@@ -14,4 +14,4 @@ This folder contains two patches that both make **Codec-13** pass all tests. The
 * 🧭 **Localization mismatch:**
 
   * *Ground truth:* Developer edit patch.
-  * *Claude patch:* **does not** modify all of the ground-truth files; it defines/implements the needed function **where it’s used**, bypassing the external edit location in another ground-truth file.
+  * *Claude patch:* **does not** modify all of the ground-truth developer edited files; it defines/implements the required function **where it’s used**, bypassing the other edit locations in the ground-truth file.
