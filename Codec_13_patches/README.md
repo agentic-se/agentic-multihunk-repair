@@ -1,4 +1,4 @@
-# Codec-13: Repair Success Without Localization Success
+# codec-13: Patch Equivalence 
 
 **Summary:**
 This folder contains two patches that both make **Codec-13** pass all tests. The ground-truth fix edits the original buggy file, while the Claude-generated fix implements the needed function **at the call site** instead of modifying the ground-truth location. This is a classic case of *repair success without localization success*.
@@ -15,8 +15,3 @@ This folder contains two patches that both make **Codec-13** pass all tests. The
 
   * *Ground truth:* Developer edit patch.
   * *Claude patch:* **does not** modify all of the ground-truth files; it defines/implements the needed function **where it’s used**, bypassing the external edit location in another ground-truth file.
-
-## Why this matters
-
-* Demonstrates that an APR system can **repair** behaviorally (tests pass) while **failing** to identify the **true** fault location.
-* Useful for evaluating metrics beyond test outcomes (e.g., **localization accuracy**, **edit proximity**).
