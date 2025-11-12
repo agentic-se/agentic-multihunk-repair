@@ -1,4 +1,4 @@
-# OAK : Evaluation of Coding Agents on Multi-hunk Repair
+# Beyond Accuracy: Behavioral Dynamics of Agentic Multi-Hunk Repair
 
 ## Coding Agents
 For detailed information about coding agent automation frameworks (Claude Code, Codex, Qwen Code, Gemini CLI and MCP support), see **[CODING_AGENTS.md](CODING_AGENTS.md)**.
