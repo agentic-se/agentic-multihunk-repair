@@ -1,0 +1,59 @@
+diff --git a/src/main/java/org/apache/commons/math3/optimization/univariate/BrentOptimizer.java b/src/main/java/org/apache/commons/math3/optimization/univariate/BrentOptimizer.java
+index b6ce68ef3..c233ea092 100644
+--- a/src/main/java/org/apache/commons/math3/optimization/univariate/BrentOptimizer.java
++++ b/src/main/java/org/apache/commons/math3/optimization/univariate/BrentOptimizer.java
+@@ -141,6 +141,7 @@ public class BrentOptimizer extends BaseAbstractUnivariateOptimizer {
+         UnivariatePointValuePair previous = null;
+         UnivariatePointValuePair current
+             = new UnivariatePointValuePair(x, isMinim ? fx : -fx);
++        UnivariatePointValuePair best = current;
+ 
+         int iter = 0;
+         while (true) {
+@@ -244,6 +245,10 @@ public class BrentOptimizer extends BaseAbstractUnivariateOptimizer {
+                     fw = fx;
+                     x = u;
+                     fx = fu;
++                    // Update the best point if we found a better one
++                    if (isMinim ? fu < best.getValue() : fu > best.getValue()) {
++                        best = current;
++                    }
+                 } else {
+                     if (u < x) {
+                         a = u;
+@@ -256,15 +261,23 @@ public class BrentOptimizer extends BaseAbstractUnivariateOptimizer {
+                         fv = fw;
+                         w = u;
+                         fw = fu;
++                        // Update the best point if we found a better one
++                        if (isMinim ? fu < best.getValue() : fu > best.getValue()) {
++                            best = current;
++                        }
+                     } else if (fu <= fv ||
+                                Precision.equals(v, x) ||
+                                Precision.equals(v, w)) {
+                         v = u;
+                         fv = fu;
++                        // Update the best point if we found a better one
++                        if (isMinim ? fu < best.getValue() : fu > best.getValue()) {
++                            best = current;
++                        }
+                     }
+                 }
+             } else { // Default termination (Brent's criterion).
+-                return current;
++                return best;
+             }
+             ++iter;
+         }
+@@ -296,4 +309,4 @@ public class BrentOptimizer extends BaseAbstractUnivariateOptimizer {
+             return a.getValue() > b.getValue() ? a : b;
+         }
+     }
+-}
++}
+\ No newline at end of file
+
+
+# Untracked source files (not included in patch):
++ src/main/java/org/apache/commons/math3/optimization/univariate/BrentOptimizer.java.backup

@@ -1,0 +1,1993 @@
+--- a/src/main/java/org/apache/commons/math/optimization/general/LevenbergMarquardtOptimizer.java
++++ b/src/main/java/org/apache/commons/math/optimization/general/LevenbergMarquardtOptimizer.java
+@@ -1,9 +1,12 @@
+-        // local point
+-        double   delta   = 0;
+-        double   xNorm   = 0;
+-        double[] diag    = new double[cols];
+-        double[] oldX    = new double[cols];
+-        double[] oldRes  = new double[rows];
+-        double[] work1   = new double[cols];
+-        double[] work2   = new double[cols];
+-        double[] work3   = new double[cols];
++        // local point
++        double   delta   = 0;
++        double   xNorm   = 0;
++        double[] diag    = new double[cols];
++        double[] oldX    = new double[cols];
++        double[] oldRes  = new double[rows];
++        double[] work1   = new double[cols];
++        double[] work2   = new double[cols];
++        double[] work3   = new double[cols];
++
++        VectorialPointValuePair previous = null;
++        VectorialPointValuePair current  = null;
+@@ -1,2 +1,3 @@
+-        // evaluate the function at the starting point and calculate its norm
+-        updateResidualsAndCost();
++        // evaluate the function at the starting point and calculate its norm
++        updateResidualsAndCost();
++        current = new VectorialPointValuePair(point, objective);
+@@ -1,4 +1,6 @@
+-        // outer loop
+-        lmPar = 0;
+-        boolean firstIteration = true;
+-        while (true) {
++        // outer loop
++        lmPar = 0;
++        boolean firstIteration = true;
++        while (true) {
++
++            previous = current;
+@@ -1,11 +1,13 @@
+-                } else {
+-                    // failed iteration, reset the previous values
+-                    cost = previousCost;
+-                    for (int j = 0; j < solvedCols; ++j) {
+-                        int pj = permutation[j];
+-                        point[pj] = oldX[pj];
+-                    }
+-                    tmpVec    = residuals;
+-                    residuals = oldRes;
+-                    oldRes    = tmpVec;
+-                }
++                } else {
++                    // failed iteration, reset the previous values
++                    cost = previousCost;
++                    for (int j = 0; j < solvedCols; ++j) {
++                        int pj = permutation[j];
++                        point[pj] = oldX[pj];
++                    }
++                    tmpVec    = residuals;
++                    residuals = oldRes;
++                    oldRes    = tmpVec;
++                }
++
++                current = new VectorialPointValuePair(point, objective);
+@@ -1,9 +1,14 @@
+-                // tests for convergence.
+-                    // we use the vectorial convergence checker
+-                    // we use the Levenberg-Marquardt specific convergence parameters
+-                    if (((Math.abs(actRed) <= costRelativeTolerance) &&
+-                         (preRed <= costRelativeTolerance) &&
+-                         (ratio <= 2.0)) ||
+-                        (delta <= parRelativeTolerance * xNorm)) {
+-                        return new VectorialPointValuePair(point, objective);
+-                    }
++                // tests for convergence.
++                if (checker != null) {
++                    if (checker.converged(iterations, previous, current)) {
++                        return new VectorialPointValuePair(point, objective);
++                    }
++                } else {
++                    // we use the Levenberg-Marquardt specific convergence parameters
++                    if (((Math.abs(actRed) <= costRelativeTolerance) &&
++                         (preRed <= costRelativeTolerance) &&
++                         (ratio <= 2.0)) ||
++                        (delta <= parRelativeTolerance * xNorm)) {
++                        return new VectorialPointValuePair(point, objective);
++                    }
++                }
+@@ -1,1 +1,1 @@
+-                    if (checker.converged(iterations, previous, current)) {
++                    if (checker.converged(getIterations(), previous, current)) {
+@@ -1,9 +1,12 @@
+-        // local point
+-        double   delta   = 0;
+-        double   xNorm   = 0;
+-        double[] diag    = new double[cols];
+-        double[] oldX    = new double[cols];
+-        double[] oldRes  = new double[rows];
+-        double[] work1   = new double[cols];
+-        double[] work2   = new double[cols];
+-        double[] work3   = new double[cols];
++        // local point
++        double   delta   = 0;
++        double   xNorm   = 0;
++        double[] diag    = new double[cols];
++        double[] oldX    = new double[cols];
++        double[] oldRes  = new double[rows];
++        double[] work1   = new double[cols];
++        double[] work2   = new double[cols];
++        double[] work3   = new double[cols];
++
++        VectorialPointValuePair previous = null;
++        VectorialPointValuePair current  = null;
+@@ -1,2 +1,3 @@
+-        // evaluate the function at the starting point and calculate its norm
+-        updateResidualsAndCost();
++        // evaluate the function at the starting point and calculate its norm
++        updateResidualsAndCost();
++        current = new VectorialPointValuePair(point, objective);
+@@ -1,4 +1,6 @@
+-        // outer loop
+-        lmPar = 0;
+-        boolean firstIteration = true;
+-        while (true) {
++        // outer loop
++        lmPar = 0;
++        boolean firstIteration = true;
++        while (true) {
++
++            previous = current;
+@@ -1,11 +1,13 @@
+-                } else {
+-                    // failed iteration, reset the previous values
+-                    cost = previousCost;
+-                    for (int j = 0; j < solvedCols; ++j) {
+-                        int pj = permutation[j];
+-                        point[pj] = oldX[pj];
+-                    }
+-                    tmpVec    = residuals;
+-                    residuals = oldRes;
+-                    oldRes    = tmpVec;
+-                }
++                } else {
++                    // failed iteration, reset the previous values
++                    cost = previousCost;
++                    for (int j = 0; j < solvedCols; ++j) {
++                        int pj = permutation[j];
++                        point[pj] = oldX[pj];
++                    }
++                    tmpVec    = residuals;
++                    residuals = oldRes;
++                    oldRes    = tmpVec;
++                }
++
++                current = new VectorialPointValuePair(point, objective);
+@@ -1,9 +1,16 @@
+-                // tests for convergence.
+-                    // we use the vectorial convergence checker
+-                    // we use the Levenberg-Marquardt specific convergence parameters
+-                    if (((Math.abs(actRed) <= costRelativeTolerance) &&
+-                         (preRed <= costRelativeTolerance) &&
+-                         (ratio <= 2.0)) ||
+-                        (delta <= parRelativeTolerance * xNorm)) {
+-                        return new VectorialPointValuePair(point, objective);
+-                    }
++                // tests for convergence.
++                // If a custom convergence checker is provided, use it.
++                // Otherwise, use the Levenberg-Marquardt specific convergence parameters.
++                if (checker != null && !(checker instanceof SimpleVectorialValueChecker)) {
++                    if (checker.converged(getIterations(), previous, current)) {
++                        return new VectorialPointValuePair(point, objective);
++                    }
++                } else {
++                    // we use the Levenberg-Marquardt specific convergence parameters
++                    if (((Math.abs(actRed) <= costRelativeTolerance) &&
++                         (preRed <= costRelativeTolerance) &&
++                         (ratio <= 2.0)) ||
++                        (delta <= parRelativeTolerance * xNorm)) {
++                        return new VectorialPointValuePair(point, objective);
++                    }
++                }
+@@ -1,2 +1,3 @@
+-import org.apache.commons.math.optimization.OptimizationException;
+-import org.apache.commons.math.optimization.VectorialPointValuePair;
++import org.apache.commons.math.optimization.OptimizationException;
++import org.apache.commons.math.optimization.VectorialPointValuePair;
++import org.apache.commons.math.optimization.SimpleVectorialValueChecker;
+@@ -1,9 +1,12 @@
+-        // local point
+-        double   delta   = 0;
+-        double   xNorm   = 0;
+-        double[] diag    = new double[cols];
+-        double[] oldX    = new double[cols];
+-        double[] oldRes  = new double[rows];
+-        double[] work1   = new double[cols];
+-        double[] work2   = new double[cols];
+-        double[] work3   = new double[cols];
++        // local point
++        double   delta   = 0;
++        double   xNorm   = 0;
++        double[] diag    = new double[cols];
++        double[] oldX    = new double[cols];
++        double[] oldRes  = new double[rows];
++        double[] work1   = new double[cols];
++        double[] work2   = new double[cols];
++        double[] work3   = new double[cols];
++
++        VectorialPointValuePair previous = null;
++        VectorialPointValuePair current  = null;
+@@ -1,2 +1,3 @@
+-        // evaluate the function at the starting point and calculate its norm
+-        updateResidualsAndCost();
++        // evaluate the function at the starting point and calculate its norm
++        updateResidualsAndCost();
++        current = new VectorialPointValuePair(point, objective);
+@@ -1,4 +1,6 @@
+-        // outer loop
+-        lmPar = 0;
+-        boolean firstIteration = true;
+-        while (true) {
++        // outer loop
++        lmPar = 0;
++        boolean firstIteration = true;
++        while (true) {
++
++            previous = current;
+@@ -1,11 +1,13 @@
+-                } else {
+-                    // failed iteration, reset the previous values
+-                    cost = previousCost;
+-                    for (int j = 0; j < solvedCols; ++j) {
+-                        int pj = permutation[j];
+-                        point[pj] = oldX[pj];
+-                    }
+-                    tmpVec    = residuals;
+-                    residuals = oldRes;
+-                    oldRes    = tmpVec;
+-                }
++                } else {
++                    // failed iteration, reset the previous values
++                    cost = previousCost;
++                    for (int j = 0; j < solvedCols; ++j) {
++                        int pj = permutation[j];
++                        point[pj] = oldX[pj];
++                    }
++                    tmpVec    = residuals;
++                    residuals = oldRes;
++                    oldRes    = tmpVec;
++                }
++
++                current = new VectorialPointValuePair(point, objective);
+@@ -1,9 +1,4 @@
+-                // tests for convergence.
+-                    // we use the vectorial convergence checker
+-                    // we use the Levenberg-Marquardt specific convergence parameters
+-                    if (((Math.abs(actRed) <= costRelativeTolerance) &&
+-                         (preRed <= costRelativeTolerance) &&
+-                         (ratio <= 2.0)) ||
+-                        (delta <= parRelativeTolerance * xNorm)) {
+-                        return new VectorialPointValuePair(point, objective);
+-                    }
++                // tests for convergence.
++                    if (checker.converged(getIterations(), previous, current)) {
++                        return new VectorialPointValuePair(point, objective);
++                    }
+@@ -1,2 +1,3 @@
+-import org.apache.commons.math.optimization.OptimizationException;
+-import org.apache.commons.math.optimization.VectorialPointValuePair;
++import org.apache.commons.math.optimization.OptimizationException;
++import org.apache.commons.math.optimization.VectorialPointValuePair;
++import org.apache.commons.math.optimization.SimpleVectorialValueChecker;
+@@ -1,1 +1,4 @@
+-public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
++public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
++
++    /** Default convergence checker. */
++    private VectorialConvergenceChecker defaultChecker;
+@@ -1,4 +1,5 @@
+-    public LevenbergMarquardtOptimizer() {
+-
+-        // set up the superclass with a default  max cost evaluations setting
+-        setMaxIterations(1000);
++    public LevenbergMarquardtOptimizer() {
++
++        // set up the superclass with a default  max cost evaluations setting
++        setMaxIterations(1000);
++        defaultChecker = getConvergenceChecker();
+@@ -1,9 +1,12 @@
+-        // local point
+-        double   delta   = 0;
+-        double   xNorm   = 0;
+-        double[] diag    = new double[cols];
+-        double[] oldX    = new double[cols];
+-        double[] oldRes  = new double[rows];
+-        double[] work1   = new double[cols];
+-        double[] work2   = new double[cols];
+-        double[] work3   = new double[cols];
++        // local point
++        double   delta   = 0;
++        double   xNorm   = 0;
++        double[] diag    = new double[cols];
++        double[] oldX    = new double[cols];
++        double[] oldRes  = new double[rows];
++        double[] work1   = new double[cols];
++        double[] work2   = new double[cols];
++        double[] work3   = new double[cols];
++
++        VectorialPointValuePair previous = null;
++        VectorialPointValuePair current  = null;
+@@ -1,2 +1,3 @@
+-        // evaluate the function at the starting point and calculate its norm
+-        updateResidualsAndCost();
++        // evaluate the function at the starting point and calculate its norm
++        updateResidualsAndCost();
++        current = new VectorialPointValuePair(point, objective);
+@@ -1,4 +1,6 @@
+-        // outer loop
+-        lmPar = 0;
+-        boolean firstIteration = true;
+-        while (true) {
++        // outer loop
++        lmPar = 0;
++        boolean firstIteration = true;
++        while (true) {
++
++            previous = current;
+@@ -1,11 +1,13 @@
+-                } else {
+-                    // failed iteration, reset the previous values
+-                    cost = previousCost;
+-                    for (int j = 0; j < solvedCols; ++j) {
+-                        int pj = permutation[j];
+-                        point[pj] = oldX[pj];
+-                    }
+-                    tmpVec    = residuals;
+-                    residuals = oldRes;
+-                    oldRes    = tmpVec;
+-                }
++                } else {
++                    // failed iteration, reset the previous values
++                    cost = previousCost;
++                    for (int j = 0; j < solvedCols; ++j) {
++                        int pj = permutation[j];
++                        point[pj] = oldX[pj];
++                    }
++                    tmpVec    = residuals;
++                    residuals = oldRes;
++                    oldRes    = tmpVec;
++                }
++
++                current = new VectorialPointValuePair(point, objective);
+@@ -1,9 +1,16 @@
+-                // tests for convergence.
+-                    // we use the vectorial convergence checker
+-                    // we use the Levenberg-Marquardt specific convergence parameters
+-                    if (((Math.abs(actRed) <= costRelativeTolerance) &&
+-                         (preRed <= costRelativeTolerance) &&
+-                         (ratio <= 2.0)) ||
+-                        (delta <= parRelativeTolerance * xNorm)) {
+-                        return new VectorialPointValuePair(point, objective);
+-                    }
++                // tests for convergence.
++                // If a custom convergence checker is provided, use it.
++                // Otherwise, use the Levenberg-Marquardt specific convergence parameters.
++                if (checker != defaultChecker) { // Check if a custom checker was set
++                    if (checker.converged(getIterations(), previous, current)) {
++                        return new VectorialPointValuePair(point, objective);
++                    }
++                } else {
++                    // we use the Levenberg-Marquardt specific convergence parameters
++                    if (((Math.abs(actRed) <= costRelativeTolerance) &&
++                         (preRed <= costRelativeTolerance) &&
++                         (ratio <= 2.0)) ||
++                        (delta <= parRelativeTolerance * xNorm)) {
++                        return new VectorialPointValuePair(point, objective);
++                    }
++                }
+@@ -1,2 +1,3 @@
+-import org.apache.commons.math.optimization.OptimizationException;
+-import org.apache.commons.math.optimization.VectorialPointValuePair;
++import org.apache.commons.math.optimization.OptimizationException;
++import org.apache.commons.math.optimization.VectorialPointValuePair;
++import org.apache.commons.math.optimization.VectorialConvergenceChecker;
+@@ -1,9 +1,12 @@
+-        // local point
+-        double   delta   = 0;
+-        double   xNorm   = 0;
+-        double[] diag    = new double[cols];
+-        double[] oldX    = new double[cols];
+-        double[] oldRes  = new double[rows];
+-        double[] work1   = new double[cols];
+-        double[] work2   = new double[cols];
+-        double[] work3   = new double[cols];
++        // local point
++        double   delta   = 0;
++        double   xNorm   = 0;
++        double[] diag    = new double[cols];
++        double[] oldX    = new double[cols];
++        double[] oldRes  = new double[rows];
++        double[] work1   = new double[cols];
++        double[] work2   = new double[cols];
++        double[] work3   = new double[cols];
++
++        VectorialPointValuePair previous = null;
++        VectorialPointValuePair current  = null;
+@@ -1,2 +1,3 @@
+-        // evaluate the function at the starting point and calculate its norm
+-        updateResidualsAndCost();
++        // evaluate the function at the starting point and calculate its norm
++        updateResidualsAndCost();
++        current = new VectorialPointValuePair(point, objective);
+@@ -1,4 +1,6 @@
+-        // outer loop
+-        lmPar = 0;
+-        boolean firstIteration = true;
+-        while (true) {
++        // outer loop
++        lmPar = 0;
++        boolean firstIteration = true;
++        while (true) {
++
++            previous = current;
+@@ -1,11 +1,13 @@
+-                } else {
+-                    // failed iteration, reset the previous values
+-                    cost = previousCost;
+-                    for (int j = 0; j < solvedCols; ++j) {
+-                        int pj = permutation[j];
+-                        point[pj] = oldX[pj];
+-                    }
+-                    tmpVec    = residuals;
+-                    residuals = oldRes;
+-                    oldRes    = tmpVec;
+-                }
++                } else {
++                    // failed iteration, reset the previous values
++                    cost = previousCost;
++                    for (int j = 0; j < solvedCols; ++j) {
++                        int pj = permutation[j];
++                        point[pj] = oldX[pj];
++                    }
++                    tmpVec    = residuals;
++                    residuals = oldRes;
++                    oldRes    = tmpVec;
++                }
++
++                current = new VectorialPointValuePair(point, objective);
+@@ -1,9 +1,11 @@
+-                // tests for convergence.
+-                    // we use the vectorial convergence checker
+-                    // we use the Levenberg-Marquardt specific convergence parameters
+-                    if (((Math.abs(actRed) <= costRelativeTolerance) &&
+-                         (preRed <= costRelativeTolerance) &&
+-                         (ratio <= 2.0)) ||
+-                        (delta <= parRelativeTolerance * xNorm)) {
+-                        return new VectorialPointValuePair(point, objective);
+-                    }
++                // tests for convergence.
++                boolean convergedByChecker = (checker != null) && checker.converged(getIterations(), previous, current);
++                boolean convergedByTolerances =
++                    ((Math.abs(actRed) <= costRelativeTolerance) &&
++                     (preRed <= costRelativeTolerance) &&
++                     (ratio <= 2.0)) ||
++                    (delta <= parRelativeTolerance * xNorm);
++
++                if (convergedByChecker || convergedByTolerances) {
++                    return new VectorialPointValuePair(point, objective);
++                }
+@@ -1,2 +1,3 @@
+-import org.apache.commons.math.optimization.OptimizationException;
+-import org.apache.commons.math.optimization.VectorialPointValuePair;
++import org.apache.commons.math.optimization.OptimizationException;
++import org.apache.commons.math.optimization.VectorialPointValuePair;
++import org.apache.commons.math.optimization.SimpleVectorialValueChecker;
+@@ -1,1 +1,4 @@
+-public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
++public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
++
++    /** Default convergence checker. */
++    private VectorialConvergenceChecker defaultConvergenceChecker;
+@@ -1,4 +1,5 @@
+-    public LevenbergMarquardtOptimizer() {
+-
+-        // set up the superclass with a default  max cost evaluations setting
+-        setMaxIterations(1000);
++    public LevenbergMarquardtOptimizer() {
++
++        // set up the superclass with a default  max cost evaluations setting
++        setMaxIterations(1000);
++        defaultConvergenceChecker = getConvergenceChecker();
+@@ -1,9 +1,12 @@
+-        // local point
+-        double   delta   = 0;
+-        double   xNorm   = 0;
+-        double[] diag    = new double[cols];
+-        double[] oldX    = new double[cols];
+-        double[] oldRes  = new double[rows];
+-        double[] work1   = new double[cols];
+-        double[] work2   = new double[cols];
+-        double[] work3   = new double[cols];
++        // local point
++        double   delta   = 0;
++        double   xNorm   = 0;
++        double[] diag    = new double[cols];
++        double[] oldX    = new double[cols];
++        double[] oldRes  = new double[rows];
++        double[] work1   = new double[cols];
++        double[] work2   = new double[cols];
++        double[] work3   = new double[cols];
++
++        VectorialPointValuePair previous = null;
++        VectorialPointValuePair current  = null;
+@@ -1,2 +1,3 @@
+-        // evaluate the function at the starting point and calculate its norm
+-        updateResidualsAndCost();
++        // evaluate the function at the starting point and calculate its norm
++        updateResidualsAndCost();
++        current = new VectorialPointValuePair(point, objective);
+@@ -1,4 +1,6 @@
+-        // outer loop
+-        lmPar = 0;
+-        boolean firstIteration = true;
+-        while (true) {
++        // outer loop
++        lmPar = 0;
++        boolean firstIteration = true;
++        while (true) {
++
++            previous = current;
+@@ -1,11 +1,13 @@
+-                } else {
+-                    // failed iteration, reset the previous values
+-                    cost = previousCost;
+-                    for (int j = 0; j < solvedCols; ++j) {
+-                        int pj = permutation[j];
+-                        point[pj] = oldX[pj];
+-                    }
+-                    tmpVec    = residuals;
+-                    residuals = oldRes;
+-                    oldRes    = tmpVec;
+-                }
++                } else {
++                    // failed iteration, reset the previous values
++                    cost = previousCost;
++                    for (int j = 0; j < solvedCols; ++j) {
++                        int pj = permutation[j];
++                        point[pj] = oldX[pj];
++                    }
++                    tmpVec    = residuals;
++                    residuals = oldRes;
++                    oldRes    = tmpVec;
++                }
++
++                current = new VectorialPointValuePair(point, objective);
+@@ -1,2 +1,1 @@
+-        VectorialPointValuePair previous = null;
+-        VectorialPointValuePair current  = null;
++
+@@ -1,2 +1,1 @@
+-        current = new VectorialPointValuePair(point, objective);
+-        current = new VectorialPointValuePair(point, objective);
++
+@@ -1,3 +1,1 @@
+-                current = new VectorialPointValuePair(point, objective);
+-
+-                current = new VectorialPointValuePair(point, objective);
++
+@@ -1,3 +1,1 @@
+-            previous = current;
+-
+-            previous = current;
++
+@@ -1,11 +1,14 @@
+-                // tests for convergence.
+-                boolean convergedByChecker = (checker != null) && checker.converged(getIterations(), previous, current);
+-                boolean convergedByTolerances =
+-                    ((Math.abs(actRed) <= costRelativeTolerance) &&
+-                     (preRed <= costRelativeTolerance) &&
+-                     (ratio <= 2.0)) ||
+-                    (delta <= parRelativeTolerance * xNorm);
+-
+-                if (convergedByChecker || convergedByTolerances) {
+-                    return new VectorialPointValuePair(point, objective);
+-                }
++                // tests for convergence.
++                if (checker != defaultConvergenceChecker) {
++                    if (checker.converged(getIterations(), previous, current)) {
++                        return new VectorialPointValuePair(point, objective);
++                    }
++                } else {
++                    // we use the Levenberg-Marquardt specific convergence parameters
++                    if (((Math.abs(actRed) <= costRelativeTolerance) &&
++                         (preRed <= costRelativeTolerance) &&
++                         (ratio <= 2.0)) ||
++                        (delta <= parRelativeTolerance * xNorm)) {
++                        return new VectorialPointValuePair(point, objective);
++                    }
++                }
+@@ -1,9 +1,12 @@
+-        // local point
+-        double   delta   = 0;
+-        double   xNorm   = 0;
+-        double[] diag    = new double[cols];
+-        double[] oldX    = new double[cols];
+-        double[] oldRes  = new double[rows];
+-        double[] work1   = new double[cols];
+-        double[] work2   = new double[cols];
+-        double[] work3   = new double[cols];
++        // local point
++        double   delta   = 0;
++        double   xNorm   = 0;
++        double[] diag    = new double[cols];
++        double[] oldX    = new double[cols];
++        double[] oldRes  = new double[rows];
++        double[] work1   = new double[cols];
++        double[] work2   = new double[cols];
++        double[] work3   = new double[cols];
++
++        VectorialPointValuePair previous = null;
++        VectorialPointValuePair current  = null;
+@@ -1,2 +1,3 @@
+-        // evaluate the function at the starting point and calculate its norm
+-        updateResidualsAndCost();
++        // evaluate the function at the starting point and calculate its norm
++        updateResidualsAndCost();
++        current = new VectorialPointValuePair(point, objective);
+@@ -1,4 +1,6 @@
+-        // outer loop
+-        lmPar = 0;
+-        boolean firstIteration = true;
+-        while (true) {
++        // outer loop
++        lmPar = 0;
++        boolean firstIteration = true;
++        while (true) {
++
++            previous = current;
+@@ -1,11 +1,13 @@
+-                } else {
+-                    // failed iteration, reset the previous values
+-                    cost = previousCost;
+-                    for (int j = 0; j < solvedCols; ++j) {
+-                        int pj = permutation[j];
+-                        point[pj] = oldX[pj];
+-                    }
+-                    tmpVec    = residuals;
+-                    residuals = oldRes;
+-                    oldRes    = tmpVec;
+-                }
++                } else {
++                    // failed iteration, reset the previous values
++                    cost = previousCost;
++                    for (int j = 0; j < solvedCols; ++j) {
++                        int pj = permutation[j];
++                        point[pj] = oldX[pj];
++                    }
++                    tmpVec    = residuals;
++                    residuals = oldRes;
++                    oldRes    = tmpVec;
++                }
++
++                current = new VectorialPointValuePair(point, objective);
+@@ -1,2 +1,3 @@
+-import org.apache.commons.math.optimization.VectorialPointValuePair;
+-import org.apache.commons.math.optimization.SimpleVectorialValueChecker;
++import org.apache.commons.math.optimization.VectorialPointValuePair;
++import org.apache.commons.math.optimization.SimpleVectorialValueChecker;
++import org.apache.commons.math.optimization.VectorialConvergenceChecker;
+@@ -1,1 +1,4 @@
+-public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
++public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
++
++    /** Custom convergence checker. */
++    private VectorialConvergenceChecker customConvergenceChecker;
+@@ -1,12 +1,18 @@
+-    public LevenbergMarquardtOptimizer() {
+-
+-        // set up the superclass with a default  max cost evaluations setting
+-        setMaxIterations(1000);
+-
+-        // default values for the tuning parameters
+-        setInitialStepBoundFactor(100.0);
+-        setCostRelativeTolerance(1.0e-10);
+-        setParRelativeTolerance(1.0e-10);
+-        setOrthoTolerance(1.0e-10);
+-
+-    }
++    public LevenbergMarquardtOptimizer() {
++
++        // set up the superclass with a default  max cost evaluations setting
++        setMaxIterations(1000);
++
++        // default values for the tuning parameters
++        setInitialStepBoundFactor(100.0);
++        setCostRelativeTolerance(1.0e-10);
++        setParRelativeTolerance(1.0e-10);
++        setOrthoTolerance(1.0e-10);
++
++    }
++
++    /** {@inheritDoc} */
++    @Override
++    public void setConvergenceChecker(VectorialConvergenceChecker convergenceChecker) {
++        this.customConvergenceChecker = convergenceChecker;
++    }
+@@ -1,9 +1,12 @@
+-        // local point
+-        double   delta   = 0;
+-        double   xNorm   = 0;
+-        double[] diag    = new double[cols];
+-        double[] oldX    = new double[cols];
+-        double[] oldRes  = new double[rows];
+-        double[] work1   = new double[cols];
+-        double[] work2   = new double[cols];
+-        double[] work3   = new double[cols];
++        // local point
++        double   delta   = 0;
++        double   xNorm   = 0;
++        double[] diag    = new double[cols];
++        double[] oldX    = new double[cols];
++        double[] oldRes  = new double[rows];
++        double[] work1   = new double[cols];
++        double[] work2   = new double[cols];
++        double[] work3   = new double[cols];
++
++        VectorialPointValuePair previous = null;
++        VectorialPointValuePair current  = null;
+@@ -1,2 +1,3 @@
+-        // evaluate the function at the starting point and calculate its norm
+-        updateResidualsAndCost();
++        // evaluate the function at the starting point and calculate its norm
++        updateResidualsAndCost();
++        current = new VectorialPointValuePair(point, objective);
+@@ -1,4 +1,6 @@
+-        // outer loop
+-        lmPar = 0;
+-        boolean firstIteration = true;
+-        while (true) {
++        // outer loop
++        lmPar = 0;
++        boolean firstIteration = true;
++        while (true) {
++
++            previous = current;
+@@ -1,11 +1,13 @@
+-                } else {
+-                    // failed iteration, reset the previous values
+-                    cost = previousCost;
+-                    for (int j = 0; j < solvedCols; ++j) {
+-                        int pj = permutation[j];
+-                        point[pj] = oldX[pj];
+-                    }
+-                    tmpVec    = residuals;
+-                    residuals = oldRes;
+-                    oldRes    = tmpVec;
+-                }
++                } else {
++                    // failed iteration, reset the previous values
++                    cost = previousCost;
++                    for (int j = 0; j < solvedCols; ++j) {
++                        int pj = permutation[j];
++                        point[pj] = oldX[pj];
++                    }
++                    tmpVec    = residuals;
++                    residuals = oldRes;
++                    oldRes    = tmpVec;
++                }
++
++                current = new VectorialPointValuePair(point, objective);
+@@ -1,6 +1,14 @@
+-                    if (((Math.abs(actRed) <= costRelativeTolerance) &&
+-                         (preRed <= costRelativeTolerance) &&
+-                         (ratio <= 2.0)) ||
+-                        (delta <= parRelativeTolerance * xNorm)) {
+-                        return new VectorialPointValuePair(point, objective);
+-                    }
++                // tests for convergence.
++                if (customConvergenceChecker != null) {
++                    if (customConvergenceChecker.converged(getIterations(), previous, current)) {
++                        return new VectorialPointValuePair(point, objective);
++                    }
++                } else {
++                    // we use the Levenberg-Marquardt specific convergence parameters
++                    if (((Math.abs(actRed) <= costRelativeTolerance) &&
++                         (preRed <= costRelativeTolerance) &&
++                         (ratio <= 2.0)) ||
++                        (delta <= parRelativeTolerance * xNorm)) {
++                        return new VectorialPointValuePair(point, objective);
++                    }
++                }
+@@ -1,1 +1,2 @@
+-import org.apache.commons.math.optimization.VectorialPointValuePair;
++import org.apache.commons.math.optimization.VectorialPointValuePair;
++import org.apache.commons.math.optimization.VectorialConvergenceChecker;
+@@ -1,1 +1,4 @@
+-public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
++public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
++
++    /** Internal convergence checker. */
++    private VectorialConvergenceChecker internalChecker;
+@@ -1,12 +1,15 @@
+-    public LevenbergMarquardtOptimizer() {
+-
+-        // set up the superclass with a default  max cost evaluations setting
+-        setMaxIterations(1000);
+-
+-        // default values for the tuning parameters
+-        setInitialStepBoundFactor(100.0);
+-        setCostRelativeTolerance(1.0e-10);
+-        setParRelativeTolerance(1.0e-10);
+-        setOrthoTolerance(1.0e-10);
+-
+-    }
++    public LevenbergMarquardtOptimizer() {
++
++        // set up the superclass with a default  max cost evaluations setting
++        setMaxIterations(1000);
++
++        // default values for the tuning parameters
++        setInitialStepBoundFactor(100.0);
++        setCostRelativeTolerance(1.0e-10);
++        setParRelativeTolerance(1.0e-10);
++        setOrthoTolerance(1.0e-10);
++
++        // initialize internal checker with LM specific tolerances
++        internalChecker = new SimpleVectorialValueChecker(costRelativeTolerance, parRelativeTolerance);
++
++    }
+@@ -1,9 +1,12 @@
+-        // local point
+-        double   delta   = 0;
+-        double   xNorm   = 0;
+-        double[] diag    = new double[cols];
+-        double[] oldX    = new double[cols];
+-        double[] oldRes  = new double[rows];
+-        double[] work1   = new double[cols];
+-        double[] work2   = new double[cols];
+-        double[] work3   = new double[cols];
++        // local point
++        double   delta   = 0;
++        double   xNorm   = 0;
++        double[] diag    = new double[cols];
++        double[] oldX    = new double[cols];
++        double[] oldRes  = new double[rows];
++        double[] work1   = new double[cols];
++        double[] work2   = new double[cols];
++        double[] work3   = new double[cols];
++
++        VectorialPointValuePair previous = null;
++        VectorialPointValuePair current  = null;
+@@ -1,2 +1,3 @@
+-        // evaluate the function at the starting point and calculate its norm
+-        updateResidualsAndCost();
++        // evaluate the function at the starting point and calculate its norm
++        updateResidualsAndCost();
++        current = new VectorialPointValuePair(point, objective);
+@@ -1,4 +1,6 @@
+-        // outer loop
+-        lmPar = 0;
+-        boolean firstIteration = true;
+-        while (true) {
++        // outer loop
++        lmPar = 0;
++        boolean firstIteration = true;
++        while (true) {
++
++            previous = current;
+@@ -1,11 +1,13 @@
+-                } else {
+-                    // failed iteration, reset the previous values
+-                    cost = previousCost;
+-                    for (int j = 0; j < solvedCols; ++j) {
+-                        int pj = permutation[j];
+-                        point[pj] = oldX[pj];
+-                    }
+-                    tmpVec    = residuals;
+-                    residuals = oldRes;
+-                    oldRes    = tmpVec;
+-                }
++                } else {
++                    // failed iteration, reset the previous values
++                    cost = previousCost;
++                    for (int j = 0; j < solvedCols; ++j) {
++                        int pj = permutation[j];
++                        point[pj] = oldX[pj];
++                    }
++                    tmpVec    = residuals;
++                    residuals = oldRes;
++                    oldRes    = tmpVec;
++                }
++
++                current = new VectorialPointValuePair(point, objective);
+@@ -1,6 +1,12 @@
+-                    if (((Math.abs(actRed) <= costRelativeTolerance) &&
+-                         (preRed <= costRelativeTolerance) &&
+-                         (ratio <= 2.0)) ||
+-                        (delta <= parRelativeTolerance * xNorm)) {
+-                        return new VectorialPointValuePair(point, objective);
+-                    }
++                // tests for convergence.
++                // we use the vectorial convergence checker
++                if (!(checker instanceof SimpleVectorialValueChecker)) {
++                    if (checker.converged(getIterations(), previous, current)) {
++                        return new VectorialPointValuePair(point, objective);
++                    }
++                } else {
++                    // we use the Levenberg-Marquardt specific convergence parameters
++                    if (internalChecker.converged(getIterations(), previous, current)) {
++                        return new VectorialPointValuePair(point, objective);
++                    }
++                }
+@@ -1,2 +1,4 @@
+-import org.apache.commons.math.optimization.OptimizationException;
+-import org.apache.commons.math.optimization.VectorialPointValuePair;
++import org.apache.commons.math.optimization.OptimizationException;
++import org.apache.commons.math.optimization.VectorialPointValuePair;
++import org.apache.commons.math.optimization.VectorialConvergenceChecker;
++import org.apache.commons.math.optimization.SimpleVectorialValueChecker;
+@@ -1,1 +1,4 @@
+-public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
++public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
++
++    /** Custom convergence checker. */
++    private VectorialConvergenceChecker customChecker;
+@@ -1,12 +1,18 @@
+-    public LevenbergMarquardtOptimizer() {
+-
+-        // set up the superclass with a default  max cost evaluations setting
+-        setMaxIterations(1000);
+-
+-        // default values for the tuning parameters
+-        setInitialStepBoundFactor(100.0);
+-        setCostRelativeTolerance(1.0e-10);
+-        setParRelativeTolerance(1.0e-10);
+-        setOrthoTolerance(1.0e-10);
+-
+-    }
++    public LevenbergMarquardtOptimizer() {
++
++        // set up the superclass with a default  max cost evaluations setting
++        setMaxIterations(1000);
++
++        // default values for the tuning parameters
++        setInitialStepBoundFactor(100.0);
++        setCostRelativeTolerance(1.0e-10);
++        setParRelativeTolerance(1.0e-10);
++        setOrthoTolerance(1.0e-10);
++
++    }
++
++    /** {@inheritDoc} */
++    @Override
++    public void setConvergenceChecker(VectorialConvergenceChecker convergenceChecker) {
++        this.customChecker = convergenceChecker;
++    }
+@@ -1,9 +1,12 @@
+-        // local point
+-        double   delta   = 0;
+-        double   xNorm   = 0;
+-        double[] diag    = new double[cols];
+-        double[] oldX    = new double[cols];
+-        double[] oldRes  = new double[rows];
+-        double[] work1   = new double[cols];
+-        double[] work2   = new double[cols];
+-        double[] work3   = new double[cols];
++        // local point
++        double   delta   = 0;
++        double   xNorm   = 0;
++        double[] diag    = new double[cols];
++        double[] oldX    = new double[cols];
++        double[] oldRes  = new double[rows];
++        double[] work1   = new double[cols];
++        double[] work2   = new double[cols];
++        double[] work3   = new double[cols];
++
++        VectorialPointValuePair previous = null;
++        VectorialPointValuePair current  = null;
+@@ -1,2 +1,3 @@
+-        // evaluate the function at the starting point and calculate its norm
+-        updateResidualsAndCost();
++        // evaluate the function at the starting point and calculate its norm
++        updateResidualsAndCost();
++        current = new VectorialPointValuePair(point, objective);
+@@ -1,4 +1,6 @@
+-        // outer loop
+-        lmPar = 0;
+-        boolean firstIteration = true;
+-        while (true) {
++        // outer loop
++        lmPar = 0;
++        boolean firstIteration = true;
++        while (true) {
++
++            previous = current;
+@@ -1,11 +1,13 @@
+-                } else {
+-                    // failed iteration, reset the previous values
+-                    cost = previousCost;
+-                    for (int j = 0; j < solvedCols; ++j) {
+-                        int pj = permutation[j];
+-                        point[pj] = oldX[pj];
+-                    }
+-                    tmpVec    = residuals;
+-                    residuals = oldRes;
+-                    oldRes    = tmpVec;
+-                }
++                } else {
++                    // failed iteration, reset the previous values
++                    cost = previousCost;
++                    for (int j = 0; j < solvedCols; ++j) {
++                        int pj = permutation[j];
++                        point[pj] = oldX[pj];
++                    }
++                    tmpVec    = residuals;
++                    residuals = oldRes;
++                    oldRes    = tmpVec;
++                }
++
++                current = new VectorialPointValuePair(point, objective);
+@@ -1,6 +1,14 @@
+-                    if (((Math.abs(actRed) <= costRelativeTolerance) &&
+-                         (preRed <= costRelativeTolerance) &&
+-                         (ratio <= 2.0)) ||
+-                        (delta <= parRelativeTolerance * xNorm)) {
+-                        return new VectorialPointValuePair(point, objective);
+-                    }
++                // tests for convergence.
++                if (customChecker != null) {
++                    if (customChecker.converged(getIterations(), previous, current)) {
++                        return new VectorialPointValuePair(point, objective);
++                    }
++                } else {
++                    // we use the Levenberg-Marquardt specific convergence parameters
++                    if (((Math.abs(actRed) <= costRelativeTolerance) &&
++                         (preRed <= costRelativeTolerance) &&
++                         (ratio <= 2.0)) ||
++                        (delta <= parRelativeTolerance * xNorm)) {
++                        return new VectorialPointValuePair(point, objective);
++                    }
++                }
+@@ -1,1 +1,2 @@
+-import org.apache.commons.math.optimization.VectorialPointValuePair;
++import org.apache.commons.math.optimization.VectorialPointValuePair;
++import org.apache.commons.math.optimization.VectorialConvergenceChecker;
+@@ -1,1 +1,4 @@
+-public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
++public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
++
++    /** Custom convergence checker. */
++    private VectorialConvergenceChecker customChecker;
+@@ -1,12 +1,18 @@
+-    public LevenbergMarquardtOptimizer() {
+-
+-        // set up the superclass with a default  max cost evaluations setting
+-        setMaxIterations(1000);
+-
+-        // default values for the tuning parameters
+-        setInitialStepBoundFactor(100.0);
+-        setCostRelativeTolerance(1.0e-10);
+-        setParRelativeTolerance(1.0e-10);
+-        setOrthoTolerance(1.0e-10);
+-
+-    }
++    public LevenbergMarquardtOptimizer() {
++
++        // set up the superclass with a default  max cost evaluations setting
++        setMaxIterations(1000);
++
++        // default values for the tuning parameters
++        setInitialStepBoundFactor(100.0);
++        setCostRelativeTolerance(1.0e-10);
++        setParRelativeTolerance(1.0e-10);
++        setOrthoTolerance(1.0e-10);
++
++    }
++
++    /** {@inheritDoc} */
++    @Override
++    public void setConvergenceChecker(VectorialConvergenceChecker convergenceChecker) {
++        this.customChecker = convergenceChecker;
++    }
+@@ -1,9 +1,12 @@
+-        // local point
+-        double   delta   = 0;
+-        double   xNorm   = 0;
+-        double[] diag    = new double[cols];
+-        double[] oldX    = new double[cols];
+-        double[] oldRes  = new double[rows];
+-        double[] work1   = new double[cols];
+-        double[] work2   = new double[cols];
+-        double[] work3   = new double[cols];
++        // local point
++        double   delta   = 0;
++        double   xNorm   = 0;
++        double[] diag    = new double[cols];
++        double[] oldX    = new double[cols];
++        double[] oldRes  = new double[rows];
++        double[] work1   = new double[cols];
++        double[] work2   = new double[cols];
++        double[] work3   = new double[cols];
++
++        VectorialPointValuePair previous = null;
++        VectorialPointValuePair current  = null;
+@@ -1,2 +1,3 @@
+-        // evaluate the function at the starting point and calculate its norm
+-        updateResidualsAndCost();
++        // evaluate the function at the starting point and calculate its norm
++        updateResidualsAndCost();
++        current = new VectorialPointValuePair(point, objective);
+@@ -1,4 +1,6 @@
+-        // outer loop
+-        lmPar = 0;
+-        boolean firstIteration = true;
+-        while (true) {
++        // outer loop
++        lmPar = 0;
++        boolean firstIteration = true;
++        while (true) {
++
++            previous = current;
+@@ -1,11 +1,13 @@
+-                } else {
+-                    // failed iteration, reset the previous values
+-                    cost = previousCost;
+-                    for (int j = 0; j < solvedCols; ++j) {
+-                        int pj = permutation[j];
+-                        point[pj] = oldX[pj];
+-                    }
+-                    tmpVec    = residuals;
+-                    residuals = oldRes;
+-                    oldRes    = tmpVec;
+-                }
++                } else {
++                    // failed iteration, reset the previous values
++                    cost = previousCost;
++                    for (int j = 0; j < solvedCols; ++j) {
++                        int pj = permutation[j];
++                        point[pj] = oldX[pj];
++                    }
++                    tmpVec    = residuals;
++                    residuals = oldRes;
++                    oldRes    = tmpVec;
++                }
++
++                current = new VectorialPointValuePair(point, objective);
+@@ -1,6 +1,14 @@
+-                    if (((Math.abs(actRed) <= costRelativeTolerance) &&
+-                         (preRed <= costRelativeTolerance) &&
+-                         (ratio <= 2.0)) ||
+-                        (delta <= parRelativeTolerance * xNorm)) {
+-                        return new VectorialPointValuePair(point, objective);
+-                    }
++                // tests for convergence.
++                if (customChecker != null) {
++                    if (customChecker.converged(getIterations(), previous, current)) {
++                        return new VectorialPointValuePair(point, objective);
++                    }
++                } else {
++                    // we use the Levenberg-Marquardt specific convergence parameters
++                    if (((Math.abs(actRed) <= costRelativeTolerance) &&
++                         (preRed <= costRelativeTolerance) &&
++                         (ratio <= 2.0)) ||
++                        (delta <= parRelativeTolerance * xNorm)) {
++                        return new VectorialPointValuePair(point, objective);
++                    }
++                }
+@@ -1,1 +1,2 @@
+-import org.apache.commons.math.optimization.VectorialPointValuePair;
++import org.apache.commons.math.optimization.VectorialPointValuePair;
++import org.apache.commons.math.optimization.VectorialConvergenceChecker;
+@@ -1,1 +1,4 @@
+-public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
++public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
++
++    /** Custom convergence checker. */
++    private VectorialConvergenceChecker customChecker;
+@@ -1,12 +1,18 @@
+-    public LevenbergMarquardtOptimizer() {
+-
+-        // set up the superclass with a default  max cost evaluations setting
+-        setMaxIterations(1000);
+-
+-        // default values for the tuning parameters
+-        setInitialStepBoundFactor(100.0);
+-        setCostRelativeTolerance(1.0e-10);
+-        setParRelativeTolerance(1.0e-10);
+-        setOrthoTolerance(1.0e-10);
+-
+-    }
++    public LevenbergMarquardtOptimizer() {
++
++        // set up the superclass with a default  max cost evaluations setting
++        setMaxIterations(1000);
++
++        // default values for the tuning parameters
++        setInitialStepBoundFactor(100.0);
++        setCostRelativeTolerance(1.0e-10);
++        setParRelativeTolerance(1.0e-10);
++        setOrthoTolerance(1.0e-10);
++
++    }
++
++    /** {@inheritDoc} */
++    @Override
++    public void setConvergenceChecker(VectorialConvergenceChecker convergenceChecker) {
++        this.customChecker = convergenceChecker;
++    }
+@@ -1,9 +1,12 @@
+-        // local point
+-        double   delta   = 0;
+-        double   xNorm   = 0;
+-        double[] diag    = new double[cols];
+-        double[] oldX    = new double[cols];
+-        double[] oldRes  = new double[rows];
+-        double[] work1   = new double[cols];
+-        double[] work2   = new double[cols];
+-        double[] work3   = new double[cols];
++        // local point
++        double   delta   = 0;
++        double   xNorm   = 0;
++        double[] diag    = new double[cols];
++        double[] oldX    = new double[cols];
++        double[] oldRes  = new double[rows];
++        double[] work1   = new double[cols];
++        double[] work2   = new double[cols];
++        double[] work3   = new double[cols];
++
++        VectorialPointValuePair previous = null;
++        VectorialPointValuePair current  = null;
+@@ -1,2 +1,3 @@
+-        // evaluate the function at the starting point and calculate its norm
+-        updateResidualsAndCost();
++        // evaluate the function at the starting point and calculate its norm
++        updateResidualsAndCost();
++        current = new VectorialPointValuePair(point, objective);
+@@ -1,4 +1,6 @@
+-        // outer loop
+-        lmPar = 0;
+-        boolean firstIteration = true;
+-        while (true) {
++        // outer loop
++        lmPar = 0;
++        boolean firstIteration = true;
++        while (true) {
++
++            previous = current;
+@@ -1,11 +1,13 @@
+-                } else {
+-                    // failed iteration, reset the previous values
+-                    cost = previousCost;
+-                    for (int j = 0; j < solvedCols; ++j) {
+-                        int pj = permutation[j];
+-                        point[pj] = oldX[pj];
+-                    }
+-                    tmpVec    = residuals;
+-                    residuals = oldRes;
+-                    oldRes    = tmpVec;
+-                }
++                } else {
++                    // failed iteration, reset the previous values
++                    cost = previousCost;
++                    for (int j = 0; j < solvedCols; ++j) {
++                        int pj = permutation[j];
++                        point[pj] = oldX[pj];
++                    }
++                    tmpVec    = residuals;
++                    residuals = oldRes;
++                    oldRes    = tmpVec;
++                }
++
++                current = new VectorialPointValuePair(point, objective);
+@@ -1,6 +1,14 @@
+-                    if (((Math.abs(actRed) <= costRelativeTolerance) &&
+-                         (preRed <= costRelativeTolerance) &&
+-                         (ratio <= 2.0)) ||
+-                        (delta <= parRelativeTolerance * xNorm)) {
+-                        return new VectorialPointValuePair(point, objective);
+-                    }
++                // tests for convergence.
++                if (customChecker != null) {
++                    if (customChecker.converged(getIterations(), previous, current)) {
++                        return new VectorialPointValuePair(point, objective);
++                    }
++                } else {
++                    // we use the Levenberg-Marquardt specific convergence parameters
++                    if (((Math.abs(actRed) <= costRelativeTolerance) &&
++                         (preRed <= costRelativeTolerance) &&
++                         (ratio <= 2.0)) ||
++                        (delta <= parRelativeTolerance * xNorm)) {
++                        return new VectorialPointValuePair(point, objective);
++                    }
++                }
+@@ -1,1 +1,2 @@
+-import org.apache.commons.math.optimization.VectorialPointValuePair;
++import org.apache.commons.math.optimization.VectorialPointValuePair;
++import org.apache.commons.math.optimization.VectorialConvergenceChecker;
+@@ -1,1 +1,4 @@
+-public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
++public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
++
++    /** Custom convergence checker. */
++    private VectorialConvergenceChecker customChecker;
+@@ -1,12 +1,18 @@
+-    public LevenbergMarquardtOptimizer() {
+-
+-        // set up the superclass with a default  max cost evaluations setting
+-        setMaxIterations(1000);
+-
+-        // default values for the tuning parameters
+-        setInitialStepBoundFactor(100.0);
+-        setCostRelativeTolerance(1.0e-10);
+-        setParRelativeTolerance(1.0e-10);
+-        setOrthoTolerance(1.0e-10);
+-
+-    }
++    public LevenbergMarquardtOptimizer() {
++
++        // set up the superclass with a default  max cost evaluations setting
++        setMaxIterations(1000);
++
++        // default values for the tuning parameters
++        setInitialStepBoundFactor(100.0);
++        setCostRelativeTolerance(1.0e-10);
++        setParRelativeTolerance(1.0e-10);
++        setOrthoTolerance(1.0e-10);
++
++    }
++
++    /** {@inheritDoc} */
++    @Override
++    public void setConvergenceChecker(VectorialConvergenceChecker convergenceChecker) {
++        this.customChecker = convergenceChecker;
++    }
+@@ -1,9 +1,12 @@
+-        // local point
+-        double   delta   = 0;
+-        double   xNorm   = 0;
+-        double[] diag    = new double[cols];
+-        double[] oldX    = new double[cols];
+-        double[] oldRes  = new double[rows];
+-        double[] work1   = new double[cols];
+-        double[] work2   = new double[cols];
+-        double[] work3   = new double[cols];
++        // local point
++        double   delta   = 0;
++        double   xNorm   = 0;
++        double[] diag    = new double[cols];
++        double[] oldX    = new double[cols];
++        double[] oldRes  = new double[rows];
++        double[] work1   = new double[cols];
++        double[] work2   = new double[cols];
++        double[] work3   = new double[cols];
++
++        VectorialPointValuePair previous = null;
++        VectorialPointValuePair current  = null;
+@@ -1,2 +1,3 @@
+-        // evaluate the function at the starting point and calculate its norm
+-        updateResidualsAndCost();
++        // evaluate the function at the starting point and calculate its norm
++        updateResidualsAndCost();
++        current = new VectorialPointValuePair(point, objective);
+@@ -1,4 +1,6 @@
+-        // outer loop
+-        lmPar = 0;
+-        boolean firstIteration = true;
+-        while (true) {
++        // outer loop
++        lmPar = 0;
++        boolean firstIteration = true;
++        while (true) {
++
++            previous = current;
+@@ -1,11 +1,13 @@
+-                } else {
+-                    // failed iteration, reset the previous values
+-                    cost = previousCost;
+-                    for (int j = 0; j < solvedCols; ++j) {
+-                        int pj = permutation[j];
+-                        point[pj] = oldX[pj];
+-                    }
+-                    tmpVec    = residuals;
+-                    residuals = oldRes;
+-                    oldRes    = tmpVec;
+-                }
++                } else {
++                    // failed iteration, reset the previous values
++                    cost = previousCost;
++                    for (int j = 0; j < solvedCols; ++j) {
++                        int pj = permutation[j];
++                        point[pj] = oldX[pj];
++                    }
++                    tmpVec    = residuals;
++                    residuals = oldRes;
++                    oldRes    = tmpVec;
++                }
++
++                current = new VectorialPointValuePair(point, objective);
+@@ -1,6 +1,14 @@
+-                    if (((Math.abs(actRed) <= costRelativeTolerance) &&
+-                         (preRed <= costRelativeTolerance) &&
+-                         (ratio <= 2.0)) ||
+-                        (delta <= parRelativeTolerance * xNorm)) {
+-                        return new VectorialPointValuePair(point, objective);
+-                    }
++                // tests for convergence.
++                if (customChecker != null) {
++                    if (customChecker.converged(getIterations(), previous, current)) {
++                        return new VectorialPointValuePair(point, objective);
++                    }
++                } else {
++                    // we use the Levenberg-Marquardt specific convergence parameters
++                    if (((Math.abs(actRed) <= costRelativeTolerance) &&
++                         (preRed <= costRelativeTolerance) &&
++                         (ratio <= 2.0)) ||
++                        (delta <= parRelativeTolerance * xNorm)) {
++                        return new VectorialPointValuePair(point, objective);
++                    }
++                }
+@@ -1,1 +1,2 @@
+-import org.apache.commons.math.optimization.VectorialPointValuePair;
++import org.apache.commons.math.optimization.VectorialPointValuePair;
++import org.apache.commons.math.optimization.VectorialConvergenceChecker;
+@@ -1,1 +1,4 @@
+-public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
++public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
++
++    /** Custom convergence checker. */
++    private VectorialConvergenceChecker customChecker;
+@@ -1,12 +1,18 @@
+-    public LevenbergMarquardtOptimizer() {
+-
+-        // set up the superclass with a default  max cost evaluations setting
+-        setMaxIterations(1000);
+-
+-        // default values for the tuning parameters
+-        setInitialStepBoundFactor(100.0);
+-        setCostRelativeTolerance(1.0e-10);
+-        setParRelativeTolerance(1.0e-10);
+-        setOrthoTolerance(1.0e-10);
+-
+-    }
++    public LevenbergMarquardtOptimizer() {
++
++        // set up the superclass with a default  max cost evaluations setting
++        setMaxIterations(1000);
++
++        // default values for the tuning parameters
++        setInitialStepBoundFactor(100.0);
++        setCostRelativeTolerance(1.0e-10);
++        setParRelativeTolerance(1.0e-10);
++        setOrthoTolerance(1.0e-10);
++
++    }
++
++    /** {@inheritDoc} */
++    @Override
++    public void setConvergenceChecker(VectorialConvergenceChecker convergenceChecker) {
++        this.customChecker = convergenceChecker;
++    }
+@@ -1,9 +1,12 @@
+-        // local point
+-        double   delta   = 0;
+-        double   xNorm   = 0;
+-        double[] diag    = new double[cols];
+-        double[] oldX    = new double[cols];
+-        double[] oldRes  = new double[rows];
+-        double[] work1   = new double[cols];
+-        double[] work2   = new double[cols];
+-        double[] work3   = new double[cols];
++        // local point
++        double   delta   = 0;
++        double   xNorm   = 0;
++        double[] diag    = new double[cols];
++        double[] oldX    = new double[cols];
++        double[] oldRes  = new double[rows];
++        double[] work1   = new double[cols];
++        double[] work2   = new double[cols];
++        double[] work3   = new double[cols];
++
++        VectorialPointValuePair previous = null;
++        VectorialPointValuePair current  = null;
+@@ -1,2 +1,3 @@
+-        // evaluate the function at the starting point and calculate its norm
+-        updateResidualsAndCost();
++        // evaluate the function at the starting point and calculate its norm
++        updateResidualsAndCost();
++        current = new VectorialPointValuePair(point, objective);
+@@ -1,4 +1,6 @@
+-        // outer loop
+-        lmPar = 0;
+-        boolean firstIteration = true;
+-        while (true) {
++        // outer loop
++        lmPar = 0;
++        boolean firstIteration = true;
++        while (true) {
++
++            previous = current;
+@@ -1,11 +1,13 @@
+-                } else {
+-                    // failed iteration, reset the previous values
+-                    cost = previousCost;
+-                    for (int j = 0; j < solvedCols; ++j) {
+-                        int pj = permutation[j];
+-                        point[pj] = oldX[pj];
+-                    }
+-                    tmpVec    = residuals;
+-                    residuals = oldRes;
+-                    oldRes    = tmpVec;
+-                }
++                } else {
++                    // failed iteration, reset the previous values
++                    cost = previousCost;
++                    for (int j = 0; j < solvedCols; ++j) {
++                        int pj = permutation[j];
++                        point[pj] = oldX[pj];
++                    }
++                    tmpVec    = residuals;
++                    residuals = oldRes;
++                    oldRes    = tmpVec;
++                }
++
++                current = new VectorialPointValuePair(point, objective);
+@@ -1,6 +1,14 @@
+-                    if (((Math.abs(actRed) <= costRelativeTolerance) &&
+-                         (preRed <= costRelativeTolerance) &&
+-                         (ratio <= 2.0)) ||
+-                        (delta <= parRelativeTolerance * xNorm)) {
+-                        return new VectorialPointValuePair(point, objective);
+-                    }
++                // tests for convergence.
++                if (customChecker != null) {
++                    if (customChecker.converged(getIterations(), previous, current)) {
++                        return new VectorialPointValuePair(point, objective);
++                    }
++                } else {
++                    // we use the Levenberg-Marquardt specific convergence parameters
++                    if (((Math.abs(actRed) <= costRelativeTolerance) &&
++                         (preRed <= costRelativeTolerance) &&
++                         (ratio <= 2.0)) ||
++                        (delta <= parRelativeTolerance * xNorm)) {
++                        return new VectorialPointValuePair(point, objective);
++                    }
++                }
+@@ -1,1 +1,2 @@
+-import org.apache.commons.math.optimization.VectorialPointValuePair;
++import org.apache.commons.math.optimization.VectorialPointValuePair;
++import org.apache.commons.math.optimization.VectorialConvergenceChecker;
+@@ -1,1 +1,4 @@
+-public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
++public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
++
++    /** Custom convergence checker. */
++    private VectorialConvergenceChecker customChecker;
+@@ -1,12 +1,18 @@
+-    public LevenbergMarquardtOptimizer() {
+-
+-        // set up the superclass with a default  max cost evaluations setting
+-        setMaxIterations(1000);
+-
+-        // default values for the tuning parameters
+-        setInitialStepBoundFactor(100.0);
+-        setCostRelativeTolerance(1.0e-10);
+-        setParRelativeTolerance(1.0e-10);
+-        setOrthoTolerance(1.0e-10);
+-
+-    }
++    public LevenbergMarquardtOptimizer() {
++
++        // set up the superclass with a default  max cost evaluations setting
++        setMaxIterations(1000);
++
++        // default values for the tuning parameters
++        setInitialStepBoundFactor(100.0);
++        setCostRelativeTolerance(1.0e-10);
++        setParRelativeTolerance(1.0e-10);
++        setOrthoTolerance(1.0e-10);
++
++    }
++
++    /** {@inheritDoc} */
++    @Override
++    public void setConvergenceChecker(VectorialConvergenceChecker convergenceChecker) {
++        this.customChecker = convergenceChecker;
++    }
+@@ -1,9 +1,12 @@
+-        // local point
+-        double   delta   = 0;
+-        double   xNorm   = 0;
+-        double[] diag    = new double[cols];
+-        double[] oldX    = new double[cols];
+-        double[] oldRes  = new double[rows];
+-        double[] work1   = new double[cols];
+-        double[] work2   = new double[cols];
+-        double[] work3   = new double[cols];
++        // local point
++        double   delta   = 0;
++        double   xNorm   = 0;
++        double[] diag    = new double[cols];
++        double[] oldX    = new double[cols];
++        double[] oldRes  = new double[rows];
++        double[] work1   = new double[cols];
++        double[] work2   = new double[cols];
++        double[] work3   = new double[cols];
++
++        VectorialPointValuePair previous = null;
++        VectorialPointValuePair current  = null;
+@@ -1,2 +1,3 @@
+-        // evaluate the function at the starting point and calculate its norm
+-        updateResidualsAndCost();
++        // evaluate the function at the starting point and calculate its norm
++        updateResidualsAndCost();
++        current = new VectorialPointValuePair(point, objective);
+@@ -1,4 +1,6 @@
+-        // outer loop
+-        lmPar = 0;
+-        boolean firstIteration = true;
+-        while (true) {
++        // outer loop
++        lmPar = 0;
++        boolean firstIteration = true;
++        while (true) {
++
++            previous = current;
+@@ -1,11 +1,13 @@
+-                } else {
+-                    // failed iteration, reset the previous values
+-                    cost = previousCost;
+-                    for (int j = 0; j < solvedCols; ++j) {
+-                        int pj = permutation[j];
+-                        point[pj] = oldX[pj];
+-                    }
+-                    tmpVec    = residuals;
+-                    residuals = oldRes;
+-                    oldRes    = tmpVec;
+-                }
++                } else {
++                    // failed iteration, reset the previous values
++                    cost = previousCost;
++                    for (int j = 0; j < solvedCols; ++j) {
++                        int pj = permutation[j];
++                        point[pj] = oldX[pj];
++                    }
++                    tmpVec    = residuals;
++                    residuals = oldRes;
++                    oldRes    = tmpVec;
++                }
++
++                current = new VectorialPointValuePair(point, objective);
+@@ -1,6 +1,14 @@
+-                    if (((Math.abs(actRed) <= costRelativeTolerance) &&
+-                         (preRed <= costRelativeTolerance) &&
+-                         (ratio <= 2.0)) ||
+-                        (delta <= parRelativeTolerance * xNorm)) {
+-                        return new VectorialPointValuePair(point, objective);
+-                    }
++                // tests for convergence.
++                if (customChecker != null) {
++                    if (customChecker.converged(getIterations(), previous, current)) {
++                        return new VectorialPointValuePair(point, objective);
++                    }
++                } else {
++                    // we use the Levenberg-Marquardt specific convergence parameters
++                    if (((Math.abs(actRed) <= costRelativeTolerance) &&
++                         (preRed <= costRelativeTolerance) &&
++                         (ratio <= 2.0)) ||
++                        (delta <= parRelativeTolerance * xNorm)) {
++                        return new VectorialPointValuePair(point, objective);
++                    }
++                }
+@@ -1,1 +1,2 @@
+-import org.apache.commons.math.optimization.VectorialPointValuePair;
++import org.apache.commons.math.optimization.VectorialPointValuePair;
++import org.apache.commons.math.optimization.VectorialConvergenceChecker;
+@@ -1,1 +1,4 @@
+-public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
++public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
++
++    /** Custom convergence checker. */
++    private VectorialConvergenceChecker customChecker;
+@@ -1,12 +1,18 @@
+-    public LevenbergMarquardtOptimizer() {
+-
+-        // set up the superclass with a default  max cost evaluations setting
+-        setMaxIterations(1000);
+-
+-        // default values for the tuning parameters
+-        setInitialStepBoundFactor(100.0);
+-        setCostRelativeTolerance(1.0e-10);
+-        setParRelativeTolerance(1.0e-10);
+-        setOrthoTolerance(1.0e-10);
+-
+-    }
++    public LevenbergMarquardtOptimizer() {
++
++        // set up the superclass with a default  max cost evaluations setting
++        setMaxIterations(1000);
++
++        // default values for the tuning parameters
++        setInitialStepBoundFactor(100.0);
++        setCostRelativeTolerance(1.0e-10);
++        setParRelativeTolerance(1.0e-10);
++        setOrthoTolerance(1.0e-10);
++
++    }
++
++    /** {@inheritDoc} */
++    @Override
++    public void setConvergenceChecker(VectorialConvergenceChecker convergenceChecker) {
++        this.customChecker = convergenceChecker;
++    }
+@@ -1,9 +1,12 @@
+-        // local point
+-        double   delta   = 0;
+-        double   xNorm   = 0;
+-        double[] diag    = new double[cols];
+-        double[] oldX    = new double[cols];
+-        double[] oldRes  = new double[rows];
+-        double[] work1   = new double[cols];
+-        double[] work2   = new double[cols];
+-        double[] work3   = new double[cols];
++        // local point
++        double   delta   = 0;
++        double   xNorm   = 0;
++        double[] diag    = new double[cols];
++        double[] oldX    = new double[cols];
++        double[] oldRes  = new double[rows];
++        double[] work1   = new double[cols];
++        double[] work2   = new double[cols];
++        double[] work3   = new double[cols];
++
++        VectorialPointValuePair previous = null;
++        VectorialPointValuePair current  = null;
+@@ -1,2 +1,3 @@
+-        // evaluate the function at the starting point and calculate its norm
+-        updateResidualsAndCost();
++        // evaluate the function at the starting point and calculate its norm
++        updateResidualsAndCost();
++        current = new VectorialPointValuePair(point, objective);
+@@ -1,4 +1,6 @@
+-        // outer loop
+-        lmPar = 0;
+-        boolean firstIteration = true;
+-        while (true) {
++        // outer loop
++        lmPar = 0;
++        boolean firstIteration = true;
++        while (true) {
++
++            previous = current;
+@@ -1,11 +1,13 @@
+-                } else {
+-                    // failed iteration, reset the previous values
+-                    cost = previousCost;
+-                    for (int j = 0; j < solvedCols; ++j) {
+-                        int pj = permutation[j];
+-                        point[pj] = oldX[pj];
+-                    }
+-                    tmpVec    = residuals;
+-                    residuals = oldRes;
+-                    oldRes    = tmpVec;
+-                }
++                } else {
++                    // failed iteration, reset the previous values
++                    cost = previousCost;
++                    for (int j = 0; j < solvedCols; ++j) {
++                        int pj = permutation[j];
++                        point[pj] = oldX[pj];
++                    }
++                    tmpVec    = residuals;
++                    residuals = oldRes;
++                    oldRes    = tmpVec;
++                }
++
++                current = new VectorialPointValuePair(point, objective);
+@@ -1,6 +1,14 @@
+-                    if (((Math.abs(actRed) <= costRelativeTolerance) &&
+-                         (preRed <= costRelativeTolerance) &&
+-                         (ratio <= 2.0)) ||
+-                        (delta <= parRelativeTolerance * xNorm)) {
+-                        return new VectorialPointValuePair(point, objective);
+-                    }
++                // tests for convergence.
++                if (customChecker != null) {
++                    if (customChecker.converged(getIterations(), previous, current)) {
++                        return new VectorialPointValuePair(point, objective);
++                    }
++                } else {
++                    // we use the Levenberg-Marquardt specific convergence parameters
++                    if (((Math.abs(actRed) <= costRelativeTolerance) &&
++                         (preRed <= costRelativeTolerance) &&
++                         (ratio <= 2.0)) ||
++                        (delta <= parRelativeTolerance * xNorm)) {
++                        return new VectorialPointValuePair(point, objective);
++                    }
++                }
+@@ -1,1 +1,2 @@
+-import org.apache.commons.math.optimization.VectorialPointValuePair;
++import org.apache.commons.math.optimization.VectorialPointValuePair;
++import org.apache.commons.math.optimization.VectorialConvergenceChecker;
+@@ -1,1 +1,4 @@
+-public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
++public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
++
++    /** Custom convergence checker. */
++    private VectorialConvergenceChecker customChecker;
+@@ -1,12 +1,18 @@
+-    public LevenbergMarquardtOptimizer() {
+-
+-        // set up the superclass with a default  max cost evaluations setting
+-        setMaxIterations(1000);
+-
+-        // default values for the tuning parameters
+-        setInitialStepBoundFactor(100.0);
+-        setCostRelativeTolerance(1.0e-10);
+-        setParRelativeTolerance(1.0e-10);
+-        setOrthoTolerance(1.0e-10);
+-
+-    }
++    public LevenbergMarquardtOptimizer() {
++
++        // set up the superclass with a default  max cost evaluations setting
++        setMaxIterations(1000);
++
++        // default values for the tuning parameters
++        setInitialStepBoundFactor(100.0);
++        setCostRelativeTolerance(1.0e-10);
++        setParRelativeTolerance(1.0e-10);
++        setOrthoTolerance(1.0e-10);
++
++    }
++
++    /** {@inheritDoc} */
++    @Override
++    public void setConvergenceChecker(VectorialConvergenceChecker convergenceChecker) {
++        this.customChecker = convergenceChecker;
++    }
+@@ -1,9 +1,12 @@
+-        // local point
+-        double   delta   = 0;
+-        double   xNorm   = 0;
+-        double[] diag    = new double[cols];
+-        double[] oldX    = new double[cols];
+-        double[] oldRes  = new double[rows];
+-        double[] work1   = new double[cols];
+-        double[] work2   = new double[cols];
+-        double[] work3   = new double[cols];
++        // local point
++        double   delta   = 0;
++        double   xNorm   = 0;
++        double[] diag    = new double[cols];
++        double[] oldX    = new double[cols];
++        double[] oldRes  = new double[rows];
++        double[] work1   = new double[cols];
++        double[] work2   = new double[cols];
++        double[] work3   = new double[cols];
++
++        VectorialPointValuePair previous = null;
++        VectorialPointValuePair current  = null;
+@@ -1,2 +1,3 @@
+-        // evaluate the function at the starting point and calculate its norm
+-        updateResidualsAndCost();
++        // evaluate the function at the starting point and calculate its norm
++        updateResidualsAndCost();
++        current = new VectorialPointValuePair(point, objective);
+@@ -1,4 +1,6 @@
+-        // outer loop
+-        lmPar = 0;
+-        boolean firstIteration = true;
+-        while (true) {
++        // outer loop
++        lmPar = 0;
++        boolean firstIteration = true;
++        while (true) {
++
++            previous = current;
+@@ -1,11 +1,13 @@
+-                } else {
+-                    // failed iteration, reset the previous values
+-                    cost = previousCost;
+-                    for (int j = 0; j < solvedCols; ++j) {
+-                        int pj = permutation[j];
+-                        point[pj] = oldX[pj];
+-                    }
+-                    tmpVec    = residuals;
+-                    residuals = oldRes;
+-                    oldRes    = tmpVec;
+-                }
++                } else {
++                    // failed iteration, reset the previous values
++                    cost = previousCost;
++                    for (int j = 0; j < solvedCols; ++j) {
++                        int pj = permutation[j];
++                        point[pj] = oldX[pj];
++                    }
++                    tmpVec    = residuals;
++                    residuals = oldRes;
++                    oldRes    = tmpVec;
++                }
++
++                current = new VectorialPointValuePair(point, objective);
+@@ -1,6 +1,14 @@
+-                    if (((Math.abs(actRed) <= costRelativeTolerance) &&
+-                         (preRed <= costRelativeTolerance) &&
+-                         (ratio <= 2.0)) ||
+-                        (delta <= parRelativeTolerance * xNorm)) {
+-                        return new VectorialPointValuePair(point, objective);
+-                    }
++                // tests for convergence.
++                if (customChecker != null) {
++                    if (customChecker.converged(getIterations(), previous, current)) {
++                        return new VectorialPointValuePair(point, objective);
++                    }
++                } else {
++                    // we use the Levenberg-Marquardt specific convergence parameters
++                    if (((Math.abs(actRed) <= costRelativeTolerance) &&
++                         (preRed <= costRelativeTolerance) &&
++                         (ratio <= 2.0)) ||
++                        (delta <= parRelativeTolerance * xNorm)) {
++                        return new VectorialPointValuePair(point, objective);
++                    }
++                }
+@@ -1,1 +1,2 @@
+-import org.apache.commons.math.optimization.VectorialPointValuePair;
++import org.apache.commons.math.optimization.VectorialPointValuePair;
++import org.apache.commons.math.optimization.VectorialConvergenceChecker;
+@@ -1,1 +1,4 @@
+-public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
++public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
++
++    /** Custom convergence checker. */
++    private VectorialConvergenceChecker customChecker;
+@@ -1,12 +1,18 @@
+-    public LevenbergMarquardtOptimizer() {
+-
+-        // set up the superclass with a default  max cost evaluations setting
+-        setMaxIterations(1000);
+-
+-        // default values for the tuning parameters
+-        setInitialStepBoundFactor(100.0);
+-        setCostRelativeTolerance(1.0e-10);
+-        setParRelativeTolerance(1.0e-10);
+-        setOrthoTolerance(1.0e-10);
+-
+-    }
++    public LevenbergMarquardtOptimizer() {
++
++        // set up the superclass with a default  max cost evaluations setting
++        setMaxIterations(1000);
++
++        // default values for the tuning parameters
++        setInitialStepBoundFactor(100.0);
++        setCostRelativeTolerance(1.0e-10);
++        setParRelativeTolerance(1.0e-10);
++        setOrthoTolerance(1.0e-10);
++
++    }
++
++    /** {@inheritDoc} */
++    @Override
++    public void setConvergenceChecker(VectorialConvergenceChecker convergenceChecker) {
++        this.customChecker = convergenceChecker;
++    }
+@@ -1,9 +1,12 @@
+-        // local point
+-        double   delta   = 0;
+-        double   xNorm   = 0;
+-        double[] diag    = new double[cols];
+-        double[] oldX    = new double[cols];
+-        double[] oldRes  = new double[rows];
+-        double[] work1   = new double[cols];
+-        double[] work2   = new double[cols];
+-        double[] work3   = new double[cols];
++        // local point
++        double   delta   = 0;
++        double   xNorm   = 0;
++        double[] diag    = new double[cols];
++        double[] oldX    = new double[cols];
++        double[] oldRes  = new double[rows];
++        double[] work1   = new double[cols];
++        double[] work2   = new double[cols];
++        double[] work3   = new double[cols];
++
++        VectorialPointValuePair previous = null;
++        VectorialPointValuePair current  = null;
+@@ -1,2 +1,3 @@
+-        // evaluate the function at the starting point and calculate its norm
+-        updateResidualsAndCost();
++        // evaluate the function at the starting point and calculate its norm
++        updateResidualsAndCost();
++        current = new VectorialPointValuePair(point, objective);

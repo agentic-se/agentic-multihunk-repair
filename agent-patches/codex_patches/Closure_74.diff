@@ -1,0 +1,77 @@
+diff --git a/src/com/google/javascript/jscomp/PeepholeFoldConstants.java b/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
+index a61bb6c8..55a27ea5 100644
+--- a/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
++++ b/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
+@@ -886,6 +886,72 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
+    */
+   @SuppressWarnings("fallthrough")
+   private Node tryFoldComparison(Node n, Node left, Node right) {
++    // If both sides are boolean-result expressions (e.g., !0, !1, true/false),
++    // and their boolean values are known, fold the comparison directly.
++    if (NodeUtil.isBooleanResult(left) && NodeUtil.isBooleanResult(right)) {
++      TernaryValue leftBool = NodeUtil.getPureBooleanValue(left);
++      TernaryValue rightBool = NodeUtil.getPureBooleanValue(right);
++      if (leftBool != TernaryValue.UNKNOWN && rightBool != TernaryValue.UNKNOWN) {
++        boolean lb = leftBool.toBoolean(true);
++        boolean rb = rightBool.toBoolean(true);
++        boolean folded;
++        switch (n.getType()) {
++          case Token.SHEQ:
++          case Token.EQ:
++            folded = (lb == rb);
++            break;
++          case Token.SHNE:
++          case Token.NE:
++            folded = (lb != rb);
++            break;
++          case Token.LE:
++            folded = ((lb ? 1 : 0) <= (rb ? 1 : 0));
++            break;
++          case Token.LT:
++            folded = ((lb ? 1 : 0) < (rb ? 1 : 0));
++            break;
++          case Token.GE:
++            folded = ((lb ? 1 : 0) >= (rb ? 1 : 0));
++            break;
++          case Token.GT:
++            folded = ((lb ? 1 : 0) > (rb ? 1 : 0));
++            break;
++          default:
++            // Not a comparison operator we fold here.
++            folded = false;
++            // fall through to general handling below
++        }
++        switch (n.getType()) {
++          case Token.SHEQ:
++          case Token.EQ:
++          case Token.SHNE:
++          case Token.NE:
++          case Token.LE:
++          case Token.LT:
++          case Token.GE:
++          case Token.GT:
++            Node newNode = new Node(folded ? Token.TRUE : Token.FALSE);
++            n.getParent().replaceChild(n, newNode);
++            reportCodeChange();
++            return newNode;
++        }
++      }
++    }
++
++    // Treat known-boolean-result expressions as literal booleans for folding.
++    if (NodeUtil.isBooleanResult(left)) {
++      TernaryValue b = NodeUtil.getPureBooleanValue(left);
++      if (b != TernaryValue.UNKNOWN) {
++        left = new Node(b.toBoolean(true) ? Token.TRUE : Token.FALSE);
++      }
++    }
++    if (NodeUtil.isBooleanResult(right)) {
++      TernaryValue b = NodeUtil.getPureBooleanValue(right);
++      if (b != TernaryValue.UNKNOWN) {
++        right = new Node(b.toBoolean(true) ? Token.TRUE : Token.FALSE);
++      }
++    }
++
+     if (!NodeUtil.isLiteralValue(left, false) ||
+         !NodeUtil.isLiteralValue(right, false)) {
+       // We only handle non-literal operands for LT and GT.

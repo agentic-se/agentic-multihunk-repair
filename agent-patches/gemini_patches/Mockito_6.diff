@@ -1,0 +1,330 @@
+--- a/src/org/mockito/Matchers.java
++++ b/src/org/mockito/Matchers.java
+@@ -1,3 +1,3 @@
+-    public static String anyString() {
+-        return reportMatcher(Any.ANY).returnString();
+-    }
++    public static String anyString() {
++        return reportMatcher(new AnyString()).returnString();
++    }
+@@ -1,22 +1,22 @@
+-    public static List anyList() {
+-        return reportMatcher(Any.ANY).returnList();
+-    }    
+-    
+-    /**
+-     * Generic friendly alias to {@link Matchers#anyList()}.
+-     * It's an alternative to &#064;SuppressWarnings("unchecked") to keep code clean of compiler warnings.
+-     * <p>
+-     * Any <code>List</code> or <code>null</code>.
+-     * <p>
+-     * This method <b>*doesn't do any type checks*</b>, it is only there to avoid casting
+-     * in your code. This might however change (type checks could be added) in a
+-     * future major release.
+-     * <p>
+-     * See examples in javadoc for {@link Matchers} class
+-     * 
+-     * @param clazz Type owned by the list to avoid casting
+-     * @return empty List.
+-     */
+-    public static <T> List<T> anyListOf(Class<T> clazz) {
+-        return (List) reportMatcher(Any.ANY).returnList();
+-    }
++    public static List anyList() {
++        return reportMatcher(new AnyList()).returnList();
++    }    
++    
++    /**
++     * Generic friendly alias to {@link Matchers#anyList()}.
++     * It's an alternative to &#064;SuppressWarnings("unchecked") to keep code clean of compiler warnings.
++     * <p>
++     * Any <code>List</code> or <code>null</code>.
++     * <p>
++     * This method <b>*doesn't do any type checks*</b>, it is only there to avoid casting
++     * in your code. This might however change (type checks could be added) in a
++     * future major release.
++     * <p>
++     * See examples in javadoc for {@link Matchers} class
++     * 
++     * @param clazz Type owned by the list to avoid casting
++     * @return empty List.
++     */
++    public static <T> List<T> anyListOf(Class<T> clazz) {
++        return (List) reportMatcher(new AnyList()).returnList();
++    }
+@@ -1,22 +1,22 @@
+-    public static Set anySet() {
+-        return reportMatcher(Any.ANY).returnSet();
+-    }
+-    
+-    /**
+-     * Generic friendly alias to {@link Matchers#anySet()}.
+-     * It's an alternative to &#064;SuppressWarnings("unchecked") to keep code clean of compiler warnings.
+-     * <p>
+-     * Any <code>Set</code> or <code>null</code>
+-     * <p>
+-     * This method <b>*dones't do any type checks*</b>, it is only there to avoid casting
+-     * in your code. This might however change (type checks could be added) in a
+-     * future major release.
+-     * <p>
+-     * See examples in javadoc for {@link Matchers} class
+-     *
+-     * @param clazz Type owned by the Set to avoid casting
+-     * @return empty Set
+-     */
+-    public static <T> Set<T> anySetOf(Class<T> clazz) {
+-        return (Set) reportMatcher(Any.ANY).returnSet();
+-    }
++    public static Set anySet() {
++        return reportMatcher(new AnySet()).returnSet();
++    }
++    
++    /**
++     * Generic friendly alias to {@link Matchers#anySet()}.
++     * It's an alternative to &#064;SuppressWarnings("unchecked") to keep code clean of compiler warnings.
++     * <p>
++     * Any <code>Set</code> or <code>null</code>
++     * <p>
++     * This method <b>*dones't do any type checks*</b>, it is only there to avoid casting
++     * in your code. This might however change (type checks could be added) in a
++     * future major release.
++     * <p>
++     * See examples in javadoc for {@link Matchers} class
++     *
++     * @param clazz Type owned by the Set to avoid casting
++     * @return empty Set
++     */
++    public static <T> Set<T> anySetOf(Class<T> clazz) {
++        return (Set) reportMatcher(new AnySet()).returnSet();
++    }
+@@ -1,23 +1,23 @@
+-    public static Map anyMap() {
+-        return reportMatcher(Any.ANY).returnMap();
+-    }
+-
+-    /**
+-     * Generic friendly alias to {@link Matchers#anyMap()}.
+-     * It's an alternative to &#064;SuppressWarnings("unchecked") to keep code clean of compiler warnings.
+-     * <p>
+-     * Any <code>Map</code> or <code>null</code>
+-     * <p>
+-     * This method <b>*doesn't do any type checks*</b>, it is only there to avoid casting
+-     * in your code. This might however change (type checks could be added) in a
+-     * future major release.
+-     * <p>
+-     * See examples in javadoc for {@link Matchers} class
+-     *
+-     * @param keyClazz Type of the map key to avoid casting
+-     * @param valueClazz Type of the value to avoid casting
+-     * @return empty Map.
+-     */
+-    public static <K, V>  Map<K, V> anyMapOf(Class<K> keyClazz, Class<V> valueClazz) {
+-        return (Map) reportMatcher(Any.ANY).returnMap();
+-    }
++    public static Map anyMap() {
++        return reportMatcher(new AnyMap()).returnMap();
++    }
++
++    /**
++     * Generic friendly alias to {@link Matchers#anyMap()}.
++     * It's an alternative to &#064;SuppressWarnings("unchecked") to keep code clean of compiler warnings.
++     * <p>
++     * Any <code>Map</code> or <code>null</code>
++     * <p>
++     * This method <b>*doesn't do any type checks*</b>, it is only there to avoid casting
++     * in your code. This might however change (type checks could be added) in a
++     * future major release.
++     * <p>
++     * See examples in javadoc for {@link Matchers} class
++     *
++     * @param keyClazz Type of the map key to avoid casting
++     * @param valueClazz Type of the value to avoid casting
++     * @return empty Map.
++     */
++    public static <K, V>  Map<K, V> anyMapOf(Class<K> keyClazz, Class<V> valueClazz) {
++        return (Map) reportMatcher(new AnyMap()).returnMap();
++    }
+@@ -1,22 +1,22 @@
+-    public static Collection anyCollection() {
+-        return reportMatcher(Any.ANY).returnList();
+-    }    
+-    
+-    /**
+-     * Generic friendly alias to {@link Matchers#anyCollection()}.
+-     * It's an alternative to &#064;SuppressWarnings("unchecked") to keep code clean of compiler warnings.     
+-     * <p>
+-     * Any <code>Collection</code> or <code>null</code>.
+-     * <p>
+-     * This method <b>*doesn't do any type checks*</b>, it is only there to avoid casting
+-     * in your code. This might however change (type checks could be added) in a
+-     * future major release.
+-     * <p>
+-     * See examples in javadoc for {@link Matchers} class
+-     * 
+-     * @param clazz Type owned by the collection to avoid casting
+-     * @return empty Collection.
+-     */
+-    public static <T> Collection<T> anyCollectionOf(Class<T> clazz) {
+-        return (Collection) reportMatcher(Any.ANY).returnList();
+-    }
++    public static Collection anyCollection() {
++        return reportMatcher(new AnyCollection()).returnList();
++    }    
++    
++    /**
++     * Generic friendly alias to {@link Matchers#anyCollection()}.
++     * It's an alternative to &#064;SuppressWarnings("unchecked") to keep code clean of compiler warnings.     
++     * <p>
++     * Any <code>Collection</code> or <code>null</code>.
++     * <p>
++     * This method <b>*doesn't do any type checks*</b>, it is only there to avoid casting
++     * in your code. This might however change (type checks could be added) in a
++     * future major release.
++     * <p>
++     * See examples in javadoc for {@link Matchers} class
++     * 
++     * @param clazz Type owned by the collection to avoid casting
++     * @return empty Collection.
++     */
++    public static <T> Collection<T> anyCollectionOf(Class<T> clazz) {
++        return (Collection) reportMatcher(new AnyCollection()).returnList();
++    }
+@@ -1,3 +1,3 @@
+-    public static boolean anyBoolean() {
+-        return reportMatcher(Any.ANY).returnFalse();
+-    }
++    public static boolean anyBoolean() {
++        return reportMatcher(new AnyPrimitiveWrapper(Boolean.class, "anyBoolean")).returnFalse();
++    }
+@@ -1,3 +1,3 @@
+-    public static byte anyByte() {
+-        return reportMatcher(Any.ANY).returnZero();
+-    }
++    public static byte anyByte() {
++        return reportMatcher(new AnyPrimitiveWrapper(Byte.class, "anyByte")).returnZero();
++    }
+@@ -1,3 +1,3 @@
+-    public static char anyChar() {
+-        return reportMatcher(Any.ANY).returnChar();
+-    }
++    public static char anyChar() {
++        return reportMatcher(new AnyPrimitiveWrapper(Character.class, "anyChar")).returnChar();
++    }
+@@ -1,3 +1,3 @@
+-    public static int anyInt() {
+-        return reportMatcher(Any.ANY).returnZero();
+-    }
++    public static int anyInt() {
++        return reportMatcher(new AnyPrimitiveWrapper(Integer.class, "anyInt")).returnZero();
++    }
+@@ -1,3 +1,3 @@
+-    public static long anyLong() {
+-        return reportMatcher(Any.ANY).returnZero();
+-    }
++    public static long anyLong() {
++        return reportMatcher(new AnyPrimitiveWrapper(Long.class, "anyLong")).returnZero();
++    }
+@@ -1,3 +1,3 @@
+-    public static float anyFloat() {
+-        return reportMatcher(Any.ANY).returnZero();
+-    }
++    public static float anyFloat() {
++        return reportMatcher(new AnyPrimitiveWrapper(Float.class, "anyFloat")).returnZero();
++    }
+@@ -1,3 +1,3 @@
+-    public static double anyDouble() {
+-        return reportMatcher(Any.ANY).returnZero();
+-    }
++    public static double anyDouble() {
++        return reportMatcher(new AnyPrimitiveWrapper(Double.class, "anyDouble")).returnZero();
++    }
+@@ -1,3 +1,3 @@
+-    public static short anyShort() {
+-        return reportMatcher(Any.ANY).returnZero();
+-    }
++    public static short anyShort() {
++        return reportMatcher(new AnyPrimitiveWrapper(Short.class, "anyShort")).returnZero();
++    }
+
+--- a/src/org/mockito/internal/matchers/Any.java
++++ b/src/org/mockito/internal/matchers/Any.java
+@@ -1,3 +1,3 @@
+-    public boolean matches(Object actual) {
+-        return true;
+-    }
++    public boolean matches(Object actual) {
++        return actual != null;
++    }
+@@ -1,3 +1,3 @@
+-    public boolean matches(Object actual) {
+-        return actual != null;
+-    }
++    public boolean matches(Object actual) {
++        return true;
++    }
+
+--- a/src/org/mockito/internal/matchers/AnyCollection.java
++++ b/src/org/mockito/internal/matchers/AnyCollection.java
+@@ -1,3 +1,3 @@
+-    public boolean matches(Object actual) {
+-        return actual == null || actual instanceof Collection;
+-    }
++    public boolean matches(Object actual) {
++        return actual instanceof Collection;
++    }
+
+--- a/src/org/mockito/internal/matchers/AnyList.java
++++ b/src/org/mockito/internal/matchers/AnyList.java
+@@ -1,3 +1,3 @@
+-    public boolean matches(Object actual) {
+-        return actual == null || actual instanceof List;
+-    }
++    public boolean matches(Object actual) {
++        return actual instanceof List;
++    }
+
+--- a/src/org/mockito/internal/matchers/AnyMap.java
++++ b/src/org/mockito/internal/matchers/AnyMap.java
+@@ -1,3 +1,3 @@
+-    public boolean matches(Object actual) {
+-        return actual == null || actual instanceof Map;
+-    }
++    public boolean matches(Object actual) {
++        return actual instanceof Map;
++    }
+
+--- a/src/org/mockito/internal/matchers/AnyPrimitiveWrapper.java
++++ b/src/org/mockito/internal/matchers/AnyPrimitiveWrapper.java
+@@ -1,3 +1,3 @@
+-    public boolean matches(Object actual) {
+-        return actual == null || primitiveWrapperType.isInstance(actual);
+-    }
++    public boolean matches(Object actual) {
++        return primitiveWrapperType.isInstance(actual);
++    }
+
+--- a/src/org/mockito/internal/matchers/AnySet.java
++++ b/src/org/mockito/internal/matchers/AnySet.java
+@@ -1,3 +1,3 @@
+-    public boolean matches(Object actual) {
+-        return actual == null || actual instanceof Set;
+-    }
++    public boolean matches(Object actual) {
++        return actual instanceof Set;
++    }
+
+--- a/src/org/mockito/internal/matchers/AnyString.java
++++ b/src/org/mockito/internal/matchers/AnyString.java
+@@ -1,3 +1,3 @@
+-    public boolean matches(Object actual) {
+-        return actual == null || actual instanceof String;
+-    }
++    public boolean matches(Object actual) {
++        return actual instanceof String;
++    }
+
+--- a/test/org/mockitousage/matchers/AnyXMatchersAcceptNullsTest.java
++++ b/test/org/mockitousage/matchers/AnyXMatchersAcceptNullsTest.java
+@@ -1,1 +1,1 @@
+-        assertEquals(null, mock.oneArg((Object) null));
++        assertEquals("0", mock.oneArg((Object) null));

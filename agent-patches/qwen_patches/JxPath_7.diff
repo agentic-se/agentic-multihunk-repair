@@ -1,0 +1,194 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationGreaterThan.java b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationGreaterThan.java
+index 3a053d4..917a85b 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationGreaterThan.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationGreaterThan.java
+@@ -1,40 +1 @@
+-/*
+- * Licensed to the Apache Software Foundation (ASF) under one or more
+- * contributor license agreements.  See the NOTICE file distributed with
+- * this work for additional information regarding copyright ownership.
+- * The ASF licenses this file to You under the Apache License, Version 2.0
+- * (the "License"); you may not use this file except in compliance with
+- * the License.  You may obtain a copy of the License at
+- *
+- *     http://www.apache.org/licenses/LICENSE-2.0
+- *
+- * Unless required by applicable law or agreed to in writing, software
+- * distributed under the License is distributed on an "AS IS" BASIS,
+- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- * See the License for the specific language governing permissions and
+- * limitations under the License.
+- */
+-package org.apache.commons.jxpath.ri.compiler;
+-
+-/**
+- * Implementation of Expression for the operation "&gt;".
+- *
+- * @author Dmitri Plotnikov
+- * @version $Revision$ $Date$
+- */
+-public class CoreOperationGreaterThan extends CoreOperationRelationalExpression {
+-
+-    public CoreOperationGreaterThan(Expression arg1, Expression arg2) {
+-        super(new Expression[] { arg1, arg2 });
+-    }
+-
+-    public Object computeValue(org.apache.commons.jxpath.ri.EvalContext context) {
+-        double l = org.apache.commons.jxpath.ri.InfoSetUtil.doubleValue(args[0].computeValue(context));
+-        double r = org.apache.commons.jxpath.ri.InfoSetUtil.doubleValue(args[1].computeValue(context));
+-        return l > r ? Boolean.TRUE : Boolean.FALSE;
+-    }
+-
+-    public String getSymbol() {
+-        return ">";
+-    }
+-}
++/*\n * Licensed to the Apache Software Foundation (ASF) under one or more\n * contributor license agreements.  See the NOTICE file distributed with\n * this work for additional information regarding copyright ownership.\n * The ASF licenses this file to You under the Apache License, Version 2.0\n * (the \"License\"); you may not use this file except in compliance with\n * the License.  You may obtain a copy of the License at\n *\n *     http://www.apache.org/licenses/LICENSE-2.0\n *\n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\npackage org.apache.commons.jxpath.ri.compiler;\n\nimport java.util.List;\n\nimport org.apache.commons.jxpath.NodeSet;\nimport org.apache.commons.jxpath.Pointer;\nimport org.apache.commons.jxpath.ri.InfoSetUtil;\n\n/**\n * Implementation of Expression for the operation \"&gt;\".\n *\n * @author Dmitri Plotnikov\n * @version $Revision$ $Date$\n */\npublic class CoreOperationGreaterThan extends CoreOperationRelationalExpression {\n\n    public CoreOperationGreaterThan(Expression arg1, Expression arg2) {\n        super(new Expression[] { arg1, arg2 });\n    }\n\n    public Object computeValue(org.apache.commons.jxpath.ri.EvalContext context) {\n        Object left = args[0].computeValue(context);\n        Object right = args[1].computeValue(context);\n        \n        // Handle node-set comparison according to XPath specification\n        if (left instanceof NodeSet) {\n            NodeSet nodeSet = (NodeSet) left;\n            List pointers = nodeSet.getPointers();\n            double rightValue = InfoSetUtil.doubleValue(right);\n            \n            // For node-set to number comparison in XPath, \n            // the comparison is true if ANY element satisfies it\n            for (int i = 0; i < pointers.size(); i++) {\n                Pointer pointer = (Pointer) pointers.get(i);\n                Object value = pointer.getValue();\n                double leftValue = InfoSetUtil.doubleValue(value);\n                if (leftValue > rightValue) {\n                    return Boolean.TRUE;\n                }\n            }\n            return Boolean.FALSE;\n        } else if (right instanceof NodeSet) {\n            NodeSet nodeSet = (NodeSet) right;\n            List pointers = nodeSet.getPointers();\n            double leftValue = InfoSetUtil.doubleValue(left);\n            \n            // For node-set to number comparison in XPath, \n            // the comparison is true if ANY element satisfies it\n            for (int i = 0; i < pointers.size(); i++) {\n                Pointer pointer = (Pointer) pointers.get(i);\n                Object value = pointer.getValue();\n                double rightValue = InfoSetUtil.doubleValue(value);\n                if (leftValue > rightValue) {\n                    return Boolean.TRUE;\n                }\n            }\n            return Boolean.FALSE;\n        } else {\n            // Standard comparison\n            double l = InfoSetUtil.doubleValue(left);\n            double r = InfoSetUtil.doubleValue(right);\n            return l > r ? Boolean.TRUE : Boolean.FALSE;\n        }\n    }\n\n    public String getSymbol() {\n        return \">\";\n    }\n}
+\ No newline at end of file
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationGreaterThanOrEqual.java b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationGreaterThanOrEqual.java
+index b9f156c..565da0c 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationGreaterThanOrEqual.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationGreaterThanOrEqual.java
+@@ -1,41 +1 @@
+-/*
+- * Licensed to the Apache Software Foundation (ASF) under one or more
+- * contributor license agreements.  See the NOTICE file distributed with
+- * this work for additional information regarding copyright ownership.
+- * The ASF licenses this file to You under the Apache License, Version 2.0
+- * (the "License"); you may not use this file except in compliance with
+- * the License.  You may obtain a copy of the License at
+- *
+- *     http://www.apache.org/licenses/LICENSE-2.0
+- *
+- * Unless required by applicable law or agreed to in writing, software
+- * distributed under the License is distributed on an "AS IS" BASIS,
+- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- * See the License for the specific language governing permissions and
+- * limitations under the License.
+- */
+-package org.apache.commons.jxpath.ri.compiler;
+-
+-/**
+- * Implementation of Expression for the operation "&gt;=".
+- *
+- * @author Dmitri Plotnikov
+- * @version $Revision$ $Date$
+- */
+-public class CoreOperationGreaterThanOrEqual extends
+-        CoreOperationRelationalExpression {
+-
+-    public CoreOperationGreaterThanOrEqual(Expression arg1, Expression arg2) {
+-        super(new Expression[] { arg1, arg2 });
+-    }
+-
+-    public Object computeValue(org.apache.commons.jxpath.ri.EvalContext context) {
+-        double l = org.apache.commons.jxpath.ri.InfoSetUtil.doubleValue(args[0].computeValue(context));
+-        double r = org.apache.commons.jxpath.ri.InfoSetUtil.doubleValue(args[1].computeValue(context));
+-        return l >= r ? Boolean.TRUE : Boolean.FALSE;
+-    }
+-
+-    public String getSymbol() {
+-        return ">=";
+-    }
+-}
++/*\n * Licensed to the Apache Software Foundation (ASF) under one or more\n * contributor license agreements.  See the NOTICE file distributed with\n * this work for additional information regarding copyright ownership.\n * The ASF licenses this file to You under the Apache License, Version 2.0\n * (the \"License\"); you may not use this file except in compliance with\n * the License.  You may obtain a copy of the License at\n *\n *     http://www.apache.org/licenses/LICENSE-2.0\n *\n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\npackage org.apache.commons.jxpath.ri.compiler;\n\nimport java.util.List;\n\nimport org.apache.commons.jxpath.NodeSet;\nimport org.apache.commons.jxpath.Pointer;\nimport org.apache.commons.jxpath.ri.InfoSetUtil;\n\n/**\n * Implementation of Expression for the operation \"&gt;=\".\n *\n * @author Dmitri Plotnikov\n * @version $Revision$ $Date$\n */\npublic class CoreOperationGreaterThanOrEqual extends\n        CoreOperationRelationalExpression {\n\n    public CoreOperationGreaterThanOrEqual(Expression arg1, Expression arg2) {\n        super(new Expression[] { arg1, arg2 });\n    }\n\n    public Object computeValue(org.apache.commons.jxpath.ri.EvalContext context) {\n        Object left = args[0].computeValue(context);\n        Object right = args[1].computeValue(context);\n        \n        // Handle node-set comparison according to XPath specification\n        if (left instanceof NodeSet) {\n            NodeSet nodeSet = (NodeSet) left;\n            List pointers = nodeSet.getPointers();\n            double rightValue = InfoSetUtil.doubleValue(right);\n            \n            // For node-set to number comparison in XPath, \n            // the comparison is true if ANY element satisfies it\n            for (int i = 0; i < pointers.size(); i++) {\n                Pointer pointer = (Pointer) pointers.get(i);\n                Object value = pointer.getValue();\n                double leftValue = InfoSetUtil.doubleValue(value);\n                if (leftValue >= rightValue) {\n                    return Boolean.TRUE;\n                }\n            }\n            return Boolean.FALSE;\n        } else if (right instanceof NodeSet) {\n            NodeSet nodeSet = (NodeSet) right;\n            List pointers = nodeSet.getPointers();\n            double leftValue = InfoSetUtil.doubleValue(left);\n            \n            // For node-set to number comparison in XPath, \n            // the comparison is true if ANY element satisfies it\n            for (int i = 0; i < pointers.size(); i++) {\n                Pointer pointer = (Pointer) pointers.get(i);\n                Object value = pointer.getValue();\n                double rightValue = InfoSetUtil.doubleValue(value);\n                if (leftValue >= rightValue) {\n                    return Boolean.TRUE;\n                }\n            }\n            return Boolean.FALSE;\n        } else {\n            // Standard comparison\n            double l = InfoSetUtil.doubleValue(left);\n            double r = InfoSetUtil.doubleValue(right);\n            return l >= r ? Boolean.TRUE : Boolean.FALSE;\n        }\n    }\n\n    public String getSymbol() {\n        return \">=\";\n    }\n}
+\ No newline at end of file
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationLessThan.java b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationLessThan.java
+index 374f772..a004f77 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationLessThan.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationLessThan.java
+@@ -1,40 +1 @@
+-/*
+- * Licensed to the Apache Software Foundation (ASF) under one or more
+- * contributor license agreements.  See the NOTICE file distributed with
+- * this work for additional information regarding copyright ownership.
+- * The ASF licenses this file to You under the Apache License, Version 2.0
+- * (the "License"); you may not use this file except in compliance with
+- * the License.  You may obtain a copy of the License at
+- *
+- *     http://www.apache.org/licenses/LICENSE-2.0
+- *
+- * Unless required by applicable law or agreed to in writing, software
+- * distributed under the License is distributed on an "AS IS" BASIS,
+- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- * See the License for the specific language governing permissions and
+- * limitations under the License.
+- */
+-package org.apache.commons.jxpath.ri.compiler;
+-
+-/**
+- * Implementation of Expression for the operation "&lt;".
+- *
+- * @author Dmitri Plotnikov
+- * @version $Revision$ $Date$
+- */
+-public class CoreOperationLessThan extends CoreOperationRelationalExpression {
+-
+-    public CoreOperationLessThan(Expression arg1, Expression arg2) {
+-        super(new Expression[] { arg1, arg2 });
+-    }
+-
+-    public Object computeValue(org.apache.commons.jxpath.ri.EvalContext context) {
+-        double l = org.apache.commons.jxpath.ri.InfoSetUtil.doubleValue(args[0].computeValue(context));
+-        double r = org.apache.commons.jxpath.ri.InfoSetUtil.doubleValue(args[1].computeValue(context));
+-        return l < r ? Boolean.TRUE : Boolean.FALSE;
+-    }
+-
+-    public String getSymbol() {
+-        return "<";
+-    }
+-}
++/*\n * Licensed to the Apache Software Foundation (ASF) under one or more\n * contributor license agreements.  See the NOTICE file distributed with\n * this work for additional information regarding copyright ownership.\n * The ASF licenses this file to You under the Apache License, Version 2.0\n * (the \"License\"); you may not use this file except in compliance with\n * the License.  You may obtain a copy of the License at\n *\n *     http://www.apache.org/licenses/LICENSE-2.0\n *\n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\npackage org.apache.commons.jxpath.ri.compiler;\n\nimport java.util.List;\nimport java.util.ArrayList;\n\nimport org.apache.commons.jxpath.NodeSet;\nimport org.apache.commons.jxpath.Pointer;\nimport org.apache.commons.jxpath.ri.InfoSetUtil;\n\n/**\n * Implementation of Expression for the operation \"&lt;\".\n *\n * @author Dmitri Plotnikov\n * @version $Revision$ $Date$\n */\npublic class CoreOperationLessThan extends CoreOperationRelationalExpression {\n\n    public CoreOperationLessThan(Expression arg1, Expression arg2) {\n        super(new Expression[] { arg1, arg2 });\n    }\n\n    public Object computeValue(org.apache.commons.jxpath.ri.EvalContext context) {\n        Object left = args[0].computeValue(context);\n        Object right = args[1].computeValue(context);\n        \n        // Handle node-set comparison according to XPath specification\n        if (left instanceof NodeSet) {\n            NodeSet nodeSet = (NodeSet) left;\n            List pointers = nodeSet.getPointers();\n            double rightValue = InfoSetUtil.doubleValue(right);\n            \n            // For node-set to number comparison in XPath, \n            // the comparison is true if ANY element satisfies it\n            for (int i = 0; i < pointers.size(); i++) {\n                Pointer pointer = (Pointer) pointers.get(i);\n                Object value = pointer.getValue();\n                double leftValue = InfoSetUtil.doubleValue(value);\n                if (leftValue < rightValue) {\n                    return Boolean.TRUE;\n                }\n            }\n            return Boolean.FALSE;\n        } else if (right instanceof NodeSet) {\n            NodeSet nodeSet = (NodeSet) right;\n            List pointers = nodeSet.getPointers();\n            double leftValue = InfoSetUtil.doubleValue(left);\n            \n            // For node-set to number comparison in XPath, \n            // the comparison is true if ANY element satisfies it\n            for (int i = 0; i < pointers.size(); i++) {\n                Pointer pointer = (Pointer) pointers.get(i);\n                Object value = pointer.getValue();\n                double rightValue = InfoSetUtil.doubleValue(value);\n                if (leftValue < rightValue) {\n                    return Boolean.TRUE;\n                }\n            }\n            return Boolean.FALSE;\n        } else {\n            // Standard comparison\n            double l = InfoSetUtil.doubleValue(left);\n            double r = InfoSetUtil.doubleValue(right);\n            return l < r ? Boolean.TRUE : Boolean.FALSE;\n        }\n    }\n\n    public String getSymbol() {\n        return \"<\";\n    }\n}
+\ No newline at end of file
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationLessThanOrEqual.java b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationLessThanOrEqual.java
+index db562d8..9d7f3d8 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationLessThanOrEqual.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationLessThanOrEqual.java
+@@ -1,41 +1 @@
+-/*
+- * Licensed to the Apache Software Foundation (ASF) under one or more
+- * contributor license agreements.  See the NOTICE file distributed with
+- * this work for additional information regarding copyright ownership.
+- * The ASF licenses this file to You under the Apache License, Version 2.0
+- * (the "License"); you may not use this file except in compliance with
+- * the License.  You may obtain a copy of the License at
+- *
+- *     http://www.apache.org/licenses/LICENSE-2.0
+- *
+- * Unless required by applicable law or agreed to in writing, software
+- * distributed under the License is distributed on an "AS IS" BASIS,
+- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- * See the License for the specific language governing permissions and
+- * limitations under the License.
+- */
+-package org.apache.commons.jxpath.ri.compiler;
+-
+-/**
+- * Implementation of Expression for the operation "&lt;=".
+- *
+- * @author Dmitri Plotnikov
+- * @version $Revision$ $Date$
+- */
+-public class CoreOperationLessThanOrEqual extends
+-        CoreOperationRelationalExpression {
+-
+-    public CoreOperationLessThanOrEqual(Expression arg1, Expression arg2) {
+-        super(new Expression[] { arg1, arg2 });
+-    }
+-
+-    public Object computeValue(org.apache.commons.jxpath.ri.EvalContext context) {
+-        double l = org.apache.commons.jxpath.ri.InfoSetUtil.doubleValue(args[0].computeValue(context));
+-        double r = org.apache.commons.jxpath.ri.InfoSetUtil.doubleValue(args[1].computeValue(context));
+-        return l <= r ? Boolean.TRUE : Boolean.FALSE;
+-    }
+-
+-    public String getSymbol() {
+-        return "<=";
+-    }
+-}
++/*\n * Licensed to the Apache Software Foundation (ASF) under one or more\n * contributor license agreements.  See the NOTICE file distributed with\n * this work for additional information regarding copyright ownership.\n * The ASF licenses this file to You under the Apache License, Version 2.0\n * (the \"License\"); you may not use this file except in compliance with\n * the License.  You may obtain a copy of the License at\n *\n *     http://www.apache.org/licenses/LICENSE-2.0\n *\n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\npackage org.apache.commons.jxpath.ri.compiler;\n\nimport java.util.List;\n\nimport org.apache.commons.jxpath.NodeSet;\nimport org.apache.commons.jxpath.Pointer;\nimport org.apache.commons.jxpath.ri.InfoSetUtil;\n\n/**\n * Implementation of Expression for the operation \"&lt;=\".\n *\n * @author Dmitri Plotnikov\n * @version $Revision$ $Date$\n */\npublic class CoreOperationLessThanOrEqual extends\n        CoreOperationRelationalExpression {\n\n    public CoreOperationLessThanOrEqual(Expression arg1, Expression arg2) {\n        super(new Expression[] { arg1, arg2 });\n    }\n\n    public Object computeValue(org.apache.commons.jxpath.ri.EvalContext context) {\n        Object left = args[0].computeValue(context);\n        Object right = args[1].computeValue(context);\n        \n        // Handle node-set comparison according to XPath specification\n        if (left instanceof NodeSet) {\n            NodeSet nodeSet = (NodeSet) left;\n            List pointers = nodeSet.getPointers();\n            double rightValue = InfoSetUtil.doubleValue(right);\n            \n            // For node-set to number comparison in XPath, \n            // the comparison is true if ANY element satisfies it\n            for (int i = 0; i < pointers.size(); i++) {\n                Pointer pointer = (Pointer) pointers.get(i);\n                Object value = pointer.getValue();\n                double leftValue = InfoSetUtil.doubleValue(value);\n                if (leftValue <= rightValue) {\n                    return Boolean.TRUE;\n                }\n            }\n            return Boolean.FALSE;\n        } else if (right instanceof NodeSet) {\n            NodeSet nodeSet = (NodeSet) right;\n            List pointers = nodeSet.getPointers();\n            double leftValue = InfoSetUtil.doubleValue(left);\n            \n            // For node-set to number comparison in XPath, \n            // the comparison is true if ANY element satisfies it\n            for (int i = 0; i < pointers.size(); i++) {\n                Pointer pointer = (Pointer) pointers.get(i);\n                Object value = pointer.getValue();\n                double rightValue = InfoSetUtil.doubleValue(value);\n                if (leftValue <= rightValue) {\n                    return Boolean.TRUE;\n                }\n            }\n            return Boolean.FALSE;\n        } else {\n            // Standard comparison\n            double l = InfoSetUtil.doubleValue(left);\n            double r = InfoSetUtil.doubleValue(right);\n            return l <= r ? Boolean.TRUE : Boolean.FALSE;\n        }\n    }\n\n    public String getSymbol() {\n        return \"<=\";\n    }\n}
+\ No newline at end of file
+
+
+# Untracked source files (not included in patch):
++ src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationLessThan.java.bak

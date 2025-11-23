@@ -1,0 +1,50 @@
+diff --git a/src/main/java/org/apache/commons/compress/compressors/CompressorStreamFactory.java b/src/main/java/org/apache/commons/compress/compressors/CompressorStreamFactory.java
+index 935283aa..4b394214 100644
+--- a/src/main/java/org/apache/commons/compress/compressors/CompressorStreamFactory.java
++++ b/src/main/java/org/apache/commons/compress/compressors/CompressorStreamFactory.java
+@@ -248,6 +248,12 @@ public class CompressorStreamFactory {
+                 return new LZMACompressorInputStream(in);
+             }
+ 
++            // Check for Deflate compressed data with zlib header
++            // zlib magic bytes: 0x78 0x01, 0x78 0x5E, 0x78 0x9C, 0x78 0xDA
++            if (isZlibSignature(signature, signatureLength)) {
++                return new DeflateCompressorInputStream(in);
++            }
++
+         } catch (IOException e) {
+             throw new CompressorException("Failed to detect Compressor from InputStream.", e);
+         }
+@@ -371,4 +377,32 @@ public class CompressorStreamFactory {
+     boolean getDecompressConcatenated() {
+         return decompressConcatenated;
+     }
++    
++    /**
++     * Checks if the signature matches what is expected for a zlib / deflated file
++     * with a zlib header.
++     * 
++     * @param signature the bytes to check
++     * @param length the number of bytes to check
++     * @return true, if this stream is zlib / deflate compressed with a header,
++     *         false otherwise
++     */
++    private static boolean isZlibSignature(byte[] signature, int length) {
++        if (length < 2) {
++            return false;
++        }
++        
++        // zlib magic bytes: 0x78 0x01, 0x78 0x5E, 0x78 0x9C, 0x78 0xDA
++        // Note: We only check the first two bytes here which is the standard
++        // way to identify zlib streams
++        if (signature[0] == (byte) 0x78) {
++            byte secondByte = signature[1];
++            return (secondByte == (byte) 0x01 || 
++                    secondByte == (byte) 0x5E || 
++                    secondByte == (byte) 0x9C || 
++                    secondByte == (byte) 0xDA);
++        }
++        
++        return false;
++    }
+ }

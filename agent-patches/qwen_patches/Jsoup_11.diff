@@ -1,0 +1,27 @@
+diff --git a/src/main/java/org/jsoup/select/Selector.java b/src/main/java/org/jsoup/select/Selector.java
+index 13341ce..bb076b3 100644
+--- a/src/main/java/org/jsoup/select/Selector.java
++++ b/src/main/java/org/jsoup/select/Selector.java
+@@ -302,6 +302,22 @@ public class Selector {
+     }
+ 
+     // :not(selector)
++    private Elements not() {
++        tq.consume(":not");
++        String subQuery = tq.chompBalanced('(', ')');
++        Validate.notEmpty(subQuery, ":not(selector) subselect must not be empty");
++
++        Elements notElements = select(subQuery, root);
++        Elements result = new Elements();
++        
++        // Add elements that are NOT in the notElements set
++        for (Element element : elements) {
++            if (!notElements.contains(element)) {
++                result.add(element);
++            }
++        }
++        return result;
++    }
+ 
+ 
+     // direct child descendants

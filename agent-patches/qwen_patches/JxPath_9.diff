@@ -1,0 +1,27 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationCompare.java b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationCompare.java
+index 26875b8..7f71ea0 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationCompare.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationCompare.java
+@@ -138,12 +138,18 @@ public abstract class CoreOperationCompare extends CoreOperation {
+         }
+         if (l instanceof Boolean || r instanceof Boolean) {
+             return (InfoSetUtil.booleanValue(l) == InfoSetUtil.booleanValue(r));
+-            }
+-            //if either side is NaN, no comparison returns true:
++        }
++        //if either side is NaN, no comparison returns true:
+         if (l instanceof Number || r instanceof Number) {
+-            return (InfoSetUtil.doubleValue(l) == InfoSetUtil.doubleValue(r));
++            double ld = InfoSetUtil.doubleValue(l);
++            double rd = InfoSetUtil.doubleValue(r);
++            // NaN is not equal to anything, including itself
++            if (Double.isNaN(ld) || Double.isNaN(rd)) {
++                return false;
+             }
+-            if (l instanceof String || r instanceof String) {
++            return ld == rd;
++        }
++        if (l instanceof String || r instanceof String) {
+             return (
+                 InfoSetUtil.stringValue(l).equals(InfoSetUtil.stringValue(r)));
+         }

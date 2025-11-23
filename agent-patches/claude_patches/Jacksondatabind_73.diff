@@ -1,0 +1,29 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/introspect/POJOPropertiesCollector.java b/src/main/java/com/fasterxml/jackson/databind/introspect/POJOPropertiesCollector.java
+index 3d36b0ffc..4713b51e2 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/introspect/POJOPropertiesCollector.java
++++ b/src/main/java/com/fasterxml/jackson/databind/introspect/POJOPropertiesCollector.java
+@@ -4,6 +4,7 @@ import java.lang.reflect.Modifier;
+ import java.util.*;
+ 
+ import com.fasterxml.jackson.annotation.JsonAnySetter;
++import com.fasterxml.jackson.annotation.JsonProperty;
+ import com.fasterxml.jackson.databind.*;
+ import com.fasterxml.jackson.databind.cfg.HandlerInstantiator;
+ import com.fasterxml.jackson.databind.cfg.MapperConfig;
+@@ -728,7 +729,16 @@ public class POJOPropertiesCollector
+         while (it.hasNext()) {
+             POJOPropertyBuilder prop = it.next();
+             // 26-Jan-2017, tatu: [databind#935]: need to denote removal of
++            JsonProperty.Access acc = prop.findAccess();
+             prop.removeNonVisible(inferMutators);
++            // [databind#935]: Remove properties that are explicitly READ_ONLY
++            // and can no longer be deserialized after removing mutators
++            if (!_forSerialization && (acc == JsonProperty.Access.READ_ONLY)) {
++                if (!prop.couldDeserialize()) {
++                    it.remove();
++                    _collectIgnorals(prop.getName());
++                }
++            }
+         }
+     }
+ 

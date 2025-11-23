@@ -1,0 +1,52 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
+index 3300d03..1c9e6ec 100644
+--- a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
+@@ -555,12 +555,19 @@ public class DOMNodePointer extends NodePointer {
+      */
+     private int getRelativePositionByQName() {
+         int count = 1;
++        // Compare based on namespace URI and local name to handle
++        // elements with different prefixes that map to the same namespace.
++        String thisLocalName = DOMNodePointer.getLocalName(node);
++        String thisNS = DOMNodePointer.getNamespaceURI(node);
+         Node n = node.getPreviousSibling();
+         while (n != null) {
+             if (n.getNodeType() == Node.ELEMENT_NODE) {
+-                String nm = n.getNodeName();
+-                if (nm.equals(node.getNodeName())) {
+-                count++;
++                String otherLocalName = DOMNodePointer.getLocalName(n);
++                if (thisLocalName.equals(otherLocalName)) {
++                    String otherNS = DOMNodePointer.getNamespaceURI(n);
++                    if (equalStrings(thisNS, otherNS)) {
++                        count++;
++                    }
+                 }
+             }
+             n = n.getPreviousSibling();
+diff --git a/src/java/org/apache/commons/jxpath/ri/model/jdom/JDOMNodePointer.java b/src/java/org/apache/commons/jxpath/ri/model/jdom/JDOMNodePointer.java
+index 7df3ace..a1d02d5 100644
+--- a/src/java/org/apache/commons/jxpath/ri/model/jdom/JDOMNodePointer.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/jdom/JDOMNodePointer.java
+@@ -690,12 +690,16 @@ public class JDOMNodePointer extends NodePointer {
+ 
+             List children = ((Element) parent).getContent();
+             int count = 0;
+-            String name = ((Element) node).getQualifiedName();
++            String thisLocalName = ((Element) node).getName();
++            String thisNS = getNamespaceURI(node);
+             for (int i = 0; i < children.size(); i++) {
+                 Object child = children.get(i);
+-                if ((child instanceof Element)
+-                    && ((Element) child).getQualifiedName().equals(name)) {
+-                    count++;
++                if (child instanceof Element) {
++                    Element ce = (Element) child;
++                    if (thisLocalName.equals(ce.getName())
++                            && equalStrings(thisNS, getNamespaceURI(ce))) {
++                        count++;
++                    }
+                 }
+                 if (child == node) {
+                     break;

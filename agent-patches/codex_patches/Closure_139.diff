@@ -1,0 +1,178 @@
+diff --git a/src/com/google/javascript/jscomp/Normalize.java b/src/com/google/javascript/jscomp/Normalize.java
+index 26655f17..2e6ddce7 100644
+--- a/src/com/google/javascript/jscomp/Normalize.java
++++ b/src/com/google/javascript/jscomp/Normalize.java
+@@ -79,11 +79,18 @@ class Normalize implements CompilerPass {
+ 
+   @Override
+   public void process(Node externs, Node root) {
+-    NodeTraversal.traverse(compiler, root,
+-        new NormalizeStatements(compiler, assertOnChange));
++    // Run statement normalizations with a scope creator that does not report
++    // duplicate declaration errors; those are handled explicitly later.
++    SyntacticScopeCreator silentScopeCreator =
++        new SyntacticScopeCreator(compiler, new SilentRedeclarationHandler());
++    NodeTraversal normalizerTraversal = new NodeTraversal(
++        compiler, new NormalizeStatements(compiler, assertOnChange),
++        silentScopeCreator);
++    normalizerTraversal.traverse(root);
+     if (MAKE_LOCAL_NAMES_UNIQUE) {
+       MakeDeclaredNamesUnique renamer = new MakeDeclaredNamesUnique();
+-      NodeTraversal t = new NodeTraversal(compiler, renamer);
++      // Also silence duplicate declaration errors during renaming.
++      NodeTraversal t = new NodeTraversal(compiler, renamer, silentScopeCreator);
+       t.traverseRoots(externs, root);
+     }
+     // It is important that removeDuplicateDeclarations runs after
+@@ -105,6 +112,20 @@ class Normalize implements CompilerPass {
+         .process(externs, root);
+   }
+ 
++  /**
++   * A RedeclarationHandler that ignores duplicate declarations. Normalize
++   * resolves duplicates in a targeted pass; reporting here is premature.
++   */
++  private static final class SilentRedeclarationHandler
++      implements SyntacticScopeCreator.RedeclarationHandler {
++    @Override
++    public void onRedeclaration(
++        Scope s, String name, Node n, Node parent, Node gramps,
++        Node nodeWithLineNumber) {
++      // Intentionally no-op.
++    }
++  }
++
+   public static class PropogateConstantAnnotations
+       extends AbstractPostOrderCallback
+       implements CompilerPass {
+@@ -282,35 +303,36 @@ class Normalize implements CompilerPass {
+     }
+ 
+     /**
+-     * Rewrite named unhoisted functions declarations to a known
+-     * consistent behavior so we don't to different logic paths for the same
+-     * code. From:
+-     *    function f() {}
+-     * to:
+-     *    var f = function () {};
+-     */
+-
+-    /**
+-     * Rewrite the function declaration from:
+-     *   function x() {}
+-     *   FUNCTION
+-     *     NAME
+-     *     LP
+-     *     BLOCK
+-     * to:
+-     *   var x = function() {};
+-     *   VAR
+-     *     NAME
+-     *       FUNCTION
+-     *         NAME (w/ empty string)
+-     *         LP
+-     *         BLOCK
++     * Rewrite named unhoisted function declarations to a consistent form.
++     * From:   function f() {}
++     * To:     var f = function () {};
++     *
++     * Only non-hoisted declarations (i.e. not in SCRIPT or the root FUNCTION
++     * body) are rewritten.
+      */
+-      // Prepare a spot for the function.
+-
+-      // Prepare the function
+-
+-      // Move the function
++    private void rewriteFunctionDeclarations(Node n) {
++      for (Node c = n.getFirstChild(), next; c != null; c = next) {
++        next = c.getNext();
++        if (NodeUtil.isFunctionDeclaration(c)
++            && !NodeUtil.isHoistedFunctionDeclaration(c)) {
++          // FUNCTION node structure: [NAME][LP][BLOCK]
++          Node fnNameNode = c.getFirstChild();
++          String fnName = fnNameNode.getString();
++          // Prepare VAR name node.
++          Node nameNode = Node.newString(Token.NAME, fnName);
++          // Make the function anonymous by clearing its name.
++          fnNameNode.setString("");
++          // Create VAR node with placeholder NAME.
++          Node varNode = new Node(Token.VAR, nameNode, n.getLineno(),
++              n.getCharno());
++          // Replace the declaration with the VAR form first to detach c.
++          n.replaceChild(c, varNode);
++          // Initialize the NAME with the (now-detached) function expression.
++          nameNode.addChildToFront(c);
++          reportCodeChange("Rewrite non-hoisted function declaration");
++        }
++      }
++    }
+ 
+ 
+     /**
+@@ -337,6 +359,10 @@ class Normalize implements CompilerPass {
+       if (n.getType() == Token.FUNCTION) {
+         moveNamedFunctions(n.getLastChild());
+       }
++
++      // Convert function declarations that are not hoisted into VAR form.
++      // Run on all nodes, safe due to isHoistedFunctionDeclaration check.
++      rewriteFunctionDeclarations(n);
+     }
+ 
+     // TODO(johnlenz): Move this to NodeTypeNormalizer once the unit tests are
+@@ -523,6 +549,18 @@ class Normalize implements CompilerPass {
+         Preconditions.checkState(parent.hasOneChild());
+ 
+         replaceVarWithAssignment(n, parent, gramps);
++      } else if (parent.getType() == Token.FUNCTION) {
++        // The duplicate is a FUNCTION declaration. If the original was a VAR,
++        // convert that original VAR to an assignment to avoid duplicate
++        // declarations, matching expected normalization semantics.
++        Scope.Var origVar = s.getVar(name);
++        if (origVar != null) {
++          Node origParent = origVar.getParentNode();
++          if (origParent != null && origParent.getType() == Token.VAR) {
++            Node origGramps = origParent.getParent();
++            replaceVarWithAssignment(origVar.getNameNode(), origParent, origGramps);
++          }
++        }
+       }
+     }
+ 
+diff --git a/src/com/google/javascript/jscomp/PrepareAst.java b/src/com/google/javascript/jscomp/PrepareAst.java
+index dd0503d3..3a62d7c6 100644
+--- a/src/com/google/javascript/jscomp/PrepareAst.java
++++ b/src/com/google/javascript/jscomp/PrepareAst.java
+@@ -55,13 +55,27 @@ class PrepareAst implements CompilerPass {
+   @Override
+   public void process(Node externs, Node root) {
+     normalizeNodeTypes(root);
++    // Use a scope creator that ignores duplicate declaration errors. Some
++    // normalizations (e.g., removing duplicate declarations) run later.
++    SyntacticScopeCreator silentScopeCreator =
++        new SyntacticScopeCreator(compiler,
++            new SyntacticScopeCreator.RedeclarationHandler() {
++              @Override
++              public void onRedeclaration(
++                  Scope s, String name, Node n, Node parent, Node gramps,
++                  Node nodeWithLineNumber) {
++                // Intentionally ignore duplicate declarations here.
++              }
++            });
+     if (externs != null) {
+-      NodeTraversal.traverse(
+-          compiler, externs, new PrepareAnnotations(compiler));
++      NodeTraversal t = new NodeTraversal(
++          compiler, new PrepareAnnotations(compiler), silentScopeCreator);
++      t.traverse(externs);
+     }
+     if (root != null) {
+-      NodeTraversal.traverse(
+-          compiler, root, new PrepareAnnotations(compiler));
++      NodeTraversal t = new NodeTraversal(
++          compiler, new PrepareAnnotations(compiler), silentScopeCreator);
++      t.traverse(root);
+     }
+   }
+ 

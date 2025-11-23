@@ -1,0 +1,58 @@
+diff --git a/src/com/google/javascript/jscomp/Compiler.java b/src/com/google/javascript/jscomp/Compiler.java
+index 71f76d83..9171c179 100644
+--- a/src/com/google/javascript/jscomp/Compiler.java
++++ b/src/com/google/javascript/jscomp/Compiler.java
+@@ -1461,10 +1461,49 @@ public class Compiler extends AbstractCompiler {
+     return toSource(n, null);
+   }
+ 
++  /**
++   * Generates JavaScript source code for an AST.
++   */
+   /**
+    * Generates JavaScript source code for an AST.
+    */
+   private String toSource(Node n, SourceMap sourceMap) {
++    return toSource(n, sourceMap, options.getLanguageOut() == LanguageMode.ECMASCRIPT5_STRICT);
++  }
++
++  /**
++   * Generates JavaScript source code for an AST.
++   */
++  private String toSource(Node n, SourceMap sourceMap, boolean tagAsStrict) {
++    CodePrinter.Builder builder = new CodePrinter.Builder(n);
++    builder.setPrettyPrint(options.prettyPrint);
++    builder.setLineBreak(options.lineBreak);
++    builder.setSourceMap(sourceMap);
++    builder.setSourceMapDetailLevel(options.sourceMapDetailLevel);
++    builder.setTagAsStrict(tagAsStrict);
++    builder.setLineLengthThreshold(options.lineLengthThreshold);
++
++    Charset charset = options.outputCharset != null ?
++        Charset.forName(options.outputCharset) : null;
++    builder.setOutputCharset(charset);
++
++    return builder.build();
++  }
++
++  /**
++   * Stores a buffer of text to which more can be appended.  This is just like a
++   * StringBuilder except that we also track the number of lines.
++   */
++  public static class CodeBuilder {
++    private final StringBuilder sb = new StringBuilder();
++    private int lineCount = 0;
++    private int colCount = 0;
++
++    /** Removes all text, but leaves the line count unchanged. */
++    void reset() {
++      sb.setLength(0);
++    }
++
+     CodePrinter.Builder builder = new CodePrinter.Builder(n);
+     builder.setPrettyPrint(options.prettyPrint);
+     builder.setLineBreak(options.lineBreak);
+
+
+# Untracked source files (not included in patch):
++ src/com/google/javascript/jscomp/Compiler.java.bak

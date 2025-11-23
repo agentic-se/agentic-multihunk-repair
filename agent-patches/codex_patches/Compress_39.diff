@@ -1,0 +1,17 @@
+diff --git a/src/main/java/org/apache/commons/compress/utils/ArchiveUtils.java b/src/main/java/org/apache/commons/compress/utils/ArchiveUtils.java
+index 0a755ce3..192370e0 100644
+--- a/src/main/java/org/apache/commons/compress/utils/ArchiveUtils.java
++++ b/src/main/java/org/apache/commons/compress/utils/ArchiveUtils.java
+@@ -284,6 +284,12 @@ public class ArchiveUtils {
+             }
+             sb.append('?');
+         }
++        // ensure the sanitized string is not longer than 255 characters
++        final int maxLen = 255;
++        if (sb.length() > maxLen) {
++            // keep the first 252 characters and add ellipsis to indicate truncation
++            return sb.substring(0, maxLen - 3) + "...";
++        }
+         return sb.toString();
+     }
+ 

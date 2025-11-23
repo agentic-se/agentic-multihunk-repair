@@ -1,0 +1,418 @@
+--- a/src/org/mockito/internal/configuration/injection/filter/NameBasedCandidateFilter.java
++++ b/src/org/mockito/internal/configuration/injection/filter/NameBasedCandidateFilter.java
+@@ -1,19 +1,10 @@
+-		if (mocks.size() > 1) {
+-			for (Object mock : mocks) {
+-				if (field.getName().equals(mockUtil.getMockName(mock).toString())) {
+-					mockNameMatches.add(mock);
+-				}
+-			}
+-			return next.filterCandidate(mockNameMatches, field,
+-					fieldInstance);
+-			/*
+-			 * In this case we have to check whether we have conflicting naming
+-			 * fields. E.g. 2 fields of the same type, but we have to make sure
+-			 * we match on the correct name.
+-			 * 
+-			 * Therefore we have to go through all other fields and make sure
+-			 * whenever we find a field that does match its name with the mock
+-			 * name, we should take that field instead.
+-			 */
+-		}
+-		return next.filterCandidate(mocks, field, fieldInstance);
++        List<Object> mockNameMatches = new ArrayList<Object>();
++        for (Object mock : mocks) {
++            if (field.getName().equals(mockUtil.getMockName(mock).toString())) {
++                mockNameMatches.add(mock);
++            }
++        }
++        if (!mockNameMatches.isEmpty()) {
++            return next.filterCandidate(mockNameMatches, field, fieldInstance);
++        }
++        return next.filterCandidate(mocks, field, fieldInstance);
+@@ -1,19 +1,10 @@
+-        if (mocks.size() > 1) {
+-            for (Object mock : mocks) {
+-                if (field.getName().equals(mockUtil.getMockName(mock).toString())) {
+-                    mockNameMatches.add(mock);
+-                }
+-            }
+-            return next.filterCandidate(mockNameMatches, field,
+-                    fieldInstance);
+-            /*
+-             * In this case we have to check whether we have conflicting naming
+-             * fields. E.g. 2 fields of the same type, but we have to make sure
+-             * we match on the correct name.
+-             * 
+-             * Therefore we have to go through all other fields and make sure
+-             * whenever we find a field that does match its name with the mock
+-             * name, we should take that field instead.
+-             */
+-        }
+-        return next.filterCandidate(mocks, field, fieldInstance);
++        List<Object> mockNameMatches = new ArrayList<Object>();
++        for (Object mock : mocks) {
++            if (field.getName().equals(mockUtil.getMockName(mock).toString())) {
++                mockNameMatches.add(mock);
++            }
++        }
++        if (!mockNameMatches.isEmpty()) {
++            return next.filterCandidate(mockNameMatches, field, fieldInstance);
++        }
++        return next.filterCandidate(mocks, field, fieldInstance);
+@@ -1,15 +1,23 @@
+-	public OngoingInjecter filterCandidate(Collection<Object> mocks,
+-			Field field, Object fieldInstance) {
+-		List<Object> mockNameMatches = new ArrayList<Object>();
+-		List<Object> mockNameMatches = new ArrayList<Object>();
+-        List<Object> mockNameMatches = new ArrayList<Object>();
+-        for (Object mock : mocks) {
+-            if (field.getName().equals(mockUtil.getMockName(mock).toString())) {
+-                mockNameMatches.add(mock);
+-            }
+-        }
+-        if (!mockNameMatches.isEmpty()) {
+-            return next.filterCandidate(mockNameMatches, field, fieldInstance);
+-        }
+-        return next.filterCandidate(mocks, field, fieldInstance);
+-	}
++	public OngoingInjecter filterCandidate(Collection<Object> mocks,
++			Field field, Object fieldInstance) {
++		List<Object> mockNameMatches = new ArrayList<Object>();
++		if (mocks.size() > 1) {
++			for (Object mock : mocks) {
++				if (field.getName().equals(mockUtil.getMockName(mock).toString())) {
++					mockNameMatches.add(mock);
++				}
++			}
++			return next.filterCandidate(mockNameMatches, field,
++					fieldInstance);
++			/*
++			 * In this case we have to check whether we have conflicting naming
++			 * fields. E.g. 2 fields of the same type, but we have to make sure
++			 * we match on the correct name.
++			 * 
++			 * Therefore we have to go through all other fields and make sure
++			 * whenever we find a field that does match its name with the mock
++			 * name, we should take that field instead.
++			 */
++		}
++		return next.filterCandidate(mocks, field, fieldInstance);
++	}
+@@ -1,19 +1,9 @@
+-		if (mocks.size() > 1) {
+-			for (Object mock : mocks) {
+-				if (field.getName().equals(mockUtil.getMockName(mock).toString())) {
+-					mockNameMatches.add(mock);
+-				}
+-			}
+-			return next.filterCandidate(mockNameMatches, field,
+-					fieldInstance);
+-			/*
+-			 * In this case we have to check whether we have conflicting naming
+-			 * fields. E.g. 2 fields of the same type, but we have to make sure
+-			 * we match on the correct name.
+-			 * 
+-			 * Therefore we have to go through all other fields and make sure
+-			 * whenever we find a field that does match its name with the mock
+-			 * name, we should take that field instead.
+-			 */
+-		}
+-		return next.filterCandidate(mocks, field, fieldInstance);
++		for (Object mock : mocks) {
++			if (field.getName().equals(mockUtil.getMockName(mock).toString())) {
++				mockNameMatches.add(mock);
++			}
++		}
++		if (!mockNameMatches.isEmpty()) {
++			return next.filterCandidate(mockNameMatches, field, fieldInstance);
++		}
++		return next.filterCandidate(mocks, field, fieldInstance);
+@@ -1,9 +1,13 @@
+-		for (Object mock : mocks) {
+-			if (field.getName().equals(mockUtil.getMockName(mock).toString())) {
+-				mockNameMatches.add(mock);
+-			}
+-		}
+-		if (!mockNameMatches.isEmpty()) {
+-			return next.filterCandidate(mockNameMatches, field, fieldInstance);
+-		}
+-		return next.filterCandidate(mocks, field, fieldInstance);
++		for (Object mock : mocks) {
++			if (field.getName().equals(mockUtil.getMockName(mock).toString())) {
++				mockNameMatches.add(mock);
++			}
++		}
++		if (!mockNameMatches.isEmpty()) {
++			return next.filterCandidate(mockNameMatches, field, fieldInstance);
++		}
++		return new OngoingInjecter() {
++            public Object thenInject() {
++                return null;
++            }
++        };
+@@ -1,13 +1,23 @@
+-		for (Object mock : mocks) {
+-			if (field.getName().equals(mockUtil.getMockName(mock).toString())) {
+-				mockNameMatches.add(mock);
+-			}
+-		}
+-		if (!mockNameMatches.isEmpty()) {
+-			return next.filterCandidate(mockNameMatches, field, fieldInstance);
+-		}
+-		return new OngoingInjecter() {
+-            public Object thenInject() {
+-                return null;
+-            }
+-        };
++		for (Object mock : mocks) {
++			if (field.getName().equals(mockUtil.getMockName(mock).toString())) {
++				mockNameMatches.add(mock);
++			}
++		}
++
++		if (!mockNameMatches.isEmpty()) {
++			// If there are mocks that match by name, prioritize them.
++			return next.filterCandidate(mockNameMatches, field, fieldInstance);
++		} else if (mocks.size() == 1) {
++            // If there's only one mock, and it didn't match by name,
++            // it means it's a type-based match. Pass it to the next filter.
++            // This is to allow type-based injection when no name conflict.
++            return next.filterCandidate(mocks, field, fieldInstance);
++        } else {
++            // If no mocks matched by name, and there are multiple mocks (ambiguous),
++            // or no mocks at all, then no injection should happen at this level.
++            return new OngoingInjecter() {
++                public Object thenInject() {
++                    return null;
++                }
++            };
++        }
+@@ -1,23 +1,14 @@
+-		for (Object mock : mocks) {
+-			if (field.getName().equals(mockUtil.getMockName(mock).toString())) {
+-				mockNameMatches.add(mock);
+-			}
+-		}
+-
+-		if (!mockNameMatches.isEmpty()) {
+-			// If there are mocks that match by name, prioritize them.
+-			return next.filterCandidate(mockNameMatches, field, fieldInstance);
+-		} else if (mocks.size() == 1) {
+-            // If there's only one mock, and it didn't match by name,
+-            // it means it's a type-based match. Pass it to the next filter.
+-            // This is to allow type-based injection when no name conflict.
+-            return next.filterCandidate(mocks, field, fieldInstance);
+-        } else {
+-            // If no mocks matched by name, and there are multiple mocks (ambiguous),
+-            // or no mocks at all, then no injection should happen at this level.
+-            return new OngoingInjecter() {
+-                public Object thenInject() {
+-                    return null;
+-                }
+-            };
+-        }
++		for (Object mock : mocks) {
++			if (field.getName().equals(mockUtil.getMockName(mock).toString())) {
++				mockNameMatches.add(mock);
++			}
++		}
++
++		if (!mockNameMatches.isEmpty()) {
++			// If there are mocks that match by name, prioritize them.
++			return next.filterCandidate(mockNameMatches, field, fieldInstance);
++		} else {
++            // If no mocks matched by name, then this filter cannot resolve the candidate.
++            // Pass an empty collection to the next filter, effectively saying no candidate found by name.
++            return next.filterCandidate(java.util.Collections.emptyList(), field, fieldInstance);
++        }
+@@ -1,1 +1,2 @@
+-import java.util.List;
++import java.util.Collections;
++import java.util.List;
+@@ -1,2 +1,1 @@
+-import java.util.Collections;
+-import java.util.List;
++import java.util.List;
+@@ -1,18 +1,23 @@
+-	public OngoingInjecter filterCandidate(Collection<Object> mocks,
+-			Field field, Object fieldInstance) {
+-		List<Object> mockNameMatches = new ArrayList<Object>();
+-		for (Object mock : mocks) {
+-			if (field.getName().equals(mockUtil.getMockName(mock).toString())) {
+-				mockNameMatches.add(mock);
+-			}
+-		}
+-
+-		if (!mockNameMatches.isEmpty()) {
+-			// If there are mocks that match by name, prioritize them.
+-			return next.filterCandidate(mockNameMatches, field, fieldInstance);
+-		} else {
+-            // If no mocks matched by name, then this filter cannot resolve the candidate.
+-            // Pass an empty collection to the next filter, effectively saying no candidate found by name.
+-            return next.filterCandidate(java.util.Collections.emptyList(), field, fieldInstance);
+-        }
+-	}
++	public OngoingInjecter filterCandidate(Collection<Object> mocks,
++			Field field, Object fieldInstance) {
++		List<Object> mockNameMatches = new ArrayList<Object>();
++		if (mocks.size() > 1) {
++			for (Object mock : mocks) {
++				if (field.getName().equals(mockUtil.getMockName(mock).toString())) {
++					mockNameMatches.add(mock);
++				}
++			}
++			return next.filterCandidate(mockNameMatches, field,
++					fieldInstance);
++			/*
++			 * In this case we have to check whether we have conflicting naming
++			 * fields. E.g. 2 fields of the same type, but we have to make sure
++			 * we match on the correct name.
++			 * 
++			 * Therefore we have to go through all other fields and make sure
++			 * whenever we find a field that does match its name with the mock
++			 * name, we should take that field instead.
++			 */
++		}
++		return next.filterCandidate(mocks, field, fieldInstance);
++	}
+@@ -1,1 +1,2 @@
+-import java.util.List;
++import java.util.Collections;
++import java.util.List;
+@@ -1,21 +1,15 @@
+-		List<Object> mockNameMatches = new ArrayList<Object>();
+-		if (mocks.size() > 1) {
+-			for (Object mock : mocks) {
+-				if (field.getName().equals(mockUtil.getMockName(mock).toString())) {
+-					mockNameMatches.add(mock);
+-				}
+-			}
+-			return next.filterCandidate(mockNameMatches, field,
+-					fieldInstance);
+-			/*
+-			 * In this case we have to check whether we have conflicting naming
+-			 * fields. E.g. 2 fields of the same type, but we have to make sure
+-			 * we match on the correct name.
+-			 * 
+-			 * Therefore we have to go through all other fields and make sure
+-			 * whenever we find a field that does match its name with the mock
+-			 * name, we should take that field instead.
+-			 */
+-		}
+-		return next.filterCandidate(mocks, field, fieldInstance);
+-	}
++		List<Object> mockNameMatches = new ArrayList<Object>();
++		for (Object mock : mocks) {
++			if (field.getName().equals(mockUtil.getMockName(mock).toString())) {
++				mockNameMatches.add(mock);
++			}
++		}
++
++		if (!mockNameMatches.isEmpty()) {
++			// If there are mocks that match by name, prioritize them.
++			return next.filterCandidate(mockNameMatches, field, fieldInstance);
++		} else {
++            // If no mocks matched by name, then this filter cannot resolve the candidate.
++            // Pass an empty collection to the next filter, effectively saying no candidate found by name.
++            return next.filterCandidate(java.util.Collections.emptyList(), field, fieldInstance);
++        }
+@@ -1,2 +1,3 @@
+-        }
+-}
++        }
++    }
++}
+@@ -1,2 +1,1 @@
+-import java.util.Collections;
+-import java.util.List;
++import java.util.List;
+@@ -1,18 +1,23 @@
+-	public OngoingInjecter filterCandidate(Collection<Object> mocks,
+-			Field field, Object fieldInstance) {
+-		List<Object> mockNameMatches = new ArrayList<Object>();
+-		for (Object mock : mocks) {
+-			if (field.getName().equals(mockUtil.getMockName(mock).toString())) {
+-				mockNameMatches.add(mock);
+-			}
+-		}
+-
+-		if (!mockNameMatches.isEmpty()) {
+-			// If there are mocks that match by name, prioritize them.
+-			return next.filterCandidate(mockNameMatches, field, fieldInstance);
+-		} else {
+-            // If no mocks matched by name, then this filter cannot resolve the candidate.
+-            // Pass an empty collection to the next filter, effectively saying no candidate found by name.
+-            return next.filterCandidate(java.util.Collections.emptyList(), field, fieldInstance);
+-        }
+-	}
++	public OngoingInjecter filterCandidate(Collection<Object> mocks,
++			Field field, Object fieldInstance) {
++		List<Object> mockNameMatches = new ArrayList<Object>();
++		if (mocks.size() > 1) {
++			for (Object mock : mocks) {
++				if (field.getName().equals(mockUtil.getMockName(mock).toString())) {
++					mockNameMatches.add(mock);
++				}
++			}
++			return next.filterCandidate(mockNameMatches, field,
++					fieldInstance);
++			/*
++			 * In this case we have to check whether we have conflicting naming
++			 * fields. E.g. 2 fields of the same type, but we have to make sure
++			 * we match on the correct name.
++			 * 
++			 * Therefore we have to go through all other fields and make sure
++			 * whenever we find a field that does match its name with the mock
++			 * name, we should take that field instead.
++			 */
++		}
++		return next.filterCandidate(mocks, field, fieldInstance);
++	}
+@@ -1,1 +1,2 @@
+-import java.util.List;
++import java.util.Collections;
++import java.util.List;
+@@ -1,21 +1,15 @@
+-		List<Object> mockNameMatches = new ArrayList<Object>();
+-		if (mocks.size() > 1) {
+-			for (Object mock : mocks) {
+-				if (field.getName().equals(mockUtil.getMockName(mock).toString())) {
+-					mockNameMatches.add(mock);
+-				}
+-			}
+-			return next.filterCandidate(mockNameMatches, field,
+-					fieldInstance);
+-			/*
+-			 * In this case we have to check whether we have conflicting naming
+-			 * fields. E.g. 2 fields of the same type, but we have to make sure
+-			 * we match on the correct name.
+-			 * 
+-			 * Therefore we have to go through all other fields and make sure
+-			 * whenever we find a field that does match its name with the mock
+-			 * name, we should take that field instead.
+-			 */
+-		}
+-		return next.filterCandidate(mocks, field, fieldInstance);
+-	}
++		List<Object> mockNameMatches = new ArrayList<Object>();
++		for (Object mock : mocks) {
++			if (field.getName().equals(mockUtil.getMockName(mock).toString())) {
++				mockNameMatches.add(mock);
++			}
++		}
++
++		if (!mockNameMatches.isEmpty()) {
++			// If there are mocks that match by name, prioritize them.
++			return next.filterCandidate(mockNameMatches, field, fieldInstance);
++		} else {
++            // If no mocks matched by name, then this filter cannot resolve the candidate.
++            // Pass an empty collection to the next filter, effectively saying no candidate found by name.
++            return next.filterCandidate(java.util.Collections.emptyList(), field, fieldInstance);
++        }
+@@ -1,2 +1,3 @@
+-        }
+-}
++        }
++    }
++}

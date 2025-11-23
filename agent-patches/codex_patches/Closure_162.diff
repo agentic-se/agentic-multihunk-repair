@@ -1,0 +1,47 @@
+diff --git a/src/com/google/javascript/jscomp/ScopedAliases.java b/src/com/google/javascript/jscomp/ScopedAliases.java
+index 5acf25a1..bea67263 100644
+--- a/src/com/google/javascript/jscomp/ScopedAliases.java
++++ b/src/com/google/javascript/jscomp/ScopedAliases.java
+@@ -358,7 +358,7 @@ class ScopedAliases implements HotSwapCompilerPass {
+         JSDocInfo info = n.getJSDocInfo();
+         if (info != null) {
+           for (Node node : info.getTypeNodes()) {
+-            fixTypeNode(node);
++            fixTypeNode(node, t);
+           }
+         }
+ 
+@@ -366,7 +366,7 @@ class ScopedAliases implements HotSwapCompilerPass {
+       }
+     }
+ 
+-    private void fixTypeNode(Node typeNode) {
++    private void fixTypeNode(Node typeNode, NodeTraversal t) {
+       if (typeNode.getType() == Token.STRING) {
+         String name = typeNode.getString();
+         int endIndex = name.indexOf('.');
+@@ -375,6 +375,15 @@ class ScopedAliases implements HotSwapCompilerPass {
+         }
+         String baseName = name.substring(0, endIndex);
+         Var aliasVar = aliases.get(baseName);
++        // Support forward references to aliases in JSDoc by falling back to
++        // the current scope's variable if it is an alias declaration.
++        if (aliasVar == null && t != null && t.getScope() != null) {
++          Var scopedVar = t.getScope().getVar(baseName);
++          if (scopedVar != null && scopedVar.getInitialValue() != null &&
++              scopedVar.getInitialValue().isQualifiedName()) {
++            aliasVar = scopedVar;
++          }
++        }
+         if (aliasVar != null) {
+           Node aliasedNode = aliasVar.getInitialValue();
+           aliasUsages.add(new AliasedTypeNode(typeNode,
+@@ -384,7 +393,7 @@ class ScopedAliases implements HotSwapCompilerPass {
+ 
+       for (Node child = typeNode.getFirstChild(); child != null;
+            child = child.getNext()) {
+-        fixTypeNode(child);
++        fixTypeNode(child, t);
+       }
+     }
+   }

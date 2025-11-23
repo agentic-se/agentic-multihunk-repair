@@ -1,0 +1,22 @@
+--- a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
+@@ -1,2 +1,1 @@
+-                String nm = n.getNodeName();
+-                if (nm.equals(node.getNodeName())) {
++                if (DOMNodePointer.getLocalName(n).equals(DOMNodePointer.getLocalName(node)) && equalStrings(DOMNodePointer.getNamespaceURI(n), DOMNodePointer.getNamespaceURI(node))) {
+
+--- a/src/java/org/apache/commons/jxpath/ri/model/jdom/JDOMNodePointer.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/jdom/JDOMNodePointer.java
+@@ -1,5 +1,7 @@
+-            String name = ((Element) node).getQualifiedName();
+-            for (int i = 0; i < children.size(); i++) {
+-                Object child = children.get(i);
+-                if ((child instanceof Element)
+-                    && ((Element) child).getQualifiedName().equals(name)) {
++            String localName = ((Element) node).getName();
++            String namespaceURI = ((Element) node).getNamespaceURI();
++            for (int i = 0; i < children.size(); i++) {
++                Object child = children.get(i);
++                if ((child instanceof Element)
++                    && ((Element) child).getName().equals(localName)
++                    && equalStrings(((Element) child).getNamespaceURI(), namespaceURI)) {

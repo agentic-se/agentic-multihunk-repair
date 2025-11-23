@@ -1,0 +1,240 @@
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java
+@@ -1,21 +1,26 @@
+-            String name = property.getName();
+-            if (ignored.contains(name)) { // explicit ignoral using @JsonIgnoreProperties needs to block entries
+-                continue;
+-            }
+-            if (!property.hasConstructorParameter()) { // never skip constructor params
+-                Class<?> rawPropertyType = null;
+-                if (property.hasSetter()) {
+-                    rawPropertyType = property.getSetter().getRawParameterType(0);
+-                } else if (property.hasField()) {
+-                    rawPropertyType = property.getField().getRawType();
+-                }
+-
+-                // Some types are declared as ignorable as well
+-                if ((rawPropertyType != null)
+-                        && isIgnorableType(ctxt.getConfig(), beanDesc, rawPropertyType, ignoredTypes)) {
+-                    // important: make ignorable, to avoid errors if value is actually seen
+-                    builder.addIgnorable(name);
+-                    continue;
+-                }
+-            }
+-            result.add(property);
++            String name = property.getName();
++            // [databind#935]: @JsonProperty.Access.READ_ONLY should prevent deserialization
++            if (property.findAccess() == JsonProperty.Access.READ_ONLY) {
++                builder.addIgnorable(name);
++                continue;
++            }
++            if (ignored.contains(name)) { // explicit ignoral using @JsonIgnoreProperties needs to block entries
++                continue;
++            }
++            if (!property.hasConstructorParameter()) { // never skip constructor params
++                Class<?> rawPropertyType = null;
++                if (property.hasSetter()) {
++                    rawPropertyType = property.getSetter().getRawParameterType(0);
++                } else if (property.hasField()) {
++                    rawPropertyType = property.getField().getRawType();
++                }
++
++                // Some types are declared as ignorable as well
++                if ((rawPropertyType != null)
++                        && isIgnorableType(ctxt.getConfig(), beanDesc, rawPropertyType, ignoredTypes)) {
++                    // important: make ignorable, to avoid errors if value is actually seen
++                    builder.addIgnorable(name);
++                    continue;
++                }
++            }
++            result.add(property);
+@@ -1,26 +1,22 @@
+-            String name = property.getName();
+-            // [databind#935]: @JsonProperty.Access.READ_ONLY should prevent deserialization
+-            if (property.findAccess() == JsonProperty.Access.READ_ONLY) {
+-                builder.addIgnorable(name);
+-                continue;
+-            }
+-            if (ignored.contains(name)) { // explicit ignoral using @JsonIgnoreProperties needs to block entries
+-                continue;
+-            }
+-            if (!property.hasConstructorParameter()) { // never skip constructor params
+-                Class<?> rawPropertyType = null;
+-                if (property.hasSetter()) {
+-                    rawPropertyType = property.getSetter().getRawParameterType(0);
+-                } else if (property.hasField()) {
+-                    rawPropertyType = property.getField().getRawType();
+-                }
+-
+-                // Some types are declared as ignorable as well
+-                if ((rawPropertyType != null)
+-                        && isIgnorableType(ctxt.getConfig(), beanDesc, rawPropertyType, ignoredTypes)) {
+-                    // important: make ignorable, to avoid errors if value is actually seen
+-                    builder.addIgnorable(name);
+-                    continue;
+-                }
+-            }
+-            result.add(property);
++            String name = property.getName();
++            if (ignored.contains(name)) { // explicit ignoral using @JsonIgnoreProperties needs to block entries
++                continue;
++            }
++            if (!property.hasConstructorParameter()) { // never skip constructor params
++                Class<?> rawPropertyType = null;
++                if (property.hasSetter()) {
++                    rawPropertyType = property.getSetter().getRawParameterType(0);
++                }
++                else if (property.hasField()) {
++                    rawPropertyType = property.getField().getRawType();
++                }
++
++                // Some types are declared as ignorable as well
++                if ((rawPropertyType != null)
++                        && isIgnorableType(ctxt.getConfig(), beanDesc, rawPropertyType, ignoredTypes)) {
++                    // important: make ignorable, to avoid errors if value is actually seen
++                    builder.addIgnorable(name);
++                    continue;
++                }
++            }
++            result.add(property);
+@@ -1,1 +1,11 @@
+-            if (ignored.contains(name)) { // explicit ignoral using @JsonIgnoreProperties needs to block entries
++            // [databind#935]: @JsonProperty.Access.READ_ONLY should prevent deserialization
++            // We know that BeanPropertyDefinition is actually POJOPropertyBuilder
++            // so we can cast it to access findAccess()
++            if (property instanceof POJOPropertyBuilder) {
++                POJOPropertyBuilder pojoProperty = (POJOPropertyBuilder) property;
++                if (pojoProperty.findAccess() == JsonProperty.Access.READ_ONLY) {
++                    builder.addIgnorable(name);
++                    continue;
++                }
++            }
++            if (ignored.contains(name)) { // explicit ignoral using @JsonIgnoreProperties needs to block entries
+@@ -1,11 +1,22 @@
+-            // [databind#935]: @JsonProperty.Access.READ_ONLY should prevent deserialization
+-            // We know that BeanPropertyDefinition is actually POJOPropertyBuilder
+-            // so we can cast it to access findAccess()
+-            if (property instanceof POJOPropertyBuilder) {
+-                POJOPropertyBuilder pojoProperty = (POJOPropertyBuilder) property;
+-                if (pojoProperty.findAccess() == JsonProperty.Access.READ_ONLY) {
+-                    builder.addIgnorable(name);
+-                    continue;
+-                }
+-            }
+-            if (ignored.contains(name)) { // explicit ignoral using @JsonIgnoreProperties needs to block entries
++            String name = property.getName();
++            if (ignored.contains(name)) { // explicit ignoral using @JsonIgnoreProperties needs to block entries
++                continue;
++            }
++            if (!property.hasConstructorParameter()) { // never skip constructor params
++                Class<?> rawPropertyType = null;
++                if (property.hasSetter()) {
++                    rawPropertyType = property.getSetter().getRawParameterType(0);
++                }
++                else if (property.hasField()) {
++                    rawPropertyType = property.getField().getRawType();
++                }
++
++                // Some types are declared as ignorable as well
++                if ((rawPropertyType != null)
++                        && isIgnorableType(ctxt.getConfig(), beanDesc, rawPropertyType, ignoredTypes)) {
++                    // important: make ignorable, to avoid errors if value is actually seen
++                    builder.addIgnorable(name);
++                    continue;
++                }
++            }
++            result.add(property);
+@@ -1,1 +1,11 @@
+-            if (ignored.contains(name)) { // explicit ignoral using @JsonIgnoreProperties needs to block entries
++            // [databind#935]: @JsonProperty.Access.READ_ONLY should prevent deserialization
++            // We know that BeanPropertyDefinition is actually POJOPropertyBuilder
++            // so we can cast it to access findAccess()
++            if (property instanceof POJOPropertyBuilder) {
++                POJOPropertyBuilder pojoProperty = (POJOPropertyBuilder) property;
++                if (pojoProperty.findAccess() == JsonProperty.Access.READ_ONLY) {
++                    builder.addIgnorable(name);
++                    continue;
++                }
++            }
++            if (ignored.contains(name)) { // explicit ignoral using @JsonIgnoreProperties needs to block entries
+
+--- a/src/main/java/com/fasterxml/jackson/databind/introspect/POJOPropertyBuilder.java
++++ b/src/main/java/com/fasterxml/jackson/databind/introspect/POJOPropertyBuilder.java
+@@ -1,8 +1,30 @@
+-    public JsonProperty.Access findAccess() {
+-        return fromMemberAnnotationsExcept(new WithMember<JsonProperty.Access>() {
+-            @Override
+-            public JsonProperty.Access withMember(AnnotatedMember member) {
+-                return _annotationIntrospector.findPropertyAccess(member);
+-            }
+-        }, JsonProperty.Access.AUTO);
+-    }
++    public JsonProperty.Access findAccess() {
++        // 16-Aug-2016, tatu: Need to check all members, not just primary,
++        //   to find if there's explicit setting.
++        //   Also, for deserialization, need to consider fields and setters
++        //   as primary, for serialization getters and fields.
++        //   But for access, any explicit annotation should take precedence.
++        JsonProperty.Access acc = fromMemberAnnotationsExcept(new WithMember<JsonProperty.Access>() {
++            @Override
++            public JsonProperty.Access withMember(AnnotatedMember member) {
++                return _annotationIntrospector.findPropertyAccess(member);
++            }
++        }, JsonProperty.Access.AUTO);
++        if (acc != null && acc != JsonProperty.Access.AUTO) {
++            return acc;
++        }
++        // If not explicitly defined, let's see if we can infer from mutators/accessors
++        // For deserialization, if there's a setter or field, it's at least WRITE_ONLY
++        if (!_forSerialization) {
++            if (hasSetter() || hasField() || hasConstructorParameter()) {
++                return JsonProperty.Access.WRITE_ONLY;
++            }
++        }
++        // For serialization, if there's a getter or field, it's at least READ_ONLY
++        if (_forSerialization) {
++            if (hasGetter() || hasField()) {
++                return JsonProperty.Access.READ_ONLY;
++            }
++        }
++        return JsonProperty.Access.AUTO;
++    }
+@@ -1,30 +1,8 @@
+-    public JsonProperty.Access findAccess() {
+-        // 16-Aug-2016, tatu: Need to check all members, not just primary,
+-        //   to find if there's explicit setting.
+-        //   Also, for deserialization, need to consider fields and setters
+-        //   as primary, for serialization getters and fields.
+-        //   But for access, any explicit annotation should take precedence.
+-        JsonProperty.Access acc = fromMemberAnnotationsExcept(new WithMember<JsonProperty.Access>() {
+-            @Override
+-            public JsonProperty.Access withMember(AnnotatedMember member) {
+-                return _annotationIntrospector.findPropertyAccess(member);
+-            }
+-        }, JsonProperty.Access.AUTO);
+-        if (acc != null && acc != JsonProperty.Access.AUTO) {
+-            return acc;
+-        }
+-        // If not explicitly defined, let's see if we can infer from mutators/accessors
+-        // For deserialization, if there's a setter or field, it's at least WRITE_ONLY
+-        if (!_forSerialization) {
+-            if (hasSetter() || hasField() || hasConstructorParameter()) {
+-                return JsonProperty.Access.WRITE_ONLY;
+-            }
+-        }
+-        // For serialization, if there's a getter or field, it's at least READ_ONLY
+-        if (_forSerialization) {
+-            if (hasGetter() || hasField()) {
+-                return JsonProperty.Access.READ_ONLY;
+-            }
+-        }
+-        return JsonProperty.Access.AUTO;
+-    }
++    public JsonProperty.Access findAccess() {
++        return fromMemberAnnotationsExcept(new WithMember<JsonProperty.Access>() {
++            @Override
++            public JsonProperty.Access withMember(AnnotatedMember member) {
++                return _annotationIntrospector.findPropertyAccess(member);
++            }
++        }, JsonProperty.Access.AUTO);
++    }

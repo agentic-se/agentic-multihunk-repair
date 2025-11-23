@@ -1,0 +1,33 @@
+diff --git a/src/main/java/org/apache/commons/math/ode/nonstiff/EmbeddedRungeKuttaIntegrator.java b/src/main/java/org/apache/commons/math/ode/nonstiff/EmbeddedRungeKuttaIntegrator.java
+index 0840ac1cc..b4f49ecad 100644
+--- a/src/main/java/org/apache/commons/math/ode/nonstiff/EmbeddedRungeKuttaIntegrator.java
++++ b/src/main/java/org/apache/commons/math/ode/nonstiff/EmbeddedRungeKuttaIntegrator.java
+@@ -300,12 +300,27 @@ public abstract class EmbeddedRungeKuttaIntegrator
+                   loop     = false;
+               } else {
+                   // reject the step to match exactly the next switch time
+-                  hNew = dt;
++                  // but ensure we don't go past the target time
++                  final double remainingTime = t - stepStart;
++                  if (Math.abs(dt) > Math.abs(remainingTime)) {
++                      // If the event is beyond the target time, we should stop at the target time
++                      hNew = remainingTime;
++                  } else {
++                      hNew = dt;
++                  }
+               }
+           } else {
+             // accept the step
+             loop = false;
+           }
++          
++          // Ensure we don't exceed the target time
++          if (!lastStep) {
++              final double remainingTime = t - stepStart;
++              if (Math.abs(hNew) > Math.abs(remainingTime)) {
++                  hNew = remainingTime;
++              }
++          }
+ 
+         } else {
+           // reject the step and attempt to reduce error by stepsize control

@@ -1,0 +1,115 @@
+--- a/src/java/org/apache/commons/codec/binary/Base64InputStream.java
++++ b/src/java/org/apache/commons/codec/binary/Base64InputStream.java
+@@ -1,1 +1,7 @@
+-            return base64.readResults(b, offset, len);
++            int readLen = base64.readResults(b, offset, len);
++            // We have to loop because Base64.readResults() can return 0, which
++            // InputStreamReader doesn't like.
++            while (readLen == 0 && base64.hasData()) {
++                readLen = base64.readResults(b, offset, len);
++            }
++            return readLen;
+@@ -1,26 +1,21 @@
+-        } else {
+-            // This is a fix for CODEC-101
+-            int readLen = 0;
+-            while (readLen == 0) {
+-                if (!base64.hasData()) {
+-                    byte[] buf = new byte[doEncode ? 4096 : 8192];
+-                    int c = in.read(buf);
+-                    if (c == -1) {
+-                        // EOF
+-                        return -1;
+-                    }
+-                    // A little optimization to avoid System.arraycopy()
+-                    // when possible.
+-                    if (c > 0 && b.length == len) {
+-                        base64.setInitialBuffer(b, offset, len);
+-                    }
+-                    if (doEncode) {
+-                        base64.encode(buf, 0, c);
+-                    } else {
+-                        base64.decode(buf, 0, c);
+-                    }
+-                }
+-                readLen = base64.readResults(b, offset, len);
+-            }
+-            return readLen;
+-        }
++        } else {
++            // This is a fix for CODEC-101
++            int readLen = 0;
++            while (readLen == 0) {
++                if (!base64.hasData()) {
++                    byte[] buf = new byte[doEncode ? 4096 : 8192];
++                    int c = in.read(buf);
++                    if (doEncode) {
++                        base64.encode(buf, 0, c);
++                    } else {
++                        base64.decode(buf, 0, c);
++                    }
++                }
++                readLen = base64.readResults(b, offset, len);
++                if (readLen == 0 && !base64.hasData()) {
++                    // We've reached EOF on the underlying stream and there's no more data in the Base64 buffer.
++                    return -1;
++                }
++            }
++            return readLen;
++        }
+@@ -1,21 +1,34 @@
+-        } else {
+-            // This is a fix for CODEC-101
+-            int readLen = 0;
+-            while (readLen == 0) {
+-                if (!base64.hasData()) {
+-                    byte[] buf = new byte[doEncode ? 4096 : 8192];
+-                    int c = in.read(buf);
+-                    if (doEncode) {
+-                        base64.encode(buf, 0, c);
+-                    } else {
+-                        base64.decode(buf, 0, c);
+-                    }
+-                }
+-                readLen = base64.readResults(b, offset, len);
+-                if (readLen == 0 && !base64.hasData()) {
+-                    // We've reached EOF on the underlying stream and there's no more data in the Base64 buffer.
+-                    return -1;
+-                }
+-            }
+-            return readLen;
+-        }
++        } else {
++            // This is a fix for CODEC-101
++            int readLen = 0;
++            while (readLen == 0) {
++                readLen = base64.readResults(b, offset, len);
++                if (readLen == 0) {
++                    // We have to read more from the underlying stream.
++                    byte[] buf = new byte[doEncode ? 4096 : 8192];
++                    int c = in.read(buf);
++                    if (c == -1) {
++                        // EOF on underlying stream. Flush any remaining data in Base64.
++                        if (doEncode) {
++                            base64.encode(buf, 0, -1);
++                        } else {
++                            base64.decode(buf, 0, -1);
++                        }
++                        readLen = base64.readResults(b, offset, len);
++                        // If still 0, then we're truly at EOF.
++                        return readLen == 0 ? -1 : readLen;
++                    }
++                    // A little optimization to avoid System.arraycopy()
++                    // when possible.
++                    if (c > 0 && b.length == len) {
++                        base64.setInitialBuffer(b, offset, len);
++                    }
++                    if (doEncode) {
++                        base64.encode(buf, 0, c);
++                    } else {
++                        base64.decode(buf, 0, c);
++                    }
++                }
++            }
++            return readLen;
++        }

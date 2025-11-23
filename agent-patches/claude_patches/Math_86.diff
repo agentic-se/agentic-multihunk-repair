@@ -1,0 +1,19 @@
+diff --git a/src/java/org/apache/commons/math/linear/CholeskyDecompositionImpl.java b/src/java/org/apache/commons/math/linear/CholeskyDecompositionImpl.java
+index acd9222f6..0af3e10ee 100644
+--- a/src/java/org/apache/commons/math/linear/CholeskyDecompositionImpl.java
++++ b/src/java/org/apache/commons/math/linear/CholeskyDecompositionImpl.java
+@@ -134,7 +134,9 @@ public class CholeskyDecompositionImpl implements CholeskyDecomposition {
+             final double[] ltI = lTData[i];
+ 
+             // check diagonal element
+-
++            if (ltI[i] < absolutePositivityThreshold) {
++                throw new NotPositiveDefiniteMatrixException();
++            }
+             ltI[i] = Math.sqrt(ltI[i]);
+             final double inverse = 1.0 / ltI[i];
+ 
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

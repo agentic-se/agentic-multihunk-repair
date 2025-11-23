@@ -1,0 +1,15 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BasicDeserializerFactory.java b/src/main/java/com/fasterxml/jackson/databind/deser/BasicDeserializerFactory.java
+index a0cbf1615..9b84a3c8d 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BasicDeserializerFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BasicDeserializerFactory.java
+@@ -1754,7 +1754,9 @@ public abstract class BasicDeserializerFactory
+         Class<?> subclass = intr.findDeserializationType(a, type);
+         if (subclass != null) {
+             try {
+-                type = (T) type.narrowBy(subclass);
++                // Use constructSpecializedType so that array types (e.g. byte[]) become ArrayType
++                // instead of SimpleType, ensuring proper array deserialization handling.
++                type = (T) ctxt.getTypeFactory().constructSpecializedType(type, subclass);
+             } catch (IllegalArgumentException iae) {
+                 throw new JsonMappingException("Failed to narrow type "+type+" with concrete-type annotation (value "+subclass.getName()+"), method '"+a.getName()+"': "+iae.getMessage(), null, iae);
+             }

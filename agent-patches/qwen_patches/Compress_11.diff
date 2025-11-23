@@ -1,0 +1,31 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java b/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
+index a30cd5a8..a6b98bd0 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
++++ b/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
+@@ -237,14 +237,18 @@ public class ArchiveStreamFactory {
+                 return new TarArchiveInputStream(in);
+             }
+             // COMPRESS-117 - improve auto-recognition
+-            try {
+-                TarArchiveInputStream tais = new TarArchiveInputStream(new ByteArrayInputStream(tarheader));
+-                tais.getNextEntry();
+-                return new TarArchiveInputStream(in);
+-            } catch (Exception e) { // NOPMD
+-                // can generate IllegalArgumentException as well as IOException
+-                // autodetection, simply not a TAR
+-                // ignored
++            // Only attempt auto-recognition for files that are large enough to be valid TAR archives
++            // Files smaller than 512 bytes cannot be valid TAR archives, so skip the fallback
++            if (signatureLength >= 512) {
++                try {
++                    TarArchiveInputStream tais = new TarArchiveInputStream(new ByteArrayInputStream(tarheader));
++                    tais.getNextEntry();
++                    return new TarArchiveInputStream(in);
++                } catch (Exception e) { // NOPMD
++                    // can generate IllegalArgumentException as well as IOException
++                    // autodetection, simply not a TAR
++                    // ignored
++                }
+             }
+         } catch (IOException e) {
+             throw new ArchiveException("Could not use reset and mark operations.", e);

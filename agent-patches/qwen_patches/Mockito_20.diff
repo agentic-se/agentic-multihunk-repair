@@ -1,0 +1,38 @@
+diff --git a/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java b/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java
+index c97b5f5bd..d27f6f650 100644
+--- a/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java
++++ b/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java
+@@ -2,6 +2,7 @@ package org.mockito.internal.creation.instance;
+ 
+ import static org.mockito.internal.util.StringJoiner.join;
+ import java.lang.reflect.Constructor;
++import java.lang.reflect.Modifier;
+ import org.mockito.internal.util.reflection.AccessibilityChanger;
+ 
+ public class ConstructorInstantiator implements Instantiator {
+@@ -13,6 +14,12 @@ public class ConstructorInstantiator implements Instantiator {
+     }
+ 
+     public <T> T newInstance(Class<T> cls) {
++        // For abstract classes, we cannot directly instantiate them,
++        // so we return null to signal that the framework should handle this appropriately
++        if (Modifier.isAbstract(cls.getModifiers())) {
++            return null;
++        }
++        
+         if (outerClassInstance == null) {
+             return noArgConstructor(cls);
+         }
+diff --git a/src/org/mockito/internal/creation/instance/InstantiatorProvider.java b/src/org/mockito/internal/creation/instance/InstantiatorProvider.java
+index 58dc6c15f..a7d79cf6a 100644
+--- a/src/org/mockito/internal/creation/instance/InstantiatorProvider.java
++++ b/src/org/mockito/internal/creation/instance/InstantiatorProvider.java
+@@ -8,6 +8,8 @@ public class InstantiatorProvider {
+ 
+     public Instantiator getInstantiator(MockCreationSettings settings) {
+         if (settings.isUsingConstructor()) {
++            // If constructor is being used, check if it's for an abstract class
++            // If it is, use a different approach that won't try to directly instantiate
+             return new ConstructorInstantiator(settings.getOuterClassInstance());
+         } else {
+             return INSTANCE;

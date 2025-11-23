@@ -1,0 +1,25 @@
+diff --git a/src/com/google/javascript/rhino/IR.java b/src/com/google/javascript/rhino/IR.java
+index 081f01f5..c1c42437 100644
+--- a/src/com/google/javascript/rhino/IR.java
++++ b/src/com/google/javascript/rhino/IR.java
+@@ -221,8 +221,8 @@ public class IR {
+   }
+ 
+   public static Node tryFinally(Node tryBody, Node finallyBody) {
+-    Preconditions.checkState(tryBody.isLabelName());
+-    Preconditions.checkState(finallyBody.isLabelName());
++    Preconditions.checkState(tryBody.isBlock());
++    Preconditions.checkState(finallyBody.isBlock());
+     Node catchBody = block().copyInformationFrom(tryBody);
+     return new Node(Token.TRY, tryBody, catchBody, finallyBody);
+   }
+@@ -230,7 +230,8 @@ public class IR {
+   public static Node tryCatch(Node tryBody, Node catchNode) {
+     Preconditions.checkState(tryBody.isBlock());
+     Preconditions.checkState(catchNode.isCatch());
+-    Node catchBody = block(catchNode).copyInformationFrom(catchNode);
++    Node catchBody = block().copyInformationFrom(catchNode);
++    catchBody.addChildToBack(catchNode);
+     return new Node(Token.TRY, tryBody, catchBody);
+   }
+ 

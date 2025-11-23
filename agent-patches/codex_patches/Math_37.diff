@@ -1,0 +1,52 @@
+diff --git a/src/main/java/org/apache/commons/math/complex/Complex.java b/src/main/java/org/apache/commons/math/complex/Complex.java
+index 8d28c5ffd..93258a976 100644
+--- a/src/main/java/org/apache/commons/math/complex/Complex.java
++++ b/src/main/java/org/apache/commons/math/complex/Complex.java
+@@ -1019,6 +1019,22 @@ public class Complex implements FieldElement<Complex>, Serializable  {
+             return NaN;
+         }
+ 
++        // Handle infinities explicitly per expected semantics
++        if (Double.isInfinite(real)) {
++            // tan(±∞ + bi) -> NaN
++            return NaN;
++        }
++        if (Double.isInfinite(imaginary)) {
++            // tan(a ± ∞i) -> 0 ± i
++            return createComplex(0.0, FastMath.copySign(1.0, imaginary));
++        }
++
++        // Avoid overflow for large |imaginary| where cosh/sinh(2b) overflow.
++        // For large |b|, tan(x + i b) -> i * sign(b).
++        if (FastMath.abs(imaginary) > 20.0) {
++            return createComplex(0.0, FastMath.copySign(1.0, imaginary));
++        }
++
+         double real2 = 2.0 * real;
+         double imaginary2 = 2.0 * imaginary;
+         double d = FastMath.cos(real2) + FastMath.cosh(imaginary2);
+@@ -1063,6 +1079,24 @@ public class Complex implements FieldElement<Complex>, Serializable  {
+         if (isNaN) {
+             return NaN;
+         }
++        // Handle infinities explicitly per expected semantics
++        if (Double.isInfinite(imaginary)) {
++            // tanh(a ± ∞i) -> NaN
++            return NaN;
++        }
++        if (Double.isInfinite(real)) {
++            // tanh(±∞ + bi) -> ±1 + 0i
++            return createComplex(FastMath.copySign(1.0, real), 0.0);
++        }
++
++        // Avoid overflow for large |real| where cosh/sinh(2a) overflow.
++        if (real > 20.0) {
++            return createComplex(1.0, 0.0);
++        }
++        if (real < -20.0) {
++            return createComplex(-1.0, 0.0);
++        }
++
+         double real2 = 2.0 * real;
+         double imaginary2 = 2.0 * imaginary;
+         double d = FastMath.cosh(real2) + FastMath.cos(imaginary2);

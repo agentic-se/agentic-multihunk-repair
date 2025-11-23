@@ -1,0 +1,56 @@
+--- a/src/main/java/org/apache/commons/math/distribution/NormalDistributionImpl.java
++++ b/src/main/java/org/apache/commons/math/distribution/NormalDistributionImpl.java
+@@ -1,5 +1,5 @@
+-    /** The mean of this distribution. */
+-    private double mean = 0;
+-
+-    /** The standard deviation of this distribution. */
+-    private double standardDeviation = 1;
++    /** The mean of this distribution. */
++    private final double mean = 0;
++
++    /** The standard deviation of this distribution. */
++    private final double standardDeviation = 1;
+@@ -1,5 +1,5 @@
+-    /** The mean of this distribution. */
+-    private final double mean = 0;
+-
+-    /** The standard deviation of this distribution. */
+-    private final double standardDeviation = 1;
++    /** The mean of this distribution. */
++    private double mean = 0;
++
++    /** The standard deviation of this distribution. */
++    private double standardDeviation = 1;
+
+--- a/src/main/java/org/apache/commons/math/distribution/PoissonDistributionImpl.java
++++ b/src/main/java/org/apache/commons/math/distribution/PoissonDistributionImpl.java
+@@ -1,6 +1,7 @@
+-    private NormalDistribution normal;
+-
+-    /**
+-     * Holds the Poisson mean for the distribution.
+-     */
+-    private double mean;
++    /** Distribution used to compute normal approximation. */
++    private final NormalDistribution normal;
++
++    /**
++     * Holds the Poisson mean for the distribution.
++     */
++    private final double mean;
+@@ -1,7 +1,7 @@
+-    /** Distribution used to compute normal approximation. */
+-    private final NormalDistribution normal;
+-
+-    /**
+-     * Holds the Poisson mean for the distribution.
+-     */
+-    private final double mean;
++    /** Distribution used to compute normal approximation. */
++    private NormalDistribution normal;
++
++    /**
++     * Holds the Poisson mean for the distribution.
++     */
++    private double mean;

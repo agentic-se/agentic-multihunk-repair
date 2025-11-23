@@ -1,0 +1,45 @@
+diff --git a/src/main/java/org/apache/commons/compress/compressors/CompressorStreamFactory.java b/src/main/java/org/apache/commons/compress/compressors/CompressorStreamFactory.java
+index 935283aa..bd8024c3 100644
+--- a/src/main/java/org/apache/commons/compress/compressors/CompressorStreamFactory.java
++++ b/src/main/java/org/apache/commons/compress/compressors/CompressorStreamFactory.java
+@@ -238,6 +238,11 @@ public class CompressorStreamFactory {
+             }
+ 
+ 
++            // detect zlib-wrapped deflate streams
++            if (DeflateCompressorInputStream.matches(signature, signatureLength)) {
++                return new DeflateCompressorInputStream(in);
++            }
++
+             if (XZUtils.matches(signature, signatureLength) &&
+                 XZUtils.isXZCompressionAvailable()) {
+                 return new XZCompressorInputStream(in, decompressConcatenated);
+diff --git a/src/main/java/org/apache/commons/compress/compressors/deflate/DeflateCompressorInputStream.java b/src/main/java/org/apache/commons/compress/compressors/deflate/DeflateCompressorInputStream.java
+index 98d8ec12..37839a36 100644
+--- a/src/main/java/org/apache/commons/compress/compressors/deflate/DeflateCompressorInputStream.java
++++ b/src/main/java/org/apache/commons/compress/compressors/deflate/DeflateCompressorInputStream.java
+@@ -103,4 +103,24 @@ public class DeflateCompressorInputStream extends CompressorInputStream {
+      * 
+      * @since 1.9
+      */
++    public static boolean matches(byte[] signature, int length) {
++        // Need at least 2 bytes for zlib header (CMF, FLG)
++        if (length < 2) {
++            return false;
++        }
++        int cmf = signature[0] & 0xFF;
++        int flg = signature[1] & 0xFF;
++        // Compression method must be DEFLATE (8)
++        if ((cmf & 0x0F) != 8) {
++            return false;
++        }
++        // Header check: (CMF*256 + FLG) % 31 must be 0
++        int combined = (cmf << 8) | flg;
++        if (combined % 31 != 0) {
++            return false;
++        }
++        // If FDICT flag is set, a 4-byte dictionary ID follows; that is fine for detection.
++        // We intentionally only detect zlib-wrapped deflate streams here (not raw deflate).
++        return true;
++    }
+ }

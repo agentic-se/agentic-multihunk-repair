@@ -1,0 +1,127 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/std/JsonValueSerializer.java b/src/main/java/com/fasterxml/jackson/databind/ser/std/JsonValueSerializer.java
+index c7cb812a0..feb38f26f 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/JsonValueSerializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/JsonValueSerializer.java
+@@ -222,8 +222,8 @@ public class JsonValueSerializer
+             }
+             // 28-Sep-2016, tatu: As per [databind#1385], we do need to do some juggling
+             //    to use different Object for type id (logical type) and actual serialization
+-            //    (delegat type).
+-            ser.serializeWithType(value, gen, provider, typeSer0);
++            //    (delegate type). Route type id to the enclosing bean, but serialize the value.
++            ser.serializeWithType(value, gen, provider, new TypeSerializerRerouter(typeSer0, bean));
+         } catch (IOException ioe) {
+             throw ioe;
+         } catch (Exception e) {
+@@ -360,22 +360,110 @@ public class JsonValueSerializer
+      * override Object to use for type id (logical type) even when asking serialization
+      * of something else (delegate type)
+      */
++    static final class TypeSerializerRerouter extends com.fasterxml.jackson.databind.jsontype.TypeSerializer {
++        private final com.fasterxml.jackson.databind.jsontype.TypeSerializer _delegate;
++        private final Object _forValue;
+ 
++        TypeSerializerRerouter(com.fasterxml.jackson.databind.jsontype.TypeSerializer delegate, Object forValue) {
++            _delegate = delegate;
++            _forValue = forValue;
++        }
++
++        @Override
++        public com.fasterxml.jackson.databind.jsontype.TypeSerializer forProperty(com.fasterxml.jackson.databind.BeanProperty prop) {
++            return new TypeSerializerRerouter(_delegate.forProperty(prop), _forValue);
++        }
+ 
++        @Override
++        public com.fasterxml.jackson.annotation.JsonTypeInfo.As getTypeInclusion() {
++            return _delegate.getTypeInclusion();
++        }
+ 
++        @Override
++        public String getPropertyName() {
++            return _delegate.getPropertyName();
++        }
++
++        @Override
++        public com.fasterxml.jackson.databind.jsontype.TypeIdResolver getTypeIdResolver() {
++            return _delegate.getTypeIdResolver();
++        }
++
++        @Override
++        public void writeTypePrefixForScalar(Object value, com.fasterxml.jackson.core.JsonGenerator g) throws java.io.IOException {
++            _delegate.writeTypePrefixForScalar(_forValue, g);
++        }
++
++        @Override
++        public void writeTypePrefixForObject(Object value, com.fasterxml.jackson.core.JsonGenerator g) throws java.io.IOException {
++            _delegate.writeTypePrefixForObject(_forValue, g);
++        }
++
++        @Override
++        public void writeTypePrefixForArray(Object value, com.fasterxml.jackson.core.JsonGenerator g) throws java.io.IOException {
++            _delegate.writeTypePrefixForArray(_forValue, g);
++        }
+ 
++        @Override
++        public void writeTypeSuffixForScalar(Object value, com.fasterxml.jackson.core.JsonGenerator g) throws java.io.IOException {
++            _delegate.writeTypeSuffixForScalar(_forValue, g);
++        }
+ 
++        @Override
++        public void writeTypeSuffixForObject(Object value, com.fasterxml.jackson.core.JsonGenerator g) throws java.io.IOException {
++            _delegate.writeTypeSuffixForObject(_forValue, g);
++        }
+ 
++        @Override
++        public void writeTypeSuffixForArray(Object value, com.fasterxml.jackson.core.JsonGenerator g) throws java.io.IOException {
++            _delegate.writeTypeSuffixForArray(_forValue, g);
++        }
+ 
++        @Override
++        public void writeTypePrefixForScalar(Object value, com.fasterxml.jackson.core.JsonGenerator g, Class<?> type) throws java.io.IOException {
++            _delegate.writeTypePrefixForScalar(_forValue, g, type);
++        }
+ 
++        @Override
++        public void writeTypePrefixForObject(Object value, com.fasterxml.jackson.core.JsonGenerator g, Class<?> type) throws java.io.IOException {
++            _delegate.writeTypePrefixForObject(_forValue, g, type);
++        }
+ 
++        @Override
++        public void writeTypePrefixForArray(Object value, com.fasterxml.jackson.core.JsonGenerator g, Class<?> type) throws java.io.IOException {
++            _delegate.writeTypePrefixForArray(_forValue, g, type);
++        }
+ 
++        @Override
++        public void writeCustomTypePrefixForScalar(Object value, com.fasterxml.jackson.core.JsonGenerator g, String typeId) throws java.io.IOException {
++            _delegate.writeCustomTypePrefixForScalar(_forValue, g, typeId);
++        }
+ 
++        @Override
++        public void writeCustomTypePrefixForObject(Object value, com.fasterxml.jackson.core.JsonGenerator g, String typeId) throws java.io.IOException {
++            _delegate.writeCustomTypePrefixForObject(_forValue, g, typeId);
++        }
+ 
++        @Override
++        public void writeCustomTypePrefixForArray(Object value, com.fasterxml.jackson.core.JsonGenerator g, String typeId) throws java.io.IOException {
++            _delegate.writeCustomTypePrefixForArray(_forValue, g, typeId);
++        }
+ 
++        @Override
++        public void writeCustomTypeSuffixForScalar(Object value, com.fasterxml.jackson.core.JsonGenerator g, String typeId) throws java.io.IOException {
++            _delegate.writeCustomTypeSuffixForScalar(_forValue, g, typeId);
++        }
+ 
+-        
++        @Override
++        public void writeCustomTypeSuffixForObject(Object value, com.fasterxml.jackson.core.JsonGenerator g, String typeId) throws java.io.IOException {
++            _delegate.writeCustomTypeSuffixForObject(_forValue, g, typeId);
++        }
+ 
++        @Override
++        public void writeCustomTypeSuffixForArray(Object value, com.fasterxml.jackson.core.JsonGenerator g, String typeId) throws java.io.IOException {
++            _delegate.writeCustomTypeSuffixForArray(_forValue, g, typeId);
++        }
++    }
+ 
+ 
+ 

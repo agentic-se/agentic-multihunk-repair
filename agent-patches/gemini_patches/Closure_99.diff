@@ -1,0 +1,1103 @@
+--- a/src/com/google/javascript/jscomp/CheckGlobalThis.java
++++ b/src/com/google/javascript/jscomp/CheckGlobalThis.java
+@@ -1,3 +1,4 @@
+-          (jsDoc.isConstructor() ||
+-           jsDoc.hasThisType() ||
+-           jsDoc.isOverride())) {
++          (jsDoc.isConstructor() ||
++           jsDoc.hasThisType() ||
++           jsDoc.isOverride() ||
++           jsDoc.isInterface())) {
+@@ -1,10 +1,11 @@
+-        // Only traverse the right side if it's not an assignment to a prototype
+-        // property or subproperty.
+-          if (lhs.getType() == Token.GETPROP &&
+-              lhs.getLastChild().getString().equals("prototype")) {
+-            return false;
+-          }
+-          if (lhs.getQualifiedName() != null && lhs.getQualifiedName().contains(".prototype.")) {
+-            return false;
+-          }
+-
++        // Only traverse the right side if it's not an assignment to a prototype
++        // property or subproperty.
++        Node currentLhs = lhs;
++        while (currentLhs.isGetProp() || currentLhs.isGetElem()) {
++          if (currentLhs.isGetProp() &&
++              currentLhs.getLastChild().getString().equals("prototype")) {
++            return false;
++          }
++          currentLhs = currentLhs.getFirstChild();
++        }
++
+@@ -1,11 +1,10 @@
+-        // Only traverse the right side if it's not an assignment to a prototype
+-        // property or subproperty.
+-        Node currentLhs = lhs;
+-        while (currentLhs.isGetProp() || currentLhs.isGetElem()) {
+-          if (currentLhs.isGetProp() &&
+-              currentLhs.getLastChild().getString().equals("prototype")) {
+-            return false;
+-          }
+-          currentLhs = currentLhs.getFirstChild();
+-        }
+-
++        // Only traverse the right side if it's not an assignment to a prototype
++        // property or subproperty.
++          if (lhs.getType() == Token.GETPROP &&
++              lhs.getLastChild().getString().equals("prototype")) {
++            return false;
++          }
++          if (lhs.getQualifiedName() != null && lhs.getQualifiedName().contains(".prototype.")) {
++            return false;
++          }
++
+@@ -1,10 +1,11 @@
+-        // Only traverse the right side if it's not an assignment to a prototype
+-        // property or subproperty.
+-          if (lhs.getType() == Token.GETPROP &&
+-              lhs.getLastChild().getString().equals("prototype")) {
+-            return false;
+-          }
+-          if (lhs.getQualifiedName() != null && lhs.getQualifiedName().contains(".prototype.")) {
+-            return false;
+-          }
+-
++        // Only traverse the right side if it's not an assignment to a prototype
++        // property or subproperty.
++        Node currentLhs = lhs;
++        while (currentLhs.getType() == Token.GETPROP || currentLhs.getType() == Token.GETELEM) {
++          if (currentLhs.getType() == Token.GETPROP &&
++              currentLhs.getLastChild().getString().equals("prototype")) {
++            return false;
++          }
++          currentLhs = currentLhs.getFirstChild();
++        }
++
+@@ -1,1 +1,13 @@
+-  public void visit(NodeTraversal t, Node n, Node parent) {
++  private boolean isPrototypeProperty(Node n) {
++    if (n.getType() == Token.GETPROP) {
++      if (n.getLastChild().getString().equals("prototype")) {
++        return true;
++      }
++      return isPrototypeProperty(n.getFirstChild());
++    } else if (n.getType() == Token.GETELEM) {
++      return isPrototypeProperty(n.getFirstChild());
++    }
++    return false;
++  }
++
++  public void visit(NodeTraversal t, Node n, Node parent) {
+@@ -1,11 +1,6 @@
+-        // Only traverse the right side if it's not an assignment to a prototype
+-        // property or subproperty.
+-        Node currentLhs = lhs;
+-        while (currentLhs.getType() == Token.GETPROP || currentLhs.getType() == Token.GETELEM) {
+-          if (currentLhs.getType() == Token.GETPROP &&
+-              currentLhs.getLastChild().getString().equals("prototype")) {
+-            return false;
+-          }
+-          currentLhs = currentLhs.getFirstChild();
+-        }
+-
++        // Only traverse the right side if it's not an assignment to a prototype
++        // property or subproperty.
++        if (isPrototypeProperty(lhs)) {
++          return false;
++        }
++
+@@ -1,6 +1,7 @@
+-        // Only traverse the right side if it's not an assignment to a prototype
+-        // property or subproperty.
+-        if (isPrototypeProperty(lhs)) {
+-          return false;
+-        }
+-
++        // Only traverse the right side if it's not an assignment to a prototype
++        // property or subproperty.
++        if (isPrototypeProperty(lhs) ||
++            (lhs.getQualifiedName() != null && lhs.getQualifiedName().contains(".prototype."))) {
++          return false;
++        }
++
+@@ -1,10 +1,19 @@
+-            pType == Token.ASSIGN)) {
+-        return false;
+-      }
+-    }
+-
+-    if (parent != null && parent.getType() == Token.ASSIGN) {
+-      Node lhs = parent.getFirstChild();
+-      Node rhs = lhs.getNext();
+-      
+-      if (n == lhs) {
++            pType == Token.ASSIGN)) {
++        return false;
++      }
++
++      // If this function is the RHS of an assignment to a prototype property,
++      // don't traverse it.
++      if (pType == Token.ASSIGN) {
++        Node lhs = parent.getFirstChild();
++        if (isPrototypeProperty(lhs)) {
++          return false;
++        }
++      }
++    }
++
++    if (parent != null && parent.getType() == Token.ASSIGN) {
++      Node lhs = parent.getFirstChild();
++      Node rhs = lhs.getNext();
++      
++      if (n == lhs) {
+@@ -1,19 +1,10 @@
+-            pType == Token.ASSIGN)) {
+-        return false;
+-      }
+-
+-      // If this function is the RHS of an assignment to a prototype property,
+-      // don't traverse it.
+-      if (pType == Token.ASSIGN) {
+-        Node lhs = parent.getFirstChild();
+-        if (isPrototypeProperty(lhs)) {
+-          return false;
+-        }
+-      }
+-    }
+-
+-    if (parent != null && parent.getType() == Token.ASSIGN) {
+-      Node lhs = parent.getFirstChild();
+-      Node rhs = lhs.getNext();
+-      
+-      if (n == lhs) {
++            pType == Token.ASSIGN)) {
++        return false;
++      }
++    }
++
++    if (parent != null && parent.getType() == Token.ASSIGN) {
++      Node lhs = parent.getFirstChild();
++      Node rhs = lhs.getNext();
++      
++      if (n == lhs) {
+@@ -1,13 +1,1 @@
+-  private boolean isPrototypeProperty(Node n) {
+-    if (n.getType() == Token.GETPROP) {
+-      if (n.getLastChild().getString().equals("prototype")) {
+-        return true;
+-      }
+-      return isPrototypeProperty(n.getFirstChild());
+-    } else if (n.getType() == Token.GETELEM) {
+-      return isPrototypeProperty(n.getFirstChild());
+-    }
+-    return false;
+-  }
+-
+-  public void visit(NodeTraversal t, Node n, Node parent) {
++  public void visit(NodeTraversal t, Node n, Node parent) {
+@@ -1,7 +1,15 @@
+-        // Only traverse the right side if it's not an assignment to a prototype
+-        // property or subproperty.
+-        if (isPrototypeProperty(lhs) ||
+-            (lhs.getQualifiedName() != null && lhs.getQualifiedName().contains(".prototype."))) {
+-          return false;
+-        }
+-
++        // Only traverse the right side if it's not an assignment to a prototype
++        // property or subproperty.
++        Node current = lhs;
++        boolean isPrototype = false;
++        while (current != null && (current.getType() == Token.GETPROP || current.getType() == Token.GETELEM)) {
++          if (current.getType() == Token.GETPROP && current.getLastChild().getString().equals("prototype")) {
++            isPrototype = true;
++            break;
++          }
++          current = current.getFirstChild();
++        }
++        if (isPrototype) {
++          return false;
++        }
++
+@@ -1,15 +1,10 @@
+-        // Only traverse the right side if it's not an assignment to a prototype
+-        // property or subproperty.
+-        Node current = lhs;
+-        boolean isPrototype = false;
+-        while (current != null && (current.getType() == Token.GETPROP || current.getType() == Token.GETELEM)) {
+-          if (current.getType() == Token.GETPROP && current.getLastChild().getString().equals("prototype")) {
+-            isPrototype = true;
+-            break;
+-          }
+-          current = current.getFirstChild();
+-        }
+-        if (isPrototype) {
+-          return false;
+-        }
+-
++        // Only traverse the right side if it's not an assignment to a prototype
++        // property or subproperty.
++          if (lhs.getType() == Token.GETPROP &&
++              lhs.getLastChild().getString().equals("prototype")) {
++            return false;
++          }
++          if (lhs.getQualifiedName() != null && lhs.getQualifiedName().contains(".prototype.")) {
++            return false;
++          }
++
+@@ -1,1 +1,13 @@
+-  public void visit(NodeTraversal t, Node n, Node parent) {
++  private boolean isPrototypeProperty(Node n) {
++    if (n.getType() == Token.GETPROP) {
++      if (n.getLastChild().getString().equals("prototype")) {
++        return true;
++      }
++      return isPrototypeProperty(n.getFirstChild());
++    } else if (n.getType() == Token.GETELEM) {
++      return isPrototypeProperty(n.getFirstChild());
++    }
++    return false;
++  }
++
++  public void visit(NodeTraversal t, Node n, Node parent) {
+@@ -1,6 +1,15 @@
+-            pType == Token.ASSIGN)) {
+-        return false;
+-      }
+-    }
+-
+-    if (parent != null && parent.getType() == Token.ASSIGN) {
++            pType == Token.ASSIGN)) {
++        return false;
++      }
++
++      // If this function is the RHS of an assignment to a prototype property,
++      // don't traverse it.
++      if (pType == Token.ASSIGN) {
++        Node lhs = parent.getFirstChild();
++        if (isPrototypeProperty(lhs)) {
++          return false;
++        }
++      }
++    }
++
++    if (parent != null && parent.getType() == Token.ASSIGN) {
+@@ -1,4 +1,5 @@
+-        if (isPrototypeProperty(lhs)) {
+-          return false;
+-        }
+-
++        if (isPrototypeProperty(lhs) ||
++            (lhs.getQualifiedName() != null && lhs.getQualifiedName().contains(".prototype."))) {
++          return false;
++        }
++
+@@ -1,13 +1,1 @@
+-  private boolean isPrototypeProperty(Node n) {
+-    if (n.getType() == Token.GETPROP) {
+-      if (n.getLastChild().getString().equals("prototype")) {
+-        return true;
+-      }
+-      return isPrototypeProperty(n.getFirstChild());
+-    } else if (n.getType() == Token.GETELEM) {
+-      return isPrototypeProperty(n.getFirstChild());
+-    }
+-    return false;
+-  }
+-
+-  public void visit(NodeTraversal t, Node n, Node parent) {
++  public void visit(NodeTraversal t, Node n, Node parent) {
+@@ -1,1 +1,16 @@
+-  public void visit(NodeTraversal t, Node n, Node parent) {
++  private boolean isAssignedToPrototypeProperty(Node functionNode) {
++    Node parent = functionNode.getParent();
++    if (parent != null && parent.getType() == Token.ASSIGN) {
++      Node lhs = parent.getFirstChild();
++      Node current = lhs;
++      while (current != null && (current.getType() == Token.GETPROP || current.getType() == Token.GETELEM)) {
++        if (current.getType() == Token.GETPROP && current.getLastChild().getString().equals("prototype")) {
++          return true;
++        }
++        current = current.getFirstChild();
++      }
++    }
++    return false;
++  }
++
++  public void visit(NodeTraversal t, Node n, Node parent) {
+@@ -1,16 +1,11 @@
+-            pType == Token.ASSIGN)) {
+-        return false;
+-      }
+-
+-      // If this function is the RHS of an assignment to a prototype property,
+-      // don't traverse it.
+-      if (pType == Token.ASSIGN) {
+-        Node lhs = parent.getFirstChild();
+-        if (isPrototypeProperty(lhs) ||
+-            (lhs.getQualifiedName() != null && lhs.getQualifiedName().contains(".prototype."))) {
+-          return false;
+-        }
+-      }
+-    }
+-
+-    if (parent != null && parent.getType() == Token.ASSIGN) {
++            pType == Token.ASSIGN)) {
++        return false;
++      }
++
++      // If this function is assigned to a prototype property, don't traverse it.
++      if (isAssignedToPrototypeProperty(n)) {
++        return false;
++      }
++    }
++
++    if (parent != null && parent.getType() == Token.ASSIGN) {
+@@ -1,29 +1,29 @@
+-      // Don't traverse functions that are constructors or have the @this
+-      // or @override annotation.
+-      JSDocInfo jsDoc = getFunctionJsDocInfo(n);
+-      if (jsDoc != null &&
+-          (jsDoc.isConstructor() ||
+-           jsDoc.hasThisType() ||
+-           jsDoc.isOverride() ||
+-           jsDoc.isInterface())) {
+-        return false;
+-      }
+-
+-      // Don't traverse functions unless they would normally
+-      // be able to have a @this annotation associated with them. e.g.,
+-      // var a = function() { }; // or
+-      // function a() {} // or
+-      // a.x = function() {};
+-      int pType = parent.getType();
+-      if (!(pType == Token.BLOCK ||
+-            pType == Token.SCRIPT ||
+-            pType == Token.NAME ||
+-            pType == Token.ASSIGN)) {
+-        return false;
+-      }
+-
+-      // If this function is assigned to a prototype property, don't traverse it.
+-      if (isAssignedToPrototypeProperty(n)) {
+-        return false;
+-      }
+-
++      // If this function is assigned to a prototype property, don't traverse it.
++      if (isAssignedToPrototypeProperty(n)) {
++        return false;
++      }
++
++      // Don't traverse functions that are constructors or have the @this
++      // or @override annotation.
++      JSDocInfo jsDoc = getFunctionJsDocInfo(n);
++      if (jsDoc != null &&
++          (jsDoc.isConstructor() ||
++           jsDoc.hasThisType() ||
++           jsDoc.isOverride() ||
++           jsDoc.isInterface())) {
++        return false;
++      }
++
++      // Don't traverse functions unless they would normally
++      // be able to have a @this annotation associated with them. e.g.,
++      // var a = function() { }; // or
++      // function a() {} // or
++      // a.x = function() {};
++      int pType = parent.getType();
++      if (!(pType == Token.BLOCK ||
++            pType == Token.SCRIPT ||
++            pType == Token.NAME ||
++            pType == Token.ASSIGN)) {
++        return false;
++      }
++
+@@ -1,9 +1,2 @@
+-  private final CheckLevel level;
+-  
+-  /**
+-   * If {@code assignLhsChild != null}, then the node being traversed is
+-   * a descendant of the first child of an ASSIGN node. assignLhsChild's
+-   * parent is this ASSIGN node.
+-   */
+-  private Node assignLhsChild = null;
+-
++  private final CheckLevel level;
++
+@@ -1,8 +1,3 @@
+-      if (n == lhs) {
+-        // Always traverse the left side of the assignment. To handle
+-        // nested assignments properly (e.g., (a = this).property = c;),
+-        // assignLhsChild should not be overridden.
+-        if (assignLhsChild == null) {
+-          assignLhsChild = lhs;
+-        }
+-      } else {
++      if (n == lhs) {
++        // Always traverse the left side of the assignment.
++      } else {
+@@ -1,9 +1,6 @@
+-  public void visit(NodeTraversal t, Node n, Node parent) {
+-    if (n.getType() == Token.THIS && shouldReportThis(n, parent)) {
+-      compiler.report(t.makeError(n, level, GLOBAL_THIS));
+-    }
+-    if (n == assignLhsChild) {
+-      assignLhsChild = null;
+-    }
+-  }
+-
++  public void visit(NodeTraversal t, Node n, Node parent) {
++    if (n.getType() == Token.THIS && shouldReportThis(n, parent)) {
++      compiler.report(t.makeError(n, level, GLOBAL_THIS));
++    }
++  }
++
+@@ -1,10 +1,5 @@
+-  private boolean shouldReportThis(Node n, Node parent) {
+-    if (assignLhsChild != null) {
+-      // Always report a THIS on the left side of an assign.
+-      return true;
+-    }
+-
+-    // Also report a THIS with a property access.
+-    return parent != null && NodeUtil.isGet(parent);
+-  }
+-
++  private boolean shouldReportThis(Node n, Node parent) {
++    // Also report a THIS with a property access.
++    return parent != null && NodeUtil.isGet(parent);
++  }
++
+@@ -1,2 +1,9 @@
+-  private final CheckLevel level;
+-
++  private final CheckLevel level;
++  
++  /**
++   * If {@code assignLhsChild != null}, then the node being traversed is
++   * a descendant of the first child of an ASSIGN node. assignLhsChild's
++   * parent is this ASSIGN node.
++   */
++  private Node assignLhsChild = null;
++
+@@ -1,3 +1,8 @@
+-      if (n == lhs) {
+-        // Always traverse the left side of the assignment.
+-      } else {
++      if (n == lhs) {
++        // Always traverse the left side of the assignment. To handle
++        // nested assignments properly (e.g., (a = this).property = c;),
++        // assignLhsChild should not be overridden.
++        if (assignLhsChild == null) {
++          assignLhsChild = lhs;
++        }
++      } else {
+@@ -1,6 +1,9 @@
+-  public void visit(NodeTraversal t, Node n, Node parent) {
+-    if (n.getType() == Token.THIS && shouldReportThis(n, parent)) {
+-      compiler.report(t.makeError(n, level, GLOBAL_THIS));
+-    }
+-  }
+-
++  public void visit(NodeTraversal t, Node n, Node parent) {
++    if (n.getType() == Token.THIS && shouldReportThis(n, parent)) {
++      compiler.report(t.makeError(n, level, GLOBAL_THIS));
++    }
++    if (n == assignLhsChild) {
++      assignLhsChild = null;
++    }
++  }
++
+@@ -1,5 +1,10 @@
+-  private boolean shouldReportThis(Node n, Node parent) {
+-    // Also report a THIS with a property access.
+-    return parent != null && NodeUtil.isGet(parent);
+-  }
+-
++  private boolean shouldReportThis(Node n, Node parent) {
++    if (assignLhsChild != null) {
++      // Always report a THIS on the left side of an assign.
++      return true;
++    }
++
++    // Also report a THIS with a property access.
++    return parent != null && NodeUtil.isGet(parent);
++  }
++
+@@ -1,12 +1,5 @@
+-      } else {
+-        // Only traverse the right side if it's not an assignment to a prototype
+-        // property or subproperty.
+-          if (lhs.getType() == Token.GETPROP &&
+-              lhs.getLastChild().getString().equals("prototype")) {
+-            return false;
+-          }
+-          if (lhs.getQualifiedName() != null && lhs.getQualifiedName().contains(".prototype.")) {
+-            return false;
+-          }
+-      }
+-
++      } else {
++        // Only traverse the right side if it's not an assignment to a prototype
++        // property or subproperty.
++      }
++
+@@ -1,10 +1,15 @@
+-  private boolean shouldReportThis(Node n, Node parent) {
+-    if (assignLhsChild != null) {
+-      // Always report a THIS on the left side of an assign.
+-      return true;
+-    }
+-
+-    // Also report a THIS with a property access.
+-    return parent != null && NodeUtil.isGet(parent);
+-  }
+-
++  private boolean shouldReportThis(Node n, Node parent) {
++    Node enclosingFunction = NodeTraversal.getEnclosingFunction(n);
++    if (enclosingFunction != null && isAssignedToPrototypeProperty(enclosingFunction)) {
++      return false;
++    }
++
++    if (assignLhsChild != null) {
++      // Always report a THIS on the left side of an assign.
++      return true;
++    }
++
++    // Also report a THIS with a property access.
++    return parent != null && NodeUtil.isGet(parent);
++  }
++
+@@ -1,15 +1,10 @@
+-  private boolean shouldReportThis(Node n, Node parent) {
+-    Node enclosingFunction = NodeTraversal.getEnclosingFunction(n);
+-    if (enclosingFunction != null && isAssignedToPrototypeProperty(enclosingFunction)) {
+-      return false;
+-    }
+-
+-    if (assignLhsChild != null) {
+-      // Always report a THIS on the left side of an assign.
+-      return true;
+-    }
+-
+-    // Also report a THIS with a property access.
+-    return parent != null && NodeUtil.isGet(parent);
+-  }
+-
++  private boolean shouldReportThis(Node n, Node parent) {
++    if (assignLhsChild != null) {
++      // Always report a THIS on the left side of an assign.
++      return true;
++    }
++
++    // Also report a THIS with a property access.
++    return parent != null && NodeUtil.isGet(parent);
++  }
++
+@@ -1,10 +1,15 @@
+-  private boolean shouldReportThis(Node n, Node parent) {
+-    if (assignLhsChild != null) {
+-      // Always report a THIS on the left side of an assign.
+-      return true;
+-    }
+-
+-    // Also report a THIS with a property access.
+-    return parent != null && NodeUtil.isGet(parent);
+-  }
+-
++  private boolean shouldReportThis(Node n, Node parent) {
++    Node enclosingFunction = t.getEnclosingFunction();
++    if (enclosingFunction != null && isAssignedToPrototypeProperty(enclosingFunction)) {
++      return false;
++    }
++
++    if (assignLhsChild != null) {
++      // Always report a THIS on the left side of an assign.
++      return true;
++    }
++
++    // Also report a THIS with a property access.
++    return parent != null && NodeUtil.isGet(parent);
++  }
++
+@@ -1,15 +1,10 @@
+-  private boolean shouldReportThis(Node n, Node parent) {
+-    Node enclosingFunction = t.getEnclosingFunction();
+-    if (enclosingFunction != null && isAssignedToPrototypeProperty(enclosingFunction)) {
+-      return false;
+-    }
+-
+-    if (assignLhsChild != null) {
+-      // Always report a THIS on the left side of an assign.
+-      return true;
+-    }
+-
+-    // Also report a THIS with a property access.
+-    return parent != null && NodeUtil.isGet(parent);
+-  }
+-
++  private boolean shouldReportThis(Node n, Node parent) {
++    if (assignLhsChild != null) {
++      // Always report a THIS on the left side of an assign.
++      return true;
++    }
++
++    // Also report a THIS with a property access.
++    return parent != null && NodeUtil.isGet(parent);
++  }
++
+@@ -1,9 +1,15 @@
+-  public void visit(NodeTraversal t, Node n, Node parent) {
+-    if (n.getType() == Token.THIS && shouldReportThis(n, parent)) {
+-      compiler.report(t.makeError(n, level, GLOBAL_THIS));
+-    }
+-    if (n == assignLhsChild) {
+-      assignLhsChild = null;
+-    }
+-  }
+-
++  public void visit(NodeTraversal t, Node n, Node parent) {
++    if (n.getType() == Token.THIS) {
++      Node enclosingFunction = t.getEnclosingFunction();
++      if (enclosingFunction != null && isAssignedToPrototypeProperty(enclosingFunction)) {
++        return;
++      }
++      if (shouldReportThis(n, parent)) {
++        compiler.report(t.makeError(n, level, GLOBAL_THIS));
++      }
++    }
++    if (n == assignLhsChild) {
++      assignLhsChild = null;
++    }
++  }
++
+@@ -1,5 +1,12 @@
+-      } else {
+-        // Only traverse the right side if it's not an assignment to a prototype
+-        // property or subproperty.
+-      }
+-
++      } else {
++        // Only traverse the right side if it's not an assignment to a prototype
++        // property or subproperty.
++          if (lhs.getType() == Token.GETPROP &&
++              lhs.getLastChild().getString().equals("prototype")) {
++            return false;
++          }
++          if (lhs.getQualifiedName() != null && lhs.getQualifiedName().contains(".prototype.")) {
++            return false;
++          }
++      }
++
+@@ -1,31 +1,26 @@
+-    if (n.getType() == Token.FUNCTION) {
+-      // If this function is assigned to a prototype property, don't traverse it.
+-      if (isAssignedToPrototypeProperty(n)) {
+-        return false;
+-      }
+-
+-      // Don't traverse functions that are constructors or have the @this
+-      // or @override annotation.
+-      JSDocInfo jsDoc = getFunctionJsDocInfo(n);
+-      if (jsDoc != null &&
+-          (jsDoc.isConstructor() ||
+-           jsDoc.hasThisType() ||
+-           jsDoc.isOverride() ||
+-           jsDoc.isInterface())) {
+-        return false;
+-      }
+-
+-      // Don't traverse functions unless they would normally
+-      // be able to have a @this annotation associated with them. e.g.,
+-      // var a = function() { }; // or
+-      // function a() {} // or
+-      // a.x = function() {};
+-      int pType = parent.getType();
+-      if (!(pType == Token.BLOCK ||
+-            pType == Token.SCRIPT ||
+-            pType == Token.NAME ||
+-            pType == Token.ASSIGN)) {
+-        return false;
+-      }
+-    }
+-
++    if (n.getType() == Token.FUNCTION) {
++      // Don't traverse functions that are constructors or have the @this
++      // or @override annotation.
++      JSDocInfo jsDoc = getFunctionJsDocInfo(n);
++      if (jsDoc != null &&
++          (jsDoc.isConstructor() ||
++           jsDoc.hasThisType() ||
++           jsDoc.isOverride() ||
++           jsDoc.isInterface())) {
++        return false;
++      }
++
++      // Don't traverse functions unless they would normally
++      // be able to have a @this annotation associated with them. e.g.,
++      // var a = function() { }; // or
++      // function a() {} // or
++      // a.x = function() {};
++      int pType = parent.getType();
++      if (!(pType == Token.BLOCK ||
++            pType == Token.SCRIPT ||
++            pType == Token.NAME ||
++            pType == Token.ASSIGN)) {
++        return false;
++      }
++    }
++
+@@ -1,16 +1,1 @@
+-  private boolean isAssignedToPrototypeProperty(Node functionNode) {
+-    Node parent = functionNode.getParent();
+-    if (parent != null && parent.getType() == Token.ASSIGN) {
+-      Node lhs = parent.getFirstChild();
+-      Node current = lhs;
+-      while (current != null && (current.getType() == Token.GETPROP || current.getType() == Token.GETELEM)) {
+-        if (current.getType() == Token.GETPROP && current.getLastChild().getString().equals("prototype")) {
+-          return true;
+-        }
+-        current = current.getFirstChild();
+-      }
+-    }
+-    return false;
+-  }
+-
+-  public void visit(NodeTraversal t, Node n, Node parent) {
++  public void visit(NodeTraversal t, Node n, Node parent) {
+@@ -1,15 +1,21 @@
+-  public void visit(NodeTraversal t, Node n, Node parent) {
+-    if (n.getType() == Token.THIS) {
+-      Node enclosingFunction = t.getEnclosingFunction();
+-      if (enclosingFunction != null && isAssignedToPrototypeProperty(enclosingFunction)) {
+-        return;
+-      }
+-      if (shouldReportThis(n, parent)) {
+-        compiler.report(t.makeError(n, level, GLOBAL_THIS));
+-      }
+-    }
+-    if (n == assignLhsChild) {
+-      assignLhsChild = null;
+-    }
+-  }
+-
++  public void visit(NodeTraversal t, Node n, Node parent) {
++    if (n.getType() == Token.THIS) {
++      Node enclosingFunction = t.getEnclosingFunction();
++      if (enclosingFunction != null) {
++        Node functionParent = enclosingFunction.getParent();
++        if (functionParent != null && functionParent.getType() == Token.ASSIGN) {
++          Node lhs = functionParent.getFirstChild();
++          if (NodeUtil.isPrototypeProperty(lhs)) {
++            return;
++          }
++        }
++      }
++      if (shouldReportThis(n, parent)) {
++        compiler.report(t.makeError(n, level, GLOBAL_THIS));
++      }
++    }
++    if (n == assignLhsChild) {
++      assignLhsChild = null;
++    }
++  }
++
+@@ -1,21 +1,15 @@
+-  public void visit(NodeTraversal t, Node n, Node parent) {
+-    if (n.getType() == Token.THIS) {
+-      Node enclosingFunction = t.getEnclosingFunction();
+-      if (enclosingFunction != null) {
+-        Node functionParent = enclosingFunction.getParent();
+-        if (functionParent != null && functionParent.getType() == Token.ASSIGN) {
+-          Node lhs = functionParent.getFirstChild();
+-          if (NodeUtil.isPrototypeProperty(lhs)) {
+-            return;
+-          }
+-        }
+-      }
+-      if (shouldReportThis(n, parent)) {
+-        compiler.report(t.makeError(n, level, GLOBAL_THIS));
+-      }
+-    }
+-    if (n == assignLhsChild) {
+-      assignLhsChild = null;
+-    }
+-  }
+-
++  public void visit(NodeTraversal t, Node n, Node parent) {
++    if (n.getType() == Token.THIS) {
++      Node enclosingFunction = t.getEnclosingFunction();
++      if (enclosingFunction != null && isAssignedToPrototypeProperty(enclosingFunction)) {
++        return;
++      }
++      if (shouldReportThis(n, parent)) {
++        compiler.report(t.makeError(n, level, GLOBAL_THIS));
++      }
++    }
++    if (n == assignLhsChild) {
++      assignLhsChild = null;
++    }
++  }
++
+@@ -1,1 +1,16 @@
+-  public void visit(NodeTraversal t, Node n, Node parent) {
++  private boolean isAssignedToPrototypeProperty(Node functionNode) {
++    Node parent = functionNode.getParent();
++    if (parent != null && parent.getType() == Token.ASSIGN) {
++      Node lhs = parent.getFirstChild();
++      Node current = lhs;
++      while (current != null && (current.getType() == Token.GETPROP || current.getType() == Token.GETELEM)) {
++        if (current.getType() == Token.GETPROP && current.getLastChild().getString().equals("prototype")) {
++          return true;
++        }
++        current = current.getFirstChild();
++      }
++    }
++    return false;
++  }
++
++  public void visit(NodeTraversal t, Node n, Node parent) {
+@@ -1,16 +1,1 @@
+-  private boolean isAssignedToPrototypeProperty(Node functionNode) {
+-    Node parent = functionNode.getParent();
+-    if (parent != null && parent.getType() == Token.ASSIGN) {
+-      Node lhs = parent.getFirstChild();
+-      Node current = lhs;
+-      while (current != null && (current.getType() == Token.GETPROP || current.getType() == Token.GETELEM)) {
+-        if (current.getType() == Token.GETPROP && current.getLastChild().getString().equals("prototype")) {
+-          return true;
+-        }
+-        current = current.getFirstChild();
+-      }
+-    }
+-    return false;
+-  }
+-
+-  public void visit(NodeTraversal t, Node n, Node parent) {
++  public void visit(NodeTraversal t, Node n, Node parent) {
+@@ -1,15 +1,23 @@
+-  public void visit(NodeTraversal t, Node n, Node parent) {
+-    if (n.getType() == Token.THIS) {
+-      Node enclosingFunction = t.getEnclosingFunction();
+-      if (enclosingFunction != null && isAssignedToPrototypeProperty(enclosingFunction)) {
+-        return;
+-      }
+-      if (shouldReportThis(n, parent)) {
+-        compiler.report(t.makeError(n, level, GLOBAL_THIS));
+-      }
+-    }
+-    if (n == assignLhsChild) {
+-      assignLhsChild = null;
+-    }
+-  }
+-
++  public void visit(NodeTraversal t, Node n, Node parent) {
++    if (n.getType() == Token.THIS) {
++      Node enclosingFunction = t.getEnclosingFunction();
++      if (enclosingFunction != null) {
++        Node functionParent = enclosingFunction.getParent(); // ASSIGN node
++        if (functionParent != null && functionParent.getType() == Token.ASSIGN) {
++          Node assignParent = functionParent.getParent(); // EXPR_RESULT node
++          if (assignParent != null && assignParent.getType() == Token.EXPR_RESULT) {
++            if (NodeUtil.isPrototypePropertyDeclaration(assignParent)) {
++              return;
++            }
++          }
++        }
++      }
++      if (shouldReportThis(n, parent)) {
++        compiler.report(t.makeError(n, level, GLOBAL_THIS));
++      }
++    }
++    if (n == assignLhsChild) {
++      assignLhsChild = null;
++    }
++  }
++
+@@ -1,23 +1,15 @@
+-  public void visit(NodeTraversal t, Node n, Node parent) {
+-    if (n.getType() == Token.THIS) {
+-      Node enclosingFunction = t.getEnclosingFunction();
+-      if (enclosingFunction != null) {
+-        Node functionParent = enclosingFunction.getParent(); // ASSIGN node
+-        if (functionParent != null && functionParent.getType() == Token.ASSIGN) {
+-          Node assignParent = functionParent.getParent(); // EXPR_RESULT node
+-          if (assignParent != null && assignParent.getType() == Token.EXPR_RESULT) {
+-            if (NodeUtil.isPrototypePropertyDeclaration(assignParent)) {
+-              return;
+-            }
+-          }
+-        }
+-      }
+-      if (shouldReportThis(n, parent)) {
+-        compiler.report(t.makeError(n, level, GLOBAL_THIS));
+-      }
+-    }
+-    if (n == assignLhsChild) {
+-      assignLhsChild = null;
+-    }
+-  }
+-
++  public void visit(NodeTraversal t, Node n, Node parent) {
++    if (n.getType() == Token.THIS) {
++      Node enclosingFunction = t.getEnclosingFunction();
++      if (enclosingFunction != null && isAssignedToPrototypeProperty(enclosingFunction)) {
++        return;
++      }
++      if (shouldReportThis(n, parent)) {
++        compiler.report(t.makeError(n, level, GLOBAL_THIS));
++      }
++    }
++    if (n == assignLhsChild) {
++      assignLhsChild = null;
++    }
++  }
++
+@@ -1,1 +1,16 @@
+-  public void visit(NodeTraversal t, Node n, Node parent) {
++  private boolean isAssignedToPrototypeProperty(Node functionNode) {
++    Node parent = functionNode.getParent();
++    if (parent != null && parent.getType() == Token.ASSIGN) {
++      Node lhs = parent.getFirstChild();
++      Node current = lhs;
++      while (current != null && (current.getType() == Token.GETPROP || current.getType() == Token.GETELEM)) {
++        if (current.getType() == Token.GETPROP && current.getLastChild().getString().equals("prototype")) {
++          return true;
++        }
++        current = current.getFirstChild();
++      }
++    }
++    return false;
++  }
++
++  public void visit(NodeTraversal t, Node n, Node parent) {
+@@ -1,15 +1,9 @@
+-  public void visit(NodeTraversal t, Node n, Node parent) {
+-    if (n.getType() == Token.THIS) {
+-      Node enclosingFunction = t.getEnclosingFunction();
+-      if (enclosingFunction != null && isAssignedToPrototypeProperty(enclosingFunction)) {
+-        return;
+-      }
+-      if (shouldReportThis(n, parent)) {
+-        compiler.report(t.makeError(n, level, GLOBAL_THIS));
+-      }
+-    }
+-    if (n == assignLhsChild) {
+-      assignLhsChild = null;
+-    }
+-  }
+-
++  public void visit(NodeTraversal t, Node n, Node parent) {
++    if (n.getType() == Token.THIS && shouldReportThis(n, parent)) {
++      compiler.report(t.makeError(n, level, GLOBAL_THIS));
++    }
++    if (n == assignLhsChild) {
++      assignLhsChild = null;
++    }
++  }
++
+@@ -1,8 +1,13 @@
+-      if (!(pType == Token.BLOCK ||
+-            pType == Token.SCRIPT ||
+-            pType == Token.NAME ||
+-            pType == Token.ASSIGN)) {
+-        return false;
+-      }
+-    }
+-
++      if (!(pType == Token.BLOCK ||
++            pType == Token.SCRIPT ||
++            pType == Token.NAME ||
++            pType == Token.ASSIGN)) {
++        return false;
++      }
++
++      // If this function is assigned to a prototype property, don't traverse it.
++      if (isAssignedToPrototypeProperty(n)) {
++        return false;
++      }
++    }
++
+@@ -1,13 +1,8 @@
+-      if (!(pType == Token.BLOCK ||
+-            pType == Token.SCRIPT ||
+-            pType == Token.NAME ||
+-            pType == Token.ASSIGN)) {
+-        return false;
+-      }
+-
+-      // If this function is assigned to a prototype property, don't traverse it.
+-      if (isAssignedToPrototypeProperty(n)) {
+-        return false;
+-      }
+-    }
+-
++      if (!(pType == Token.BLOCK ||
++            pType == Token.SCRIPT ||
++            pType == Token.NAME ||
++            pType == Token.ASSIGN)) {
++        return false;
++      }
++    }
++
+@@ -1,16 +1,1 @@
+-  private boolean isAssignedToPrototypeProperty(Node functionNode) {
+-    Node parent = functionNode.getParent();
+-    if (parent != null && parent.getType() == Token.ASSIGN) {
+-      Node lhs = parent.getFirstChild();
+-      Node current = lhs;
+-      while (current != null && (current.getType() == Token.GETPROP || current.getType() == Token.GETELEM)) {
+-        if (current.getType() == Token.GETPROP && current.getLastChild().getString().equals("prototype")) {
+-          return true;
+-        }
+-        current = current.getFirstChild();
+-      }
+-    }
+-    return false;
+-  }
+-
+-  public void visit(NodeTraversal t, Node n, Node parent) {
++  public void visit(NodeTraversal t, Node n, Node parent) {
+@@ -1,1 +1,16 @@
+-  public void visit(NodeTraversal t, Node n, Node parent) {
++  private boolean isAssignedToPrototypeProperty(Node functionNode) {
++    Node parent = functionNode.getParent();
++    if (parent != null && parent.getType() == Token.ASSIGN) {
++      Node lhs = parent.getFirstChild();
++      Node current = lhs;
++      while (current != null && (current.getType() == Token.GETPROP || current.getType() == Token.GETELEM)) {
++        if (current.getType() == Token.GETPROP && current.getLastChild().getString().equals("prototype")) {
++          return true;
++        }
++        current = current.getFirstChild();
++      }
++    }
++    return false;
++  }
++
++  public void visit(NodeTraversal t, Node n, Node parent) {
+@@ -1,9 +1,15 @@
+-  public void visit(NodeTraversal t, Node n, Node parent) {
+-    if (n.getType() == Token.THIS && shouldReportThis(n, parent)) {
+-      compiler.report(t.makeError(n, level, GLOBAL_THIS));
+-    }
+-    if (n == assignLhsChild) {
+-      assignLhsChild = null;
+-    }
+-  }
+-
++  public void visit(NodeTraversal t, Node n, Node parent) {
++    if (n.getType() == Token.THIS) {
++      Node enclosingFunction = t.getEnclosingFunction();
++      if (enclosingFunction != null && isAssignedToPrototypeProperty(enclosingFunction)) {
++        return;
++      }
++      if (shouldReportThis(n, parent)) {
++        compiler.report(t.makeError(n, level, GLOBAL_THIS));
++      }
++    }
++    if (n == assignLhsChild) {
++      assignLhsChild = null;
++    }
++  }
++

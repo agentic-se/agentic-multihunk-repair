@@ -1,0 +1,24 @@
+diff --git a/src/org/mockito/internal/configuration/injection/FinalMockCandidateFilter.java b/src/org/mockito/internal/configuration/injection/FinalMockCandidateFilter.java
+index 637c450eb..31b7965e7 100644
+--- a/src/org/mockito/internal/configuration/injection/FinalMockCandidateFilter.java
++++ b/src/org/mockito/internal/configuration/injection/FinalMockCandidateFilter.java
+@@ -1,6 +1,7 @@
+ package org.mockito.internal.configuration.injection;
+ 
+ import org.mockito.exceptions.base.MockitoException;
++import org.mockito.internal.util.reflection.BeanPropertySetter;
+ import org.mockito.internal.util.reflection.FieldSetter;
+ 
+ import java.lang.reflect.Field;
+@@ -22,7 +23,11 @@ public class FinalMockCandidateFilter implements MockCandidateFilter {
+             return new OngoingInjecter() {
+                 public boolean thenInject() {
+                     try {
++                        // Try property setter first
++                        if (!new BeanPropertySetter(fieldInstance, field).set(matchingMock)) {
++                            // If setter not found or failed, fall back to field injection
+                             new FieldSetter(fieldInstance, field).set(matchingMock);
++                        }
+                     } catch (Exception e) {
+                         throw new MockitoException("Problems injecting dependency in " + field.getName(), e);
+                     }

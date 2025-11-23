@@ -1,0 +1,28 @@
+--- a/src/main/java/org/apache/commons/csv/CSVParser.java
++++ b/src/main/java/org/apache/commons/csv/CSVParser.java
+@@ -1,3 +1,7 @@
+-                for (int i = 0; i < header.length; i++) {
+-                    hdrMap.put(header[i], Integer.valueOf(i));
+-                }
++                for (int i = 0; i < header.length; i++) {
++                    final String headerName = header[i];
++                    if (hdrMap.containsKey(headerName)) {
++                        throw new IllegalStateException("The header contains a duplicate name: "" + headerName + "" in " + format.format());
++                    }
++                    hdrMap.put(headerName, Integer.valueOf(i));
++                }
+@@ -1,7 +1,7 @@
+-                for (int i = 0; i < header.length; i++) {
+-                    final String headerName = header[i];
+-                    if (hdrMap.containsKey(headerName)) {
+-                        throw new IllegalStateException("The header contains a duplicate name: "" + headerName + "" in " + format.format());
+-                    }
+-                    hdrMap.put(headerName, Integer.valueOf(i));
+-                }
++                for (int i = 0; i < header.length; i++) {
++                    final String headerName = header[i];
++                    if (hdrMap.containsKey(headerName)) {
++                        throw new IllegalStateException("The header contains a duplicate name: \"" + headerName + "\" in " + format.format());
++                    }
++                    hdrMap.put(headerName, Integer.valueOf(i));
++                }

@@ -1,0 +1,192 @@
+--- a/run_bug_exposing_tests.sh
++++ b/run_bug_exposing_tests.sh
+@@ -1,1 +1,1 @@
+-  java -cp "$CP" org.junit.runner.JUnitCore "$cls" >> "$LOGFILE" 2>&1
++  java -cp "$CP" junit.textui.TestRunner "$cls" >> "$LOGFILE" 2>&1
+
+--- a/src/main/java/org/joda/time/chrono/ZonedChronology.java
++++ b/src/main/java/org/joda/time/chrono/ZonedChronology.java
+@@ -1,11 +1,14 @@
+-        public long add(long instant, int value) {
+-            if (iTimeField) {
+-                int offset = getOffsetToAdd(instant);
+-                long localInstant = iField.add(instant + offset, value);
+-                return localInstant - offset;
+-            } else {
+-               long localInstant = iZone.convertUTCToLocal(instant);
+-               localInstant = iField.add(localInstant, value);
+-               return iZone.convertLocalToUTC(localInstant, false, instant);
+-            }
+-        }
++        public long add(long instant, int value) {
++            if (iTimeField) {
++                int offset = getOffsetToAdd(instant);
++                long localInstant = iField.add(instant + offset, value);
++                return localInstant - offset;
++            } else {
++                if (value == 0) {
++                    return instant;
++                }
++               long localInstant = iZone.convertUTCToLocal(instant);
++               localInstant = iField.add(localInstant, value);
++               return iZone.convertLocalToUTC(localInstant, false, instant);
++            }
++        }
+@@ -1,11 +1,14 @@
+-        public long add(long instant, long value) {
+-            if (iTimeField) {
+-                int offset = getOffsetToAdd(instant);
+-                long localInstant = iField.add(instant + offset, value);
+-                return localInstant - offset;
+-            } else {
+-               long localInstant = iZone.convertUTCToLocal(instant);
+-               localInstant = iField.add(localInstant, value);
+-               return iZone.convertLocalToUTC(localInstant, false, instant);
+-            }
+-        }
++        public long add(long instant, long value) {
++            if (iTimeField) {
++                int offset = getOffsetToAdd(instant);
++                long localInstant = iField.add(instant + offset, value);
++                return localInstant - offset;
++            } else {
++                if (value == 0) {
++                    return instant;
++                }
++               long localInstant = iZone.convertUTCToLocal(instant);
++               localInstant = iField.add(localInstant, value);
++               return iZone.convertLocalToUTC(localInstant, false, instant);
++            }
++        }
+@@ -1,14 +1,11 @@
+-        public long add(long instant, int value) {
+-            if (iTimeField) {
+-                int offset = getOffsetToAdd(instant);
+-                long localInstant = iField.add(instant + offset, value);
+-                return localInstant - offset;
+-            } else {
+-                if (value == 0) {
+-                    return instant;
+-                }
+-               long localInstant = iZone.convertUTCToLocal(instant);
+-               localInstant = iField.add(localInstant, value);
+-               return iZone.convertLocalToUTC(localInstant, false, instant);
+-            }
+-        }
++        public long add(long instant, int value) {
++            if (iTimeField) {
++                int offset = getOffsetToAdd(instant);
++                long localInstant = iField.add(instant + offset, value);
++                return localInstant - offset;
++            } else {
++               long localInstant = iZone.convertUTCToLocal(instant);
++               localInstant = iField.add(localInstant, value);
++               return iZone.convertLocalToUTC(localInstant, false, instant);
++            }
++        }
+@@ -1,14 +1,11 @@
+-        public long add(long instant, long value) {
+-            if (iTimeField) {
+-                int offset = getOffsetToAdd(instant);
+-                long localInstant = iField.add(instant + offset, value);
+-                return localInstant - offset;
+-            } else {
+-                if (value == 0) {
+-                    return instant;
+-                }
+-               long localInstant = iZone.convertUTCToLocal(instant);
+-               localInstant = iField.add(localInstant, value);
+-               return iZone.convertLocalToUTC(localInstant, false, instant);
+-            }
+-        }
++        public long add(long instant, long value) {
++            if (iTimeField) {
++                int offset = getOffsetToAdd(instant);
++                long localInstant = iField.add(instant + offset, value);
++                return localInstant - offset;
++            } else {
++               long localInstant = iZone.convertUTCToLocal(instant);
++               localInstant = iField.add(localInstant, value);
++               return iZone.convertLocalToUTC(localInstant, false, instant);
++            }
++        }
+@@ -1,11 +1,14 @@
+-        public long add(long instant, int value) {
+-            if (iTimeField) {
+-                int offset = getOffsetToAdd(instant);
+-                long localInstant = iField.add(instant + offset, value);
+-                return localInstant - offset;
+-            } else {
+-               long localInstant = iZone.convertUTCToLocal(instant);
+-               localInstant = iField.add(localInstant, value);
+-               return iZone.convertLocalToUTC(localInstant, false, instant);
+-            }
+-        }
++        public long add(long instant, int value) {
++            if (iTimeField) {
++                int offset = getOffsetToAdd(instant);
++                long localInstant = iField.add(instant + offset, value);
++                return localInstant - offset;
++            } else {
++                if (value == 0) {
++                    return instant;
++                }
++               long localInstant = iZone.convertUTCToLocal(instant);
++               localInstant = iField.add(localInstant, value);
++               return iZone.convertLocalToUTC(localInstant, false, instant);
++            }
++        }
+@@ -1,11 +1,14 @@
+-        public long add(long instant, long value) {
+-            if (iTimeField) {
+-                int offset = getOffsetToAdd(instant);
+-                long localInstant = iField.add(instant + offset, value);
+-                return localInstant - offset;
+-            } else {
+-               long localInstant = iZone.convertUTCToLocal(instant);
+-               localInstant = iField.add(localInstant, value);
+-               return iZone.convertLocalToUTC(localInstant, false, instant);
+-            }
+-        }
++        public long add(long instant, long value) {
++            if (iTimeField) {
++                int offset = getOffsetToAdd(instant);
++                long localInstant = iField.add(instant + offset, value);
++                return localInstant - offset;
++            } else {
++                if (value == 0) {
++                    return instant;
++                }
++               long localInstant = iZone.convertUTCToLocal(instant);
++               localInstant = iField.add(localInstant, value);
++               return iZone.convertLocalToUTC(localInstant, false, instant);
++            }
++        }
+@@ -1,5 +1,8 @@
+-        public long add(long instant, int value) {
+-            int offset = getOffsetToAdd(instant);
+-            instant = iField.add(instant + offset, value);
+-            return instant - (iTimeField ? offset : getOffsetFromLocalToSubtract(instant));
+-        }
++        public long add(long instant, int value) {
++            if (value == 0 && !iTimeField) {
++                return instant;
++            }
++            int offset = getOffsetToAdd(instant);
++            instant = iField.add(instant + offset, value);
++            return instant - (iTimeField ? offset : getOffsetFromLocalToSubtract(instant));
++        }
+@@ -1,5 +1,8 @@
+-        public long add(long instant, long value) {
+-            int offset = getOffsetToAdd(instant);
+-            instant = iField.add(instant + offset, value);
+-            return instant - (iTimeField ? offset : getOffsetFromLocalToSubtract(instant));
+-        }
++        public long add(long instant, long value) {
++            if (value == 0 && !iTimeField) {
++                return instant;
++            }
++            int offset = getOffsetToAdd(instant);
++            instant = iField.add(instant + offset, value);
++            return instant - (iTimeField ? offset : getOffsetFromLocalToSubtract(instant));
++        }

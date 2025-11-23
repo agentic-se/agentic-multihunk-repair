@@ -1,0 +1,24 @@
+diff --git a/src/main/java/org/jsoup/nodes/Element.java b/src/main/java/org/jsoup/nodes/Element.java
+index fd2b542..a3e6684 100644
+--- a/src/main/java/org/jsoup/nodes/Element.java
++++ b/src/main/java/org/jsoup/nodes/Element.java
+@@ -432,7 +432,7 @@ public class Element extends Node {
+      */
+     public Elements siblingElements() {
+ 
+-        return parent().children();
++        return parentNode == null ? new Elements() : parent().children();
+     }
+ 
+     /**
+
+
+# Untracked source files (not included in patch):
++ src/main/java/org/jsoup/nodes/Element.java.bak
++ src/main/java/org/jsoup/nodes/Node$1.class
++ src/main/java/org/jsoup/nodes/Node$OuterHtmlVisitor.class
++ src/main/java/org/jsoup/nodes/Node.class
++ src/main/java/org/jsoup/nodes/Node.java.backup
++ src/main/java/org/jsoup/nodes/Node.java.bak
++ src/main/java/org/jsoup/nodes/Node.java.bak2
++ src/main/java/org/jsoup/nodes/Node.java.fixed

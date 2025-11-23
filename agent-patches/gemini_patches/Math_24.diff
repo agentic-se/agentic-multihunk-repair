@@ -1,0 +1,45 @@
+--- a/src/main/java/org/apache/commons/math3/optimization/univariate/BrentOptimizer.java
++++ b/src/main/java/org/apache/commons/math3/optimization/univariate/BrentOptimizer.java
+@@ -1,10 +1,10 @@
+-        double fx = computeObjectiveValue(x);
+-        if (!isMinim) {
+-            fx = -fx;
+-        }
+-        double fv = fx;
+-        double fw = fx;
+-
+-        UnivariatePointValuePair previous = null;
+-        UnivariatePointValuePair current
+-            = new UnivariatePointValuePair(x, isMinim ? fx : -fx);
++        double fx = computeObjectiveValue(x);
++        if (!isMinim) {
++            fx = -fx;
++        }
++        double fv = fx;
++        double fw = fx;
++
++        UnivariatePointValuePair previous = null;
++        UnivariatePointValuePair current = new UnivariatePointValuePair(x, isMinim ? fx : -fx);
++        UnivariatePointValuePair best = current;
+@@ -1,2 +1,3 @@
+-                    x = u;
+-                    fx = fu;
++                    x = u;
++                    fx = fu;
++                    best = new UnivariatePointValuePair(x, isMinim ? fx : -fx);
+@@ -1,5 +1,5 @@
+-                if (checker != null) {
+-                    if (checker.converged(iter, previous, current)) {
+-                        return current;
+-                    }
+-                }
++                if (checker != null) {
++                    if (checker.converged(iter, previous, current)) {
++                        return best(current, best, isMinim);
++                    }
++                }
+@@ -1,2 +1,2 @@
+-            } else { // Default termination (Brent's criterion).
+-                return current;
++            } else { // Default termination (Brent's criterion).
++                return best;

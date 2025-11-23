@@ -1,0 +1,48 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/std/StdKeySerializers.java b/src/main/java/com/fasterxml/jackson/databind/ser/std/StdKeySerializers.java
+index 7f55a3f29..d89a21f63 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/StdKeySerializers.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/StdKeySerializers.java
+@@ -7,6 +7,7 @@ import java.util.Date;
+ import com.fasterxml.jackson.core.*;
+ import com.fasterxml.jackson.databind.*;
+ import com.fasterxml.jackson.databind.ser.impl.PropertySerializerMap;
++import com.fasterxml.jackson.databind.util.EnumValues;
+ 
+ @SuppressWarnings("serial")
+ public class StdKeySerializers
+@@ -79,7 +80,8 @@ public class StdKeySerializers
+                 return new Dynamic();
+             }
+             if (rawKeyType.isEnum()) {
+-                return new Default(Default.TYPE_ENUM, rawKeyType);
++                // Use specialized Enum key serializer that honors @JsonProperty etc
++                return new EnumKeySerializer(config, rawKeyType);
+             }
+         }
+         return DEFAULT_KEY_SERIALIZER;
+@@ -212,7 +214,25 @@ public class StdKeySerializers
+      *
+      * @since 2.8
+      */
++    public static class EnumKeySerializer extends StdSerializer<Object>
++    {
++        protected final EnumValues _values;
+ 
++        @SuppressWarnings("unchecked")
++        public EnumKeySerializer(SerializationConfig config, Class<?> enumType) {
++            super(enumType, false);
++            _values = EnumValues.constructFromName(config, (Class<Enum<?>>) enumType);
++        }
+ 
++        @Override
++        public void serialize(Object value, JsonGenerator g, SerializerProvider provider) throws IOException {
++            // Honor WRITE_ENUMS_USING_TO_STRING if enabled
++            if (provider.isEnabled(SerializationFeature.WRITE_ENUMS_USING_TO_STRING)) {
++                g.writeFieldName(value.toString());
++                return;
++            }
++            g.writeFieldName(_values.serializedValueFor((Enum<?>) value));
++        }
++    }
+         
+ }

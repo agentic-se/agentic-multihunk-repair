@@ -1,0 +1,49 @@
+diff --git a/src/main/java/org/apache/commons/math/optimization/general/LevenbergMarquardtOptimizer.java b/src/main/java/org/apache/commons/math/optimization/general/LevenbergMarquardtOptimizer.java
+index 50914932e..3cf8150c6 100644
+--- a/src/main/java/org/apache/commons/math/optimization/general/LevenbergMarquardtOptimizer.java
++++ b/src/main/java/org/apache/commons/math/optimization/general/LevenbergMarquardtOptimizer.java
+@@ -255,6 +255,7 @@ public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
+         double[] diag    = new double[cols];
+         double[] oldX    = new double[cols];
+         double[] oldRes  = new double[rows];
++        double[] oldObj  = new double[rows];
+         double[] work1   = new double[cols];
+         double[] work2   = new double[cols];
+         double[] work3   = new double[cols];
+@@ -341,6 +342,10 @@ public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
+                 double[] tmpVec = residuals;
+                 residuals = oldRes;
+                 oldRes    = tmpVec;
++                // swap objective buffers as well, so we can restore on failure
++                tmpVec    = objective;
++                objective = oldObj;
++                oldObj    = tmpVec;
+ 
+                 // determine the Levenberg-Marquardt parameter
+                 determineLMParameter(oldRes, delta, diag, work1, work2, work3);
+@@ -431,6 +436,11 @@ public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
+                     tmpVec    = residuals;
+                     residuals = oldRes;
+                     oldRes    = tmpVec;
++                    // restore objective and current to be consistent with restored point
++                    tmpVec    = objective;
++                    objective = oldObj;
++                    oldObj    = tmpVec;
++                    current   = previous;
+                 }
+                 if (checker==null) {
+                 	if (((Math.abs(actRed) <= costRelativeTolerance) &&
+@@ -440,8 +450,11 @@ public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
+                        return current;
+                    }
+                 } else {
+-                    if (checker.converged(getIterations(), previous, current)) {
+-                        return current;
++                    // Only check convergence on successful iterations
++                    if (ratio >= 1.0e-4) {
++                        if (checker.converged(getIterations(), previous, current)) {
++                            return current;
++                        }
+                     }
+                 }
+                 // tests for termination and stringent tolerances

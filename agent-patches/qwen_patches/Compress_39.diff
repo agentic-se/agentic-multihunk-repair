@@ -1,0 +1,19 @@
+diff --git a/src/main/java/org/apache/commons/compress/utils/ArchiveUtils.java b/src/main/java/org/apache/commons/compress/utils/ArchiveUtils.java
+index 0a755ce3..67ddf7ae 100644
+--- a/src/main/java/org/apache/commons/compress/utils/ArchiveUtils.java
++++ b/src/main/java/org/apache/commons/compress/utils/ArchiveUtils.java
+@@ -284,7 +284,13 @@ public class ArchiveUtils {
+             }
+             sb.append('?');
+         }
+-        return sb.toString();
++        
++        // Truncate to 255 characters and append "..."
++        String result = sb.toString();
++        if (result.length() > 255) {
++            result = result.substring(0, 252) + "...";
++        }
++        return result;
+     }
+ 
+ }

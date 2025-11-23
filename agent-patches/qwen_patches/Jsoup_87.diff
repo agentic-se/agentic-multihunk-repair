@@ -1,0 +1,24 @@
+diff --git a/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java b/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
+index 1bffec7..a068016 100644
+--- a/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
++++ b/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
+@@ -514,10 +514,11 @@ public class HtmlTreeBuilder extends TreeBuilder {
+     boolean inSelectScope(String targetName) {
+         for (int pos = stack.size() -1; pos >= 0; pos--) {
+             Element el = stack.get(pos);
+-            String elName = el.nodeName();
+-            if (elName.equals(targetName))
++            // Use case-insensitive comparison for tag names to ensure proper matching 
++            // when preserveCase is used, especially in scope checking
++            if (el.nodeName().equalsIgnoreCase(targetName))
+                 return true;
+-            if (!inSorted(elName, TagSearchSelectScope)) // all elements except
++            if (!inSorted(el.nodeName(), TagSearchSelectScope)) // all elements except
+                 return false;
+         }
+         Validate.fail("Should not be reachable");
+
+
+# Untracked source files (not included in patch):
++ src/main/java/org/jsoup/parser/HtmlTreeBuilder.java.orig
++ src/main/java/org/jsoup/parser/HtmlTreeBuilder.java.rej

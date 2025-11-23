@@ -1,0 +1,28 @@
+diff --git a/src/java/org/apache/commons/codec/binary/Base64.java b/src/java/org/apache/commons/codec/binary/Base64.java
+index 76f14f50..4ca2453c 100644
+--- a/src/java/org/apache/commons/codec/binary/Base64.java
++++ b/src/java/org/apache/commons/codec/binary/Base64.java
+@@ -482,9 +482,6 @@ public class Base64 implements BinaryEncoder, BinaryDecoder {
+             }
+         } else {
+             for (int i = 0; i < inAvail; i++) {
+-                if (buffer == null || buffer.length - pos < encodeSize) {
+-                    resizeBuffer();
+-                }
+                 modulus = (++modulus) % 3;
+                 int b = in[inPos++];
+                 if (b < 0) {
+@@ -492,6 +489,9 @@ public class Base64 implements BinaryEncoder, BinaryDecoder {
+                 }
+                 x = (x << 8) + b;
+                 if (0 == modulus) {
++                    while (buffer == null || buffer.length - pos < encodeSize) {
++                        resizeBuffer();
++                    }
+                     buffer[pos++] = encodeTable[(x >> 18) & MASK_6BITS];
+                     buffer[pos++] = encodeTable[(x >> 12) & MASK_6BITS];
+                     buffer[pos++] = encodeTable[(x >> 6) & MASK_6BITS];
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

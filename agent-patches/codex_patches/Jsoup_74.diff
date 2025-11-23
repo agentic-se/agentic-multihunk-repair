@@ -1,0 +1,27 @@
+diff --git a/src/main/java/org/jsoup/helper/StringUtil.java b/src/main/java/org/jsoup/helper/StringUtil.java
+index 439a7d6..5f71940 100644
+--- a/src/main/java/org/jsoup/helper/StringUtil.java
++++ b/src/main/java/org/jsoup/helper/StringUtil.java
+@@ -156,6 +156,11 @@ public final class StringUtil {
+         int c;
+         for (int i = 0; i < len; i+= Character.charCount(c)) {
+             c = string.codePointAt(i);
++            // Strip certain invisible formatting characters that should not appear in visible text
++            // U+00AD SOFT HYPHEN, U+200B ZERO WIDTH SPACE, U+200C ZERO WIDTH NON-JOINER, U+200D ZERO WIDTH JOINER
++            if (isInvisibleChar(c)) {
++                continue;
++            }
+             if (isActuallyWhitespace(c)) {
+                 if ((stripLeading && !reachedNonWhite) || lastWasWhite)
+                     continue;
+@@ -170,6 +175,10 @@ public final class StringUtil {
+         }
+     }
+ 
++    private static boolean isInvisibleChar(int c) {
++        return c == 173 || c == 8203 || c == 8204 || c == 8205; // &shy;, ZWSP, ZWNJ, ZWJ
++    }
++
+     public static boolean in(final String needle, final String... haystack) {
+         final int len = haystack.length;
+         for (int i = 0; i < len; i++) {

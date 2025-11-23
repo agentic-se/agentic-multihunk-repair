@@ -1,0 +1,30 @@
+diff --git a/src/com/google/javascript/jscomp/Normalize.java b/src/com/google/javascript/jscomp/Normalize.java
+index 4c99858e..a6913b00 100644
+--- a/src/com/google/javascript/jscomp/Normalize.java
++++ b/src/com/google/javascript/jscomp/Normalize.java
+@@ -640,10 +640,21 @@ class Normalize implements CompilerPass {
+       Preconditions.checkState(n.getType() == Token.NAME);
+       Var v = s.getVar(name);
+ 
+-        // We allow variables to be duplicate declared if one
+-        // declaration appears in source and the other in externs.
+-        // This deals with issues where a browser built-in is declared
+-        // in one browser but not in another.
++      // We allow variables to be duplicate declared if one
++      // declaration appears in source and the other in externs.
++      // This deals with issues where a browser built-in is declared
++      // in one browser but not in another.
++      // Exception: "arguments" is special and should not be treated as an extern redeclaration.
++      if (v != null && v.isExtern() && !name.equals("arguments")) {
++        // If the first declaration is in externs and the second is in source,
++        // update the scope to point to the source declaration but keep both VAR keywords.
++        if (parent.getType() == Token.VAR) {
++          s.undeclare(v);
++          s.declare(name, n, n.getJSType(),
++              compiler.getInput(NodeUtil.getSourceName(n)));
++        }
++        return;
++      }
+ 
+       // If name is "arguments", Var maybe null.
+       if (v != null && v.getParentNode().getType() == Token.CATCH) {

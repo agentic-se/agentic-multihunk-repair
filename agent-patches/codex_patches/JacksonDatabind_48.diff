@@ -1,0 +1,18 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/SerializationConfig.java b/src/main/java/com/fasterxml/jackson/databind/SerializationConfig.java
+index da192ee35..5220cb66d 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/SerializationConfig.java
++++ b/src/main/java/com/fasterxml/jackson/databind/SerializationConfig.java
+@@ -861,6 +861,13 @@ public final class SerializationConfig
+     public VisibilityChecker<?> getDefaultVisibilityChecker()
+     {
+         VisibilityChecker<?> vchecker = super.getDefaultVisibilityChecker();
++        // Ensure that serialization-side introspection respects global auto-detect
++        // settings consistently with deserialization (see [databind#48]).
++        // In particular, when AUTO_DETECT_SETTERS is disabled, setters should
++        // not contribute implicit properties during serialization introspection.
++        if (!isEnabled(MapperFeature.AUTO_DETECT_SETTERS)) {
++            vchecker = vchecker.withSetterVisibility(Visibility.NONE);
++        }
+         // then global overrides (disabling)
+         if (!isEnabled(MapperFeature.AUTO_DETECT_GETTERS)) {
+             vchecker = vchecker.withGetterVisibility(Visibility.NONE);

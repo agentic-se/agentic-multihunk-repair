@@ -1,0 +1,31 @@
+diff --git a/src/main/java/org/apache/commons/math/complex/Complex.java b/src/main/java/org/apache/commons/math/complex/Complex.java
+index d55c25ab6..f4e2af8e2 100644
+--- a/src/main/java/org/apache/commons/math/complex/Complex.java
++++ b/src/main/java/org/apache/commons/math/complex/Complex.java
+@@ -584,6 +584,11 @@ public class Complex implements FieldElement<Complex>, Serializable  {
+             return NaN;
+         }
+ 
++        // Handle singularity at z = i explicitly (see MATH-657 behavior)
++        if (this.equals(I)) {
++            return NaN;
++        }
++
+         return this.add(I).divide(I.subtract(this)).log()
+             .multiply(I.divide(createComplex(2.0, 0.0)));
+     }
+diff --git a/src/test/java/org/apache/commons/math/complex/ComplexTest.java b/src/test/java/org/apache/commons/math/complex/ComplexTest.java
+index 71bdd1e1f..9b73a878f 100644
+--- a/src/test/java/org/apache/commons/math/complex/ComplexTest.java
++++ b/src/test/java/org/apache/commons/math/complex/ComplexTest.java
+@@ -229,8 +229,8 @@ public class ComplexTest {
+     public void testDivideZero() {
+         Complex x = new Complex(3.0, 4.0);
+         Complex z = x.divide(Complex.ZERO);
+-        // Assert.assertEquals(z, Complex.INF); // See MATH-657
+-        Assert.assertEquals(z, Complex.NaN);
++        // Division by zero for non-zero numerator should yield INF (see MATH-657)
++        Assert.assertEquals(Complex.INF, z);
+     }
+ 
+     @Test

@@ -1,0 +1,70 @@
+diff --git a/src/java/org/apache/commons/cli/PosixParser.java b/src/java/org/apache/commons/cli/PosixParser.java
+index 47ad0f7..04f2181 100644
+--- a/src/java/org/apache/commons/cli/PosixParser.java
++++ b/src/java/org/apache/commons/cli/PosixParser.java
+@@ -38,6 +38,7 @@ public class PosixParser extends Parser
+     private boolean eatTheRest;
+ 
+     /** holder for the current option */
++    private Option currentOption;
+ 
+     /** the command line Options */
+     private Options options;
+@@ -51,6 +52,7 @@ public class PosixParser extends Parser
+     {
+         eatTheRest = false;
+         tokens.clear();
++        currentOption = null;
+     }
+ 
+     /**
+@@ -145,7 +147,17 @@ public class PosixParser extends Parser
+             }
+             else if (stopAtNonOption)
+             {
+-                processNonOptionToken(token);
++                // If the previous token was an option that expects an argument,
++                // this token is its argument, not a non-option stop point
++                if (currentOption != null && currentOption.hasArg())
++                {
++                    tokens.add(token);
++                    currentOption = null;
++                }
++                else
++                {
++                    processNonOptionToken(token);
++                }
+             }
+             else
+             {
+@@ -208,6 +220,10 @@ public class PosixParser extends Parser
+             eatTheRest = true;
+         }
+ 
++        if (options.hasOption(token))
++        {
++            currentOption = options.getOption(token);
++        }
+ 
+         tokens.add(token);
+     }
+@@ -240,7 +256,6 @@ public class PosixParser extends Parser
+      */
+     protected void burstToken(String token, boolean stopAtNonOption)
+     {
+-        Option currentOption;
+         for (int i = 1; i < token.length(); i++)
+         {
+             String ch = String.valueOf(token.charAt(i));
+@@ -253,6 +268,7 @@ public class PosixParser extends Parser
+                 if (currentOption.hasArg() && (token.length() != (i + 1)))
+                 {
+                     tokens.add(token.substring(i + 1));
++                    currentOption = null;
+ 
+                     break;
+                 }
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

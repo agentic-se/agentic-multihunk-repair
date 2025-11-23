@@ -1,0 +1,110 @@
+--- a/src/main/java/org/apache/commons/math/dfp/Dfp.java
++++ b/src/main/java/org/apache/commons/math/dfp/Dfp.java
+@@ -1,13 +1,17 @@
+-    public double toDouble() {
+-
+-        if (isInfinite()) {
+-            if (lessThan(getZero())) {
+-                return Double.NEGATIVE_INFINITY;
+-            } else {
+-                return Double.POSITIVE_INFINITY;
+-            }
+-        }
+-
+-        if (isNaN()) {
+-            return Double.NaN;
+-        }
++    public double toDouble() {
++
++        if (mant[mant.length - 1] == 0) {
++            return sign == 1 ? 0.0 : -0.0;
++        }
++
++        if (isInfinite()) {
++            if (lessThan(getZero())) {
++                return Double.NEGATIVE_INFINITY;
++            } else {
++                return Double.POSITIVE_INFINITY;
++            }
++        }
++
++        if (isNaN()) {
++            return Double.NaN;
++        }
+@@ -1,17 +1,13 @@
+-    public double toDouble() {
+-
+-        if (mant[mant.length - 1] == 0) {
+-            return sign == 1 ? 0.0 : -0.0;
+-        }
+-
+-        if (isInfinite()) {
+-            if (lessThan(getZero())) {
+-                return Double.NEGATIVE_INFINITY;
+-            } else {
+-                return Double.POSITIVE_INFINITY;
+-            }
+-        }
+-
+-        if (isNaN()) {
+-            return Double.NaN;
+-        }
++    public double toDouble() {
++
++        if (isInfinite()) {
++            if (lessThan(getZero())) {
++                return Double.NEGATIVE_INFINITY;
++            } else {
++                return Double.POSITIVE_INFINITY;
++            }
++        }
++
++        if (isNaN()) {
++            return Double.NaN;
++        }
+@@ -1,4 +1,9 @@
+-            if (x == 0) {
+-                // make sure 0 has the right sign
+-                return;
+-            }
++            if (x == 0) {
++                // make sure 0 has the right sign
++                if (Double.doubleToLongBits(x) == 0x8000000000000000L) { // -0.0
++                    sign = -1;
++                } else { // +0.0
++                    sign = 1;
++                }
++                return;
++            }
+@@ -1,14 +1,17 @@
+-    public double toDouble() {
+-
+-        if (isInfinite()) {
+-            if (lessThan(getZero())) {
+-                return Double.NEGATIVE_INFINITY;
+-            }
+-            else {
+-                return Double.POSITIVE_INFINITY;
+-            }
+-        }
+-
+-        if (isNaN()) {
+-            return Double.NaN;
+-        }
++    public double toDouble() {
++
++        if (mant[mant.length - 1] == 0) {
++            return sign == 1 ? 0.0 : -0.0;
++        }
++
++        if (isInfinite()) {
++            if (lessThan(getZero())) {
++                return Double.NEGATIVE_INFINITY;
++            } else {
++                return Double.POSITIVE_INFINITY;
++            }
++        }
++
++        if (isNaN()) {
++            return Double.NaN;
++        }

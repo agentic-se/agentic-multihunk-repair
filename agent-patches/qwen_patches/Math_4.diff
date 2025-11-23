@@ -1,0 +1,58 @@
+diff --git a/src/main/java/org/apache/commons/math3/geometry/euclidean/threed/SubLine.java b/src/main/java/org/apache/commons/math3/geometry/euclidean/threed/SubLine.java
+index a146cb661..49c811c3a 100644
+--- a/src/main/java/org/apache/commons/math3/geometry/euclidean/threed/SubLine.java
++++ b/src/main/java/org/apache/commons/math3/geometry/euclidean/threed/SubLine.java
+@@ -1,4 +1,4 @@
+-/*
++/* 
+  * Licensed to the Apache Software Foundation (ASF) under one or more
+  * contributor license agreements.  See the NOTICE file distributed with
+  * this work for additional information regarding copyright ownership.
+@@ -111,6 +111,11 @@ public class SubLine {
+ 
+         // compute the intersection on infinite line
+         Vector3D v1D = line.intersection(subLine.line);
++        
++        // if lines don't intersect, return null
++        if (v1D == null) {
++            return null;
++        }
+ 
+         // check location of point with respect to first sub-line
+         Location loc1 = remainingRegion.checkPoint(line.toSubSpace(v1D));
+@@ -139,4 +144,4 @@ public class SubLine {
+                                 line.toSubSpace(end).getX());
+     }
+ 
+-}
++}
+\ No newline at end of file
+diff --git a/src/main/java/org/apache/commons/math3/geometry/euclidean/twod/SubLine.java b/src/main/java/org/apache/commons/math3/geometry/euclidean/twod/SubLine.java
+index a9d621a44..4484fba77 100644
+--- a/src/main/java/org/apache/commons/math3/geometry/euclidean/twod/SubLine.java
++++ b/src/main/java/org/apache/commons/math3/geometry/euclidean/twod/SubLine.java
+@@ -1,4 +1,4 @@
+-/*
++/* 
+  * Licensed to the Apache Software Foundation (ASF) under one or more
+  * contributor license agreements.  See the NOTICE file distributed with
+  * this work for additional information regarding copyright ownership.
+@@ -115,6 +115,11 @@ public class SubLine extends AbstractSubHyperplane<Euclidean2D, Euclidean1D> {
+ 
+         // compute the intersection on infinite line
+         Vector2D v2D = line1.intersection(line2);
++        
++        // if lines don't intersect, return null
++        if (v2D == null) {
++            return null;
++        }
+ 
+         // check location of point with respect to first sub-line
+         Location loc1 = getRemainingRegion().checkPoint(line1.toSubSpace(v2D));
+@@ -206,4 +211,4 @@ public class SubLine extends AbstractSubHyperplane<Euclidean2D, Euclidean1D> {
+ 
+     }
+ 
+-}
++}
+\ No newline at end of file

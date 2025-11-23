@@ -1,0 +1,116 @@
+diff --git a/src/main/java/org/apache/commons/math3/distribution/FDistribution.java b/src/main/java/org/apache/commons/math3/distribution/FDistribution.java
+index 8b0993c4d..ee6052ad5 100644
+--- a/src/main/java/org/apache/commons/math3/distribution/FDistribution.java
++++ b/src/main/java/org/apache/commons/math3/distribution/FDistribution.java
+@@ -271,13 +271,25 @@ public class FDistribution extends AbstractRealDistribution {
+     }
+ 
+     /** {@inheritDoc} */
++    @Override
+     public boolean isSupportLowerBoundInclusive() {
+-        return true;
++        final double lowerBound = getSupportLowerBound();
++        if (Double.isInfinite(lowerBound)) {
++            return false;
++        }
++        final double density = density(lowerBound);
++        return !Double.isNaN(density) && !Double.isInfinite(density);
+     }
+ 
+     /** {@inheritDoc} */
++    @Override
+     public boolean isSupportUpperBoundInclusive() {
+-        return false;
++        final double upperBound = getSupportUpperBound();
++        if (Double.isInfinite(upperBound)) {
++            return false;
++        }
++        final double density = density(upperBound);
++        return !Double.isNaN(density) && !Double.isInfinite(density);
+     }
+ 
+     /**
+@@ -290,4 +302,4 @@ public class FDistribution extends AbstractRealDistribution {
+     public boolean isSupportConnected() {
+         return true;
+     }
+-}
++}
+\ No newline at end of file
+diff --git a/src/main/java/org/apache/commons/math3/distribution/RealDistribution.java b/src/main/java/org/apache/commons/math3/distribution/RealDistribution.java
+index 90dc8fdeb..2ef9a3388 100644
+--- a/src/main/java/org/apache/commons/math3/distribution/RealDistribution.java
++++ b/src/main/java/org/apache/commons/math3/distribution/RealDistribution.java
+@@ -146,6 +146,7 @@ public interface RealDistribution {
+      * function returns a non-NaN, non-infinite value there
+      * @deprecated to be removed in 4.0
+      */
++    @Deprecated
+     boolean isSupportLowerBoundInclusive();
+ 
+     /**
+@@ -158,6 +159,7 @@ public interface RealDistribution {
+      * function returns a non-NaN, non-infinite value there
+      * @deprecated to be removed in 4.0
+      */
++    @Deprecated
+     boolean isSupportUpperBoundInclusive();
+ 
+     /**
+@@ -192,4 +194,4 @@ public interface RealDistribution {
+      * if {@code sampleSize} is not positive
+      */
+     double[] sample(int sampleSize);
+-}
++}
+\ No newline at end of file
+diff --git a/src/main/java/org/apache/commons/math3/distribution/UniformRealDistribution.java b/src/main/java/org/apache/commons/math3/distribution/UniformRealDistribution.java
+index 5d32f6ebf..162df166e 100644
+--- a/src/main/java/org/apache/commons/math3/distribution/UniformRealDistribution.java
++++ b/src/main/java/org/apache/commons/math3/distribution/UniformRealDistribution.java
+@@ -25,8 +25,8 @@ import org.apache.commons.math3.random.Well19937c;
+ /**
+  * Implementation of the uniform real distribution.
+  *
+- * @see <a href="http://en.wikipedia.org/wiki/Uniform_distribution_(continuous)"
+- * >Uniform distribution (continuous), at Wikipedia</a>
++ * @see <a href="http://en.wikipedia.org/wiki/Uniform_distribution_(continuous)">
++ * Uniform distribution (continuous), at Wikipedia</a>
+  *
+  * @version $Id$
+  * @since 3.0
+@@ -175,13 +175,25 @@ public class UniformRealDistribution extends AbstractRealDistribution {
+     }
+ 
+     /** {@inheritDoc} */
++    @Override
+     public boolean isSupportLowerBoundInclusive() {
+-        return true;
++        final double lowerBound = getSupportLowerBound();
++        if (Double.isInfinite(lowerBound)) {
++            return false;
++        }
++        final double density = density(lowerBound);
++        return !Double.isNaN(density) && !Double.isInfinite(density);
+     }
+ 
+     /** {@inheritDoc} */
++    @Override
+     public boolean isSupportUpperBoundInclusive() {
+-        return false;
++        final double upperBound = getSupportUpperBound();
++        if (Double.isInfinite(upperBound)) {
++            return false;
++        }
++        final double density = density(upperBound);
++        return !Double.isNaN(density) && !Double.isInfinite(density);
+     }
+ 
+     /**
+@@ -201,4 +213,4 @@ public class UniformRealDistribution extends AbstractRealDistribution {
+         final double u = random.nextDouble();
+         return u * upper + (1 - u) * lower;
+     }
+-}
++}
+\ No newline at end of file

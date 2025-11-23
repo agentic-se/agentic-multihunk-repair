@@ -1,0 +1,23 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+index b8acda873..160b6ad21 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+@@ -347,6 +347,18 @@ public final class TypeFactory
+             return baseType;
+         }
+ 
++        // 31-Oct-2025, fix for handling of primitive base types with wrapper subtypes
++        // If base type is a primitive (e.g. 'long') but subtype id resolves to wrapper
++        // type (e.g. java.lang.Long), treat it as compatible and keep primitive base.
++        // This allows polymorphic handling of primitives via their wrapper types.
++        if (rawBase.isPrimitive()) {
++            Class<?> wrapper = com.fasterxml.jackson.databind.util.ClassUtil.wrapperType(rawBase);
++            if (wrapper == subclass) {
++                // No need to specialize: keep primitive base type
++                return baseType;
++            }
++        }
++
+         JavaType newType;
+ 
+         // also: if we start from untyped, not much to save

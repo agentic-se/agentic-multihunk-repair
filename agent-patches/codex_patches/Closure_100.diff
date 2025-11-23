@@ -1,0 +1,42 @@
+diff --git a/src/com/google/javascript/jscomp/CheckGlobalThis.java b/src/com/google/javascript/jscomp/CheckGlobalThis.java
+index 6390687e..1b387ac5 100644
+--- a/src/com/google/javascript/jscomp/CheckGlobalThis.java
++++ b/src/com/google/javascript/jscomp/CheckGlobalThis.java
+@@ -96,6 +96,11 @@ final class CheckGlobalThis implements Callback {
+       // var a = function() { }; // or
+       // function a() {} // or
+       // a.x = function() {};
++      int pType = parent.getType();
++      if (!(pType == Token.SCRIPT || pType == Token.BLOCK ||
++            pType == Token.NAME || pType == Token.ASSIGN)) {
++        return false;
++      }
+     }
+ 
+     if (parent != null && parent.getType() == Token.ASSIGN) {
+@@ -137,13 +142,22 @@ final class CheckGlobalThis implements Callback {
+   }
+ 
+   private boolean shouldReportThis(Node n, Node parent) {
++    // Do not report direct assignments to 'this' (e.g., `this = ...`).
++    if (parent != null && parent.getType() == Token.ASSIGN &&
++        n == parent.getFirstChild()) {
++      return false;
++    }
++
++    // Report if 'this' appears within the left-hand side of an assignment
++    // (e.g., `this.foo = 5;` or `(a = this).foo = 4;`).
+     if (assignLhsChild != null) {
+-      // Always report a THIS on the left side of an assign.
+       return true;
+     }
+ 
+-    // Also report a THIS with a property access.
+-    return false;
++    // Also report a THIS with a property access (reads),
++    // e.g., `var a = this.foo;` or `this[bar]`.
++    int pType = (parent == null) ? Token.ERROR : parent.getType();
++    return pType == Token.GETPROP || pType == Token.GETELEM;
+   }
+ 
+   /**

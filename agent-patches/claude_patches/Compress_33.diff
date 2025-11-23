@@ -1,0 +1,67 @@
+diff --git a/src/main/java/org/apache/commons/compress/compressors/CompressorStreamFactory.java b/src/main/java/org/apache/commons/compress/compressors/CompressorStreamFactory.java
+index 935283aa..4df76a0f 100644
+--- a/src/main/java/org/apache/commons/compress/compressors/CompressorStreamFactory.java
++++ b/src/main/java/org/apache/commons/compress/compressors/CompressorStreamFactory.java
+@@ -248,6 +248,10 @@ public class CompressorStreamFactory {
+                 return new LZMACompressorInputStream(in);
+             }
+ 
++            if (DeflateCompressorInputStream.matches(signature, signatureLength)) {
++                return new DeflateCompressorInputStream(in);
++            }
++
+         } catch (IOException e) {
+             throw new CompressorException("Failed to detect Compressor from InputStream.", e);
+         }
+diff --git a/src/main/java/org/apache/commons/compress/compressors/deflate/DeflateCompressorInputStream.java b/src/main/java/org/apache/commons/compress/compressors/deflate/DeflateCompressorInputStream.java
+index 98d8ec12..eecbbcd2 100644
+--- a/src/main/java/org/apache/commons/compress/compressors/deflate/DeflateCompressorInputStream.java
++++ b/src/main/java/org/apache/commons/compress/compressors/deflate/DeflateCompressorInputStream.java
+@@ -93,14 +93,41 @@ public class DeflateCompressorInputStream extends CompressorInputStream {
+     /**
+      * Checks if the signature matches what is expected for a zlib / deflated file
+      *  with the zlib header.
+-     * 
++     *
+      * @param signature
+      *            the bytes to check
+      * @param length
+      *            the number of bytes to check
+      * @return true, if this stream is zlib / deflate compressed with a header
+      * stream, false otherwise
+-     * 
++     *
+      * @since 1.9
+      */
++    public static boolean matches(byte[] signature, int length) {
++        if (length < 2) {
++            return false;
++        }
++
++        // Zlib header format (RFC 1950):
++        // Byte 0: CMF (Compression Method and Flags)
++        //   bits 0-3: Compression method (8 = deflate)
++        //   bits 4-7: Compression info (window size)
++        // Byte 1: FLG (Flags)
++        //   The CMF and FLG bytes, when viewed as a 16-bit unsigned integer
++        //   in big-endian order (CMF*256 + FLG), must be a multiple of 31
++
++        int method = signature[0] & 0x0F;
++        if (method != 8) { // 8 = deflate compression method
++            return false;
++        }
++
++        int cinfo = ((signature[0] >> 4) & 0x0F);
++        if (cinfo > 7) { // window size must be valid
++            return false;
++        }
++
++        // Check if (CMF*256 + FLG) is a multiple of 31
++        int header = ((signature[0] & 0xFF) << 8) | (signature[1] & 0xFF);
++        return header % 31 == 0;
++    }
+ }
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

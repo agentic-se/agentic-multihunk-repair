@@ -1,0 +1,42 @@
+diff --git a/src/main/java/org/jsoup/parser/Tokeniser.java b/src/main/java/org/jsoup/parser/Tokeniser.java
+index 6d729cf..27c16e0 100644
+--- a/src/main/java/org/jsoup/parser/Tokeniser.java
++++ b/src/main/java/org/jsoup/parser/Tokeniser.java
+@@ -194,6 +194,11 @@ class Tokeniser {
+         return tagPending.tagName.equals(lastStartTag.tagName);
+     }
+ 
++    // Expose the name of the last emitted start tag (e.g., title/textarea for RCData handling)
++    String getLastStartTagName() {
++        return lastStartTag != null ? lastStartTag.tagName : null;
++    }
++
+ 
+     boolean isTrackErrors() {
+         return trackErrors;
+diff --git a/src/main/java/org/jsoup/parser/TokeniserState.java b/src/main/java/org/jsoup/parser/TokeniserState.java
+index ca27ea0..b8b6a0f 100644
+--- a/src/main/java/org/jsoup/parser/TokeniserState.java
++++ b/src/main/java/org/jsoup/parser/TokeniserState.java
+@@ -217,6 +217,21 @@ enum TokeniserState {
+                 t.advanceTransition(RCDATAEndTagOpen);
+                 // diverge from spec: got a start tag, but there's no appropriate end tag (</title>), so rather than
+                 // consuming to EOF; break out here
++            } else if (r.matchesLetter()) {
++                // If we're in RCData (e.g., <title> or <textarea>) and encounter a start tag without a forthcoming
++                // appropriate end tag, break out of RCData by emitting the appropriate end tag token so the TreeBuilder
++                // exits Text state and resumes normal parsing.
++                String lastStart = t.getLastStartTagName();
++                if (lastStart != null && !r.containsIgnoreCase("</" + lastStart)) {
++                    // Step back so the upcoming '<' will be reprocessed by Data -> TagOpen
++                    r.unconsume();
++                    // Emit a synthetic end tag for the RCData element
++                    t.emit(new Token.EndTag(lastStart));
++                    t.transition(Data);
++                } else {
++                    t.emit("<");
++                    t.transition(Rcdata);
++                }
+             } else {
+                 t.emit("<");
+                 t.transition(Rcdata);

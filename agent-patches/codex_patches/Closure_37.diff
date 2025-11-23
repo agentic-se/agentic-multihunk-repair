@@ -1,0 +1,81 @@
+diff --git a/src/com/google/javascript/jscomp/NodeTraversal.java b/src/com/google/javascript/jscomp/NodeTraversal.java
+index 8201b41a..e21bd175 100644
+--- a/src/com/google/javascript/jscomp/NodeTraversal.java
++++ b/src/com/google/javascript/jscomp/NodeTraversal.java
+@@ -508,9 +508,23 @@ public class NodeTraversal {
+    * Traverses a function.
+    */
+   private void traverseFunction(Node n, Node parent) {
+-    Preconditions.checkState(n.getChildCount() == 3);
++    // Be tolerant of malformed function nodes in IDE mode.
+     Preconditions.checkState(n.isFunction());
+ 
++    // If the function node does not have the expected 3 children
++    // (name, args, body), recover gracefully when in IDE mode.
++    if (n.getChildCount() != 3) {
++      if (compiler.isIdeMode()) {
++        for (Node child = n.getFirstChild(); child != null; ) {
++          Node next = child.getNext();
++          traverseBranch(child, n);
++          child = next;
++        }
++        return;
++      }
++      Preconditions.checkState(n.getChildCount() == 3);
++    }
++
+     final Node fnName = n.getFirstChild();
+ 
+     boolean isFunctionExpression = (parent != null)
+@@ -531,15 +545,29 @@ public class NodeTraversal {
+     }
+ 
+     final Node args = fnName.getNext();
+-    final Node body = args.getNext();
++    final Node body = (args != null) ? args.getNext() : null;
+ 
+     // Args
+-    traverseBranch(args, n);
++    if (args != null) {
++      traverseBranch(args, n);
++    } else if (!compiler.isIdeMode()) {
++      // In non-IDE mode, arguments list must be present.
++      Preconditions.checkNotNull(args);
++    }
+ 
+     // Body
+-    Preconditions.checkState(body.getNext() == null &&
+-            body.isBlock());
+-    traverseBranch(body, n);
++    if (body != null) {
++      if (!body.isBlock() && compiler.isIdeMode()) {
++        // Best-effort traversal in IDE mode if body is not a block.
++        traverseBranch(body, n);
++      } else {
++        Preconditions.checkState(body.getNext() == null && body.isBlock());
++        traverseBranch(body, n);
++      }
++    } else if (!compiler.isIdeMode()) {
++      // In non-IDE mode, body must be present.
++      Preconditions.checkNotNull(body);
++    }
+ 
+     popScope();
+   }
+diff --git a/src/com/google/javascript/jscomp/parsing/IRFactory.java b/src/com/google/javascript/jscomp/parsing/IRFactory.java
+index 4da40856..5fac3dd3 100644
+--- a/src/com/google/javascript/jscomp/parsing/IRFactory.java
++++ b/src/com/google/javascript/jscomp/parsing/IRFactory.java
+@@ -668,6 +668,12 @@ class IRFactory {
+         // doesn't support, repair it here. see Rhino's
+         // Parser#parseFunctionBodyExpr.
+       parseDirectives(bodyNode);
++      // In IDE mode, Rhino may produce a non-block as the function body
++      // when recovering from parse errors (e.g., incomplete function).
++      // Ensure the body is a BLOCK to keep the AST well-formed.
++      if (config.isIdeMode && !bodyNode.isBlock()) {
++        bodyNode = newNode(Token.BLOCK);
++      }
+       node.addChildToBack(bodyNode);
+      return node;
+     }

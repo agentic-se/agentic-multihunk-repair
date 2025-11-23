@@ -1,0 +1,48 @@
+diff --git a/src/com/google/javascript/jscomp/FunctionTypeBuilder.java b/src/com/google/javascript/jscomp/FunctionTypeBuilder.java
+index 14694cec..493d296b 100644
+--- a/src/com/google/javascript/jscomp/FunctionTypeBuilder.java
++++ b/src/com/google/javascript/jscomp/FunctionTypeBuilder.java
+@@ -289,6 +289,15 @@ final class FunctionTypeBuilder {
+       }
+ 
+       // Clone any remaining params that aren't in the function literal.
++      // If the overriding function declares fewer parameters than the
++      // overridden function type, we must preserve the remaining
++      // parameter types from the super type. This ensures overridden
++      // methods keep compatible call signatures and that argument
++      // checks (including additional parameters) still apply.
++      while (oldParams.hasNext()) {
++        Node oldParam = oldParams.next();
++        paramBuilder.newParameterFromNode(oldParam);
++      }
+ 
+       parametersNode = paramBuilder.build();
+     }
+@@ -480,6 +489,10 @@ final class FunctionTypeBuilder {
+     }
+ 
+     // Copy over any old parameters that aren't in the param list.
++    while (oldParameterType != null) {
++      builder.newParameterFromNode(oldParameterType);
++      oldParameterType = oldParameterType.getNext();
++    }
+ 
+     if (templateTypeName != null && !foundTemplateType) {
+       reportError(TEMPLATE_TYPE_EXPECTED, fnName);
+@@ -489,7 +502,15 @@ final class FunctionTypeBuilder {
+       reportWarning(INEXISTANT_PARAM, inexistentName, fnName);
+     }
+ 
+-    parametersNode = builder.build();
++    // If no parameters are declared in the literal or JSDoc, and we already
++    // have parameter information (e.g., from an overridden function), preserve
++    // the existing parameters instead of replacing them with an empty list.
++    boolean hasLiteralParams = argsParent.getFirstChild() != null;
++    boolean hasJsDocParams = info != null && info.getParameterCount() > 0;
++    Node builtParams = builder.build();
++    if (hasLiteralParams || hasJsDocParams || oldParameterType == null) {
++      parametersNode = builtParams;
++    } // else keep existing parametersNode inferred earlier
+     return this;
+   }
+ 

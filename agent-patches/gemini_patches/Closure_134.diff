@@ -1,0 +1,86 @@
+--- a/run_bug_exposing_tests.sh
++++ b/run_bug_exposing_tests.sh
+@@ -1,4 +1,4 @@
+-for cls in $(defects4j export -p tests.trigger | cut -d: -f1 | sort -u); do
+-  echo "Running $cls" | tee -a "$LOGFILE"
+-  java -cp "$CP" org.junit.runner.JUnitCore "$cls" >> "$LOGFILE" 2>&1
+-done
++for test_case in $(defects4j export -p tests.trigger); do
++  echo "Running $test_case" | tee -a "$LOGFILE"
++  defects4j test -t "$test_case" >> "$LOGFILE" 2>&1
++done
+
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -1,10 +1,20 @@
+-      // First, check to see if the property is implemented
+-      // on a superclass.
+-      JSType propType = ownerType.getPropertyType(propName);
+-      if (propType instanceof FunctionType) {
+-        return (FunctionType) propType;
+-      }
+-        // If it's not, then check to see if it's implemented
+-        // on an implemented interface.
+-
+-      return null;
++      // First, check to see if the property is implemented
++      // on a superclass.
++      JSType propType = ownerType.getPropertyType(propName);
++      if (propType instanceof FunctionType) {
++        return (FunctionType) propType;
++      }
++
++      // If it's not, then check to see if it's implemented
++      // on an implemented interface.
++      if (ownerType.isConstructor()) {
++        for (JSType implementedInterface :
++             ownerType.getConstructor().getImplementedInterfaces()) {
++          propType = implementedInterface.getPropertyType(propName);
++          if (propType instanceof FunctionType) {
++            return (FunctionType) propType;
++          }
++        }
++      }
++
++      return null;
+@@ -1,1 +1,2 @@
+-          propType = implementedInterface.getPropertyType(propName);
++          ObjectType interfaceObjType = implementedInterface.toObjectType();
++          propType = interfaceObjType.getPropertyType(propName);
+
+--- a/test/com/google/javascript/jscomp/TypeCheckTest.java
++++ b/test/com/google/javascript/jscomp/TypeCheckTest.java
+@@ -1,10 +1,23 @@
+-  public void testIssue86() throws Exception {
+-    testTypes(
+-        "/** @interface */ function I() {}" +
+-        "/** @return {number} */ I.prototype.get = function(){};" +
+-        "/** @constructor \n * @implements {I} */ function F() {}" +
+-        "/** @override */ F.prototype.get = function() { return true; };",
+-        "inconsistent return type\n" +
+-        "found   : boolean\n" +
+-        "required: number");
+-  }
++  public void testIssue86() throws Exception {
++    testTypes(
++        "/** @interface */ function I() {}" +
++        "/** @return {number} */ I.prototype.get = function(){};" +
++        "/** @constructor \n * @implements {I} */ function F() {}" +
++        "/** @override */ F.prototype.get = function() { return true; };",
++        "inconsistent return type\n" +
++        "found   : boolean\n" +
++        "required: number");
++  }
++
++  public void testInheritDocWithInterface() throws Exception {
++    testTypes(
++        "/** @interface */ function Foo(){}\n" +
++        "/** @return {number} */ Foo.prototype.x = function(){};\n" +
++        "/**\n" +
++        " * @constructor\n" +
++        " * @implements {Foo}\n" +
++        " */\n" +
++        "function Bar(){}\n" +
++        "/** @inheritDoc */\n" +
++        "Bar.prototype.x = function() { return 1; };");
++  }

@@ -1,0 +1,65 @@
+diff --git a/src/java/org/apache/commons/cli/HelpFormatter.java b/src/java/org/apache/commons/cli/HelpFormatter.java
+index 9fa8ebf..e195289 100644
+--- a/src/java/org/apache/commons/cli/HelpFormatter.java
++++ b/src/java/org/apache/commons/cli/HelpFormatter.java
+@@ -823,17 +823,24 @@ public class HelpFormatter
+         {
+             int lastPos = pos;
+             text = padding + text.substring(pos).trim();
+-            pos = findWrapPos(text, width, 0);
++            // Avoid wrapping within the left padding by starting the
++            // search at nextLineTabStop, while keeping the total line
++            // length limited to 'width' (CLI-162)
++            int effectiveWidth = Math.max(1, width - nextLineTabStop);
++            pos = findWrapPos(text, effectiveWidth, nextLineTabStop);
+ 
+             if (pos == -1)
+             {
+                 sb.append(text);
+ 
+                 return sb;
+-            } else
++            }
++
++            // Guard against non-progress that could cause an infinite loop
+             if (pos == lastPos)
+             {
+-                throw new RuntimeException("Text too long for line - throwing exception to avoid infinite loop [CLI-162]: " + text);
++                sb.append(rtrim(text));
++                return sb;
+             }
+ 
+             sb.append(rtrim(text.substring(0, pos))).append(defaultNewLine);
+@@ -858,8 +865,8 @@ public class HelpFormatter
+         int pos = -1;
+ 
+         // the line ends before the max wrap pos or a new line char found
+-        if (((pos = text.indexOf('\n', startPos)) != -1 && pos <= width)
+-                || ((pos = text.indexOf('\t', startPos)) != -1 && pos <= width))
++        if (((pos = text.indexOf('\n', startPos)) != -1 && pos <= startPos + width)
++                || ((pos = text.indexOf('\t', startPos)) != -1 && pos <= startPos + width))
+         {
+             return pos + 1;
+         }
+@@ -870,7 +877,8 @@ public class HelpFormatter
+ 
+ 
+         // look for the last whitespace character before startPos+width
+-        pos = startPos + width;
++        // Ensure we don't step beyond the string length
++        pos = Math.min(startPos + width, text.length() - 1);
+ 
+         char c;
+ 
+@@ -888,9 +896,9 @@ public class HelpFormatter
+         
+         // must look for the first whitespace chearacter after startPos 
+         // + width
+-        pos = startPos + width;
++        pos = Math.min(startPos + width, text.length());
+ 
+-        while ((pos <= text.length()) && ((c = text.charAt(pos)) != ' ')
++        while ((pos < text.length()) && ((c = text.charAt(pos)) != ' ')
+                && (c != '\n') && (c != '\r'))
+         {
+             ++pos;

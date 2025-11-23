@@ -1,0 +1,36 @@
+--- a/src/java/org/apache/commons/cli/CommandLine.java
++++ b/src/java/org/apache/commons/cli/CommandLine.java
+@@ -1,14 +1,19 @@
+-    void addOption(Option opt)
+-    {
+-        hashcodeMap.put(new Integer(opt.hashCode()), opt);
+-        String key = opt.getKey();
+-        if (key == null)
+-        {
+-            key = opt.getLongOpt();
+-        }
+-        else
+-        {
+-            names.put(opt.getLongOpt(), key);
+-        }
+-        options.put(key, opt);
+-    }
++    void addOption(Option opt)
++    {
++        hashcodeMap.put(new Integer(opt.hashCode()), opt);
++
++        // Store by short name if it exists
++        if (opt.getOpt() != null) {
++            options.put(opt.getOpt(), opt);
++        }
++
++        // Store by long name if it exists
++        if (opt.hasLongOpt()) {
++            options.put(opt.getLongOpt(), opt);
++        }
++
++        // Maintain the mapping from long name to short name for getOptionValue
++        if (opt.getOpt() != null && opt.hasLongOpt()) {
++            names.put(opt.getLongOpt(), opt.getOpt());
++        }
++    }

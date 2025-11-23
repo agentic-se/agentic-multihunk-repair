@@ -1,0 +1,69 @@
+diff --git a/src/com/google/javascript/jscomp/AbstractCommandLineRunner.java b/src/com/google/javascript/jscomp/AbstractCommandLineRunner.java
+index 8cb44726..e0e655b0 100644
+--- a/src/com/google/javascript/jscomp/AbstractCommandLineRunner.java
++++ b/src/com/google/javascript/jscomp/AbstractCommandLineRunner.java
+@@ -158,6 +158,18 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
+ 
+     inputCharset = getInputCharset();
+ 
++    // Set the output charset based on the input charset selection.
++    // If the user explicitly sets a charset via --charset, honor it exactly.
++    // Otherwise, if we're using the default UTF-8 input, write US-ASCII by
++    // default to preserve historical behavior of escaping non-ASCII chars.
++    if (!config.charset.isEmpty()) {
++      options.outputCharset = config.charset;
++    } else if (inputCharset == Charsets.UTF_8) {
++      options.outputCharset = Charsets.US_ASCII.name();
++    } else {
++      options.outputCharset = inputCharset.name();
++    }
++
+     if (config.jsOutputFile.length() > 0) {
+       options.jsOutputFile = config.jsOutputFile;
+     }
+@@ -515,11 +527,6 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
+     Result result;
+ 
+     setRunOptions(options);
+-    if (inputCharset == Charsets.UTF_8) {
+-      options.outputCharset = Charsets.US_ASCII;
+-    } else {
+-      options.outputCharset = inputCharset;
+-    }
+ 
+     boolean writeOutputToFile = !options.jsOutputFile.isEmpty();
+     if (writeOutputToFile) {
+diff --git a/src/com/google/javascript/jscomp/Compiler.java b/src/com/google/javascript/jscomp/Compiler.java
+index 7a12c4fc..f8e3ede2 100644
+--- a/src/com/google/javascript/jscomp/Compiler.java
++++ b/src/com/google/javascript/jscomp/Compiler.java
+@@ -1359,7 +1359,10 @@ public class Compiler extends AbstractCompiler {
+     builder.setSourceMap(sourceMap);
+     builder.setSourceMapDetailLevel(options.sourceMapDetailLevel);
+ 
+-    Charset charset = options.outputCharset;
++    Charset charset = null;
++    if (options.outputCharset != null) {
++      charset = Charset.forName(options.outputCharset);
++    }
+     builder.setOutputCharset(charset);
+ 
+     return builder.build();
+diff --git a/src/com/google/javascript/jscomp/CompilerOptions.java b/src/com/google/javascript/jscomp/CompilerOptions.java
+index f4c78363..f54c77e3 100644
+--- a/src/com/google/javascript/jscomp/CompilerOptions.java
++++ b/src/com/google/javascript/jscomp/CompilerOptions.java
+@@ -582,10 +582,10 @@ public class CompilerOptions implements Serializable, Cloneable {
+       SourceMap.DetailLevel.SYMBOLS;
+ 
+   /**
+-   * Charset to use when generating code.  If null, then output ASCII.
+-   * This needs to be a string because CompilerOptions is serializable.
++   * Charset name to use when generating code. If null, then output ASCII.
++   * Stored as a String to keep CompilerOptions serializable and stable.
+    */
+-  public Charset outputCharset;
++  public String outputCharset;
+ 
+   /**
+    * Whether the named objects types included 'undefined' by default.

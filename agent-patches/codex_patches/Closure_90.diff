@@ -1,0 +1,62 @@
+diff --git a/src/com/google/javascript/jscomp/FunctionTypeBuilder.java b/src/com/google/javascript/jscomp/FunctionTypeBuilder.java
+index 99c9fce7..d2cac582 100644
+--- a/src/com/google/javascript/jscomp/FunctionTypeBuilder.java
++++ b/src/com/google/javascript/jscomp/FunctionTypeBuilder.java
+@@ -181,7 +181,11 @@ final class FunctionTypeBuilder {
+       // create interfaces JSType, ObjectType, FunctionType etc and have
+       // separate implementation instead of the class hierarchy, so that
+       // union types can also be object types, etc.
+-      if (!type.isSubtype(
++      // Ignore null/undefined when validating @this types, since 'this'
++      // inside a function cannot be null or undefined. This allows typedefs
++      // like (Array|null|undefined) to be valid @this types.
++      JSType nonNullThis = type.restrictByNotNullOrUndefined();
++      if (!nonNullThis.isSubtype(
+               typeRegistry.getNativeType(OBJECT_TYPE))) {
+         reportWarning(THIS_TYPE_NON_OBJECT, type.toString());
+         return false;
+@@ -409,12 +413,22 @@ final class FunctionTypeBuilder {
+       @Nullable Node owner) {
+     ObjectType maybeThisType = null;
+     if (info != null && info.hasThisType()) {
+-      maybeThisType = ObjectType.cast(
+-          info.getThisType().evaluate(scope, typeRegistry));
++      // Evaluate the @this type and validate it against being an object,
++      // ignoring null/undefined in the validation.
++      JSType evaluatedThis = info.getThisType().evaluate(scope, typeRegistry);
++      if (evaluatedThis != null) {
++        evaluatedThis.setValidator(new ThisTypeValidator());
++        // Use a dereferenced version for the effective this-type inside
++        // the function so that typedefs like (Array|null|undefined)
++        // behave as Array.
++        ObjectType dereferenced = evaluatedThis.dereference();
++        if (dereferenced != null) {
++          maybeThisType = dereferenced;
++        }
++      }
+     }
+     if (maybeThisType != null) {
+       thisType = maybeThisType;
+-      thisType.setValidator(new ThisTypeValidator());
+     } else if (owner != null &&
+                (info == null || !info.hasType())) {
+       // If the function is of the form:
+diff --git a/src/com/google/javascript/jscomp/TypeCheck.java b/src/com/google/javascript/jscomp/TypeCheck.java
+index 1566e882..eb60215f 100644
+--- a/src/com/google/javascript/jscomp/TypeCheck.java
++++ b/src/com/google/javascript/jscomp/TypeCheck.java
+@@ -1413,8 +1413,13 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
+       argument = arguments.next();
+       ordinal++;
+ 
++      // Special-case 'this' arguments to ensure we use the current scope's
++      // declared this-type, even if the 'this' node has not been visited yet.
++      JSType argType =
++          (argument.getType() == Token.THIS) ? t.getScope().getTypeOfThis() :
++              getJSType(argument);
+       validator.expectArgumentMatchesParameter(t, argument,
+-          getJSType(argument), getJSType(parameter), call, ordinal);
++          argType, getJSType(parameter), call, ordinal);
+     }
+ 
+     int numArgs = call.getChildCount() - 1;

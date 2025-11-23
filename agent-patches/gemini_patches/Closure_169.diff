@@ -1,0 +1,313 @@
+--- a/src/com/google/javascript/jscomp/TypeCheck.java
++++ b/src/com/google/javascript/jscomp/TypeCheck.java
+@@ -1,12 +1,30 @@
+-      // Functions with explicit 'this' types must be called in a GETPROP
+-      // or GETELEM.
+-      if (functionType.isOrdinaryFunction() &&
+-          !functionType.getTypeOfThis().isUnknownType() &&
+-          !functionType.getTypeOfThis().isNativeObjectType() &&
+-          !(child.isGetElem() ||
+-            child.isGetProp())) {
+-        report(t, n, EXPECTED_THIS_TYPE, functionType.toString());
+-      }
+-
+-      visitParameterList(t, n, functionType);
+-      ensureTyped(t, n, functionType.getReturnType());
++      // Functions with explicit 'this' types must be called in a GETPROP
++      // or GETELEM.
++      if (functionType.isOrdinaryFunction() &&
++          !functionType.getTypeOfThis().isUnknownType() &&
++          !functionType.getTypeOfThis().isNativeObjectType() &&
++          !(child.isGetElem() ||
++            child.isGetProp())) {
++        report(t, n, EXPECTED_THIS_TYPE, functionType.toString());
++      }
++
++      // Special handling for return type compatibility when formal return type is UNKNOWN.
++      // If the formal return type is UNKNOWN, then any actual return type is considered compatible.
++      // This addresses the issue where 'function(): undefined' is not considered a subtype of 'function(): ?'.
++      JSType actualReturnType = functionType.getReturnType();
++      JSType formalReturnType = functionType.getReturnType(); // This is the return type of the function being called.
++
++      // If the formal return type is UNKNOWN, we temporarily set the actual return type
++      // to UNKNOWN for the purpose of parameter validation, effectively bypassing
++      // the strict return type check for this specific case.
++      if (formalReturnType.isUnknownType() && actualReturnType.isVoidType()) {
++          // Create a temporary function type with the actual parameters but an UNKNOWN return type
++          // to allow the parameter validation to proceed without a return type mismatch.
++          FunctionType tempFunctionType = compiler.getTypeRegistry().createFunctionTypeWithNewReturnType(
++              functionType, compiler.getTypeRegistry().getNativeType(JSTypeNative.UNKNOWN_TYPE));
++          visitParameterList(t, n, tempFunctionType);
++      } else {
++          visitParameterList(t, n, functionType);
++      }
++
++      ensureTyped(t, n, functionType.getReturnType());
+@@ -1,30 +1,12 @@
+-      // Functions with explicit 'this' types must be called in a GETPROP
+-      // or GETELEM.
+-      if (functionType.isOrdinaryFunction() &&
+-          !functionType.getTypeOfThis().isUnknownType() &&
+-          !functionType.getTypeOfThis().isNativeObjectType() &&
+-          !(child.isGetElem() ||
+-            child.isGetProp())) {
+-        report(t, n, EXPECTED_THIS_TYPE, functionType.toString());
+-      }
+-
+-      // Special handling for return type compatibility when formal return type is UNKNOWN.
+-      // If the formal return type is UNKNOWN, then any actual return type is considered compatible.
+-      // This addresses the issue where 'function(): undefined' is not considered a subtype of 'function(): ?'.
+-      JSType actualReturnType = functionType.getReturnType();
+-      JSType formalReturnType = functionType.getReturnType(); // This is the return type of the function being called.
+-
+-      // If the formal return type is UNKNOWN, we temporarily set the actual return type
+-      // to UNKNOWN for the purpose of parameter validation, effectively bypassing
+-      // the strict return type check for this specific case.
+-      if (formalReturnType.isUnknownType() && actualReturnType.isVoidType()) {
+-          // Create a temporary function type with the actual parameters but an UNKNOWN return type
+-          // to allow the parameter validation to proceed without a return type mismatch.
+-          FunctionType tempFunctionType = compiler.getTypeRegistry().createFunctionTypeWithNewReturnType(
+-              functionType, compiler.getTypeRegistry().getNativeType(JSTypeNative.UNKNOWN_TYPE));
+-          visitParameterList(t, n, tempFunctionType);
+-      } else {
+-          visitParameterList(t, n, functionType);
+-      }
+-
+-      ensureTyped(t, n, functionType.getReturnType());
++      // Functions with explicit 'this' types must be called in a GETPROP
++      // or GETELEM.
++      if (functionType.isOrdinaryFunction() &&
++          !functionType.getTypeOfThis().isUnknownType() &&
++          !functionType.getTypeOfThis().isNativeObjectType() &&
++          !(child.isGetElem() ||
++            child.isGetProp())) {
++        report(t, n, EXPECTED_THIS_TYPE, functionType.toString());
++      }
++
++      visitParameterList(t, n, functionType);
++      ensureTyped(t, n, functionType.getReturnType());
+
+--- a/src/com/google/javascript/jscomp/TypeValidator.java
++++ b/src/com/google/javascript/jscomp/TypeValidator.java
+@@ -1,10 +1,34 @@
+-  void expectArgumentMatchesParameter(NodeTraversal t, Node n, JSType argType,
+-      JSType paramType, Node callNode, int ordinal) {
+-    if (!argType.canAssignTo(paramType)) {
+-      mismatch(t, n,
+-          String.format("actual parameter %d of %s does not match " +
+-              "formal parameter", ordinal,
+-              getReadableJSTypeName(callNode.getFirstChild(), false)),
+-          argType, paramType);
+-    }
+-  }
++  void expectArgumentMatchesParameter(NodeTraversal t, Node n, JSType argType,
++      JSType paramType, Node callNode, int ordinal) {
++    // Special case for function return types: if the formal parameter's
++    // return type is '?', and the actual parameter's return type is 'undefined',
++    // consider them compatible.
++    if (argType.isFunctionType() && paramType.isFunctionType()) {
++      FunctionType actualFnType = argType.toMaybeFunctionType();
++      FunctionType formalFnType = paramType.toMaybeFunctionType();
++
++      if (actualFnType != null && formalFnType != null &&
++          actualFnType.getReturnType().isVoidType() &&
++          formalFnType.getReturnType().isUnknownType()) {
++        // If the actual return type is undefined and the formal is unknown,
++        // consider it a match for the return type part.
++        // Now, we still need to check the parameters.
++        // We'll create a temporary function type with the formal return type
++        // to allow the rest of the comparison to proceed.
++        FunctionType tempActualFnType = typeRegistry.createFunctionTypeWithNewReturnType(
++            actualFnType, formalFnType.getReturnType());
++
++        if (tempActualFnType.canAssignTo(formalFnType)) {
++          return; // Parameters also match, so no error.
++        }
++      }
++    }
++
++    if (!argType.canAssignTo(paramType)) {
++      mismatch(t, n,
++          String.format("actual parameter %d of %s does not match " +
++              "formal parameter", ordinal,
++              getReadableJSTypeName(callNode.getFirstChild(), false)),
++          argType, paramType);
++    }
++  }
+@@ -1,34 +1,10 @@
+-  void expectArgumentMatchesParameter(NodeTraversal t, Node n, JSType argType,
+-      JSType paramType, Node callNode, int ordinal) {
+-    // Special case for function return types: if the formal parameter's
+-    // return type is '?', and the actual parameter's return type is 'undefined',
+-    // consider them compatible.
+-    if (argType.isFunctionType() && paramType.isFunctionType()) {
+-      FunctionType actualFnType = argType.toMaybeFunctionType();
+-      FunctionType formalFnType = paramType.toMaybeFunctionType();
+-
+-      if (actualFnType != null && formalFnType != null &&
+-          actualFnType.getReturnType().isVoidType() &&
+-          formalFnType.getReturnType().isUnknownType()) {
+-        // If the actual return type is undefined and the formal is unknown,
+-        // consider it a match for the return type part.
+-        // Now, we still need to check the parameters.
+-        // We'll create a temporary function type with the formal return type
+-        // to allow the rest of the comparison to proceed.
+-        FunctionType tempActualFnType = typeRegistry.createFunctionTypeWithNewReturnType(
+-            actualFnType, formalFnType.getReturnType());
+-
+-        if (tempActualFnType.canAssignTo(formalFnType)) {
+-          return; // Parameters also match, so no error.
+-        }
+-      }
+-    }
+-
+-    if (!argType.canAssignTo(paramType)) {
+-      mismatch(t, n,
+-          String.format("actual parameter %d of %s does not match " +
+-              "formal parameter", ordinal,
+-              getReadableJSTypeName(callNode.getFirstChild(), false)),
+-          argType, paramType);
+-    }
+-  }
++  void expectArgumentMatchesParameter(NodeTraversal t, Node n, JSType argType,
++      JSType paramType, Node callNode, int ordinal) {
++    if (!argType.canAssignTo(paramType)) {
++      mismatch(t, n,
++          String.format("actual parameter %d of %s does not match " +
++              "formal parameter", ordinal,
++              getReadableJSTypeName(callNode.getFirstChild(), false)),
++          argType, paramType);
++    }
++  }
+
+--- a/src/com/google/javascript/rhino/jstype/ArrowType.java
++++ b/src/com/google/javascript/rhino/jstype/ArrowType.java
+@@ -1,4 +1,8 @@
+-    // this.returnType <: that.returnType (covariant)
+-    if (!this.returnType.isSubtype(that.returnType)) {
+-      return false;
+-    }
++    // this.returnType <: that.returnType (covariant)
++    if (!this.returnType.isSubtype(that.returnType)) {
++      // Special case: if the required return type is UNKNOWN, then any return type is acceptable.
++      if (that.returnType.isUnknownType()) {
++        return true;
++      }
++      return false;
++    }
+@@ -1,8 +1,4 @@
+-    // this.returnType <: that.returnType (covariant)
+-    if (!this.returnType.isSubtype(that.returnType)) {
+-      // Special case: if the required return type is UNKNOWN, then any return type is acceptable.
+-      if (that.returnType.isUnknownType()) {
+-        return true;
+-      }
+-      return false;
+-    }
++    // this.returnType <: that.returnType (covariant)
++    if (!this.returnType.isSubtype(that.returnType)) {
++      return false;
++    }
+@@ -1,4 +1,10 @@
+-    // this.returnType <: that.returnType (covariant)
+-    if (!this.returnType.isSubtype(that.returnType)) {
+-      return false;
+-    }
++    // this.returnType <: that.returnType (covariant)
++    // Special case: if the required return type is UNKNOWN, then any return type is acceptable.
++    if (that.returnType.isUnknownType()) {
++      // If the required return type is unknown, then any actual return type is compatible.
++      // This effectively makes the return type check always pass if the formal parameter's
++      // return type is '?'.
++      // We still need to check parameters.
++    } else if (!this.returnType.isSubtype(that.returnType)) {
++      return false;
++    }
+@@ -1,8 +1,10 @@
+-  boolean checkArrowEquivalenceHelper(
+-      ArrowType that, boolean tolerateUnknowns) {
+-    // Please keep this method in sync with the hashCode() method below.
+-    if (!returnType.checkEquivalenceHelper(that.returnType, tolerateUnknowns)) {
+-      return false;
+-    }
+-    return hasEqualParameters(that, tolerateUnknowns);
+-  }
++  boolean checkArrowEquivalenceHelper(
++      ArrowType that, boolean tolerateUnknowns) {
++    // Please keep this method in sync with the hashCode() method below.
++    // For return types, we need to check for subtyping (covariant), not strict equivalence.
++    // If this.returnType is a subtype of that.returnType, it's compatible.
++    if (!this.returnType.isSubtype(that.returnType)) {
++      return false;
++    }
++    return hasEqualParameters(that, tolerateUnknowns);
++  }
+
+--- a/src/com/google/javascript/rhino/jstype/JSType.java
++++ b/src/com/google/javascript/rhino/jstype/JSType.java
+@@ -1,9 +1,13 @@
+-  static boolean isSubtypeHelper(JSType thisType, JSType thatType) {
+-    // unknown
+-    if (thatType.isUnknownType()) {
+-      return true;
+-    }
+-    // all type
+-    if (thatType.isAllType()) {
+-      return true;
+-    }
++  static boolean isSubtypeHelper(JSType thisType, JSType thatType) {
++    // unknown
++    if (thatType.isUnknownType()) {
++      return true;
++    }
++    // Special case: VoidType is a subtype of UnknownType.
++    if (thisType.isVoidType() && thatType.isUnknownType()) {
++      return true;
++    }
++    // all type
++    if (thatType.isAllType()) {
++      return true;
++    }
+
+--- a/src/com/google/javascript/rhino/jstype/VoidType.java
++++ b/src/com/google/javascript/rhino/jstype/VoidType.java
+@@ -1,5 +1,14 @@
+-  @Override
+-  public <T> T visit(Visitor<T> visitor) {
+-    return visitor.caseVoidType();
+-  }
+-}
++  @Override
++  public boolean isSubtype(JSType that) {
++    // A VoidType is a subtype of UnknownType.
++    if (that.isUnknownType()) {
++      return true;
++    }
++    return super.isSubtype(that);
++  }
++
++  @Override
++  public <T> T visit(Visitor<T> visitor) {
++    return visitor.caseVoidType();
++  }
++}
+@@ -1,14 +1,5 @@
+-  @Override
+-  public boolean isSubtype(JSType that) {
+-    // A VoidType is a subtype of UnknownType.
+-    if (that.isUnknownType()) {
+-      return true;
+-    }
+-    return super.isSubtype(that);
+-  }
+-
+-  @Override
+-  public <T> T visit(Visitor<T> visitor) {
+-    return visitor.caseVoidType();
+-  }
+-}
++  @Override
++  public <T> T visit(Visitor<T> visitor) {
++    return visitor.caseVoidType();
++  }
++}

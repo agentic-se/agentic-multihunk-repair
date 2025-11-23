@@ -1,0 +1,55 @@
+diff --git a/src/com/google/javascript/jscomp/CodeGenerator.java b/src/com/google/javascript/jscomp/CodeGenerator.java
+index f28378cc..e0e58469 100644
+--- a/src/com/google/javascript/jscomp/CodeGenerator.java
++++ b/src/com/google/javascript/jscomp/CodeGenerator.java
+@@ -93,6 +93,18 @@ class CodeGenerator {
+     Node first = n.getFirstChild();
+     Node last = n.getLastChild();
+ 
++    // Special-case deeply nested left-recursive ADD chains to avoid
++    // stack overflows by unrolling them iteratively. We only apply this
++    // when the left child is also an ADD (i.e. left-recursive shape).
++    if (type == Token.ADD && first != null && last != null && first.getType() == type) {
++      int p = NodeUtil.precedence(type);
++      // For right-hand side of operations, only pass context if it's the
++      // IN_FOR_INIT_CLAUSE one.
++      Context rhsContext = getContextForNoInOperator(context);
++      unrollLeftAssociativeBinaryOperator(n, Token.ADD, "+", context, rhsContext, p, p + 1);
++      return;
++    }
++
+     // Handle all binary operators
+     if (opstr != null && first != last) {
+       Preconditions.checkState(
+@@ -756,6 +768,31 @@ class CodeGenerator {
+     } while (current != n);
+   }
+ 
++  /**
++   * Unrolls a left-recursive binary operator chain and emits it iteratively
++   * using the provided operator string via addOp. This prevents deep
++   * recursion and potential StackOverflowErrors for large trees.
++   *
++   * We assume nodes are left-recursive.
++   */
++  private void unrollLeftAssociativeBinaryOperator(
++      Node n, int op, String opStr, Context context,
++      Context rhsContext, int leftPrecedence, int rightPrecedence) {
++    Node firstNonOperator = n.getFirstChild();
++    while (firstNonOperator.getType() == op) {
++      firstNonOperator = firstNonOperator.getFirstChild();
++    }
++
++    addExpr(firstNonOperator, leftPrecedence, context);
++
++    Node current = firstNonOperator;
++    do {
++      current = current.getParent();
++      cc.addOp(opStr, true);
++      addExpr(current.getFirstChild().getNext(), rightPrecedence, rhsContext);
++    } while (current != n);
++  }
++
+   static boolean isSimpleNumber(String s) {
+     int len = s.length();
+     for (int index = 0; index < len; index++) {

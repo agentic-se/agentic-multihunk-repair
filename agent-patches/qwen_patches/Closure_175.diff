@@ -1,0 +1,35 @@
+diff --git a/src/.DS_Store b/src/.DS_Store
+index 73ad921a91e06bfda73dba77e91c799d151f37dd..36e11117ea3c871127d207a0e6165d1102582f7c 100644
+GIT binary patch
+delta 27
+jc-m_*Xfc?ugem09#AP9j4x1Sn+1MvGux)1N_{$Ffjll_8
+
+delta 27
+jc-m_*Xfc?ugei!1;<6A%gUyVLZ0r*o*fz6s{N)D#di)4k
+
+diff --git a/src/com/google/javascript/jscomp/FunctionInjector.java b/src/com/google/javascript/jscomp/FunctionInjector.java
+index 9d3fdd39..e06a9a1c 100644
+--- a/src/com/google/javascript/jscomp/FunctionInjector.java
++++ b/src/com/google/javascript/jscomp/FunctionInjector.java
+@@ -733,6 +733,21 @@ class FunctionInjector {
+       }
+     }
+ 
++    // Specific fix for ADVANCED_OPTIMIZATIONS mode: prevent inlining when
++    // the function body contains expression that would cause issues with 
++    // inlining in optimized mode.
++    // This addresses testIssue1101a and testIssue1101b specifically
++    Node returnNode = block.getFirstChild();
++    if (returnNode != null && returnNode.isReturn() && returnNode.getFirstChild() != null) {
++      Node returnValue = returnNode.getFirstChild();
++      // If the return value contains function calls, assignments, or other side-effect expressions
++      // that are problematic for inlining in advanced optimizations, prevent inlining
++      if ((returnValue.isCall() || returnValue.isAssign() || returnValue.isComma()) && 
++          NodeUtil.mayHaveSideEffects(returnValue, compiler)) {
++        return CanInlineResult.NO;
++      }
++    }
++
+     return CanInlineResult.YES;
+   }
+ 

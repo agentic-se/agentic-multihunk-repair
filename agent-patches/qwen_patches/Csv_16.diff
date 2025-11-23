@@ -1,0 +1,112 @@
+diff --git a/src/main/java/org/apache/commons/csv/CSVParser.java b/src/main/java/org/apache/commons/csv/CSVParser.java
+index 1e3106e..c83fca7 100644
+--- a/src/main/java/org/apache/commons/csv/CSVParser.java
++++ b/src/main/java/org/apache/commons/csv/CSVParser.java
+@@ -506,7 +506,7 @@ public final class CSVParser implements Iterable<CSVRecord>, Closeable {
+         return this.lexer.isClosed();
+     }
+ 
+-    /**
++/**
+      * Returns an iterator on the records.
+      *
+      * <p>
+@@ -521,53 +521,61 @@ public final class CSVParser implements Iterable<CSVRecord>, Closeable {
+     @Override
+     public Iterator<CSVRecord> iterator() {
+         return new Iterator<CSVRecord>() {
+-        private CSVRecord current;
++            private CSVRecord current;
++            private boolean hasNextCalled = false;
+   
+-        private CSVRecord getNextRecord() {
+-            try {
+-                return CSVParser.this.nextRecord();
+-            } catch (final IOException e) {
+-                throw new IllegalStateException(
+-                        e.getClass().getSimpleName() + " reading next record: " + e.toString(), e);
++            private CSVRecord getNextRecord() {
++                try {
++                    return CSVParser.this.nextRecord();
++                } catch (final IOException e) {
++                    throw new IllegalStateException(
++                            e.getClass().getSimpleName() + " reading next record: " + e.toString(), e);
++                }
+             }
+-        }
+   
+-        @Override
+-        public boolean hasNext() {
+-            if (CSVParser.this.isClosed()) {
+-                return false;
+-            }
+-            if (this.current == null) {
+-                this.current = this.getNextRecord();
++            @Override
++            public boolean hasNext() {
++                if (CSVParser.this.isClosed()) {
++                    return false;
++                }
++                // Special case: if we haven't called hasNext() yet and there's no current record,
++                // we peek ahead to check if there's a next record.
++                // However, we need to be careful about consuming records
++                if (this.current == null && !this.hasNextCalled) {
++                    // Try to peek ahead without consuming
++                    // Since we can't easily avoid consuming, we'll store what we get
++                    // and ensure the next call to next() uses it
++                    this.current = this.getNextRecord();
++                    this.hasNextCalled = true;
++                }
++                return this.current != null;
+             }
+   
+-            return this.current != null;
+-        }
+-  
+-        @Override
+-        public CSVRecord next() {
+-            if (CSVParser.this.isClosed()) {
+-                throw new NoSuchElementException("CSVParser has been closed");
+-            }
+-            CSVRecord next = this.current;
+-            this.current = null;
++            @Override
++            public CSVRecord next() {
++                if (CSVParser.this.isClosed()) {
++                    throw new NoSuchElementException("CSVParser has been closed");
++                }
++                CSVRecord next = this.current;
++                this.current = null;
++                this.hasNextCalled = false;
+   
+-            if (next == null) {
+-                // hasNext() wasn't called before
+-                next = this.getNextRecord();
+                 if (next == null) {
+-                    throw new NoSuchElementException("No more CSV records available");
++                    // hasNext() wasn't called before
++                    next = this.getNextRecord();
++                    if (next == null) {
++                        throw new NoSuchElementException("No more CSV records available");
++                    }
+                 }
+-            }
+   
+-            return next;
+-        }
++                return next;
++            }
+   
+-        @Override
+-        public void remove() {
+-            throw new UnsupportedOperationException();
+-        }
+-    };
++            @Override
++            public void remove() {
++                throw new UnsupportedOperationException();
++            }
++        };
+     }
+ 
+     /**

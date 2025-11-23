@@ -1,0 +1,604 @@
+--- a/src/main/java/com/fasterxml/jackson/databind/SerializerProvider.java
++++ b/src/main/java/com/fasterxml/jackson/databind/SerializerProvider.java
+@@ -1,13 +1,13 @@
+-    protected JsonSerializer<Object> _createUntypedSerializer(JavaType type)
+-        throws JsonMappingException
+-    {
+-        /* 27-Mar-2015, tatu: Wish I knew exactly why/what, but [databind#738]
+-         *    can be prevented by synchronizing on cache (not on 'this', however,
+-         *    since there's one instance per serialization).
+-         *   Perhaps not-yet-resolved instance might be exposed too early to callers.
+-         */
+-        synchronized (_serializerCache) {
+-            // 17-Feb-2013, tatu: Used to call deprecated method (that passed property)
+-            return (JsonSerializer<Object>)_serializerFactory.createSerializer(this, type);
+-        }
+-    }
++    protected JsonSerializer<Object> _createUntypedSerializer(JavaType type, BeanProperty property)
++        throws JsonMappingException
++    {
++        /* 27-Mar-2015, tatu: Wish I knew exactly why/what, but [databind#738]
++         *    can be prevented by synchronizing on cache (not on 'this', however,
++         *    since there's one instance per serialization).
++         *   Perhaps not-yet-resolved instance might be exposed too early to callers.
++         */
++        synchronized (_serializerCache) {
++            // 17-Feb-2013, tatu: Used to call deprecated method (that passed property)
++            return (JsonSerializer<Object>)_serializerFactory.createSerializer(this, type, property);
++        }
++    }
+@@ -1,20 +1,20 @@
+-    protected JsonSerializer<Object> _createAndCacheUntypedSerializer(JavaType type)
+-        throws JsonMappingException
+-    {        
+-        JsonSerializer<Object> ser;
+-        try {
+-            ser = _createUntypedSerializer(type);
+-        } catch (IllegalArgumentException iae) {
+-            /* We better only expose checked exceptions, since those
+-             * are what caller is expected to handle
+-             */
+-            reportMappingProblem(iae, iae.getMessage());
+-            return null; // never gets here
+-        }
+-    
+-        if (ser != null) {
+-            // 21-Dec-2015, tatu: Should we also cache using raw key?
+-            _serializerCache.addAndResolveNonTypedSerializer(type, ser, this);
+-        }
+-        return ser;
+-    }
++    protected JsonSerializer<Object> _createAndCacheUntypedSerializer(JavaType type, BeanProperty property)
++        throws JsonMappingException
++    {        
++        JsonSerializer<Object> ser;
++        try {
++            ser = _createUntypedSerializer(type, property);
++        } catch (IllegalArgumentException iae) {
++            /* We better only expose checked exceptions, since those
++             * are what caller is expected to handle
++             */
++            reportMappingProblem(iae, iae.getMessage());
++            return null; // never gets here
++        }
++    
++        if (ser != null) {
++            // 21-Dec-2015, tatu: Should we also cache using raw key?
++            _serializerCache.addAndResolveNonTypedSerializer(type, ser, this);
++        }
++        return ser;
++    }
+@@ -1,2 +1,2 @@
+-    protected JsonSerializer<Object> _createAndCacheUntypedSerializer(Class<?> rawType)
+-        throws JsonMappingException
++    protected JsonSerializer<Object> _createAndCacheUntypedSerializer(Class<?> rawType, BeanProperty property)
++        throws JsonMappingException
+@@ -1,1 +1,1 @@
+-                    ser = _createUntypedSerializer(fullType);
++                    ser = _createUntypedSerializer(fullType, property);
+@@ -1,6 +1,6 @@
+-                if (ser == null) {
+-                    // If neither, must create
+-                    ser = _createAndCacheUntypedSerializer(valueType);
+-                    // Not found? Must use the unknown type serializer, which will report error later on
+-                    if (ser == null) {
+-                        ser = getUnknownTypeSerializer(valueType);
++                if (ser == null) {
++                    // If neither, must create
++                    ser = _createAndCacheUntypedSerializer(valueType, property);
++                    // Not found? Must use the unknown type serializer, which will report error later on
++                    if (ser == null) {
++                        ser = getUnknownTypeSerializer(valueType);
+@@ -1,21 +1,21 @@
+-    @SuppressWarnings("unchecked")
+-    public JsonSerializer<Object> findValueSerializer(JavaType valueType, BeanProperty property)
+-        throws JsonMappingException
+-    {
+-        // (see comments from above method)
+-        JsonSerializer<Object> ser = _knownSerializers.untypedValueSerializer(valueType);
+-        if (ser == null) {
+-            ser = _serializerCache.untypedValueSerializer(valueType);
+-            if (ser == null) {
+-                ser = _createAndCacheUntypedSerializer(valueType);
+-                if (ser == null) {
+-                    ser = getUnknownTypeSerializer(valueType.getRawClass());
+-                    if (CACHE_UNKNOWN_MAPPINGS) {
+-                        _serializerCache.addAndResolveNonTypedSerializer(valueType, ser, this);
+-                    }
+-                    return ser;
+-                }
+-            }
+-        }
+-        return (JsonSerializer<Object>) handleSecondaryContextualization(ser, property);
+-    }
++    @SuppressWarnings("unchecked")
++    public JsonSerializer<Object> findValueSerializer(JavaType valueType, BeanProperty property)
++        throws JsonMappingException
++    {
++        // (see comments from above method)
++        JsonSerializer<Object> ser = _knownSerializers.untypedValueSerializer(valueType);
++        if (ser == null) {
++            ser = _serializerCache.untypedValueSerializer(valueType);
++            if (ser == null) {
++                ser = _createAndCacheUntypedSerializer(valueType, property); // Pass property here
++                if (ser == null) {
++                    ser = getUnknownTypeSerializer(valueType.getRawClass());
++                    if (CACHE_UNKNOWN_MAPPINGS) {
++                        _serializerCache.addAndResolveNonTypedSerializer(valueType, ser, this);
++                    }
++                    return ser;
++                }
++            }
++        }
++        return (JsonSerializer<Object>) handleSecondaryContextualization(ser, property);
++    }
+@@ -1,21 +1,21 @@
+-    @SuppressWarnings("unchecked")
+-    public JsonSerializer<Object> findPrimaryPropertySerializer(JavaType valueType, BeanProperty property)
+-        throws JsonMappingException
+-    {
+-        JsonSerializer<Object> ser = _knownSerializers.untypedValueSerializer(valueType);
+-        if (ser == null) {
+-            ser = _serializerCache.untypedValueSerializer(valueType);
+-            if (ser == null) {
+-                ser = _createAndCacheUntypedSerializer(valueType);
+-                if (ser == null) {
+-                    ser = getUnknownTypeSerializer(valueType.getRawClass());
+-                    // Should this be added to lookups?
+-                    if (CACHE_UNKNOWN_MAPPINGS) {
+-                        _serializerCache.addAndResolveNonTypedSerializer(valueType, ser, this);
+-                    }
+-                    return ser;
+-                }
+-            }
+-        }
+-        return (JsonSerializer<Object>) handlePrimaryContextualization(ser, property);
+-    }
++    @SuppressWarnings("unchecked")
++    public JsonSerializer<Object> findPrimaryPropertySerializer(JavaType valueType, BeanProperty property)
++        throws JsonMappingException
++    {
++        JsonSerializer<Object> ser = _knownSerializers.untypedValueSerializer(valueType);
++        if (ser == null) {
++            ser = _serializerCache.untypedValueSerializer(valueType);
++            if (ser == null) {
++                ser = _createAndCacheUntypedSerializer(valueType, property); // Pass property here
++                if (ser == null) {
++                    ser = getUnknownTypeSerializer(valueType.getRawClass());
++                    // Should this be added to lookups?
++                    if (CACHE_UNKNOWN_MAPPINGS) {
++                        _serializerCache.addAndResolveNonTypedSerializer(valueType, ser, this);
++                    }
++                    return ser;
++                }
++            }
++        }
++        return (JsonSerializer<Object>) handlePrimaryContextualization(ser, property);
++    }
+@@ -1,24 +1,24 @@
+-    @SuppressWarnings("unchecked")
+-    public JsonSerializer<Object> findPrimaryPropertySerializer(Class<?> valueType,
+-            BeanProperty property)
+-        throws JsonMappingException
+-    {
+-        JsonSerializer<Object> ser = _knownSerializers.untypedValueSerializer(valueType);
+-        if (ser == null) {
+-            ser = _serializerCache.untypedValueSerializer(valueType);
+-            if (ser == null) {
+-                ser = _serializerCache.untypedValueSerializer(_config.constructType(valueType));
+-                if (ser == null) {
+-                    ser = _createAndCacheUntypedSerializer(valueType);
+-                    if (ser == null) {
+-                        ser = getUnknownTypeSerializer(valueType);
+-                        if (CACHE_UNKNOWN_MAPPINGS) {
+-                            _serializerCache.addAndResolveNonTypedSerializer(valueType, ser, this);
+-                        }
+-                        return ser;
+-                    }
+-                }
+-            }
+-        }
+-        return (JsonSerializer<Object>) handlePrimaryContextualization(ser, property);
+-    }
++    @SuppressWarnings("unchecked")
++    public JsonSerializer<Object> findPrimaryPropertySerializer(Class<?> valueType,
++            BeanProperty property)
++        throws JsonMappingException
++    {
++        JsonSerializer<Object> ser = _knownSerializers.untypedValueSerializer(valueType);
++        if (ser == null) {
++            ser = _serializerCache.untypedValueSerializer(valueType);
++            if (ser == null) {
++                ser = _serializerCache.untypedValueSerializer(_config.constructType(valueType));
++                if (ser == null) {
++                    ser = _createAndCacheUntypedSerializer(valueType, property); // Pass property here
++                    if (ser == null) {
++                        ser = getUnknownTypeSerializer(valueType);
++                        if (CACHE_UNKNOWN_MAPPINGS) {
++                            _serializerCache.addAndResolveNonTypedSerializer(valueType, ser, this);
++                        }
++                        return ser;
++                    }
++                }
++            }
++        }
++        return (JsonSerializer<Object>) handlePrimaryContextualization(ser, property);
++    }
+@@ -1,1 +1,1 @@
+-                    ser = _createAndCacheUntypedSerializer(valueType);
++                    ser = _createAndCacheUntypedSerializer(valueType, null);
+@@ -1,1 +1,1 @@
+-                ser = _createAndCacheUntypedSerializer(valueType);
++                ser = _createAndCacheUntypedSerializer(valueType, null);
+@@ -1,1 +1,1 @@
+-                ser = _createAndCacheUntypedSerializer(runtimeType);
++                ser = _createAndCacheUntypedSerializer(runtimeType, null);
+
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/BasicSerializerFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/BasicSerializerFactory.java
+@@ -1,19 +1,18 @@
+-    protected JsonSerializer<?> buildEnumSerializer(SerializationConfig config,
+-            JavaType type, BeanDescription beanDesc)
+-        throws JsonMappingException
+-    {
+-        /* As per [databind#24], may want to use alternate shape, serialize as JSON Object.
+-         * Challenge here is that EnumSerializer does not know how to produce
+-         * POJO style serialization, so we must handle that special case separately;
+-         * otherwise pass it to EnumSerializer.
+-         */
+-        JsonFormat.Value format = beanDesc.findExpectedFormat(null);
+-        if (format != null && format.getShape() == JsonFormat.Shape.OBJECT) {
+-            // one special case: suppress serialization of "getDeclaringClass()"...
+-            ((BasicBeanDescription) beanDesc).removeProperty("declaringClass");
+-            // returning null will mean that eventually BeanSerializer gets constructed
+-            return null;
+-        }
+-        @SuppressWarnings("unchecked")
+-        Class<Enum<?>> enumClass = (Class<Enum<?>>) type.getRawClass();
+-        JsonSerializer<?> ser = EnumSerializer.construct(enumClass, config, beanDesc, format);
++    protected JsonSerializer<?> buildEnumSerializer(SerializationConfig config,
++            JavaType type, BeanDescription beanDesc, final BeanProperty prop)
++        throws JsonMappingException
++    {
++        // [databind#1543]: need to be able to use per-property annotations
++        JsonFormat.Value format = findFormatOverrides(config, prop, type.getRawClass());
++        if (format == null) {
++            format = beanDesc.findExpectedFormat(null);
++        }
++        if (format != null && format.getShape() == JsonFormat.Shape.OBJECT) {
++            // one special case: suppress serialization of "getDeclaringClass()"...
++            ((BasicBeanDescription) beanDesc).removeProperty("declaringClass");
++            // returning null will mean that eventually BeanSerializer gets constructed
++            return null;
++        }
++        @SuppressWarnings("unchecked")
++        Class<Enum<?>> enumClass = (Class<Enum<?>>) type.getRawClass();
++        JsonSerializer<?> ser = EnumSerializer.construct(enumClass, config, beanDesc, format);
+@@ -1,3 +1,3 @@
+-        if (Enum.class.isAssignableFrom(raw)) {
+-            return buildEnumSerializer(prov.getConfig(), type, beanDesc);
+-        }
++        if (Enum.class.isAssignableFrom(raw)) {
++            return buildEnumSerializer(prov.getConfig(), type, beanDesc, null);
++        }
+@@ -1,16 +1,31 @@
+-    protected Class<?> _verifyAsClass(Object src, String methodName, Class<?> noneClass)
+-    {
+-        if (src == null) {
+-            return null;
+-        }
+-        if (!(src instanceof Class)) {
+-            throw new IllegalStateException("AnnotationIntrospector."+methodName+"() returned value of type "+src.getClass().getName()+": expected type JsonSerializer or Class<JsonSerializer> instead");
+-        }
+-        Class<?> cls = (Class<?>) src;
+-        if (cls == noneClass || ClassUtil.isBogusClass(cls)) {
+-            return null;
+-        }
+-        return cls;
+-    }
+-}
+-
++    protected Class<?> _verifyAsClass(Object src, String methodName, Class<?> noneClass)
++    {
++        if (src == null) {
++            return null;
++        }
++        if (!(src instanceof Class)) {
++            throw new IllegalStateException("AnnotationIntrospector."+methodName+"() returned value of type "+src.getClass().getName()+": expected type JsonSerializer or Class<JsonSerializer> instead");
++        }
++        Class<?> cls = (Class<?>) src;
++        if (cls == noneClass || ClassUtil.isBogusClass(cls)) {
++            return null;
++        }
++        return cls;
++    }
++
++    /**
++     * Helper method to find {@link JsonFormat.Value} for a property, if any,
++     * or `null` if none.
++     *
++     * @since 2.8
++     */
++    protected JsonFormat.Value findFormatOverrides(SerializationConfig config,
++            BeanProperty prop, Class<?> typeForDefaults)
++    {
++        if (prop != null) {
++            return config.getDefaultPropertyFormat(typeForDefaults).withOverrides(prop.findFormatOverrides(config.getAnnotationIntrospector()));
++        }
++        return config.getDefaultPropertyFormat(typeForDefaults);
++    }
++}
++
+@@ -1,18 +1,18 @@
+-    protected JsonSerializer<?> buildEnumSerializer(SerializationConfig config,
+-            JavaType type, BeanDescription beanDesc, final BeanProperty prop)
+-        throws JsonMappingException
+-    {
+-        // [databind#1543]: need to be able to use per-property annotations
+-        JsonFormat.Value format = findFormatOverrides(config, prop, type.getRawClass());
+-        if (format == null) {
+-            format = beanDesc.findExpectedFormat(null);
+-        }
+-        if (format != null && format.getShape() == JsonFormat.Shape.OBJECT) {
+-            // one special case: suppress serialization of "getDeclaringClass()"...
+-            ((BasicBeanDescription) beanDesc).removeProperty("declaringClass");
+-            // returning null will mean that eventually BeanSerializer gets constructed
+-            return null;
+-        }
+-        @SuppressWarnings("unchecked")
+-        Class<Enum<?>> enumClass = (Class<Enum<?>>) type.getRawClass();
+-        JsonSerializer<?> ser = EnumSerializer.construct(enumClass, config, beanDesc, format);
++    protected JsonSerializer<?> buildEnumSerializer(SerializationConfig config,
++            JavaType type, BeanDescription beanDesc, final BeanProperty prop)
++        throws JsonMappingException
++    {
++        // [databind#1543]: need to be able to use per-property annotations
++        JsonFormat.Value format = beanDesc.findExpectedFormat(null);
++        if (prop != null) {
++            format = format.withOverrides(prop.findFormatOverrides(config.getAnnotationIntrospector()));
++        }
++        if (format != null && format.getShape() == JsonFormat.Shape.OBJECT) {
++            // one special case: suppress serialization of "getDeclaringClass()"...
++            ((BasicBeanDescription) beanDesc).removeProperty("declaringClass");
++            // returning null will mean that eventually BeanSerializer gets constructed
++            return null;
++        }
++        @SuppressWarnings("unchecked")
++        Class<Enum<?>> enumClass = (Class<Enum<?>>) type.getRawClass();
++        JsonSerializer<?> ser = EnumSerializer.construct(enumClass, config, beanDesc, format);
+@@ -1,4 +1,4 @@
+-        JsonFormat.Value format = beanDesc.findExpectedFormat(null);
+-        if (prop != null) {
+-            format = format.withOverrides(prop.findFormatOverrides(config.getAnnotationIntrospector()));
+-        }
++        JsonFormat.Value format = beanDesc.findExpectedFormat(null);
++        if (prop != null) {
++            format = format.withOverrides(prop.findPropertyFormat(config, type.getRawClass()));
++        }
+@@ -1,31 +1,16 @@
+-    protected Class<?> _verifyAsClass(Object src, String methodName, Class<?> noneClass)
+-    {
+-        if (src == null) {
+-            return null;
+-        }
+-        if (!(src instanceof Class)) {
+-            throw new IllegalStateException("AnnotationIntrospector."+methodName+"() returned value of type "+src.getClass().getName()+": expected type JsonSerializer or Class<JsonSerializer> instead");
+-        }
+-        Class<?> cls = (Class<?>) src;
+-        if (cls == noneClass || ClassUtil.isBogusClass(cls)) {
+-            return null;
+-        }
+-        return cls;
+-    }
+-
+-    /**
+-     * Helper method to find {@link JsonFormat.Value} for a property, if any,
+-     * or `null` if none.
+-     *
+-     * @since 2.8
+-     */
+-    protected JsonFormat.Value findFormatOverrides(SerializationConfig config,
+-            BeanProperty prop, Class<?> typeForDefaults)
+-    {
+-        if (prop != null) {
+-            return config.getDefaultPropertyFormat(typeForDefaults).withOverrides(prop.findFormatOverrides(config.getAnnotationIntrospector()));
+-        }
+-        return config.getDefaultPropertyFormat(typeForDefaults);
+-    }
+-}
+-
++    protected Class<?> _verifyAsClass(Object src, String methodName, Class<?> noneClass)
++    {
++        if (src == null) {
++            return null;
++        }
++        if (!(src instanceof Class)) {
++            throw new IllegalStateException("AnnotationIntrospector."+methodName+"() returned value of type "+src.getClass().getName()+": expected type JsonSerializer or Class<JsonSerializer> instead");
++        }
++        Class<?> cls = (Class<?>) src;
++        if (cls == noneClass || ClassUtil.isBogusClass(cls)) {
++            return null;
++        }
++        return cls;
++    }
++}
++
+@@ -1,3 +1,3 @@
+-        if (Enum.class.isAssignableFrom(raw)) {
+-            return buildEnumSerializer(prov.getConfig(), type, beanDesc, null);
+-        }
++        if (Enum.class.isAssignableFrom(raw)) {
++            return null;
++        }
+@@ -1,3 +1,3 @@
+-    public abstract JsonSerializer<Object> createSerializer(SerializerProvider prov,
+-            JavaType type)
+-        throws JsonMappingException;
++    public abstract JsonSerializer<Object> createSerializer(SerializerProvider prov,
++            JavaType type, BeanProperty property)
++        throws JsonMappingException;
+
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/BeanSerializerFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/BeanSerializerFactory.java
+@@ -1,10 +1,16 @@
+-        // Does member specify a serializer? If so, let's use it.
+-        JsonSerializer<?> annotatedSerializer = findSerializerFromAnnotation(prov,
+-                accessor);
+-        // Unlike most other code paths, serializer produced
+-        // here will NOT be resolved or contextualized, unless done here, so:
+-        if (annotatedSerializer instanceof ResolvableSerializer) {
+-            ((ResolvableSerializer) annotatedSerializer).resolve(prov);
+-        }
+-        // 05-Sep-2013, tatu: should be primary property serializer so:
+-        annotatedSerializer = prov.handlePrimaryContextualization(annotatedSerializer, property);
++        // Does member specify a serializer? If so, let's use it.
++        JsonSerializer<?> annotatedSerializer = findSerializerFromAnnotation(prov,
++                accessor);
++        // Unlike most other code paths, serializer produced
++        // here will NOT be resolved or contextualized, unless done here, so:
++        if (annotatedSerializer instanceof ResolvableSerializer) {
++            ((ResolvableSerializer) annotatedSerializer).resolve(prov);
++        }
++        // 05-Sep-2013, tatu: should be primary property serializer so:
++        annotatedSerializer = prov.handlePrimaryContextualization(annotatedSerializer, property);
++
++        // [databind#1543]: if enum, may need to use specific serializer
++        if (type.isEnumType()) {
++            annotatedSerializer = buildEnumSerializer(prov.getConfig(), type, beanDesc, property);
++        }
++
+@@ -1,5 +1,5 @@
+-            if (accessor instanceof AnnotatedMethod) {
+-                result.add(_constructWriter(prov, property, pb, staticTyping, (AnnotatedMethod) accessor));
+-            } else {
+-                result.add(_constructWriter(prov, property, pb, staticTyping, (AnnotatedField) accessor));
+-            }
++            if (accessor instanceof AnnotatedMethod) {
++                result.add(_constructWriter(prov, property, pb, staticTyping, (AnnotatedMethod) accessor, beanDesc));
++            } else {
++                result.add(_constructWriter(prov, property, pb, staticTyping, (AnnotatedField) accessor, beanDesc));
++            }
+@@ -1,4 +1,4 @@
+-    protected BeanPropertyWriter _constructWriter(SerializerProvider prov,
+-            BeanPropertyDefinition propDef,
+-            PropertyBuilder pb, boolean staticTyping, AnnotatedMember accessor)
+-        throws JsonMappingException
++    protected BeanPropertyWriter _constructWriter(SerializerProvider prov,
++            BeanPropertyDefinition propDef,
++            PropertyBuilder pb, boolean staticTyping, AnnotatedMember accessor, BeanDescription beanDesc)
++        throws JsonMappingException
+@@ -1,16 +1,10 @@
+-        // Does member specify a serializer? If so, let's use it.
+-        JsonSerializer<?> annotatedSerializer = findSerializerFromAnnotation(prov,
+-                accessor);
+-        // Unlike most other code paths, serializer produced
+-        // here will NOT be resolved or contextualized, unless done here, so:
+-        if (annotatedSerializer instanceof ResolvableSerializer) {
+-            ((ResolvableSerializer) annotatedSerializer).resolve(prov);
+-        }
+-        // 05-Sep-2013, tatu: should be primary property serializer so:
+-        annotatedSerializer = prov.handlePrimaryContextualization(annotatedSerializer, property);
+-
+-        // [databind#1543]: if enum, may need to use specific serializer
+-        if (type.isEnumType()) {
+-            annotatedSerializer = buildEnumSerializer(prov.getConfig(), type, beanDesc, property);
+-        }
+-
++        // Does member specify a serializer? If so, let's use it.
++        JsonSerializer<?> annotatedSerializer = findSerializerFromAnnotation(prov,
++                accessor);
++        // Unlike most other code paths, serializer produced
++        // here will NOT be resolved or contextualized, unless done here, so:
++        if (annotatedSerializer instanceof ResolvableSerializer) {
++            ((ResolvableSerializer) annotatedSerializer).resolve(prov);
++        }
++        // 05-Sep-2013, tatu: should be primary property serializer so:
++        annotatedSerializer = prov.handlePrimaryContextualization(annotatedSerializer, property);
+@@ -1,5 +1,5 @@
+-            if (accessor instanceof AnnotatedMethod) {
+-                result.add(_constructWriter(prov, property, pb, staticTyping, (AnnotatedMethod) accessor, beanDesc));
+-            } else {
+-                result.add(_constructWriter(prov, property, pb, staticTyping, (AnnotatedField) accessor, beanDesc));
+-            }
++            if (accessor instanceof AnnotatedMethod) {
++                result.add(_constructWriter(prov, property, pb, staticTyping, (AnnotatedMethod) accessor));
++            } else {
++                result.add(_constructWriter(prov, property, pb, staticTyping, (AnnotatedField) accessor));
++            }
+@@ -1,4 +1,4 @@
+-    protected BeanPropertyWriter _constructWriter(SerializerProvider prov,
+-            BeanPropertyDefinition propDef,
+-            PropertyBuilder pb, boolean staticTyping, AnnotatedMember accessor, BeanDescription beanDesc)
+-        throws JsonMappingException
++    protected BeanPropertyWriter _constructWriter(SerializerProvider prov,
++            BeanPropertyDefinition propDef,
++            PropertyBuilder pb, boolean staticTyping, AnnotatedMember accessor)
++        throws JsonMappingException
+@@ -1,3 +1,3 @@
+-    public JsonSerializer<Object> createSerializer(SerializerProvider prov,
+-            JavaType origType)
+-        throws JsonMappingException
++    public JsonSerializer<Object> createSerializer(SerializerProvider prov,
++            JavaType origType, BeanProperty property)
++        throws JsonMappingException
+@@ -1,1 +1,1 @@
+-            return (JsonSerializer<Object>) _createSerializer2(prov, type, beanDesc, staticTyping);
++            return (JsonSerializer<Object>) _createSerializer2(prov, type, beanDesc, staticTyping, property);
+@@ -1,1 +1,1 @@
+-            ser = _createSerializer2(prov, delegateType, beanDesc, true);
++            ser = _createSerializer2(prov, delegateType, beanDesc, true, property);
+@@ -1,3 +1,3 @@
+-    protected JsonSerializer<?> _createSerializer2(SerializerProvider prov,
+-            JavaType type, BeanDescription beanDesc, boolean staticTyping)
+-        throws JsonMappingException
++    protected JsonSerializer<?> _createSerializer2(SerializerProvider prov,
++            JavaType type, BeanDescription beanDesc, boolean staticTyping, BeanProperty property)
++        throws JsonMappingException
+@@ -1,1 +1,1 @@
+-                    ser = findSerializerByPrimaryType(prov, type, beanDesc, staticTyping);
++                    ser = findSerializerByPrimaryType(prov, type, beanDesc, staticTyping, property);
+
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/SerializerFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/SerializerFactory.java
+@@ -1,3 +1,3 @@
+-    public abstract JsonSerializer<Object> createSerializer(SerializerProvider prov,
+-            JavaType baseType)
+-        throws JsonMappingException;
++    public abstract JsonSerializer<Object> createSerializer(SerializerProvider prov,
++            JavaType baseType, BeanProperty property)
++        throws JsonMappingException;
+
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/EnumSerializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/EnumSerializer.java
+@@ -1,16 +1,15 @@
+-    public JsonSerializer<?> createContextual(SerializerProvider serializers,
+-            BeanProperty property) throws JsonMappingException
+-    {
+-        if (property != null) {
+-            JsonFormat.Value format = findFormatOverrides(serializers,
+-                    property, handledType());
+-            if (format != null) {
+-                Boolean serializeAsIndex = _isShapeWrittenUsingIndex(property.getType().getRawClass(),
+-                        format, false);
+-                if (serializeAsIndex != _serializeAsIndex) {
+-                    return new EnumSerializer(_values, serializeAsIndex);
+-                }
+-            }
+-        }
+-        return this;
+-    }
++    public JsonSerializer<?> createContextual(SerializerProvider serializers,
++            BeanProperty property) throws JsonMappingException
++    {
++        if (property != null) {
++            JsonFormat.Value format = property.findPropertyFormat(serializers.getConfig(), handledType());
++            if (format != null) {
++                Boolean serializeAsIndex = _isShapeWrittenUsingIndex(property.getType().getRawClass(),
++                        format, false);
++                if (serializeAsIndex != _serializeAsIndex) {
++                    return new EnumSerializer(_values, serializeAsIndex);
++                }
++            }
++        }
++        return this;
++    }

@@ -1,0 +1,125 @@
+diff --git a/src/main/java/org/apache/commons/lang3/StringUtils.java b/src/main/java/org/apache/commons/lang3/StringUtils.java
+index dd2f5cf1..49940a35 100644
+--- a/src/main/java/org/apache/commons/lang3/StringUtils.java
++++ b/src/main/java/org/apache/commons/lang3/StringUtils.java
+@@ -1373,13 +1373,24 @@ public class StringUtils {
+             return INDEX_NOT_FOUND;
+         }
+         int csLen = cs.length();
++        int csLast = csLen - 1;
+         int searchLen = searchChars.length;
++        int searchLast = searchLen - 1;
+         for (int i = 0; i < csLen; i++) {
+             char ch = cs.charAt(i);
+             for (int j = 0; j < searchLen; j++) {
+                 if (searchChars[j] == ch) {
+-                        // ch is a supplementary character
++                    if (Character.isHighSurrogate(ch)) {
++                        // ch is a high surrogate
++                        if (j < searchLast && i < csLast) {
++                            if (searchChars[j + 1] == cs.charAt(i + 1)) {
++                                return i;
++                            }
++                        }
++                    } else {
++                        // ch is in the Basic Multilingual Plane
+                         return i;
++                    }
+                 }
+             }
+         }
+@@ -1452,9 +1463,15 @@ public class StringUtils {
+             char ch = cs.charAt(i);
+             for (int j = 0; j < searchLength; j++) {
+                 if (searchChars[j] == ch) {
+-                    if (i < csLast && j < searchLast && ch >= Character.MIN_HIGH_SURROGATE && ch <= Character.MAX_HIGH_SURROGATE) {
+-                            // missing low surrogate, fine, like String.indexOf(String)
+-                        if (searchChars[j + 1] == cs.charAt(i + 1)) {
++                    if (Character.isHighSurrogate(ch)) {
++                        // ch is a high surrogate
++                        if (j < searchLast && Character.isLowSurrogate(searchChars[j + 1])) {
++                            // searchChars[j] and searchChars[j+1] are a surrogate pair
++                            if (i < csLast && searchChars[j + 1] == cs.charAt(i + 1)) {
++                                return true;
++                            }
++                        } else {
++                            // searchChars[j] is a high surrogate not part of a pair
+                             return true;
+                         }
+                     } else {
+@@ -1530,13 +1547,23 @@ public class StringUtils {
+             return INDEX_NOT_FOUND;
+         }
+         int csLen = cs.length();
++        int csLast = csLen - 1;
+         int searchLen = searchChars.length;
++        int searchLast = searchLen - 1;
+         outer:
+         for (int i = 0; i < csLen; i++) {
+             char ch = cs.charAt(i);
+             for (int j = 0; j < searchLen; j++) {
+                 if (searchChars[j] == ch) {
++                    if (Character.isHighSurrogate(ch)) {
++                        // ch is a high surrogate
++                        if (i < csLast && j < searchLast && searchChars[j + 1] == cs.charAt(i + 1)) {
++                            continue outer;
++                        }
++                    } else {
++                        // ch is in the Basic Multilingual Plane
+                         continue outer;
++                    }
+                 }
+             }
+             return i;
+@@ -1573,8 +1600,15 @@ public class StringUtils {
+         int strLen = str.length();
+         for (int i = 0; i < strLen; i++) {
+             char ch = str.charAt(i);
+-            if (searchChars.indexOf(ch) < 0) {
+-                    return i;
++            boolean chFound = searchChars.indexOf(ch) >= 0;
++            if (i + 1 < strLen && Character.isHighSurrogate(ch)) {
++                char ch2 = str.charAt(i + 1);
++                if (chFound && searchChars.indexOf(ch2) < 0) {
++                    chFound = false;
++                }
++            }
++            if (!chFound) {
++                return i;
+             }
+         }
+         return INDEX_NOT_FOUND;
+@@ -1675,14 +1709,28 @@ public class StringUtils {
+             return true;
+         }
+         int csLen = cs.length();
++        int csLast = csLen - 1;
+         int searchLen = searchChars.length;
++        int searchLast = searchLen - 1;
+         for (int i = 0; i < csLen; i++) {
+             char ch = cs.charAt(i);
+             for (int j = 0; j < searchLen; j++) {
+                 if (searchChars[j] == ch) {
+-                            // missing low surrogate, fine, like String.indexOf(String)
++                    if (Character.isHighSurrogate(ch)) {
++                        // ch is a high surrogate
++                        if (j < searchLast && Character.isLowSurrogate(searchChars[j + 1])) {
++                            // searchChars[j] and searchChars[j+1] are a surrogate pair
++                            if (i < csLast && searchChars[j + 1] == cs.charAt(i + 1)) {
++                                return false;
++                            }
++                        } else {
++                            // searchChars[j] is a high surrogate not part of a pair
++                            return false;
++                        }
++                    } else {
+                         // ch is in the Basic Multilingual Plane
+                         return false;
++                    }
+                 }
+             }
+         }
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

@@ -1,0 +1,12 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/axes/DescendantContext.java b/src/java/org/apache/commons/jxpath/ri/axes/DescendantContext.java
+index e2665a9..cb156d8 100644
+--- a/src/java/org/apache/commons/jxpath/ri/axes/DescendantContext.java
++++ b/src/java/org/apache/commons/jxpath/ri/axes/DescendantContext.java
+@@ -97,6 +97,7 @@ public class DescendantContext extends EvalContext {
+                             null));
+                 }
+                 if (includeSelf) {
++                    // Fix: Ensure we only increment position if the test passes
+                     if (currentNodePointer.testNode(nodeTest)) {
+                         position++;
+                         return true;

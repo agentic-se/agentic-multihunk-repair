@@ -1,0 +1,28 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ObjectIdValueProperty.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ObjectIdValueProperty.java
+index dc0b05f48..eadd4dd75 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ObjectIdValueProperty.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ObjectIdValueProperty.java
+@@ -4,6 +4,7 @@ import java.io.IOException;
+ import java.lang.annotation.Annotation;
+ 
+ import com.fasterxml.jackson.core.JsonParser;
++import com.fasterxml.jackson.core.JsonToken;
+ import com.fasterxml.jackson.databind.*;
+ import com.fasterxml.jackson.databind.deser.*;
+ import com.fasterxml.jackson.databind.introspect.AnnotatedMember;
+@@ -75,7 +76,14 @@ public final class ObjectIdValueProperty
+     public Object deserializeSetAndReturn(JsonParser p,
+     		DeserializationContext ctxt, Object instance) throws IOException
+     {
+-        Object id = _valueDeserializer.deserialize(p, ctxt);
++        // [databind#1150]: 12-Oct-2016, tatu: Need to check for null token first, before
++        //    deserializing, as otherwise deserializer for id may throw exception
++        Object id;
++        if (p.getCurrentToken() == JsonToken.VALUE_NULL) {
++            id = null;
++        } else {
++            id = _valueDeserializer.deserialize(p, ctxt);
++        }
+         /* 02-Apr-2015, tatu: Actually, as per [databind#742], let it be;
+          *  missing or null id is needed for some cases, such as cases where id
+          *  will be generated externally, at a later point, and is not available

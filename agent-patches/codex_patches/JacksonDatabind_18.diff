@@ -1,0 +1,102 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/MappingIterator.java b/src/main/java/com/fasterxml/jackson/databind/MappingIterator.java
+index b4ce3e956..0bb91602d 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/MappingIterator.java
++++ b/src/main/java/com/fasterxml/jackson/databind/MappingIterator.java
+@@ -72,7 +72,7 @@ public class MappingIterator<T> implements Iterator<T>, Closeable
+      * Context to resynchronize to, in case an exception is encountered
+      * but caller wants to try to read more elements.
+      */
+-    
++    protected JsonStreamContext _seqContext;
+     /**
+      * If not null, "value to update" instead of creating a new instance
+      * for each call.
+@@ -135,12 +135,21 @@ public class MappingIterator<T> implements Iterator<T>, Closeable
+          * and if not, caller needs to hand us JsonParser instead, pointing to
+          * the first token of the first element.
+          */
+-        if (managedParser && (p != null) && p.isExpectedStartArrayToken()) {
+-                // If pointing to START_ARRAY, context should be that ARRAY
++        if (p != null) {
++            if (managedParser && p.isExpectedStartArrayToken()) {
++                // For wrapped sequences, clear START_ARRAY and use ARRAY context
+                 p.clearCurrentToken();
+-                // regardless, recovery context should be whatever context we have now,
+-                // with sole exception of pointing to a start marker, in which case it's
+-                // the parent
++                _seqContext = p.getParsingContext();
++            } else {
++                // For unwrapped sequences (root-level values), if pointing to a start marker,
++                // use parent (root) as sequence context; otherwise current context.
++                JsonToken t = p.getCurrentToken();
++                JsonStreamContext sctxt = p.getParsingContext();
++                if (t != null && t.isStructStart()) {
++                    sctxt = sctxt.getParent();
++                }
++                _seqContext = sctxt;
++            }
+         }
+     }
+ 
+@@ -252,6 +261,10 @@ public class MappingIterator<T> implements Iterator<T>, Closeable
+                 value = _updatedValue;
+             }
+             return value;
++        } catch (JsonProcessingException e) {
++            // Try to recover position so that subsequent reads may proceed
++            _resync();
++            throw e;
+         } finally {
+             /* 24-Mar-2015, tatu: As per [#733], need to mark token consumed no
+              *   matter what, to avoid infinite loop for certain failure cases.
+@@ -349,9 +362,6 @@ public class MappingIterator<T> implements Iterator<T>, Closeable
+     /**********************************************************
+      */
+ 
+-        // First, a quick check to see if we might have been lucky and no re-sync needed
+-
+-
+     protected <R> R _throwNoSuchElement() {
+         throw new NoSuchElementException();
+     }
+@@ -363,4 +373,40 @@ public class MappingIterator<T> implements Iterator<T>, Closeable
+     protected <R> R _handleIOException(IOException e) {
+         throw new RuntimeException(e.getMessage(), e);
+     }
++
++    /**
++     * Attempt best-effort resynchronization after a processing exception,
++     * to try to position the parser at the boundary of the current value,
++     * so that subsequent reads can continue.
++     */
++    protected void _resync() {
++        final JsonParser p = _parser;
++        if (p == null) {
++            return;
++        }
++        final JsonStreamContext seqCtxt = _seqContext;
++        if (seqCtxt == null) {
++            return;
++        }
++        try {
++            JsonToken t = p.getCurrentToken();
++            // Initialize token stream if needed
++            if (t == null) {
++                t = p.nextToken();
++            }
++            // Loop until we are back at the sequence context (container of values)
++            while (t != null && p.getParsingContext() != seqCtxt) {
++                if (t.isStructStart()) {
++                    // Skip over nested structures efficiently
++                    p.skipChildren();
++                    // After skipChildren, current token is the matching END_*; advance once
++                    t = p.getCurrentToken();
++                }
++                // Advance to next token; this may move context back towards sequence context
++                t = p.nextToken();
++            }
++        } catch (IOException ioe) {
++            // Best-effort: ignore and let caller deal with original exception
++        }
++    }
+ }

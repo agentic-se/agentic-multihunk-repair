@@ -1,0 +1,101 @@
+diff --git a/src/main/java/org/apache/commons/math/ode/events/CombinedEventsManager.java b/src/main/java/org/apache/commons/math/ode/events/CombinedEventsManager.java
+index 0831e4ab8..29dca39c8 100644
+--- a/src/main/java/org/apache/commons/math/ode/events/CombinedEventsManager.java
++++ b/src/main/java/org/apache/commons/math/ode/events/CombinedEventsManager.java
+@@ -187,6 +187,17 @@ public class CombinedEventsManager {
+         return (first == null) ? Double.NaN : first.getEventTime();
+     }
+ 
++    /** Get the convergence threshold associated with the first pending event.
++     * <p>This exposes the effective accuracy used when locating the current
++     * event so integrators can make consistent decisions when comparing
++     * extremely small time differences (e.g. deciding whether an event occurs
++     * at the start of a step).</p>
++     * @return the convergence threshold for the first event, or 0 if none
++     */
++    public double getConvergence() {
++        return (first == null) ? 0.0 : first.getConvergence();
++    }
++
+     /** Inform the event handlers that the step has been accepted
+      * by the integrator.
+      * @param t value of the independent <i>time</i> variable at the
+diff --git a/src/main/java/org/apache/commons/math/ode/nonstiff/AdamsBashforthIntegrator.java b/src/main/java/org/apache/commons/math/ode/nonstiff/AdamsBashforthIntegrator.java
+index 6ee9bd56c..36fd5fc4a 100644
+--- a/src/main/java/org/apache/commons/math/ode/nonstiff/AdamsBashforthIntegrator.java
++++ b/src/main/java/org/apache/commons/math/ode/nonstiff/AdamsBashforthIntegrator.java
+@@ -270,7 +270,7 @@ public class AdamsBashforthIntegrator extends AdamsIntegrator {
+                     interpolatorTmp.storeTime(stepEnd);
+                     if (manager.evaluateStep(interpolatorTmp)) {
+                         final double dt = manager.getEventTime() - stepStart;
+-                        if (Math.abs(dt) <= Math.ulp(stepStart)) {
++                        if (Math.abs(dt) <= manager.getConvergence()) {
+                             // we cannot simply truncate the step, reject the current computation
+                             // and let the loop compute another state with the truncated step.
+                             // it is so small (much probably exactly 0 due to limited accuracy)
+diff --git a/src/main/java/org/apache/commons/math/ode/nonstiff/AdamsMoultonIntegrator.java b/src/main/java/org/apache/commons/math/ode/nonstiff/AdamsMoultonIntegrator.java
+index e0e2f0d2c..5e72327f6 100644
+--- a/src/main/java/org/apache/commons/math/ode/nonstiff/AdamsMoultonIntegrator.java
++++ b/src/main/java/org/apache/commons/math/ode/nonstiff/AdamsMoultonIntegrator.java
+@@ -288,7 +288,7 @@ public class AdamsMoultonIntegrator extends AdamsIntegrator {
+                     interpolatorTmp.storeTime(stepEnd);
+                     if (manager.evaluateStep(interpolatorTmp)) {
+                         final double dt = manager.getEventTime() - stepStart;
+-                        if (Math.abs(dt) <= Math.ulp(stepStart)) {
++                        if (Math.abs(dt) <= manager.getConvergence()) {
+                             // we cannot simply truncate the step, reject the current computation
+                             // and let the loop compute another state with the truncated step.
+                             // it is so small (much probably exactly 0 due to limited accuracy)
+diff --git a/src/main/java/org/apache/commons/math/ode/nonstiff/EmbeddedRungeKuttaIntegrator.java b/src/main/java/org/apache/commons/math/ode/nonstiff/EmbeddedRungeKuttaIntegrator.java
+index 0840ac1cc..a5da86622 100644
+--- a/src/main/java/org/apache/commons/math/ode/nonstiff/EmbeddedRungeKuttaIntegrator.java
++++ b/src/main/java/org/apache/commons/math/ode/nonstiff/EmbeddedRungeKuttaIntegrator.java
+@@ -291,12 +291,14 @@ public abstract class EmbeddedRungeKuttaIntegrator
+           interpolator.storeTime(stepStart + stepSize);
+           if (manager.evaluateStep(interpolator)) {
+               final double dt = manager.getEventTime() - stepStart;
+-              if (Math.abs(dt) <= Math.ulp(stepStart)) {
++              if (Math.abs(dt) <= manager.getConvergence()) {
+                   // we cannot simply truncate the step, reject the current computation
+                   // and let the loop compute another state with the truncated step.
+                   // it is so small (much probably exactly 0 due to limited accuracy)
+                   // that the code above would fail handling it.
+                   // So we set up an artificial 0 size step by copying states
++                  System.arraycopy(y, 0, yTmp, 0, y0.length);
++                  stepSize = 0.0;
+                   loop     = false;
+               } else {
+                   // reject the step to match exactly the next switch time
+diff --git a/src/main/java/org/apache/commons/math/ode/nonstiff/GraggBulirschStoerIntegrator.java b/src/main/java/org/apache/commons/math/ode/nonstiff/GraggBulirschStoerIntegrator.java
+index 90c1073d3..99555a266 100644
+--- a/src/main/java/org/apache/commons/math/ode/nonstiff/GraggBulirschStoerIntegrator.java
++++ b/src/main/java/org/apache/commons/math/ode/nonstiff/GraggBulirschStoerIntegrator.java
+@@ -884,7 +884,7 @@ public class GraggBulirschStoerIntegrator extends AdaptiveStepsizeIntegrator {
+             interpolator.storeTime(stepStart + stepSize);
+             if (eventsHandlersManager.evaluateStep(interpolator)) {
+                 final double dt = eventsHandlersManager.getEventTime() - stepStart;
+-                if (Math.abs(dt) > Math.ulp(stepStart)) {
++                if (Math.abs(dt) > eventsHandlersManager.getConvergence()) {
+                     // reject the step to match exactly the next switch time
+                     hNew = Math.abs(dt);
+                     reject = true;
+diff --git a/src/main/java/org/apache/commons/math/ode/nonstiff/RungeKuttaIntegrator.java b/src/main/java/org/apache/commons/math/ode/nonstiff/RungeKuttaIntegrator.java
+index 255b1f42b..51b3d59f9 100644
+--- a/src/main/java/org/apache/commons/math/ode/nonstiff/RungeKuttaIntegrator.java
++++ b/src/main/java/org/apache/commons/math/ode/nonstiff/RungeKuttaIntegrator.java
+@@ -171,12 +171,14 @@ public abstract class RungeKuttaIntegrator extends AbstractIntegrator {
+         interpolator.storeTime(stepStart + stepSize);
+         if (manager.evaluateStep(interpolator)) {
+             final double dt = manager.getEventTime() - stepStart;
+-            if (Math.abs(dt) <= Math.ulp(stepStart)) {
++            if (Math.abs(dt) <= manager.getConvergence()) {
+                 // we cannot simply truncate the step, reject the current computation
+                 // and let the loop compute another state with the truncated step.
+                 // it is so small (much probably exactly 0 due to limited accuracy)
+                 // that the code above would fail handling it.
+                 // So we set up an artificial 0 size step by copying states
++                System.arraycopy(y, 0, yTmp, 0, y0.length);
++                stepSize = 0.0;
+                 loop     = false;
+             } else {
+                 // reject the step to match exactly the next switch time

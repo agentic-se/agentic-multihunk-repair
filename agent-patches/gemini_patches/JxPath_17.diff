@@ -1,0 +1,32 @@
+--- a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMAttributeIterator.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMAttributeIterator.java
+@@ -1,3 +1,3 @@
+-            if (equalStrings(testPrefix, nodePrefix)) {
+-                return true;
+-            }
++            if (testPrefix==null || equalStrings(testPrefix, nodePrefix)) {
++                return true;
++            }
+
+--- a/src/java/org/apache/commons/jxpath/ri/model/jdom/JDOMAttributeIterator.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/jdom/JDOMAttributeIterator.java
+@@ -1,1 +1,1 @@
+-                    if (attr.getNamespace().equals(ns)) {
++                    if (ns == null && attr.getNamespace().equals(Namespace.NO_NAMESPACE) || attr.getNamespace().equals(ns)) {
+@@ -1,6 +1,10 @@
+-                for (int i = 0; i < allAttributes.size(); i++) {
+-                    Attribute attr = (Attribute) allAttributes.get(i);
+-                    if (ns == null && attr.getNamespace().equals(Namespace.NO_NAMESPACE) || attr.getNamespace().equals(ns)) {
+-                        attributes.add(attr);
+-                    }
+-                }
++                for (int i = 0; i < allAttributes.size(); i++) {
++                    Attribute attr = (Attribute) allAttributes.get(i);
++                    if (prefix == null) { // XPath is @*
++                        attributes.add(attr);
++                    } else { // XPath is @prefix:*
++                        if (attr.getNamespace().equals(ns)) {
++                            attributes.add(attr);
++                        }
++                    }
++                }

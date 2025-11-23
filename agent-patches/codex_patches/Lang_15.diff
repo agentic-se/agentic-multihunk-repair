@@ -1,0 +1,32 @@
+diff --git a/src/main/java/org/apache/commons/lang3/reflect/TypeUtils.java b/src/main/java/org/apache/commons/lang3/reflect/TypeUtils.java
+index 415cefa3..b4fa5439 100644
+--- a/src/main/java/org/apache/commons/lang3/reflect/TypeUtils.java
++++ b/src/main/java/org/apache/commons/lang3/reflect/TypeUtils.java
+@@ -220,6 +220,15 @@ public class TypeUtils {
+             Type toTypeArg = entry.getValue();
+             Type fromTypeArg = fromTypeVarAssigns.get(entry.getKey());
+ 
++            // If the from-type argument is an unresolvable type variable (e.g.,
++            // introduced by a raw supertype in the hierarchy), try to unroll it
++            // using assignments we have; if it cannot be resolved, treat it as
++            // absent so that wildcard bounds can still be satisfied.
++            if (fromTypeArg instanceof TypeVariable<?>) {
++                Type unrolled = unrollVariableAssignments((TypeVariable<?>) fromTypeArg, fromTypeVarAssigns);
++                fromTypeArg = unrolled == null ? null : unrolled;
++            }
++
+             // parameters must either be absent from the subject type, within
+             // the bounds of the wildcard type, or be an exact match to the
+             // parameters of the target type.
+@@ -672,7 +681,10 @@ public class TypeUtils {
+                 : new HashMap<TypeVariable<?>, Type>(subtypeVarAssigns);
+ 
+         // has target class been reached?
+-        if (cls.getTypeParameters().length > 0 || toClass.equals(cls)) {
++        // Do not stop just because the current class declares type parameters.
++        // We must continue walking the hierarchy to collect mappings from
++        // partially-assigned classes/interfaces (e.g., implements This<String, T>).
++        if (toClass.equals(cls)) {
+             return typeVarAssigns;
+         }
+ 

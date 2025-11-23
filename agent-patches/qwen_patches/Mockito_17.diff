@@ -1,0 +1,88 @@
+diff --git a/src/org/mockito/internal/creation/MockSettingsImpl.java b/src/org/mockito/internal/creation/MockSettingsImpl.java
+index bf2cf3bf2..c73f7c68f 100644
+--- a/src/org/mockito/internal/creation/MockSettingsImpl.java
++++ b/src/org/mockito/internal/creation/MockSettingsImpl.java
+@@ -1,80 +1 @@
+-/*
+- * Copyright (c) 2007 Mockito contributors
+- * This program is made available under the terms of the MIT License.
+- */
+-package org.mockito.internal.creation;
+-
+-import org.mockito.MockSettings;
+-import org.mockito.exceptions.Reporter;
+-import org.mockito.internal.util.MockName;
+-import org.mockito.stubbing.Answer;
+-
+-public class MockSettingsImpl implements MockSettings {
+-
+-    private static final long serialVersionUID = 4475297236197939568L;
+-    private Class<?>[] extraInterfaces;
+-    private String name;
+-    private Object spiedInstance;
+-    private Answer<Object> defaultAnswer;
+-    private MockName mockName;
+-
+-    public MockSettings serializable() {
+-        return this.extraInterfaces(java.io.Serializable.class);
+-    }
+-
+-    public MockSettings extraInterfaces(Class<?>... extraInterfaces) {
+-        if (extraInterfaces == null || extraInterfaces.length == 0) {
+-            new Reporter().extraInterfacesRequiresAtLeastOneInterface();
+-        }
+-            
+-        for (Class<?> i : extraInterfaces) {
+-            if (i == null) {
+-                new Reporter().extraInterfacesDoesNotAcceptNullParameters();
+-            } else if (!i.isInterface()) {
+-                new Reporter().extraInterfacesAcceptsOnlyInterfaces(i);
+-            }
+-        }
+-        this.extraInterfaces = extraInterfaces;
+-        return this;
+-    }
+-
+-    public MockName getMockName() {
+-        return mockName;
+-    }
+-
+-    public Class<?>[] getExtraInterfaces() {
+-        return extraInterfaces;
+-    }
+-
+-    public Object getSpiedInstance() {
+-        return spiedInstance;
+-    }
+-
+-    public MockSettings name(String name) {
+-        this.name = name;
+-        return this;
+-    }
+-
+-    public MockSettings spiedInstance(Object spiedInstance) {
+-        this.spiedInstance = spiedInstance;
+-        return this;
+-    }
+-
+-    @SuppressWarnings("unchecked")
+-    public MockSettings defaultAnswer(Answer defaultAnswer) {
+-        this.defaultAnswer = defaultAnswer;
+-        return this;
+-    }
+-
+-    public Answer<Object> getDefaultAnswer() {
+-        return defaultAnswer;
+-    }
+-
+-    public boolean isSerializable() {
+-        return extraInterfaces != null && java.util.Arrays.asList(extraInterfaces).contains(java.io.Serializable.class);
+-    }
+-
+-    public void initiateMockName(Class classToMock) {
+-        mockName = new MockName(name, classToMock);
+-    }
+-}
+\ No newline at end of file
++/*\n * Copyright (c) 2007 Mockito contributors\n * This program is made available under the terms of the MIT License.\n */\npackage org.mockito.internal.creation;\n\nimport java.util.ArrayList;\nimport java.util.Arrays;\n\nimport org.mockito.MockSettings;\nimport org.mockito.exceptions.Reporter;\nimport org.mockito.internal.util.MockName;\nimport org.mockito.stubbing.Answer;\n\npublic class MockSettingsImpl implements MockSettings {\n\n    private static final long serialVersionUID = 4475297236197939568L;\n    private Class<?>[] extraInterfaces;\n    private String name;\n    private Object spiedInstance;\n    private Answer<Object> defaultAnswer;\n    private MockName mockName;\n\n    public MockSettings serializable() {\n        return this.extraInterfaces(java.io.Serializable.class);\n    }\n\n    public MockSettings extraInterfaces(Class<?>... extraInterfaces) {\n        if (extraInterfaces == null || extraInterfaces.length == 0) {\n            new Reporter().extraInterfacesRequiresAtLeastOneInterface();\n        }\n            \n        for (Class<?> i : extraInterfaces) {\n            if (i == null) {\n                new Reporter().extraInterfacesDoesNotAcceptNullParameters();\n            } else if (!i.isInterface()) {\n                new Reporter().extraInterfacesAcceptsOnlyInterfaces(i);\n            }\n        }\n        \n        // Handle the case when serializable() is already called and we add extra interfaces\n        if (this.extraInterfaces != null) {\n            // Create a new array combining existing interfaces with new ones, avoiding duplicates\n            java.util.List<Class<?>> combined = new java.util.ArrayList<Class<?>>();\n            // Add existing interfaces\n            for (Class<?> existing : this.extraInterfaces) {\n                combined.add(existing);\n            }\n            // Add new interfaces only if they're not already present\n            for (Class<?> newInterface : extraInterfaces) {\n                boolean alreadyExists = false;\n                for (Class<?> existing : combined) {\n                    if (existing == newInterface) {\n                        alreadyExists = true;\n                        break;\n                    }\n                }\n                if (!alreadyExists) {\n                    combined.add(newInterface);\n                }\n            }\n            this.extraInterfaces = combined.toArray(new Class<?>[combined.size()]);\n        } else {\n            this.extraInterfaces = extraInterfaces;\n        }\n        return this;\n    }\n\n    public MockName getMockName() {\n        return mockName;\n    }\n\n    public Class<?>[] getExtraInterfaces() {\n        return extraInterfaces;\n    }\n\n    public Object getSpiedInstance() {\n        return spiedInstance;\n    }\n\n    public MockSettings name(String name) {\n        this.name = name;\n        return this;\n    }\n\n    public MockSettings spiedInstance(Object spiedInstance) {\n        this.spiedInstance = spiedInstance;\n        return this;\n    }\n\n    @SuppressWarnings(\"unchecked\")\n    public MockSettings defaultAnswer(Answer defaultAnswer) {\n        this.defaultAnswer = defaultAnswer;\n        return this;\n    }\n\n    public Answer<Object> getDefaultAnswer() {\n        return defaultAnswer;\n    }\n\n    public boolean isSerializable() {\n        return extraInterfaces != null && java.util.Arrays.asList(extraInterfaces).contains(java.io.Serializable.class);\n    }\n\n    public void initiateMockName(Class classToMock) {\n        mockName = new MockName(name, classToMock);\n    }\n}
+\ No newline at end of file

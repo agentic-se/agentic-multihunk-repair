@@ -1,0 +1,46 @@
+diff --git a/src/main/java/org/apache/commons/cli/HelpFormatter.java b/src/main/java/org/apache/commons/cli/HelpFormatter.java
+index 1debaf6..156a3d2 100644
+--- a/src/main/java/org/apache/commons/cli/HelpFormatter.java
++++ b/src/main/java/org/apache/commons/cli/HelpFormatter.java
+@@ -655,6 +655,11 @@ public class HelpFormatter
+             buff.append(option.getOpt() == null ? longOptSeparator : " ");
+             buff.append("<").append(option.getArgName()).append(">");
+         }
++        else if (option.hasArg() && !option.hasArgName() && option.getArgName() == null)
++        {
++            buff.append(option.getOpt() == null ? longOptSeparator : " ");
++            buff.append("<").append(getArgName()).append(">");
++        }
+         
+         // if the Option is not a required option
+         if (!required)
+diff --git a/src/main/java/org/apache/commons/cli/Option.java b/src/main/java/org/apache/commons/cli/Option.java
+index 921c7ab..d021722 100644
+--- a/src/main/java/org/apache/commons/cli/Option.java
++++ b/src/main/java/org/apache/commons/cli/Option.java
+@@ -54,7 +54,7 @@ public class Option implements Cloneable, Serializable
+     private String longOpt;
+ 
+     /** the name of the argument for this option */
+-    private String argName = "arg";
++    private String argName = null;
+ 
+     /** description of the option */
+     private String description;
+diff --git a/src/main/java/org/apache/commons/cli/OptionBuilder.java b/src/main/java/org/apache/commons/cli/OptionBuilder.java
+index 33a24a6..a22d829 100644
+--- a/src/main/java/org/apache/commons/cli/OptionBuilder.java
++++ b/src/main/java/org/apache/commons/cli/OptionBuilder.java
+@@ -77,7 +77,7 @@ public final class OptionBuilder
+     private static void reset()
+     {
+         description = null;
+-        argName = "arg";
++        argName = null;
+         longopt = null;
+         type = null;
+         required = false;
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

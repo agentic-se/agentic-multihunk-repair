@@ -1,0 +1,6 @@
+# No tracked changes detected in src/ or source/
+
+
+# Untracked source files (not included in patch):
++ src/main/java/com/fasterxml/jackson/databind/JsonMappingException.java.bak
++ src/main/java/com/fasterxml/jackson/databind/util/ClassUtil.java.backup

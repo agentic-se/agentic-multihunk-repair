@@ -1,0 +1,13 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/std/BeanSerializerBase.java b/src/main/java/com/fasterxml/jackson/databind/ser/std/BeanSerializerBase.java
+index 1f1d2e3e2..9aaa0272e 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/BeanSerializerBase.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/BeanSerializerBase.java
+@@ -430,7 +430,7 @@ public abstract class BeanSerializerBase
+                 // no ObjectId override, but maybe ObjectIdRef?
+                 if (oiw != null) {
+                     objectIdInfo = intr.findObjectReferenceInfo(accessor,
+-                            new ObjectIdInfo(NAME_FOR_OBJECT_REF, null, null, null));
++                            new ObjectIdInfo(NAME_FOR_OBJECT_REF, null, null, null).withAlwaysAsId(oiw.alwaysAsId));
+                         oiw = _objectIdWriter.withAlwaysAsId(objectIdInfo.getAlwaysAsId());
+                 }
+             } else {

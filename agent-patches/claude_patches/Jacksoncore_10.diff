@@ -1,0 +1,37 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/sym/ByteQuadsCanonicalizer.java b/src/main/java/com/fasterxml/jackson/core/sym/ByteQuadsCanonicalizer.java
+index 976ef6e4..21149d79 100644
+--- a/src/main/java/com/fasterxml/jackson/core/sym/ByteQuadsCanonicalizer.java
++++ b/src/main/java/com/fasterxml/jackson/core/sym/ByteQuadsCanonicalizer.java
+@@ -922,7 +922,8 @@ public final class ByteQuadsCanonicalizer
+         /* 31-Jul-2015, tatu: Note that spillover area does NOT end at end of array,
+          *   since "long names" area follows. Instead, need to calculate from hash size.
+          */
+-        if (_spilloverEnd >= hashArea.length) {
++        final int end = (_hashSize << 3);
++        if (_spilloverEnd >= end) {
+             if (_failOnDoS) {
+                 _reportTooManyCollisions();
+             }
+@@ -936,7 +937,7 @@ public final class ByteQuadsCanonicalizer
+     private int _appendLongName(int[] quads, int qlen)
+     {
+         int start = _longNameOffset;
+-        
++
+         // note: at this point we must already be shared. But may not have enough space
+         if ((start + qlen) > _hashArea.length) {
+             // try to increment in reasonable chunks; at least space that we need
+@@ -981,7 +982,8 @@ public final class ByteQuadsCanonicalizer
+          *    to work it out, but this is the simplest, fast and seems to do ok.
+          */
+         hash += (hash >>> 16); // to xor hi- and low- 16-bits
+-        hash ^= (hash >>> 12);
++        hash ^= (hash << 3); // shuffle back a bit
++        hash += (hash >>> 12); // and bit more
+         return hash;
+     }
+ 
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

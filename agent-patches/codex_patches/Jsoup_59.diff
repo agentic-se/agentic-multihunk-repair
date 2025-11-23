@@ -1,0 +1,38 @@
+diff --git a/src/main/java/org/jsoup/parser/Token.java b/src/main/java/org/jsoup/parser/Token.java
+index 7dcfa2b..52a9302 100644
+--- a/src/main/java/org/jsoup/parser/Token.java
++++ b/src/main/java/org/jsoup/parser/Token.java
+@@ -102,8 +102,23 @@ abstract class Token {
+                 attributes = new Attributes();
+ 
+             if (pendingAttributeName != null) {
+-                // the tokeniser has skipped whitespace control chars, but trimming could collapse to empty for other control codes, so verify here
+-                pendingAttributeName = pendingAttributeName.trim();
++                // the tokeniser has skipped whitespace control chars, but attribute names may still contain
++                // other control characters. Trim and remove ASCII control codes (\u0001-\u001F) except
++                // standard whitespace (tab, lf, ff, cr). If the name becomes empty, skip creating the attribute.
++                String name = pendingAttributeName.trim();
++                StringBuilder cleaned = new StringBuilder(name.length());
++                for (int i = 0; i < name.length(); i++) {
++                    char ch = name.charAt(i);
++                    // allow printable characters and space; drop other C0 control chars except TAB(9), LF(10), FF(12), CR(13)
++                    if (ch >= 0x20 || ch == '\t' || ch == '\n' || ch == '\f' || ch == '\r') {
++                        cleaned.append(ch);
++                    }
++                }
++                pendingAttributeName = cleaned.toString();
++                if (pendingAttributeName.length() == 0) {
++                    // nothing meaningful to add
++                    pendingAttributeName = null;
++                } else {
+                     Attribute attribute;
+                     if (hasPendingAttributeValue)
+                         attribute = new Attribute(pendingAttributeName,
+@@ -113,6 +128,7 @@ abstract class Token {
+                     else
+                         attribute = new BooleanAttribute(pendingAttributeName);
+                     attributes.put(attribute);
++                }
+             }
+             pendingAttributeName = null;
+             hasEmptyAttributeValue = false;

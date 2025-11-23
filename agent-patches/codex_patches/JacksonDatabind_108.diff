@@ -1,0 +1,24 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ObjectReader.java b/src/main/java/com/fasterxml/jackson/databind/ObjectReader.java
+index ae5f43175..fcbca4e23 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ObjectReader.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ObjectReader.java
+@@ -1166,6 +1166,19 @@ public class ObjectReader
+     @SuppressWarnings("unchecked")
+     @Override
+     public <T extends TreeNode> T readTree(JsonParser p) throws IOException {
++        // Special-case EOF handling for parser input: return null to indicate no content
++        _config.initialize(p);
++        if (_schema != null) {
++            p.setSchema(_schema);
++        }
++        JsonToken t = p.getCurrentToken();
++        if (t == null) {
++            t = p.nextToken();
++            if (t == null) {
++                return null;
++            }
++        }
++        // Delegate normal binding for non-EOF case
+         return (T) _bindAsTree(p);
+     }
+ 

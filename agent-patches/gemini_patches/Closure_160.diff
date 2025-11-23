@@ -1,0 +1,315 @@
+--- a/src/com/google/javascript/jscomp/AbstractCommandLineRunner.java
++++ b/src/com/google/javascript/jscomp/AbstractCommandLineRunner.java
+@@ -1,5 +1,3 @@
+-    if (config.warningGuards != null) {
+-      for (WarningGuardSpec.Entry entry : config.warningGuards.entries) {
+-        diagnosticGroups.setWarningLevel(options, entry.groupName, entry.level);
+-      }
+-    }
++    if (config.warningGuards != null) {
++      options.addWarningsGuard(new CommandLineWarningGuard(config.warningGuards));
++    }
+@@ -1,1 +1,18 @@
+-  protected static class WarningGuardSpec {
++  private static class CommandLineWarningGuard extends WarningsGuard {
++    private static final long serialVersionUID = 1L;
++    private final WarningGuardSpec spec;
++
++    CommandLineWarningGuard(WarningGuardSpec spec) {
++      this.spec = spec;
++    }
++
++    @Override
++    public CheckLevel level(JSError error) {
++      return spec.get = level(error);
++    }
++
++    @Override
++    protected int getPriority() {
++      return Priority.MAX.value;
++    }
++  }
+@@ -1,18 +1,1 @@
+-  private static class CommandLineWarningGuard extends WarningsGuard {
+-    private static final long serialVersionUID = 1L;
+-    private final WarningGuardSpec spec;
+-
+-    CommandLineWarningGuard(WarningGuardSpec spec) {
+-      this.spec = spec;
+-    }
+-
+-    @Override
+-    public CheckLevel level(JSError error) {
+-      return spec.get = level(error);
+-    }
+-
+-    @Override
+-    protected int getPriority() {
+-      return Priority.MAX.value;
+-    }
+-  }
++  protected static class WarningGuardSpec {
+@@ -1,3 +1,13 @@
+-    protected void clear() {
+-      entries.clear();
+-    }
++    protected void clear() {
++      entries.clear();
++    }
++
++    protected CheckLevel getCheckLevel(JSError error) {
++      for (int i = entries.size() - 1; i >= 0; --i) {
++        Entry entry = entries.get(i);
++        if (error.getGroup().matches(entry.groupName)) {
++          return entry.level;
++        }
++      }
++      return null;
++    }
+@@ -1,5 +1,24 @@
+-  /**
+-   * A little helper class to make it easier to collect warning types
+-   * from --jscomp_error, --jscomp_warning, and --jscomp_off.
+-   */
+-  protected static class WarningGuardSpec {
++  private static class CommandLineWarningGuard extends WarningsGuard {
++    private static final long serialVersionUID = 1L;
++    private final WarningGuardSpec spec;
++
++    CommandLineWarningGuard(WarningGuardSpec spec) {
++      this.spec = spec;
++    }
++
++    @Override
++    public CheckLevel level(JSError error) {
++      return spec.getCheckLevel(error);
++    }
++
++    @Override
++    protected int getPriority() {
++      return Priority.MAX.value;
++    }
++  }
++
++  /**
++   * A little helper class to make it easier to collect warning types
++   * from --jscomp_error, --jscomp_warning, and --jscomp_off.
++   */
++  protected static class WarningGuardSpec {
+@@ -1,9 +1,11 @@
+-    protected CheckLevel getCheckLevel(JSError error) {
+-      for (int i = entries.size() - 1; i >= 0; --i) {
+-        Entry entry = entries.get(i);
+-        if (error.getGroup().matches(entry.groupName)) {
+-          return entry.level;
+-        }
+-      }
+-      return null;
+-    }
++    protected CheckLevel getCheckLevel(JSError error) {
++      DiagnosticGroups diagnosticGroups = new DiagnosticGroups();
++      for (int i = entries.size() - 1; i >= 0; --i) {
++        Entry entry = entries.get(i);
++        DiagnosticGroup group = diagnosticGroups.forName(entry.groupName);
++        if (group != null && group.matches(error.getType())) {
++          return entry.level;
++        }
++      }
++      return null;
++    }
+@@ -1,5 +1,3 @@
+-    if (config.warningGuards != null) {
+-      for (WarningGuardSpec.Entry entry : config.warningGuards.entries) {
+-        diagnosticGroups.setWarningLevel(options, entry.groupName, entry.level);
+-      }
+-    }
++    if (config.warningGuards != null) {
++      options.addWarningsGuard(new CommandLineWarningGuard(config.warningGuards));
++    }
+@@ -1,5 +1,24 @@
+-  /**
+-   * A little helper class to make it easier to collect warning types
+-   * from --jscomp_error, --jscomp_warning, and --jscomp_off.
+-   */
+-  protected static class WarningGuardSpec {
++  private static class CommandLineWarningGuard extends WarningsGuard {
++    private static final long serialVersionUID = 1L;
++    private final WarningGuardSpec spec;
++
++    CommandLineWarningGuard(WarningGuardSpec spec) {
++      this.spec = spec;
++    }
++
++    @Override
++    public CheckLevel level(JSError error) {
++      return spec.getCheckLevel(error);
++    }
++
++    @Override
++    protected int getPriority() {
++      return Priority.MAX.value;
++    }
++  }
++
++  /**
++   * A little helper class to make it easier to collect warning types
++   * from --jscomp_error, --jscomp_warning, and --jscomp_off.
++   */
++  protected static class WarningGuardSpec {
+@@ -1,3 +1,15 @@
+-    protected void clear() {
+-      entries.clear();
+-    }
++    protected void clear() {
++      entries.clear();
++    }
++
++    protected CheckLevel getCheckLevel(JSError error) {
++      DiagnosticGroups diagnosticGroups = new DiagnosticGroups();
++      for (int i = entries.size() - 1; i >= 0; --i) {
++        Entry entry = entries.get(i);
++        DiagnosticGroup group = diagnosticGroups.forName(entry.groupName);
++        if (group != null && group.matches(error.getType())) {
++          return entry.level;
++        }
++      }
++      return null;
++    }
+
+--- a/src/com/google/javascript/jscomp/CommandLineRunner.java
++++ b/src/com/google/javascript/jscomp/CommandLineRunner.java
+@@ -1,2 +1,2 @@
+-    WarningLevel wLevel = flags.warning_level;
+-    wLevel.setOptionsForWarningLevel(options);
++    WarningLevel wLevel = flags.warning_level;
++    options.addWarningsGuard(wLevel.getWarningsGuard());
+@@ -1,2 +1,2 @@
+-    WarningLevel wLevel = flags.warning_level;
+-    options.addWarningsGuard(wLevel.getWarningsGuard());
++    WarningLevel wLevel = flags.warning_level;
++    wLevel.setOptionsForWarningLevel(options);
+@@ -1,2 +1,2 @@
+-    WarningLevel wLevel = flags.warning_level;
+-    wLevel.setOptionsForWarningLevel(options);
++    WarningLevel wLevel = flags.warning_level;
++    options.addWarningsGuard(wLevel.getWarningsGuard());
+
+--- a/src/com/google/javascript/jscomp/DiagnosticGroups.java
++++ b/src/com/google/javascript/jscomp/DiagnosticGroups.java
+@@ -1,4 +1,34 @@
+-  public static DiagnosticGroup CONST =
+-      DiagnosticGroups.registerGroup("const",
+-          CheckAccessControls.CONST_PROPERTY_REASSIGNED_VALUE,
+-          ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
++  public static DiagnosticGroup CHECK_USELESS_CODE =
++      DiagnosticGroups.registerGroup("uselessCode",
++          CheckSideEffects.USELESS_CODE_ERROR,
++          CheckUnreachableCode.UNREACHABLE_CODE);
++
++  public static DiagnosticGroup CHECK_SUSPICIOUS_CODE =
++      DiagnosticGroups.registerGroup("suspiciousCode",
++          CheckSuspiciousCode.SUSPICIOUS_CODE);
++
++  public static DiagnosticGroup CHECK_UNUSED_PROPERTIES_EARLY =
++      DiagnosticGroups.registerGroup("unusedPropertiesEarly",
++          CheckUnusedProperties.UNUSED_PROPERTY);
++
++  public static DiagnosticGroup CHECK_CONTROL_STRUCTURES =
++      DiagnosticGroups.registerGroup("checkControlStructures",
++          CheckControlStructures.CONTROL_STRUCTURE_ERROR);
++
++  public static DiagnosticGroup CHECK_MISSING_RETURN =
++      DiagnosticGroups.registerGroup("missingReturn",
++          CheckMissingReturn.MISSING_RETURN_STATEMENT);
++
++  public static DiagnosticGroup CHECK_GLOBAL_NAMES_LEVEL =
++      DiagnosticGroups.registerGroup("checkGlobalNamesLevel",
++          CheckGlobalNames.UNDEFINED_NAME_WARNING);
++
++  public static DiagnosticGroup AGGRESSIVE_VAR_CHECK =
++      DiagnosticGroups.registerGroup("aggressiveVarCheck",
++          VarCheck.UNDEFINED_VAR_ERROR,
++          SyntacticScopeCreator.VAR_MULTIPLY_DECLARED_ERROR);
++
++  public static DiagnosticGroup CONST =
++      DiagnosticGroups.registerGroup("const",
++          CheckAccessControls.CONST_PROPERTY_REASSIGNED_VALUE,
++          ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
+@@ -1,7 +1,12 @@
+-package com.google.javascript.jscomp;
+-
+-import com.google.common.base.Preconditions;
+-import com.google.common.collect.ImmutableMap;
+-import com.google.common.collect.Maps;
+-
+-import java.util.Map;
++package com.google.javascript.jscomp;
++
++import com.google.common.base.Preconditions;
++import com.google.common.collect.ImmutableMap;
++import com.google.common.collect.Maps;
++import com.google.javascript.jscomp.CheckControlStructures;
++import com.google.javascript.jscomp.CheckGlobalNames;
++import com.google.javascript.jscomp.CheckMissingReturn;
++import com.google.javascript.jscomp.CheckSuspiciousCode;
++import com.google.javascript.jscomp.CheckUnusedProperties;
++
++import java.util.Map;
+@@ -1,8 +1,10 @@
+-  static final String DIAGNOSTIC_GROUP_NAMES =
+-      "accessControls, ambiguousFunctionDecl, checkRegExp," +
+-      "checkTypes, checkVars, constantProperty, deprecated, " +
+-      "externsValidation, fileoverviewTags, globalThis, " +
+-      "internetExplorerChecks, invalidCasts, missingProperties, " +
+-      "nonStandardJsDocs, strictModuleDepCheck, typeInvalidation, " +
+-      "undefinedVars, unknownDefines, uselessCode, " +
+-      "visibility";
++  static final String DIAGNOSTIC_GROUP_NAMES =
++      "accessControls, ambiguousFunctionDecl, checkRegExp," +
++      "checkTypes, checkVars, constantProperty, deprecated, " +
++      "externsValidation, fileoverviewTags, globalThis, " +
++      "internetExplorerChecks, invalidCasts, missingProperties, " +
++      "nonStandardJsDocs, strictModuleDepCheck, typeInvalidation, " +
++      "undefinedVars, unknownDefines, uselessCode, suspiciousCode, " +
++      "unusedPropertiesEarly, checkControlStructures, missingReturn, " +
++      "checkGlobalNamesLevel, aggressiveVarCheck, " +
++      "visibility";
+@@ -1,4 +1,34 @@
+-  public static DiagnosticGroup CONST =
+-      DiagnosticGroups.registerGroup("const",
+-          CheckAccessControls.CONST_PROPERTY_REASSIGNED_VALUE,
+-          ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
++  public static DiagnosticGroup CHECK_USELESS_CODE =
++      DiagnosticGroups.registerGroup("uselessCode",
++          CheckSideEffects.USELESS_CODE_ERROR,
++          CheckUnreachableCode.UNREACHABLE_CODE);
++
++  public static DiagnosticGroup CHECK_SUSPICIOUS_CODE =
++      DiagnosticGroups.registerGroup("suspiciousCode",
++          CheckSuspiciousCode.SUSPICIOUS_CODE);
++
++  public static DiagnosticGroup CHECK_UNUSED_PROPERTIES_EARLY =
++      DiagnosticGroups.registerGroup("unusedPropertiesEarly",
++          CheckUnusedProperties.UNUSED_PROPERTY);
++
++  public static DiagnosticGroup CHECK_CONTROL_STRUCTURES =
++      DiagnosticGroups.registerGroup("checkControlStructures",
++          CheckControlStructures.CONTROL_STRUCTURE_ERROR);
++
++  public static DiagnosticGroup CHECK_MISSING_RETURN =
++      DiagnosticGroups.registerGroup("missingReturn",
++          CheckMissingReturn.MISSING_RETURN_STATEMENT);
++
++  public static DiagnosticGroup CHECK_GLOBAL_NAMES_LEVEL =
++      DiagnosticGroups.registerGroup("checkGlobalNamesLevel",
++          CheckGlobalNames.UNDEFINED_NAME_WARNING);
++
++  public static DiagnosticGroup AGGRESSIVE_VAR_CHECK =
++      DiagnosticGroups.registerGroup("aggressiveVarCheck",
++          VarCheck.UNDEFINED_VAR_ERROR,
++          SyntacticScopeCreator.VAR_MULTIPLY_DECLARED_ERROR);
++
++  public static DiagnosticGroup CONST =
++      DiagnosticGroups.registerGroup("const",
++          CheckAccessControls.CONST_PROPERTY_REASSIGNED_VALUE,
++          ConstCheck.CONST_REASSIGNED_VALUE_ERROR);

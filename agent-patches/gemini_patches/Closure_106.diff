@@ -1,0 +1,356 @@
+--- a/src/com/google/javascript/jscomp/CollapseProperties.java
++++ b/src/com/google/javascript/jscomp/CollapseProperties.java
+@@ -1,4 +1,7 @@
+-          if (p.refs.get(0).node.getLastChild().getBooleanProp(
+-                Node.IS_CONSTANT_NAME)) {
+-            nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+-          }
++          if (p.refs != null && !p.refs.isEmpty() &&
++              p.refs.get(0).node != null &&
++              p.refs.get(0).node.getLastChild() != null &&
++              p.refs.get(0).node.getLastChild().getBooleanProp(
++                Node.IS_CONSTANT_NAME)) {
++            nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
++          }
+@@ -1,7 +1,4 @@
+-          if (p.refs != null && !p.refs.isEmpty() &&
+-              p.refs.get(0).node != null &&
+-              p.refs.get(0).node.getLastChild() != null &&
+-              p.refs.get(0).node.getLastChild().getBooleanProp(
+-                Node.IS_CONSTANT_NAME)) {
+-            nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+-          }
++          // Determine if this is a constant var by checking the Name object itself.
++          if (p.isConstant()) {
++            nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
++          }
+@@ -1,4 +1,4 @@
+-          // Determine if this is a constant var by checking the Name object itself.
+-          if (p.isConstant()) {
+-            nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+-          }
++          if (p.refs.get(0).node.getLastChild().getBooleanProp(
++                Node.IS_CONSTANT_NAME)) {
++            nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
++          }
+@@ -1,4 +1,7 @@
+-          if (p.refs.get(0).node.getLastChild().getBooleanProp(
+-                Node.IS_CONSTANT_NAME)) {
+-            nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+-          }
++          // Determine if this is a constant var by checking the first
++          // reference to it using NodeUtil.isConstantName.
++          if (p.refs != null && !p.refs.isEmpty() &&
++              p.refs.get(0).node != null &&
++              NodeUtil.isConstantName(p.refs.get(0).node)) {
++            nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
++          }
+@@ -1,7 +1,4 @@
+-          // Determine if this is a constant var by checking the first
+-          // reference to it using NodeUtil.isConstantName.
+-          if (p.refs != null && !p.refs.isEmpty() &&
+-              p.refs.get(0).node != null &&
+-              NodeUtil.isConstantName(p.refs.get(0).node)) {
+-            nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+-          }
++          if (p.refs.get(0).node.getLastChild().getBooleanProp(
++                Node.IS_CONSTANT_NAME)) {
++            nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
++          }
+@@ -1,4 +1,19 @@
+-          if (p.refs.get(0).node.getLastChild().getBooleanProp(
+-                Node.IS_CONSTANT_NAME)) {
+-            nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+-          }
++          // Determine if this is a constant var by checking the first
++          // reference to it. Don't check the declaration, as it might be null.
++          if (p.refs != null && !p.refs.isEmpty() && p.refs.get(0).node != null) {
++            Node refNode = p.refs.get(0).node;
++            boolean isConstant = false;
++            if (refNode.getType() == Token.GETPROP) {
++              // For GETPROP, check the last child (the property name)
++              if (refNode.getLastChild() != null) {
++                isConstant = refNode.getLastChild().getBooleanProp(Node.IS_CONSTANT_NAME);
++              }
++            } else if (refNode.getType() == Token.NAME) {
++              // For NAME, check the node itself
++              isConstant = refNode.getBooleanProp(Node.IS_CONSTANT_NAME);
++            }
++
++            if (isConstant) {
++              nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
++            }
++          }
+@@ -1,6 +1,20 @@
+-    // Create the new alias node.
+-    Node nameNode = NodeUtil.newName(alias, gramps.getFirstChild(),
+-        alias.replace("$", "."));
+-    if (ref.node.getLastChild().getBooleanProp(Node.IS_CONSTANT_NAME)) {
+-      nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+-    }
++    // Create the new alias node.
++    Node nameNode = NodeUtil.newName(alias, gramps.getFirstChild(),
++        alias.replace("$", "."));
++    // Determine if this is a constant var by checking the reference node.
++    if (ref.node != null) {
++      boolean isConstant = false;
++      if (ref.node.getType() == Token.GETPROP) {
++        // For GETPROP, check the last child (the property name)
++        if (ref.node.getLastChild() != null) {
++          isConstant = ref.node.getLastChild().getBooleanProp(Node.IS_CONSTANT_NAME);
++        }
++      } else if (ref.node.getType() == Token.NAME) {
++        // For NAME, check the node itself
++        isConstant = ref.node.getBooleanProp(Node.IS_CONSTANT_NAME);
++      }
++
++      if (isConstant) {
++        nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
++      }
++    }
+@@ -1,2 +1,2 @@
+-    addStubsForUndeclaredProperties(
+-        n, fnName, ref.node.getAncestor(2), ref.node.getParent());
++    addStubsForUndeclaredProperties(
++        n, fnName, ref.node.getParent(), ref.node.getParent());
+@@ -1,2 +1,2 @@
+-    addStubsForUndeclaredProperties(
+-        n, fnName, ref.node.getParent(), ref.node.getParent());
++    addStubsForUndeclaredProperties(
++        n, fnName, ref.node.getAncestor(2), ref.node.getParent());
+@@ -1,21 +1,1 @@
+-          // Determine if this is a constant var by checking the first
+-          // reference to it. Don't check the declaration, as it might be null.
+-          // Determine if this is a constant var by checking the first
+-          // reference to it. Don't check the declaration, as it might be null.
+-          if (p.refs != null && !p.refs.isEmpty() && p.refs.get(0).node != null) {
+-            Node refNode = p.refs.get(0).node;
+-            boolean isConstant = false;
+-            if (refNode.getType() == Token.GETPROP) {
+-              // For GETPROP, check the last child (the property name)
+-              if (refNode.getLastChild() != null) {
+-                isConstant = refNode.getLastChild().getBooleanProp(Node.IS_CONSTANT_NAME);
+-              }
+-            } else if (refNode.getType() == Token.NAME) {
+-              // For NAME, check the node itself
+-              isConstant = refNode.getBooleanProp(Node.IS_CONSTANT_NAME);
+-            }
+-
+-            if (isConstant) {
+-              nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+-            }
+-          }
++
+@@ -1,4 +1,8 @@
+-          compiler.reportCodeChange();
+-
+-          
+-        }
++          compiler.reportCodeChange();
++
++          // Determine if this is a constant var by checking the first
++          // reference to it. Don't check the declaration, as it might be null.
++          if (p.refs.get(0).node.getLastChild().getBooleanProp(
++                Node.IS_CONSTANT_NAME)) {
++            nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
++          }
+@@ -1,5 +1,6 @@
+-        }
+-      }
+-    }
+-    return numStubs;
+-  }
++        }
++      }
++    }
++    return numStubs;
++  }
++}
+@@ -1,30 +1,30 @@
+-  private int addStubsForUndeclaredProperties(
+-      Name n, String alias, Node parent, Node addAfter) {
+-    Preconditions.checkArgument(NodeUtil.isStatementBlock(parent));
+-    int numStubs = 0;
+-    if (n.props != null) {
+-      for (Name p : n.props) {
+-        if (p.needsToBeStubbed()) {
+-          String propAlias = alias + '$' + p.name;
+-          Node nameNode = Node.newString(Token.NAME, propAlias);
+-          Node newVar = new Node(Token.VAR, nameNode);
+-          if (addAfter == null) {
+-            parent.addChildToFront(newVar);
+-          } else {
+-            parent.addChildAfter(newVar, addAfter);
+-            addAfter = newVar;
+-          }
+-          numStubs++;
+-          compiler.reportCodeChange();
+-
+-          // Determine if this is a constant var by checking the first
+-          // reference to it. Don't check the declaration, as it might be null.
+-          if (p.refs.get(0).node.getLastChild().getBooleanProp(
+-                Node.IS_CONSTANT_NAME)) {
+-            nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+-          }
+-      }
+-    }
+-    return numStubs;
+-  }
+-}
++  private int addStubsForUndeclaredProperties(
++      Name n, String alias, Node parent, Node addAfter) {
++    Preconditions.checkArgument(NodeUtil.isStatementBlock(parent));
++    int numStubs = 0;
++    if (n.props != null) {
++      for (Name p : n.props) {
++        if (p.needsToBeStubbed()) {
++          String propAlias = alias + '$' + p.name;
++          Node nameNode = Node.newString(Token.NAME, propAlias);
++          Node newVar = new Node(Token.VAR, nameNode);
++          if (addAfter == null) {
++            parent.addChildToFront(newVar);
++          } else {
++            parent.addChildAfter(newVar, addAfter);
++            addAfter = newVar;
++          }
++          numStubs++;
++          compiler.reportCodeChange();
++
++          // Determine if this is a constant var by checking the first
++          // reference to it. Don't check the declaration, as it might be null.
++          if (p.refs.get(0).node.getLastChild().getBooleanProp(
++                Node.IS_CONSTANT_NAME)) {
++            nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
++          }
++        }
++      }
++    }
++    return numStubs;
++  }
+@@ -1,33 +1,30 @@
+-  private int addStubsForUndeclaredProperties(
+-      Name n, String alias, Node parent, Node addAfter) {
+-    Preconditions.checkArgument(NodeUtil.isStatementBlock(parent));
+-    int numStubs = 0;
+-    if (n.props != null) {
+-      for (Name p : n.props) {
+-        if (p.needsToBeStubbed()) {
+-          String propAlias = alias + '
+-}
+- + p.name;
+-          Node nameNode = Node.newString(Token.NAME, propAlias);
+-          Node newVar = new Node(Token.VAR, nameNode);
+-          if (addAfter == null) {
+-            parent.addChildToFront(newVar);
+-          } else {
+-            parent.addChildAfter(newVar, addAfter);
+-            addAfter = newVar;
+-          }
+-          numStubs++;
+-          compiler.reportCodeChange();
+-
+-          // Determine if this is a constant var by checking the first
+-          // reference to it. Don't check the declaration, as it might be null.
+-          if (p.refs.get(0).node.getLastChild().getBooleanProp(
+-                Node.IS_CONSTANT_NAME)) {
+-            nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+-          }
+-        }
+-      }
+-    }
+-    return numStubs;
+-  }
+-}
++  private int addStubsForUndeclaredProperties(
++      Name n, String alias, Node parent, Node addAfter) {
++    Preconditions.checkArgument(NodeUtil.isStatementBlock(parent));
++    int numStubs = 0;
++    if (n.props != null) {
++      for (Name p : n.props) {
++        if (p.needsToBeStubbed()) {
++          String propAlias = alias + '$' + p.name;
++          Node nameNode = Node.newString(Token.NAME, propAlias);
++          Node newVar = new Node(Token.VAR, nameNode);
++          if (addAfter == null) {
++            parent.addChildToFront(newVar);
++          } else {
++            parent.addChildAfter(newVar, addAfter);
++            addAfter = newVar;
++          }
++          numStubs++;
++          compiler.reportCodeChange();
++
++          // Determine if this is a constant var by checking the first
++          // reference to it. Don't check the declaration, as it might be null.
++          if (p.refs.get(0).node.getLastChild().getBooleanProp(
++                Node.IS_CONSTANT_NAME)) {
++            nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
++          }
++        }
++      }
++    }
++    return numStubs;
++  }
+@@ -1,32 +1,30 @@
+-  private int addStubsForUndeclaredProperties(
+-      Name n, String alias, Node parent, Node addAfter) {
+-    Preconditions.checkArgument(NodeUtil.isStatementBlock(parent));
+-    int numStubs = 0;
+-    if (n.props != null) {
+-      for (Name p : n.props) {
+-        if (p.needsToBeStubbed()) {
+-          String propAlias = alias + '
+- + p.name;
+-          Node nameNode = Node.newString(Token.NAME, propAlias);
+-          Node newVar = new Node(Token.VAR, nameNode);
+-          if (addAfter == null) {
+-            parent.addChildToFront(newVar);
+-          } else {
+-            parent.addChildAfter(newVar, addAfter);
+-            addAfter = newVar;
+-          }
+-          numStubs++;
+-          compiler.reportCodeChange();
+-
+-          // Determine if this is a constant var by checking the first
+-          // reference to it. Don't check the declaration, as it might be null.
+-          if (p.refs.get(0).node.getLastChild().getBooleanProp(
+-                Node.IS_CONSTANT_NAME)) {
+-            nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+-          }
+-        }
+-      }
+-    }
+-    return numStubs;
+-  }
+-
++  private int addStubsForUndeclaredProperties(
++      Name n, String alias, Node parent, Node addAfter) {
++    Preconditions.checkArgument(NodeUtil.isStatementBlock(parent));
++    int numStubs = 0;
++    if (n.props != null) {
++      for (Name p : n.props) {
++        if (p.needsToBeStubbed()) {
++          String propAlias = alias + '$' + p.name;
++          Node nameNode = Node.newString(Token.NAME, propAlias);
++          Node newVar = new Node(Token.VAR, nameNode);
++          if (addAfter == null) {
++            parent.addChildToFront(newVar);
++          } else {
++            parent.addChildAfter(newVar, addAfter);
++            addAfter = newVar;
++          }
++          numStubs++;
++          compiler.reportCodeChange();
++
++          // Determine if this is a constant var by checking the first
++          // reference to it. Don't check the declaration, as it might be null.
++          if (p.refs.get(0).node.getLastChild().getBooleanProp(
++                Node.IS_CONSTANT_NAME)) {
++            nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
++          }
++        }
++      }
++    }
++    return numStubs;
++  }

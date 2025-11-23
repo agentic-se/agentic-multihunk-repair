@@ -1,0 +1,187 @@
+diff --git a/src/java/org/apache/commons/math/stat/Frequency.java b/src/java/org/apache/commons/math/stat/Frequency.java
+index 75914d795..8062af7df 100644
+--- a/src/java/org/apache/commons/math/stat/Frequency.java
++++ b/src/java/org/apache/commons/math/stat/Frequency.java
+@@ -107,7 +107,37 @@ public class Frequency implements Serializable {
+      */
+     @Deprecated
+     public void addValue(Object v) {
+-    
++        if (!(v instanceof Comparable)) {
++            throw new ClassCastException("Value must be Comparable");
++        }
++        
++        /**
++         * Adds 1 to the frequency count for v.
++         * <p>
++         * If other objects have already been added to this Frequency, v must
++         * be comparable to those that have already been added.
++         * </p>
++         * 
++         * @param v the value to add.
++         * @throws IllegalArgumentException if <code>v</code> is not comparable with previous entries
++         */
++        Object obj = v;
++        if (v instanceof Integer) {
++           obj = Long.valueOf(((Integer) v).longValue());
++        }
++        try {
++            Long count = (Long) freqTable.get(obj);
++            if (count == null) {
++                freqTable.put(obj, Long.valueOf(1));
++            } else {
++                freqTable.put(obj, Long.valueOf(count.longValue() + 1));
++            }
++        } catch (ClassCastException ex) {   
++            //TreeMap will throw ClassCastException if v is not comparable
++            throw new IllegalArgumentException("Value not comparable to existing values.");
++        }
++    }
++
+     /**
+      * Adds 1 to the frequency count for v.
+      * <p>
+@@ -118,6 +148,7 @@ public class Frequency implements Serializable {
+      * @param v the value to add.
+      * @throws IllegalArgumentException if <code>v</code> is not comparable with previous entries
+      */
++    public void addValue(Comparable v) {
+         Object obj = v;
+         if (v instanceof Integer) {
+            obj = Long.valueOf(((Integer) v).longValue());
+@@ -227,6 +258,28 @@ public class Frequency implements Serializable {
+         }
+         return result;
+     }
++    
++    /**
++     * Returns the number of values = v.
++     * 
++     * @param v the value to lookup.
++     * @return the frequency of v.
++     */
++    public long getCount(Comparable v) {
++        if (v instanceof Integer) {
++            return getCount(((Integer) v).longValue());
++        }
++        long result = 0;
++        try { 
++            Long count =  (Long) freqTable.get(v);
++            if (count != null) {
++                result = count.longValue();
++            }
++        } catch (ClassCastException ex) {
++            // ignore and return 0 -- ClassCastException will be thrown if value is not comparable
++        }
++        return result;
++    }
+ 
+     /**
+      * Returns the number of values = v.
+@@ -277,6 +330,23 @@ public class Frequency implements Serializable {
+         return (double) getCount(v) / (double) sumFreq;        
+     }
+     
++    /**
++      * Returns the percentage of values that are equal to v
++     * (as a proportion between 0 and 1).
++     * <p>
++     * Returns <code>Double.NaN</code> if no values have been added.</p>
++     * 
++     * @param v the value to lookup
++     * @return the proportion of values equal to v
++     */
++    public double getPct(Comparable v) {
++        final long sumFreq = getSumFreq();
++        if (sumFreq == 0) {
++            return Double.NaN;
++        }
++        return (double) getCount(v) / (double) sumFreq;        
++    }
++    
+     /**
+      * Returns the percentage of values that are equal to v
+      * (as a proportion between 0 and 1).
+@@ -362,6 +432,56 @@ public class Frequency implements Serializable {
+         return result;
+     }
+     
++    /**
++     * Returns the cumulative frequency of values less than or equal to v.
++     * <p>
++     * Returns 0 if v is not comparable to the values set.</p>
++     * 
++     * @param v the value to lookup.
++     * @return the proportion of values equal to v
++     */
++    public long getCumFreq(Comparable v) {
++        if (getSumFreq() == 0) {
++            return 0;
++        }
++        if (v instanceof Integer) {
++            return getCumFreq(((Integer) v).longValue());
++        }
++        Comparator c = freqTable.comparator();
++        if (c == null) {
++            c = new NaturalComparator();
++        }
++        long result = 0;
++        
++        try {
++            Long value = (Long) freqTable.get(v);
++            if (value != null) {
++                result = value.longValue();
++            }
++        } catch (ClassCastException ex) {
++            return result;   // v is not comparable
++        }
++        
++        if (c.compare(v, freqTable.firstKey()) < 0) {
++            return 0;  // v is comparable, but less than first value
++        }
++        
++        if (c.compare(v, freqTable.lastKey()) >= 0) {
++            return getSumFreq();    // v is comparable, but greater than the last value
++        }
++        
++        Iterator values = valuesIterator();
++        while (values.hasNext()) {
++            Object nextValue = values.next();
++            if (c.compare(v, nextValue) > 0) {
++                result += getCount(nextValue);
++            } else {
++                return result;
++            }
++        }
++        return result;
++    }
++    
+      /**
+      * Returns the cumulative frequency of values less than or equal to v.
+      * <p>
+@@ -419,6 +539,25 @@ public class Frequency implements Serializable {
+         return (double) getCumFreq(v) / (double) sumFreq;        
+     }
+     
++    /**
++     * Returns the cumulative percentage of values less than or equal to v
++     * (as a proportion between 0 and 1).
++     * <p>
++     * Returns <code>Double.NaN</code> if no values have been added.
++     * Returns 0 if at least one value has been added, but v is not comparable
++     * to the values set.</p>
++     * 
++     * @param v the value to lookup
++     * @return the proportion of values less than or equal to v
++     */
++    public double getCumPct(Comparable v) {
++        final long sumFreq = getSumFreq();
++        if (sumFreq == 0) {
++            return Double.NaN;
++        }
++        return (double) getCumFreq(v) / (double) sumFreq;        
++    }
++    
+     /**
+      * Returns the cumulative percentage of values less than or equal to v
+      * (as a proportion between 0 and 1).

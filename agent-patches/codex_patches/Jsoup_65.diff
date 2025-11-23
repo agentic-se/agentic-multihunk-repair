@@ -1,0 +1,61 @@
+diff --git a/src/main/java/org/jsoup/parser/HtmlTreeBuilderState.java b/src/main/java/org/jsoup/parser/HtmlTreeBuilderState.java
+index aaf6041..b72c8b3 100644
+--- a/src/main/java/org/jsoup/parser/HtmlTreeBuilderState.java
++++ b/src/main/java/org/jsoup/parser/HtmlTreeBuilderState.java
+@@ -801,6 +801,10 @@ enum HtmlTreeBuilderState {
+     },
+     InTable {
+         boolean process(Token t, HtmlTreeBuilder tb) {
++            // If we're inside a <template>, parse content in InBody to avoid table-specific rules
++            if (tb.getFromStack("template") != null) {
++                return tb.process(t, InBody);
++            }
+             if (t.isCharacter()) {
+                 tb.newPendingTableCharacters();
+                 tb.markInsertionMode();
+@@ -815,6 +819,10 @@ enum HtmlTreeBuilderState {
+             } else if (t.isStartTag()) {
+                 Token.StartTag startTag = t.asStartTag();
+                 String name = startTag.normalName();
++                if (name.equals("template")) {
++                    // script-supporting element: allow directly in table contexts
++                    return tb.process(t, InBody);
++                }
+                 if (name.equals("caption")) {
+                     tb.clearStackToTableContext();
+                     tb.insertMarkerToFormattingElements();
+@@ -1029,10 +1037,17 @@ enum HtmlTreeBuilderState {
+     },
+     InTableBody {
+         boolean process(Token t, HtmlTreeBuilder tb) {
++            // Inside a <template> within table body, use generic InBody rules
++            if (tb.getFromStack("template") != null) {
++                return tb.process(t, InBody);
++            }
+             switch (t.type) {
+                 case StartTag:
+                     Token.StartTag startTag = t.asStartTag();
+                     String name = startTag.normalName();
++                    if (name.equals("template")) {
++                        return tb.process(t, InBody);
++                    }
+                     if (name.equals("tr")) {
+                         tb.clearStackToTableBodyContext();
+                         tb.insert(startTag);
+@@ -1089,9 +1104,16 @@ enum HtmlTreeBuilderState {
+     },
+     InRow {
+         boolean process(Token t, HtmlTreeBuilder tb) {
++            // When a <template> is open, defer to InBody handling
++            if (tb.getFromStack("template") != null) {
++                return tb.process(t, InBody);
++            }
+             if (t.isStartTag()) {
+                 Token.StartTag startTag = t.asStartTag();
+                 String name = startTag.normalName();
++                if (name.equals("template")) {
++                    return tb.process(t, InBody);
++                }
+ 
+                 if (StringUtil.in(name, "th", "td")) {
+                     tb.clearStackToTableRowContext();

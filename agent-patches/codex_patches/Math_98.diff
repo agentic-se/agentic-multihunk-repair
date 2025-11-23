@@ -1,0 +1,29 @@
+diff --git a/src/java/org/apache/commons/math/linear/BigMatrixImpl.java b/src/java/org/apache/commons/math/linear/BigMatrixImpl.java
+index 7cd61cb2c..266663788 100644
+--- a/src/java/org/apache/commons/math/linear/BigMatrixImpl.java
++++ b/src/java/org/apache/commons/math/linear/BigMatrixImpl.java
+@@ -988,7 +988,8 @@ public class BigMatrixImpl implements BigMatrix, Serializable {
+         }
+         final int nRows = this.getRowDimension();
+         final int nCols = this.getColumnDimension();
+-        final BigDecimal[] out = new BigDecimal[v.length];
++        // The result vector length should match the row dimension
++        final BigDecimal[] out = new BigDecimal[nRows];
+         for (int row = 0; row < nRows; row++) {
+             BigDecimal sum = ZERO;
+             for (int i = 0; i < nCols; i++) {
+diff --git a/src/java/org/apache/commons/math/linear/RealMatrixImpl.java b/src/java/org/apache/commons/math/linear/RealMatrixImpl.java
+index 791064425..d07c45193 100644
+--- a/src/java/org/apache/commons/math/linear/RealMatrixImpl.java
++++ b/src/java/org/apache/commons/math/linear/RealMatrixImpl.java
+@@ -776,7 +776,9 @@ public class RealMatrixImpl implements RealMatrix, Serializable {
+         if (v.length != nCols) {
+             throw new IllegalArgumentException("vector has wrong length");
+         }
+-        final double[] out = new double[v.length];
++        // The result vector must have the same length as the row dimension
++        // of the matrix, not the input vector length (for non-square cases).
++        final double[] out = new double[nRows];
+         for (int row = 0; row < nRows; row++) {
+             final double[] dataRow = data[row];
+             double sum = 0;

@@ -1,0 +1,35 @@
+diff --git a/src/main/java/org/apache/commons/cli/TypeHandler.java b/src/main/java/org/apache/commons/cli/TypeHandler.java
+index 93c0b73..174d88c 100644
+--- a/src/main/java/org/apache/commons/cli/TypeHandler.java
++++ b/src/main/java/org/apache/commons/cli/TypeHandler.java
+@@ -89,7 +89,7 @@ public class TypeHandler
+         }
+         else if (PatternOptionBuilder.EXISTING_FILE_VALUE == clazz)
+         {
+-            return createFile(str);
++            return openFile(str);
+         }
+         else if (PatternOptionBuilder.FILES_VALUE == clazz)
+         {
+@@ -231,6 +231,17 @@ public class TypeHandler
+      * @return The file input stream represented by <code>str</code>.
+      * @throws ParseException if the file is not exist or not readable
+      */
++    public static FileInputStream openFile(final String str) throws ParseException
++    {
++        try
++        {
++            return new FileInputStream(str);
++        }
++        catch (final FileNotFoundException e)
++        {
++            return null;
++        }
++    }
+ 
+     /**
+      * Returns the File[] represented by <code>str</code>.
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

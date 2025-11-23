@@ -1,0 +1,411 @@
+--- a/src/main/java/org/apache/commons/codec/binary/Base64InputStream.java
++++ b/src/main/java/org/apache/commons/codec/binary/Base64InputStream.java
+@@ -1,3 +1,14 @@
+-        super(in, new Base64(lineLength, lineSeparator), doEncode);
+-    }
+-}
++        super(in, new Base64(lineLength, lineSeparator), doEncode);
++    }
++
++    @Override
++    public long skip(long n) throws IOException {
++        //delegate to read()
++        long bytesRead = 0;
++        while ((bytesRead < n) && (read() != -1))
++        {
++            bytesRead++;
++        }
++        return bytesRead;
++    }
++}
+@@ -1,1 +1,2 @@
+-import java.io.InputStream;
++import java.io.IOException;
++import java.io.InputStream;
+@@ -1,14 +1,3 @@
+-        super(in, new Base64(lineLength, lineSeparator), doEncode);
+-    }
+-
+-    @Override
+-    public long skip(long n) throws IOException {
+-        //delegate to read()
+-        long bytesRead = 0;
+-        while ((bytesRead < n) && (read() != -1))
+-        {
+-            bytesRead++;
+-        }
+-        return bytesRead;
+-    }
+-}
++        super(in, new Base64(lineLength, lineSeparator), doEncode);
++    }
++}
+@@ -1,2 +1,1 @@
+-import java.io.IOException;
+-import java.io.InputStream;
++import java.io.InputStream;
+
+--- a/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java
++++ b/src/main/java/org/apache/commons/codec/binary/BaseNCodecInputStream.java
+@@ -1,35 +1,48 @@
+-            return readLen;
+-        }
+-    }
+-    /**
+-     * {@inheritDoc}
+-     * 
+-     * @return false
+-     */
+-    @Override
+-    public boolean markSupported() {
+-        return false; // not an easy job to support marks
+-    }
+-
+-    /**
+-     * {@inheritDoc}
+-     *
+-     * @throws IllegalArgumentException if the provided skip length is negative
+-     */
+-
+-        // skip in chunks of 512 bytes
+-
+-
+-    /**
+-     * {@inheritDoc}
+-     *
+-     * @return <code>0</code> if the {@link InputStream} has reached <code>EOF</code>,
+-     * <code>1</code> otherwise
+-     */
+-        // Note: the logic is similar to the InflaterInputStream:
+-        //       as long as we have not reached EOF, indicate that there is more
+-        //       data available. As we do not know for sure how much data is left,
+-        //       just return 1 as a safe guess.
+-
+-        // use the EOF flag of the underlying codec instance
+-}
++            return readLen;
++        }
++    }
++
++    /**
++     * {@inheritDoc}
++     *
++     * @throws IllegalArgumentException if the provided skip length is negative
++     */
++    @Override
++    public long skip(long n) throws IOException {
++        if (n < 0) {
++            throw new IllegalArgumentException("Negative skip length cannot be handled.");
++        }
++        // delegate to read()
++        long bytesRead = 0;
++        while (bytesRead < n && read() != EOF) {
++            bytesRead++;
++        }
++        return bytesRead;
++    }
++
++    /**
++     * {@inheritDoc}
++     *
++     * @return false
++     */
++    @Override
++    public boolean markSupported() {
++        return false; // not an easy job to support marks
++    }
++
++    /**
++     * {@inheritDoc}
++     *
++     * @return <code>0</code> if the {@link InputStream} has reached <code>EOF</code>,
++     * <code>1</code> otherwise
++     */
++    @Override
++    public int available() throws IOException {
++        // Note: the logic is similar to the InflaterInputStream:
++        //       as long as we have not reached EOF, indicate that there is more
++        //       data available. As we do not know for sure how much data is left,
++        //       just return 1 as a safe guess.
++
++        return this.baseNCodec.has;// use the EOF flag of the underlying codec instance
++    }
++}
+@@ -1,3 +1,3 @@
+-        return this.baseNCodec.has;// use the EOF flag of the underlying codec instance
+-    }
+-}
++        return this.baseNCodec.hasData() ? 1 : 0;
++    }
++}
+@@ -1,3 +1,3 @@
+-        return this.baseNCodec.hasData() ? 1 : 0;
+-    }
+-}
++        return this.baseNCodec.available();
++    }
++}
+@@ -1,44 +1,32 @@
+-    /**
+-     * {@inheritDoc}
+-     *
+-     * @throws IllegalArgumentException if the provided skip length is negative
+-     */
+-    @Override
+-    public long skip(long n) throws IOException {
+-        if (n < 0) {
+-            throw new IllegalArgumentException("Negative skip length cannot be handled.");
+-        }
+-        // delegate to read()
+-        long bytesRead = 0;
+-        while (bytesRead < n && read() != EOF) {
+-            bytesRead++;
+-        }
+-        return bytesRead;
+-    }
+-
+-    /**
+-     * {@inheritDoc}
+-     *
+-     * @return false
+-     */
+-    @Override
+-    public boolean markSupported() {
+-        return false; // not an easy job to support marks
+-    }
+-
+-    /**
+-     * {@inheritDoc}
+-     *
+-     * @return <code>0</code> if the {@link InputStream} has reached <code>EOF</code>,
+-     * <code>1</code> otherwise
+-     */
+-    @Override
+-    public int available() throws IOException {
+-        // Note: the logic is similar to the InflaterInputStream:
+-        //       as long as we have not reached EOF, indicate that there is more
+-        //       data available. As we do not know for sure how much data is left,
+-        //       just return 1 as a safe guess.
+-
+-        return this.baseNCodec.available();
+-    }
+-}
++    /**
++     * {@inheritDoc}
++     *
++     * @return false
++     */
++    @Override
++    public boolean markSupported() {
++        return false; // not an easy job to support marks
++    }
++
++    /**
++     * {@inheritDoc}
++     *
++     * @throws IllegalArgumentException if the provided skip length is negative
++     */
++
++        // skip in chunks of 512 bytes
++
++
++    /**
++     * {@inheritDoc}
++     *
++     * @return <code>0</code> if the {@link InputStream} has reached <code>EOF</code>,
++     * <code>1</code> otherwise
++     */
++        // Note: the logic is similar to the InflaterInputStream:
++        //       as long as we have not reached EOF, indicate that there is more
++        //       data available. As we do not know for sure how much data is left,
++        //       just return 1 as a safe guess.
++
++        // use the EOF flag of the underlying codec instance
++}
+@@ -1,36 +1,45 @@
+-            return readLen;
+-        }
+-    }
+-
+-    /**
+-     * {@inheritDoc}
+-     *
+-     * @return false
+-     */
+-    @Override
+-    public boolean markSupported() {
+-        return false; // not an easy job to support marks
+-    }
+-
+-    /**
+-     * {@inheritDoc}
+-     *
+-     * @throws IllegalArgumentException if the provided skip length is negative
+-     */
+-
+-        // skip in chunks of 512 bytes
+-
+-
+-    /**
+-     * {@inheritDoc}
+-     *
+-     * @return <code>0</code> if the {@link InputStream} has reached <code>EOF</code>,
+-     * <code>1</code> otherwise
+-     */
+-        // Note: the logic is similar to the InflaterInputStream:
+-        //       as long as we have not reached EOF, indicate that there is more
+-        //       data available. As we do not know for sure how much data is left,
+-        //       just return 1 as a safe guess.
+-
+-        // use the EOF flag of the underlying codec instance
+-}
++            return readLen;
++        }
++    }
++
++    /**
++     * {@inheritDoc}
++     *
++     * @throws IllegalArgumentException if the provided skip length is negative
++     */
++    @Override
++    public long skip(long n) throws IOException {
++        if (n < 0) {
++            throw new IllegalArgumentException("Negative skip length cannot be handled.");
++        }
++        // delegate to read()
++        long bytesRead = 0;
++        while (bytesRead < n && read() != EOF) {
++            bytesRead++;
++        }
++        return bytesRead;
++    }
++
++    /**
++     * {@inheritDoc}
++     *
++     * @return false
++     */
++    @Override
++    public boolean markSupported() {
++        return false; // not an easy job to support marks
++    }
++
++    /**
++     * {@inheritDoc}
++     *
++     * @return <code>0</code> if the {@link InputStream} has reached <code>EOF</code>,
++     * <code>1</code> otherwise
++     */
++        // Note: the logic is similar to the InflaterInputStream:
++        //       as long as we have not reached EOF, indicate that there is more
++        //       data available. As we do not know for sure how much data is left,
++        //       just return 1 as a safe guess.
++
++        // use the EOF flag of the underlying codec instance
++}
+@@ -1,2 +1,9 @@
+-        // use the EOF flag of the underlying codec instance
+-}
++        // use the EOF flag of the underlying codec instance
++        if (this.baseNCodec.hasData()) {
++            return 1; // At least one byte is available from the codec's buffer
++        } else if (this.in.available() > 0) {
++            return 1; // Underlying stream has data, so we can potentially decode more
++        }
++        return 0; // No data in codec buffer, and underlying stream is at EOF
++    }
++}
+@@ -1,20 +1,15 @@
+-    /**
+-     * {@inheritDoc}
+-     *
+-     * @return <code>0</code> if the {@link InputStream} has reached <code>EOF</code>,
+-     * <code>1</code> otherwise
+-     */
+-        // Note: the logic is similar to the InflaterInputStream:
+-        //       as long as we have not reached EOF, indicate that there is more
+-        //       data available. As we do not know for sure how much data is left,
+-        //       just return 1 as a safe guess.
+-
+-        // use the EOF flag of the underlying codec instance
+-        if (this.baseNCodec.hasData()) {
+-            return 1; // At least one byte is available from the codec's buffer
+-        } else if (this.in.available() > 0) {
+-            return 1; // Underlying stream has data, so we can potentially decode more
+-        }
+-        return 0; // No data in codec buffer, and underlying stream is at EOF
+-    }
+-
++    public int available() throws IOException {
++        // Note: the logic is similar to the InflaterInputStream:
++        //       as long as we have not reached EOF, indicate that there is more
++        //       data available. As we do not know for sure how much data is left,
++        //       just return 1 as a safe guess.
++
++        // use the EOF flag of the underlying codec instance
++        if (this.baseNCodec.hasData()) {
++            return 1; // At least one byte is available from the codec's buffer
++        } else if (this.in.available() > 0) {
++            return 1; // Underlying stream has data, so we can potentially decode more
++        }
++        return 0; // No data in codec buffer, and underlying stream is at EOF
++    }
++}
+@@ -1,3 +1,2 @@
+-    }
+-}
+-}
++    }
++}
+
+--- a/src/test/java/org/apache/commons/codec/binary/Base64Test.java
++++ b/src/test/java/org/apache/commons/codec/binary/Base64Test.java
+@@ -1,4 +1,14 @@
+-        assertTrue("testDEFAULT_BUFFER_SIZE", strOriginal.equals(strDecoded));
+-    }
+-
+-}
++        assertTrue("testDEFAULT_BUFFER_SIZE", strOriginal.equals(strDecoded));
++    }
++
++    @Test
++    public void testSkip() throws Throwable {
++        InputStream ins =
++            new ByteArrayInputStream("AAAA////".getBytes("ISO-8859-1"));//should decode to
++            // {0, 0, 0, 255, 255, 255}
++        Base64InputStream instance = new Base64InputStream(ins);
++        assertEquals(3L, instance.skip(3L)); //should skip 3 decoded characters, or 4 encoded characters
++        assertEquals(255, instance.read()); //Currently returns 3, as it is decoding "A/", not "//"
++    }
++
++}
+@@ -1,1 +1,3 @@
+-import java.io.UnsupportedEncodingException;
++import java.io.ByteArrayInputStream;
++import java.io.InputStream;
++import java.io.UnsupportedEncodingException;
+@@ -1,14 +1,4 @@
+-        assertTrue("testDEFAULT_BUFFER_SIZE", strOriginal.equals(strDecoded));
+-    }
+-
+-    @Test
+-    public void testSkip() throws Throwable {
+-        InputStream ins =
+-            new ByteArrayInputStream("AAAA////".getBytes("ISO-8859-1"));//should decode to
+-            // {0, 0, 0, 255, 255, 255}
+-        Base64InputStream instance = new Base64InputStream(ins);
+-        assertEquals(3L, instance.skip(3L)); //should skip 3 decoded characters, or 4 encoded characters
+-        assertEquals(255, instance.read()); //Currently returns 3, as it is decoding "A/", not "//"
+-    }
+-
+-}
++        assertTrue("testDEFAULT_BUFFER_SIZE", strOriginal.equals(strDecoded));
++    }
++
++}
+@@ -1,3 +1,1 @@
+-import java.io.ByteArrayInputStream;
+-import java.io.InputStream;
+-import java.io.UnsupportedEncodingException;
++import java.io.UnsupportedEncodingException;

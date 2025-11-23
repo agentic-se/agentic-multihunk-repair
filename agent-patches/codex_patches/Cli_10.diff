@@ -1,0 +1,22 @@
+diff --git a/src/java/org/apache/commons/cli/Options.java b/src/java/org/apache/commons/cli/Options.java
+index 2309da3..121108b 100644
+--- a/src/java/org/apache/commons/cli/Options.java
++++ b/src/java/org/apache/commons/cli/Options.java
+@@ -212,7 +212,9 @@ public class Options implements Serializable {
+      */
+     public List getRequiredOptions()
+     {
+-        return requiredOpts;
++        // Return a defensive copy so parsers can modify their working list
++        // without mutating this Options' internal state across parses.
++        return new ArrayList(requiredOpts);
+     }
+ 
+     /** 
+@@ -278,4 +280,4 @@ public class Options implements Serializable {
+ 
+         return buf.toString();
+     }
+-}
+\ No newline at end of file
++}

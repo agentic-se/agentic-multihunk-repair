@@ -1,0 +1,79 @@
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerBase.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerBase.java
+@@ -1,9 +1,13 @@
+-        ReadableObjectId roid = ctxt.findObjectId(id, _objectIdReader.generator, _objectIdReader.resolver);
+-        // do we have it resolved?
+-        Object pojo = roid.resolve();
+-        if (pojo == null) { // not yet; should wait...
+-            throw new UnresolvedForwardReference(p,
+-                    "Could not resolve Object Id ["+id+"] (for "+_beanType+").",
+-                    p.getCurrentLocation(), roid);
+-        }
+-        return pojo;
++        ReadableObjectId roid = ctxt.findObjectId(id, _objectIdReader.generator, _objectIdReader.resolver);
++        // 02-Apr-2015, tatu: As per [databind#742] should allow 'null' to mean 'no id' (and thus null object)
++        if (roid == null) {
++            return null;
++        }
++        // do we have it resolved?
++        Object pojo = roid.resolve();
++        if (pojo == null) { // not yet; should wait...
++            throw new UnresolvedForwardReference(p,
++                    "Could not resolve Object Id ["+id+"] (for "+_beanType+").",
++                    p.getCurrentLocation(), roid);
++        }
++        return pojo;
+@@ -1,13 +1,9 @@
+-        ReadableObjectId roid = ctxt.findObjectId(id, _objectIdReader.generator, _objectIdReader.resolver);
+-        // 02-Apr-2015, tatu: As per [databind#742] should allow 'null' to mean 'no id' (and thus null object)
+-        if (roid == null) {
+-            return null;
+-        }
+-        // do we have it resolved?
+-        Object pojo = roid.resolve();
+-        if (pojo == null) { // not yet; should wait...
+-            throw new UnresolvedForwardReference(p,
+-                    "Could not resolve Object Id ["+id+"] (for "+_beanType+").",
+-                    p.getCurrentLocation(), roid);
+-        }
+-        return pojo;
++        ReadableObjectId roid = ctxt.findObjectId(id, _objectIdReader.generator, _objectIdReader.resolver);
++        // do we have it resolved?
++        Object pojo = roid.resolve();
++        if (pojo == null) { // not yet; should wait...
++            throw new UnresolvedForwardReference(p,
++                    "Could not resolve Object Id ["+id+"] (for "+_beanType+").",
++                    p.getCurrentLocation(), roid);
++        }
++        return pojo;
+
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/DefaultDeserializationContext.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/DefaultDeserializationContext.java
+@@ -1,8 +1,1 @@
+-        /* 02-Apr-2015, tatu: As per [databind#742] should allow 'null', similar to how
+-         *   missing id already works.
+-         */
+-        if (id == null) {
+-            return null;
+-        }
+-
+-        final ObjectIdGenerator.IdKey key = gen.key(id);
++        final ObjectIdGenerator.IdKey key = gen.key(id);
+
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringDeserializer.java
+@@ -1,5 +1,9 @@
+-        String text = p.getValueAsString();
+-        if (text != null) {
+-            return text;
+-        }
+-        throw ctxt.mappingException(_valueClass, p.getCurrentToken());
++        // [databind#381]: null means successful deserialization of JSON null
++        if (t == JsonToken.VALUE_NULL) {
++            return null;
++        }
++        String text = p.getValueAsString();
++        if (text != null) {
++            return text;
++        }
++        throw ctxt.mappingException(_valueClass, p.getCurrentToken());

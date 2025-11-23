@@ -1,0 +1,1204 @@
+--- a/src/main/java/org/apache/commons/math/ode/events/EventState.java
++++ b/src/main/java/org/apache/commons/math/ode/events/EventState.java
+@@ -1,2 +1,7 @@
+-        return (nextAction == EventHandler.Action.RESET_STATE) ||
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++        if ((nextAction == EventHandler.Action.RESET_STATE) ||
++            (nextAction == EventHandler.Action.RESET_DERIVATIVES)) {
++            previousEventTime = Double.NaN;
++        }
++
++        return (nextAction == EventHandler.Action.RESET_STATE) ||
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+@@ -1,7 +1,2 @@
+-        if ((nextAction == EventHandler.Action.RESET_STATE) ||
+-            (nextAction == EventHandler.Action.RESET_DERIVATIVES)) {
+-            previousEventTime = Double.NaN;
+-        }
+-
+-        return (nextAction == EventHandler.Action.RESET_STATE) ||
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++        return (nextAction == EventHandler.Action.RESET_STATE) ||
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+@@ -1,5 +1,10 @@
+-            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
+-        } else {
+-            g0Positive = g0 >= 0;
+-            nextAction = EventHandler.Action.CONTINUE;
+-        }
++            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
++        } else {
++            g0Positive = g0 >= 0;
++            nextAction = EventHandler.Action.CONTINUE;
++        }
++
++        if ((nextAction == EventHandler.Action.RESET_STATE) ||
++            (nextAction == EventHandler.Action.RESET_DERIVATIVES)) {
++            previousEventTime = Double.NaN;
++        }
+@@ -1,10 +1,5 @@
+-            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
+-        } else {
+-            g0Positive = g0 >= 0;
+-            nextAction = EventHandler.Action.CONTINUE;
+-        }
+-
+-        if ((nextAction == EventHandler.Action.RESET_STATE) ||
+-            (nextAction == EventHandler.Action.RESET_DERIVATIVES)) {
+-            previousEventTime = Double.NaN;
+-        }
++            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
++        } else {
++            g0Positive = g0 >= 0;
++            nextAction = EventHandler.Action.CONTINUE;
++        }
+@@ -1,2 +1,4 @@
+-        return (nextAction == EventHandler.Action.RESET_STATE) ||
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++        previousEventTime = Double.NaN;
++
++        return (nextAction == EventHandler.Action.RESET_STATE) ||
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+@@ -1,4 +1,2 @@
+-        previousEventTime = Double.NaN;
+-
+-        return (nextAction == EventHandler.Action.RESET_STATE) ||
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++        return (nextAction == EventHandler.Action.RESET_STATE) ||
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+@@ -1,2 +1,5 @@
+-        return (nextAction == EventHandler.Action.RESET_STATE) ||
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++        previousEventTime = Double.NaN;
++        g0Positive        = true;
++
++        return (nextAction == EventHandler.Action.RESET_STATE) ||
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+@@ -1,5 +1,2 @@
+-        previousEventTime = Double.NaN;
+-        g0Positive        = true;
+-
+-        return (nextAction == EventHandler.Action.RESET_STATE) ||
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++        return (nextAction == EventHandler.Action.RESET_STATE) ||
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+@@ -1,7 +1,14 @@
+-            previousEventTime = t;
+-            g0Positive        = increasing;
+-            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
+-        } else {
+-            g0Positive = g0 >= 0;
+-            nextAction = EventHandler.Action.CONTINUE;
+-        }
++            g0Positive        = increasing;
++            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
++            // ONLY set previousEventTime if not resetting
++            if ((nextAction != EventHandler.Action.RESET_STATE) &&
++                (nextAction != EventHandler.Action.RESET_DERIVATIVES)) {
++                previousEventTime = t;
++            } else {
++                previousEventTime = Double.NaN; // Explicitly reset if action is RESET
++            }
++        } else {
++            g0Positive = g0 >= 0;
++            nextAction = EventHandler.Action.CONTINUE;
++            previousEventTime = Double.NaN; // Also reset if no pending event
++        }
+@@ -1,14 +1,7 @@
+-            g0Positive        = increasing;
+-            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
+-            // ONLY set previousEventTime if not resetting
+-            if ((nextAction != EventHandler.Action.RESET_STATE) &&
+-                (nextAction != EventHandler.Action.RESET_DERIVATIVES)) {
+-                previousEventTime = t;
+-            } else {
+-                previousEventTime = Double.NaN; // Explicitly reset if action is RESET
+-            }
+-        } else {
+-            g0Positive = g0 >= 0;
+-            nextAction = EventHandler.Action.CONTINUE;
+-            previousEventTime = Double.NaN; // Also reset if no pending event
+-        }
++            previousEventTime = t;
++            g0Positive        = increasing;
++            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
++        } else {
++            g0Positive = g0 >= 0;
++            nextAction = EventHandler.Action.CONTINUE;
++        }
+@@ -1,3 +1,5 @@
+-    public void reinitializeBegin(final StepInterpolator interpolator) {
+-
+-        t0 = interpolator.getPreviousTime();
++    public void reinitializeBegin(final StepInterpolator interpolator) {
++
++        previousEventTime = Double.NaN;
++
++        t0 = interpolator.getPreviousTime();
+@@ -1,5 +1,3 @@
+-    public void reinitializeBegin(final StepInterpolator interpolator) {
+-
+-        previousEventTime = Double.NaN;
+-
+-        t0 = interpolator.getPreviousTime();
++    public void reinitializeBegin(final StepInterpolator interpolator) {
++
++        t0 = interpolator.getPreviousTime();
+@@ -1,7 +1,14 @@
+-            previousEventTime = t;
+-            g0Positive        = increasing;
+-            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
+-        } else {
+-            g0Positive = g0 >= 0;
+-            nextAction = EventHandler.Action.CONTINUE;
+-        }
++            previousEventTime = t;
++            g0Positive        = increasing;
++            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
++
++            // ADD THIS BLOCK: Reset previousEventTime if a reset action is pending
++            if ((nextAction == EventHandler.Action.RESET_STATE) ||
++                (nextAction == EventHandler.Action.RESET_DERIVATIVES)) {
++                previousEventTime = Double.NaN;
++            }
++
++        } else {
++            g0Positive = g0 >= 0;
++            nextAction = EventHandler.Action.CONTINUE;
++        }
+@@ -1,14 +1,7 @@
+-            previousEventTime = t;
+-            g0Positive        = increasing;
+-            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
+-
+-            // ADD THIS BLOCK: Reset previousEventTime if a reset action is pending
+-            if ((nextAction == EventHandler.Action.RESET_STATE) ||
+-                (nextAction == EventHandler.Action.RESET_DERIVATIVES)) {
+-                previousEventTime = Double.NaN;
+-            }
+-
+-        } else {
+-            g0Positive = g0 >= 0;
+-            nextAction = EventHandler.Action.CONTINUE;
+-        }
++            previousEventTime = t;
++            g0Positive        = increasing;
++            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
++        } else {
++            g0Positive = g0 >= 0;
++            nextAction = EventHandler.Action.CONTINUE;
++        }
+@@ -1,2 +1,4 @@
+-        return (nextAction == EventHandler.Action.RESET_STATE) ||
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++        previousEventTime = Double.NaN;
++
++        return (nextAction == EventHandler.Action.RESET_STATE) ||
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+@@ -1,4 +1,2 @@
+-        previousEventTime = Double.NaN;
+-
+-        return (nextAction == EventHandler.Action.RESET_STATE) ||
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++        return (nextAction == EventHandler.Action.RESET_STATE) ||
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+@@ -1,7 +1,16 @@
+-            previousEventTime = t;
+-            g0Positive        = increasing;
+-            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
+-        } else {
+-            g0Positive = g0 >= 0;
+-            nextAction = EventHandler.Action.CONTINUE;
+-        }
++            g0Positive        = increasing;
++            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
++
++            // If a reset action is pending, clear previousEventTime
++            if ((nextAction == EventHandler.Action.RESET_STATE) ||
++                (nextAction == EventHandler.Action.RESET_DERIVATIVES)) {
++                previousEventTime = Double.NaN;
++            } else {
++                previousEventTime = t; // Only set if not resetting
++            }
++
++        } else {
++            g0Positive = g0 >= 0;
++            nextAction = EventHandler.Action.CONTINUE;
++            previousEventTime = Double.NaN; // No pending event, so clear previousEventTime
++        }
+@@ -1,16 +1,7 @@
+-            g0Positive        = increasing;
+-            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
+-
+-            // If a reset action is pending, clear previousEventTime
+-            if ((nextAction == EventHandler.Action.RESET_STATE) ||
+-                (nextAction == EventHandler.Action.RESET_DERIVATIVES)) {
+-                previousEventTime = Double.NaN;
+-            } else {
+-                previousEventTime = t; // Only set if not resetting
+-            }
+-
+-        } else {
+-            g0Positive = g0 >= 0;
+-            nextAction = EventHandler.Action.CONTINUE;
+-            previousEventTime = Double.NaN; // No pending event, so clear previousEventTime
+-        }
++            previousEventTime = t;
++            g0Positive        = increasing;
++            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
++        } else {
++            g0Positive = g0 >= 0;
++            nextAction = EventHandler.Action.CONTINUE;
++        }
+@@ -1,2 +1,5 @@
+-        return (nextAction == EventHandler.Action.RESET_STATE) ||
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++        previousEventTime = Double.NaN;
++        t0 = Double.NaN;
++
++        return (nextAction == EventHandler.Action.RESET_STATE) ||
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+@@ -1,5 +1,2 @@
+-        previousEventTime = Double.NaN;
+-        t0 = Double.NaN;
+-
+-        return (nextAction == EventHandler.Action.RESET_STATE) ||
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++        return (nextAction == EventHandler.Action.RESET_STATE) ||
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+@@ -1,2 +1,5 @@
+-        return (nextAction == EventHandler.Action.RESET_STATE) ||
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++        previousEventTime = Double.NaN;
++        g0Positive        = true;
++
++        return (nextAction == EventHandler.Action.RESET_STATE) ||
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+@@ -1,5 +1,2 @@
+-        previousEventTime = Double.NaN;
+-        g0Positive        = true;
+-
+-        return (nextAction == EventHandler.Action.RESET_STATE) ||
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++        return (nextAction == EventHandler.Action.RESET_STATE) ||
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+@@ -1,7 +1,16 @@
+-            previousEventTime = t;
+-            g0Positive        = increasing;
+-            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
+-        } else {
+-            g0Positive = g0 >= 0;
+-            nextAction = EventHandler.Action.CONTINUE;
+-        }
++            g0Positive        = increasing;
++            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
++
++            // If a reset action is pending, clear previousEventTime
++            if ((nextAction == EventHandler.Action.RESET_STATE) ||
++                (nextAction == EventHandler.Action.RESET_DERIVATIVES)) {
++                previousEventTime = Double.NaN;
++            } else {
++                previousEventTime = t; // Only set if not resetting
++            }
++
++        } else {
++            g0Positive = g0 >= 0;
++            nextAction = EventHandler.Action.CONTINUE;
++            previousEventTime = Double.NaN; // No pending event, so clear previousEventTime
++        }
+@@ -1,16 +1,7 @@
+-            g0Positive        = increasing;
+-            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
+-
+-            // If a reset action is pending, clear previousEventTime
+-            if ((nextAction == EventHandler.Action.RESET_STATE) ||
+-                (nextAction == EventHandler.Action.RESET_DERIVATIVES)) {
+-                previousEventTime = Double.NaN;
+-            } else {
+-                previousEventTime = t; // Only set if not resetting
+-            }
+-
+-        } else {
+-            g0Positive = g0 >= 0;
+-            nextAction = EventHandler.Action.CONTINUE;
+-            previousEventTime = Double.NaN; // No pending event, so clear previousEventTime
+-        }
++            previousEventTime = t;
++            g0Positive        = increasing;
++            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
++        } else {
++            g0Positive = g0 >= 0;
++            nextAction = EventHandler.Action.CONTINUE;
++        }
+@@ -1,2 +1,5 @@
+-        return (nextAction == EventHandler.Action.RESET_STATE) ||
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++        previousEventTime = Double.NaN;
++        t0 = Double.NaN;
++
++        return (nextAction == EventHandler.Action.RESET_STATE) ||
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+@@ -1,5 +1,2 @@
+-        previousEventTime = Double.NaN;
+-        t0 = Double.NaN;
+-
+-        return (nextAction == EventHandler.Action.RESET_STATE) ||
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++        return (nextAction == EventHandler.Action.RESET_STATE) ||
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+@@ -1,7 +1,16 @@
+-            previousEventTime = t;
+-            g0Positive        = increasing;
+-            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
+-        } else {
+-            g0Positive = g0 >= 0;
+-            nextAction = EventHandler.Action.CONTINUE;
+-        }
++            g0Positive        = increasing;
++            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
++
++            // If a reset action is pending, clear previousEventTime
++            if ((nextAction == EventHandler.Action.RESET_STATE) ||
++                (nextAction == EventHandler.Action.RESET_DERIVATIVES)) {
++                previousEventTime = Double.NaN;
++            } else {
++                previousEventTime = t; // Only set if not resetting
++            }
++
++        } else {
++            g0Positive = g0 >= 0;
++            nextAction = EventHandler.Action.CONTINUE;
++            previousEventTime = Double.NaN; // No pending event, so clear previousEventTime
++        }
+@@ -1,16 +1,7 @@
+-            g0Positive        = increasing;
+-            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
+-
+-            // If a reset action is pending, clear previousEventTime
+-            if ((nextAction == EventHandler.Action.RESET_STATE) ||
+-                (nextAction == EventHandler.Action.RESET_DERIVATIVES)) {
+-                previousEventTime = Double.NaN;
+-            } else {
+-                previousEventTime = t; // Only set if not resetting
+-            }
+-
+-        } else {
+-            g0Positive = g0 >= 0;
+-            nextAction = EventHandler.Action.CONTINUE;
+-            previousEventTime = Double.NaN; // No pending event, so clear previousEventTime
+-        }
++            previousEventTime = t;
++            g0Positive        = increasing;
++            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
++        } else {
++            g0Positive = g0 >= 0;
++            nextAction = EventHandler.Action.CONTINUE;
++        }
+@@ -1,2 +1,5 @@
+-        return (nextAction == EventHandler.Action.RESET_STATE) ||
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++        previousEventTime = Double.NaN;
++        t0 = Double.NaN;
++
++        return (nextAction == EventHandler.Action.RESET_STATE) ||
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+@@ -1,5 +1,2 @@
+-        previousEventTime = Double.NaN;
+-        t0 = Double.NaN;
+-
+-        return (nextAction == EventHandler.Action.RESET_STATE) ||
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++        return (nextAction == EventHandler.Action.RESET_STATE) ||
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+@@ -1,7 +1,16 @@
+-            previousEventTime = t;
+-            g0Positive        = increasing;
+-            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
+-        } else {
+-            g0Positive = g0 >= 0;
+-            nextAction = EventHandler.Action.CONTINUE;
+-        }
++            g0Positive        = increasing;
++            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
++
++            // If a reset action is pending, clear previousEventTime
++            if ((nextAction == EventHandler.Action.RESET_STATE) ||
++                (nextAction == EventHandler.Action.RESET_DERIVATIVES)) {
++                previousEventTime = Double.NaN;
++            } else {
++                previousEventTime = t; // Only set if not resetting
++            }
++
++        } else {
++            g0Positive = g0 >= 0;
++            nextAction = EventHandler.Action.CONTINUE;
++            previousEventTime = Double.NaN; // No pending event, so clear previousEventTime
++        }
+@@ -1,16 +1,7 @@
+-            g0Positive        = increasing;
+-            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
+-
+-            // If a reset action is pending, clear previousEventTime
+-            if ((nextAction == EventHandler.Action.RESET_STATE) ||
+-                (nextAction == EventHandler.Action.RESET_DERIVATIVES)) {
+-                previousEventTime = Double.NaN;
+-            } else {
+-                previousEventTime = t; // Only set if not resetting
+-            }
+-
+-        } else {
+-            g0Positive = g0 >= 0;
+-            nextAction = EventHandler.Action.CONTINUE;
+-            previousEventTime = Double.NaN; // No pending event, so clear previousEventTime
+-        }
++            previousEventTime = t;
++            g0Positive        = increasing;
++            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
++        } else {
++            g0Positive = g0 >= 0;
++            nextAction = EventHandler.Action.CONTINUE;
++        }
+@@ -1,2 +1,5 @@
+-        return (nextAction == EventHandler.Action.RESET_STATE) ||
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++        previousEventTime = Double.NaN;
++        t0 = Double.NaN;
++
++        return (nextAction == EventHandler.Action.RESET_STATE) ||
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+@@ -1,5 +1,2 @@
+-        previousEventTime = Double.NaN;
+-        t0 = Double.NaN;
+-
+-        return (nextAction == EventHandler.Action.RESET_STATE) ||
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++        return (nextAction == EventHandler.Action.RESET_STATE) ||
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+@@ -1,7 +1,16 @@
+-            previousEventTime = t;
+-            g0Positive        = increasing;
+-            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
+-        } else {
+-            g0Positive = g0 >= 0;
+-            nextAction = EventHandler.Action.CONTINUE;
+-        }
++            g0Positive        = increasing;
++            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
++
++            // If a reset action is pending, clear previousEventTime
++            if ((nextAction == EventHandler.Action.RESET_STATE) ||
++                (nextAction == EventHandler.Action.RESET_DERIVATIVES)) {
++                previousEventTime = Double.NaN;
++            } else {
++                previousEventTime = t; // Only set if not resetting
++            }
++
++        } else {
++            g0Positive = g0 >= 0;
++            nextAction = EventHandler.Action.CONTINUE;
++            previousEventTime = Double.NaN; // No pending event, so clear previousEventTime
++        }
+@@ -1,16 +1,7 @@
+-            g0Positive        = increasing;
+-            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
+-
+-            // If a reset action is pending, clear previousEventTime
+-            if ((nextAction == EventHandler.Action.RESET_STATE) ||
+-                (nextAction == EventHandler.Action.RESET_DERIVATIVES)) {
+-                previousEventTime = Double.NaN;
+-            } else {
+-                previousEventTime = t; // Only set if not resetting
+-            }
+-
+-        } else {
+-            g0Positive = g0 >= 0;
+-            nextAction = EventHandler.Action.CONTINUE;
+-            previousEventTime = Double.NaN; // No pending event, so clear previousEventTime
+-        }
++            previousEventTime = t;
++            g0Positive        = increasing;
++            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
++        } else {
++            g0Positive = g0 >= 0;
++            nextAction = EventHandler.Action.CONTINUE;
++        }
+@@ -1,2 +1,5 @@
+-        return (nextAction == EventHandler.Action.RESET_STATE) ||
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++        previousEventTime = Double.NaN;
++        t0 = Double.NaN;
++
++        return (nextAction == EventHandler.Action.RESET_STATE) ||
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+@@ -1,5 +1,2 @@
+-        previousEventTime = Double.NaN;
+-        t0 = Double.NaN;
+-
+-        return (nextAction == EventHandler.Action.RESET_STATE) ||
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++        return (nextAction == EventHandler.Action.RESET_STATE) ||
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+@@ -1,7 +1,16 @@
+-            previousEventTime = t;
+-            g0Positive        = increasing;
+-            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
+-        } else {
+-            g0Positive = g0 >= 0;
+-            nextAction = EventHandler.Action.CONTINUE;
+-        }
++            g0Positive        = increasing;
++            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
++
++            // If a reset action is pending, clear previousEventTime
++            if ((nextAction == EventHandler.Action.RESET_STATE) ||
++                (nextAction == EventHandler.Action.RESET_DERIVATIVES)) {
++                previousEventTime = Double.NaN;
++            } else {
++                previousEventTime = t; // Only set if not resetting
++            }
++
++        } else {
++            g0Positive = g0 >= 0;
++            nextAction = EventHandler.Action.CONTINUE;
++            previousEventTime = Double.NaN; // No pending event, so clear previousEventTime
++        }
+@@ -1,16 +1,7 @@
+-            g0Positive        = increasing;
+-            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
+-
+-            // If a reset action is pending, clear previousEventTime
+-            if ((nextAction == EventHandler.Action.RESET_STATE) ||
+-                (nextAction == EventHandler.Action.RESET_DERIVATIVES)) {
+-                previousEventTime = Double.NaN;
+-            } else {
+-                previousEventTime = t; // Only set if not resetting
+-            }
+-
+-        } else {
+-            g0Positive = g0 >= 0;
+-            nextAction = EventHandler.Action.CONTINUE;
+-            previousEventTime = Double.NaN; // No pending event, so clear previousEventTime
+-        }
++            previousEventTime = t;
++            g0Positive        = increasing;
++            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
++        } else {
++            g0Positive = g0 >= 0;
++            nextAction = EventHandler.Action.CONTINUE;
++        }
+@@ -1,2 +1,5 @@
+-        return (nextAction == EventHandler.Action.RESET_STATE) ||
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++        previousEventTime = Double.NaN;
++        t0 = Double.NaN;
++
++        return (nextAction == EventHandler.Action.RESET_STATE) ||
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+@@ -1,5 +1,2 @@
+-        previousEventTime = Double.NaN;
+-        t0 = Double.NaN;
+-
+-        return (nextAction == EventHandler.Action.RESET_STATE) ||
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++        return (nextAction == EventHandler.Action.RESET_STATE) ||
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+@@ -1,7 +1,16 @@
+-            previousEventTime = t;
+-            g0Positive        = increasing;
+-            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
+-        } else {
+-            g0Positive = g0 >= 0;
+-            nextAction = EventHandler.Action.CONTINUE;
+-        }
++            g0Positive        = increasing;
++            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
++
++            // If a reset action is pending, clear previousEventTime
++            if ((nextAction == EventHandler.Action.RESET_STATE) ||
++                (nextAction == EventHandler.Action.RESET_DERIVATIVES)) {
++                previousEventTime = Double.NaN;
++            } else {
++                previousEventTime = t; // Only set if not resetting
++            }
++
++        } else {
++            g0Positive = g0 >= 0;
++            nextAction = EventHandler.Action.CONTINUE;
++            previousEventTime = Double.NaN; // No pending event, so clear previousEventTime
++        }
+@@ -1,16 +1,7 @@
+-            g0Positive        = increasing;
+-            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
+-
+-            // If a reset action is pending, clear previousEventTime
+-            if ((nextAction == EventHandler.Action.RESET_STATE) ||
+-                (nextAction == EventHandler.Action.RESET_DERIVATIVES)) {
+-                previousEventTime = Double.NaN;
+-            } else {
+-                previousEventTime = t; // Only set if not resetting
+-            }
+-
+-        } else {
+-            g0Positive = g0 >= 0;
+-            nextAction = EventHandler.Action.CONTINUE;
+-            previousEventTime = Double.NaN; // No pending event, so clear previousEventTime
+-        }
++            previousEventTime = t;
++            g0Positive        = increasing;
++            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
++        } else {
++            g0Positive = g0 >= 0;
++            nextAction = EventHandler.Action.CONTINUE;
++        }
+@@ -1,2 +1,5 @@
+-        return (nextAction == EventHandler.Action.RESET_STATE) ||
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++        previousEventTime = Double.NaN;
++        t0 = Double.NaN;
++
++        return (nextAction == EventHandler.Action.RESET_STATE) ||
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+@@ -1,5 +1,2 @@
+-        previousEventTime = Double.NaN;
+-        t0 = Double.NaN;
+-
+-        return (nextAction == EventHandler.Action.RESET_STATE) ||
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++        return (nextAction == EventHandler.Action.RESET_STATE) ||
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+@@ -1,7 +1,16 @@
+-            previousEventTime = t;
+-            g0Positive        = increasing;
+-            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
+-        } else {
+-            g0Positive = g0 >= 0;
+-            nextAction = EventHandler.Action.CONTINUE;
+-        }
++            g0Positive        = increasing;
++            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
++
++            // If a reset action is pending, clear previousEventTime
++            if ((nextAction == EventHandler.Action.RESET_STATE) ||
++                (nextAction == EventHandler.Action.RESET_DERIVATIVES)) {
++                previousEventTime = Double.NaN;
++            } else {
++                previousEventTime = t; // Only set if not resetting
++            }
++
++        } else {
++            g0Positive = g0 >= 0;
++            nextAction = EventHandler.Action.CONTINUE;
++            previousEventTime = Double.NaN; // No pending event, so clear previousEventTime
++        }
+@@ -1,16 +1,7 @@
+-            g0Positive        = increasing;
+-            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
+-
+-            // If a reset action is pending, clear previousEventTime
+-            if ((nextAction == EventHandler.Action.RESET_STATE) ||
+-                (nextAction == EventHandler.Action.RESET_DERIVATIVES)) {
+-                previousEventTime = Double.NaN;
+-            } else {
+-                previousEventTime = t; // Only set if not resetting
+-            }
+-
+-        } else {
+-            g0Positive = g0 >= 0;
+-            nextAction = EventHandler.Action.CONTINUE;
+-            previousEventTime = Double.NaN; // No pending event, so clear previousEventTime
+-        }
++            previousEventTime = t;
++            g0Positive        = increasing;
++            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
++        } else {
++            g0Positive = g0 >= 0;
++            nextAction = EventHandler.Action.CONTINUE;
++        }
+@@ -1,2 +1,5 @@
+-        return (nextAction == EventHandler.Action.RESET_STATE) ||
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++        previousEventTime = Double.NaN;
++        t0 = Double.NaN;
++
++        return (nextAction == EventHandler.Action.RESET_STATE) ||
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+@@ -1,5 +1,2 @@
+-        previousEventTime = Double.NaN;
+-        t0 = Double.NaN;
+-
+-        return (nextAction == EventHandler.Action.RESET_STATE) ||
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++        return (nextAction == EventHandler.Action.RESET_STATE) ||
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+@@ -1,7 +1,16 @@
+-            previousEventTime = t;
+-            g0Positive        = increasing;
+-            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
+-        } else {
+-            g0Positive = g0 >= 0;
+-            nextAction = EventHandler.Action.CONTINUE;
+-        }
++            g0Positive        = increasing;
++            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
++
++            // If a reset action is pending, clear previousEventTime
++            if ((nextAction == EventHandler.Action.RESET_STATE) ||
++                (nextAction == EventHandler.Action.RESET_DERIVATIVES)) {
++                previousEventTime = Double.NaN;
++            } else {
++                previousEventTime = t; // Only set if not resetting
++            }
++
++        } else {
++            g0Positive = g0 >= 0;
++            nextAction = EventHandler.Action.CONTINUE;
++            previousEventTime = Double.NaN; // No pending event, so clear previousEventTime
++        }
+@@ -1,16 +1,7 @@
+-            g0Positive        = increasing;
+-            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
+-
+-            // If a reset action is pending, clear previousEventTime
+-            if ((nextAction == EventHandler.Action.RESET_STATE) ||
+-                (nextAction == EventHandler.Action.RESET_DERIVATIVES)) {
+-                previousEventTime = Double.NaN;
+-            } else {
+-                previousEventTime = t; // Only set if not resetting
+-            }
+-
+-        } else {
+-            g0Positive = g0 >= 0;
+-            nextAction = EventHandler.Action.CONTINUE;
+-            previousEventTime = Double.NaN; // No pending event, so clear previousEventTime
+-        }
++            previousEventTime = t;
++            g0Positive        = increasing;
++            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
++        } else {
++            g0Positive = g0 >= 0;
++            nextAction = EventHandler.Action.CONTINUE;
++        }
+@@ -1,2 +1,5 @@
+-        return (nextAction == EventHandler.Action.RESET_STATE) ||
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++        previousEventTime = Double.NaN;
++        t0 = Double.NaN;
++
++        return (nextAction == EventHandler.Action.RESET_STATE) ||
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+@@ -1,5 +1,2 @@
+-        previousEventTime = Double.NaN;
+-        t0 = Double.NaN;
+-
+-        return (nextAction == EventHandler.Action.RESET_STATE) ||
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++        return (nextAction == EventHandler.Action.RESET_STATE) ||
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+@@ -1,7 +1,16 @@
+-            previousEventTime = t;
+-            g0Positive        = increasing;
+-            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
+-        } else {
+-            g0Positive = g0 >= 0;
+-            nextAction = EventHandler.Action.CONTINUE;
+-        }
++            g0Positive        = increasing;
++            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
++
++            // If a reset action is pending, clear previousEventTime
++            if ((nextAction == EventHandler.Action.RESET_STATE) ||
++                (nextAction == EventHandler.Action.RESET_DERIVATIVES)) {
++                previousEventTime = Double.NaN;
++            } else {
++                previousEventTime = t; // Only set if not resetting
++            }
++
++        } else {
++            g0Positive = g0 >= 0;
++            nextAction = EventHandler.Action.CONTINUE;
++            previousEventTime = Double.NaN; // No pending event, so clear previousEventTime
++        }
+@@ -1,16 +1,7 @@
+-            g0Positive        = increasing;
+-            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
+-
+-            // If a reset action is pending, clear previousEventTime
+-            if ((nextAction == EventHandler.Action.RESET_STATE) ||
+-                (nextAction == EventHandler.Action.RESET_DERIVATIVES)) {
+-                previousEventTime = Double.NaN;
+-            } else {
+-                previousEventTime = t; // Only set if not resetting
+-            }
+-
+-        } else {
+-            g0Positive = g0 >= 0;
+-            nextAction = EventHandler.Action.CONTINUE;
+-            previousEventTime = Double.NaN; // No pending event, so clear previousEventTime
+-        }
++            previousEventTime = t;
++            g0Positive        = increasing;
++            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
++        } else {
++            g0Positive = g0 >= 0;
++            nextAction = EventHandler.Action.CONTINUE;
++        }
+@@ -1,2 +1,5 @@
+-        return (nextAction == EventHandler.Action.RESET_STATE) ||
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++        previousEventTime = Double.NaN;
++        t0 = Double.NaN;
++
++        return (nextAction == EventHandler.Action.RESET_STATE) ||
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+@@ -1,5 +1,2 @@
+-        previousEventTime = Double.NaN;
+-        t0 = Double.NaN;
+-
+-        return (nextAction == EventHandler.Action.RESET_STATE) ||
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++        return (nextAction == EventHandler.Action.RESET_STATE) ||
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+@@ -1,7 +1,16 @@
+-            previousEventTime = t;
+-            g0Positive        = increasing;
+-            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
+-        } else {
+-            g0Positive = g0 >= 0;
+-            nextAction = EventHandler.Action.CONTINUE;
+-        }
++            g0Positive        = increasing;
++            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
++
++            // If a reset action is pending, clear previousEventTime
++            if ((nextAction == EventHandler.Action.RESET_STATE) ||
++                (nextAction == EventHandler.Action.RESET_DERIVATIVES)) {
++                previousEventTime = Double.NaN;
++            } else {
++                previousEventTime = t; // Only set if not resetting
++            }
++
++        } else {
++            g0Positive = g0 >= 0;
++            nextAction = EventHandler.Action.CONTINUE;
++            previousEventTime = Double.NaN; // No pending event, so clear previousEventTime
++        }
+@@ -1,16 +1,7 @@
+-            g0Positive        = increasing;
+-            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
+-
+-            // If a reset action is pending, clear previousEventTime
+-            if ((nextAction == EventHandler.Action.RESET_STATE) ||
+-                (nextAction == EventHandler.Action.RESET_DERIVATIVES)) {
+-                previousEventTime = Double.NaN;
+-            } else {
+-                previousEventTime = t; // Only set if not resetting
+-            }
+-
+-        } else {
+-            g0Positive = g0 >= 0;
+-            nextAction = EventHandler.Action.CONTINUE;
+-            previousEventTime = Double.NaN; // No pending event, so clear previousEventTime
+-        }
++            previousEventTime = t;
++            g0Positive        = increasing;
++            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
++        } else {
++            g0Positive = g0 >= 0;
++            nextAction = EventHandler.Action.CONTINUE;
++        }
+@@ -1,2 +1,5 @@
+-        return (nextAction == EventHandler.Action.RESET_STATE) ||
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++        previousEventTime = Double.NaN;
++        t0 = Double.NaN;
++
++        return (nextAction == EventHandler.Action.RESET_STATE) ||
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+@@ -1,5 +1,2 @@
+-        previousEventTime = Double.NaN;
+-        t0 = Double.NaN;
+-
+-        return (nextAction == EventHandler.Action.RESET_STATE) ||
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++        return (nextAction == EventHandler.Action.RESET_STATE) ||
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+@@ -1,7 +1,16 @@
+-            previousEventTime = t;
+-            g0Positive        = increasing;
+-            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
+-        } else {
+-            g0Positive = g0 >= 0;
+-            nextAction = EventHandler.Action.CONTINUE;
+-        }
++            g0Positive        = increasing;
++            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
++
++            // If a reset action is pending, clear previousEventTime
++            if ((nextAction == EventHandler.Action.RESET_STATE) ||
++                (nextAction == EventHandler.Action.RESET_DERIVATIVES)) {
++                previousEventTime = Double.NaN;
++            } else {
++                previousEventTime = t; // Only set if not resetting
++            }
++
++        } else {
++            g0Positive = g0 >= 0;
++            nextAction = EventHandler.Action.CONTINUE;
++            previousEventTime = Double.NaN; // No pending event, so clear previousEventTime
++        }
+@@ -1,16 +1,7 @@
+-            g0Positive        = increasing;
+-            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
+-
+-            // If a reset action is pending, clear previousEventTime
+-            if ((nextAction == EventHandler.Action.RESET_STATE) ||
+-                (nextAction == EventHandler.Action.RESET_DERIVATIVES)) {
+-                previousEventTime = Double.NaN;
+-            } else {
+-                previousEventTime = t; // Only set if not resetting
+-            }
+-
+-        } else {
+-            g0Positive = g0 >= 0;
+-            nextAction = EventHandler.Action.CONTINUE;
+-            previousEventTime = Double.NaN; // No pending event, so clear previousEventTime
+-        }
++            previousEventTime = t;
++            g0Positive        = increasing;
++            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
++        } else {
++            g0Positive = g0 >= 0;
++            nextAction = EventHandler.Action.CONTINUE;
++        }
+@@ -1,2 +1,5 @@
+-        return (nextAction == EventHandler.Action.RESET_STATE) ||
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++        previousEventTime = Double.NaN;
++        t0 = Double.NaN;
++
++        return (nextAction == EventHandler.Action.RESET_STATE) ||
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+@@ -1,5 +1,2 @@
+-        previousEventTime = Double.NaN;
+-        t0 = Double.NaN;
+-
+-        return (nextAction == EventHandler.Action.RESET_STATE) ||
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++        return (nextAction == EventHandler.Action.RESET_STATE) ||
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+@@ -1,7 +1,16 @@
+-            previousEventTime = t;
+-            g0Positive        = increasing;
+-            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
+-        } else {
+-            g0Positive = g0 >= 0;
+-            nextAction = EventHandler.Action.CONTINUE;
+-        }
++            g0Positive        = increasing;
++            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
++
++            // If a reset action is pending, clear previousEventTime
++            if ((nextAction == EventHandler.Action.RESET_STATE) ||
++                (nextAction == EventHandler.Action.RESET_DERIVATIVES)) {
++                previousEventTime = Double.NaN;
++            } else {
++                previousEventTime = t; // Only set if not resetting
++            }
++
++        } else {
++            g0Positive = g0 >= 0;
++            nextAction = EventHandler.Action.CONTINUE;
++            previousEventTime = Double.NaN; // No pending event, so clear previousEventTime
++        }
+@@ -1,16 +1,7 @@
+-            g0Positive        = increasing;
+-            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
+-
+-            // If a reset action is pending, clear previousEventTime
+-            if ((nextAction == EventHandler.Action.RESET_STATE) ||
+-                (nextAction == EventHandler.Action.RESET_DERIVATIVES)) {
+-                previousEventTime = Double.NaN;
+-            } else {
+-                previousEventTime = t; // Only set if not resetting
+-            }
+-
+-        } else {
+-            g0Positive = g0 >= 0;
+-            nextAction = EventHandler.Action.CONTINUE;
+-            previousEventTime = Double.NaN; // No pending event, so clear previousEventTime
+-        }
++            previousEventTime = t;
++            g0Positive        = increasing;
++            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
++        } else {
++            g0Positive = g0 >= 0;
++            nextAction = EventHandler.Action.CONTINUE;
++        }
+@@ -1,2 +1,5 @@
+-        return (nextAction == EventHandler.Action.RESET_STATE) ||
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++        previousEventTime = Double.NaN;
++        t0 = Double.NaN;
++
++        return (nextAction == EventHandler.Action.RESET_STATE) ||
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+@@ -1,5 +1,2 @@
+-        previousEventTime = Double.NaN;
+-        t0 = Double.NaN;
+-
+-        return (nextAction == EventHandler.Action.RESET_STATE) ||
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++        return (nextAction == EventHandler.Action.RESET_STATE) ||
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+@@ -1,7 +1,16 @@
+-            previousEventTime = t;
+-            g0Positive        = increasing;
+-            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
+-        } else {
+-            g0Positive = g0 >= 0;
+-            nextAction = EventHandler.Action.CONTINUE;
+-        }
++            g0Positive        = increasing;
++            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
++
++            // If a reset action is pending, clear previousEventTime
++            if ((nextAction == EventHandler.Action.RESET_STATE) ||
++                (nextAction == EventHandler.Action.RESET_DERIVATIVES)) {
++                previousEventTime = Double.NaN;
++            } else {
++                previousEventTime = t; // Only set if not resetting
++            }
++
++        } else {
++            g0Positive = g0 >= 0;
++            nextAction = EventHandler.Action.CONTINUE;
++            previousEventTime = Double.NaN; // No pending event, so clear previousEventTime
++        }
+@@ -1,16 +1,7 @@
+-            g0Positive        = increasing;
+-            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
+-
+-            // If a reset action is pending, clear previousEventTime
+-            if ((nextAction == EventHandler.Action.RESET_STATE) ||
+-                (nextAction == EventHandler.Action.RESET_DERIVATIVES)) {
+-                previousEventTime = Double.NaN;
+-            } else {
+-                previousEventTime = t; // Only set if not resetting
+-            }
+-
+-        } else {
+-            g0Positive = g0 >= 0;
+-            nextAction = EventHandler.Action.CONTINUE;
+-            previousEventTime = Double.NaN; // No pending event, so clear previousEventTime
+-        }
++            previousEventTime = t;
++            g0Positive        = increasing;
++            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
++        } else {
++            g0Positive = g0 >= 0;
++            nextAction = EventHandler.Action.CONTINUE;
++        }
+@@ -1,2 +1,5 @@
+-        return (nextAction == EventHandler.Action.RESET_STATE) ||
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++        previousEventTime = Double.NaN;
++        t0 = Double.NaN;
++
++        return (nextAction == EventHandler.Action.RESET_STATE) ||
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+@@ -1,5 +1,2 @@
+-        previousEventTime = Double.NaN;
+-        t0 = Double.NaN;
+-
+-        return (nextAction == EventHandler.Action.RESET_STATE) ||
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++        return (nextAction == EventHandler.Action.RESET_STATE) ||
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+@@ -1,7 +1,16 @@
+-            previousEventTime = t;
+-            g0Positive        = increasing;
+-            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
+-        } else {
+-            g0Positive = g0 >= 0;
+-            nextAction = EventHandler.Action.CONTINUE;
+-        }
++            g0Positive        = increasing;
++            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
++
++            // If a reset action is pending, clear previousEventTime
++            if ((nextAction == EventHandler.Action.RESET_STATE) ||
++                (nextAction == EventHandler.Action.RESET_DERIVATIVES)) {
++                previousEventTime = Double.NaN;
++            } else {
++                previousEventTime = t; // Only set if not resetting
++            }
++
++        } else {
++            g0Positive = g0 >= 0;
++            nextAction = EventHandler.Action.CONTINUE;
++            previousEventTime = Double.NaN; // No pending event, so clear previousEventTime
++        }
+@@ -1,16 +1,7 @@
+-            g0Positive        = increasing;
+-            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
+-
+-            // If a reset action is pending, clear previousEventTime
+-            if ((nextAction == EventHandler.Action.RESET_STATE) ||
+-                (nextAction == EventHandler.Action.RESET_DERIVATIVES)) {
+-                previousEventTime = Double.NaN;
+-            } else {
+-                previousEventTime = t; // Only set if not resetting
+-            }
+-
+-        } else {
+-            g0Positive = g0 >= 0;
+-            nextAction = EventHandler.Action.CONTINUE;
+-            previousEventTime = Double.NaN; // No pending event, so clear previousEventTime
+-        }
++            previousEventTime = t;
++            g0Positive        = increasing;
++            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
++        } else {
++            g0Positive = g0 >= 0;
++            nextAction = EventHandler.Action.CONTINUE;
++        }
+@@ -1,2 +1,5 @@
+-        return (nextAction == EventHandler.Action.RESET_STATE) ||
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++        previousEventTime = Double.NaN;
++        t0 = Double.NaN;
++
++        return (nextAction == EventHandler.Action.RESET_STATE) ||
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+@@ -1,5 +1,2 @@
+-        previousEventTime = Double.NaN;
+-        t0 = Double.NaN;
+-
+-        return (nextAction == EventHandler.Action.RESET_STATE) ||
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++        return (nextAction == EventHandler.Action.RESET_STATE) ||
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+@@ -1,7 +1,16 @@
+-            previousEventTime = t;
+-            g0Positive        = increasing;
+-            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
+-        } else {
+-            g0Positive = g0 >= 0;
+-            nextAction = EventHandler.Action.CONTINUE;
+-        }
++            g0Positive        = increasing;
++            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
++
++            // If a reset action is pending, clear previousEventTime
++            if ((nextAction == EventHandler.Action.RESET_STATE) ||
++                (nextAction == EventHandler.Action.RESET_DERIVATIVES)) {
++                previousEventTime = Double.NaN;
++            } else {
++                previousEventTime = t; // Only set if not resetting
++            }
++
++        } else {
++            g0Positive = g0 >= 0;
++            nextAction = EventHandler.Action.CONTINUE;
++            previousEventTime = Double.NaN; // No pending event, so clear previousEventTime
++        }

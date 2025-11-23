@@ -1,0 +1,117 @@
+diff --git a/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java b/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
+index b07e47f..0a10691 100644
+--- a/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
++++ b/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
+@@ -54,6 +54,9 @@ public class HtmlTreeBuilder extends TreeBuilder {
+     private boolean framesetOk; // if ok to go into frameset
+     private boolean fosterInserts; // if next inserts should be fostered
+     private boolean fragmentParsing; // if parsing a fragment of html
++    // Optimization: track count of open <p> elements on the stack to avoid O(N) scans
++    // when checking inButtonScope("p") in deeply nested documents.
++    private int stackPCount;
+ 
+     HtmlTreeBuilder() {}
+ 
+@@ -78,6 +81,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
+         framesetOk = true;
+         fosterInserts = false;
+         fragmentParsing = false;
++        stackPCount = 0;
+     }
+ 
+     List<Node> parseFragment(String inputFragment, Element context, String baseUri, ParseErrorList errors, ParseSettings settings) {
+@@ -220,6 +224,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
+     void insert(Element el) {
+         insertNode(el);
+         stack.add(el);
++        if (el.nodeName().equals("p")) stackPCount++;
+     }
+ 
+     Element insertEmpty(Token.StartTag startTag) {
+@@ -281,11 +286,14 @@ public class HtmlTreeBuilder extends TreeBuilder {
+ 
+     Element pop() {
+         int size = stack.size();
+-        return stack.remove(size-1);
++        Element popped = stack.remove(size-1);
++        if (popped.nodeName().equals("p")) stackPCount--;
++        return popped;
+     }
+ 
+     void push(Element element) {
+         stack.add(element);
++        if (element.nodeName().equals("p")) stackPCount++;
+     }
+ 
+     ArrayList<Element> getStack() {
+@@ -321,6 +329,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
+             Element next = stack.get(pos);
+             if (next == el) {
+                 stack.remove(pos);
++                if (next.nodeName().equals("p")) stackPCount--;
+                 return true;
+             }
+         }
+@@ -331,6 +340,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
+         for (int pos = stack.size() -1; pos >= 0; pos--) {
+             Element next = stack.get(pos);
+             stack.remove(pos);
++            if (next.nodeName().equals("p")) stackPCount--;
+             if (next.nodeName().equals(elName))
+                 break;
+         }
+@@ -341,6 +351,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
+         for (int pos = stack.size() -1; pos >= 0; pos--) {
+             Element next = stack.get(pos);
+             stack.remove(pos);
++            if (next.nodeName().equals("p")) stackPCount--;
+             if (inSorted(next.nodeName(), elNames))
+                 break;
+         }
+@@ -353,6 +364,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
+                 break;
+             } else {
+                 stack.remove(pos);
++                if (next.nodeName().equals("p")) stackPCount--;
+             }
+         }
+     }
+@@ -376,6 +388,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
+                 break;
+             else
+                 stack.remove(pos);
++                if (next.nodeName().equals("p")) stackPCount--;
+         }
+     }
+ 
+@@ -394,6 +407,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
+         int i = stack.lastIndexOf(after);
+         Validate.isTrue(i != -1);
+         stack.add(i+1, in);
++        if (in.nodeName().equals("p")) stackPCount++;
+     }
+ 
+     void replaceOnStack(Element out, Element in) {
+@@ -404,6 +418,12 @@ public class HtmlTreeBuilder extends TreeBuilder {
+         int i = queue.lastIndexOf(out);
+         Validate.isTrue(i != -1);
+         queue.set(i, in);
++        if (queue == stack) {
++            boolean outIsP = out.nodeName().equals("p");
++            boolean inIsP = in.nodeName().equals("p");
++            if (outIsP && !inIsP) stackPCount--;
++            else if (!outIsP && inIsP) stackPCount++;
++        }
+     }
+ 
+     void resetInsertionMode() {
+@@ -498,6 +518,9 @@ public class HtmlTreeBuilder extends TreeBuilder {
+     }
+ 
+     boolean inButtonScope(String targetName) {
++        // Fast-path: if checking for <p> and there are none open, it's not in scope.
++        if ("p".equals(targetName) && stackPCount == 0)
++            return false;
+         return inScope(targetName, TagSearchButton);
+     }
+ 

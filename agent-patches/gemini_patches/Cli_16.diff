@@ -1,0 +1,1057 @@
+--- a/src/java/org/apache/commons/cli2/Group.java
++++ b/src/java/org/apache/commons/cli2/Group.java
+@@ -1,1 +1,14 @@
+-    int getMaximum();
++    int getMaximum();
++
++    /**
++     * Gets the member Options of thie Group.
++     * Note this does not include any Arguments
++     * @return only the non Argument Options of the Group
++     */
++    List getOptions();
++
++    /**
++     * Gets the anonymous Arguments of this Group.
++     * @return the Argument options of this Group
++     */
++    List getAnonymous();
+@@ -1,2 +1,3 @@
+-import java.util.Comparator;
+-import java.util.Set;
++import java.util.Comparator;
++import java.util.List;
++import java.util.Set;
+@@ -1,1 +1,14 @@
+-    int getMaximum();
++    int getMaximum();
++
++    /**
++     * Gets the member Options of thie Group.
++     * Note this does not include any Arguments
++     * @return only the non Argument Options of the Group
++     */
++    List getOptions();
++
++    /**
++     * Gets the anonymous Arguments of this Group.
++     * @return the Argument options of this Group
++     */
++    List getAnonymous();
+@@ -1,1 +1,14 @@
+-    int getMaximum();
++    int getMaximum();
++
++    /**
++     * Gets the member Options of thie Group.
++     * Note this does not include any Arguments
++     * @return only the non Argument Options of the Group
++     */
++    List getOptions();
++
++    /**
++     * Gets the anonymous Arguments of this Group.
++     * @return the Argument options of this Group
++     */
++    List getAnonymous();
+
+--- a/src/java/org/apache/commons/cli2/Option.java
++++ b/src/java/org/apache/commons/cli2/Option.java
+@@ -1,11 +1,12 @@
+-     */
+-
+-    /**
+-     * Sets the parent of this option. This method is called when the option is
+-     * added to a group. Storing the parent of an option makes it possible to
+-     * keep track of hierarchical relations between options. For instance, if an
+-     * option is identified while parsing a command line, the group this option
+-     * belongs to can also be added to the command line.
+-     *
+-     * @param parent the parent option
+-     */
++    Option getParent();
++
++    /**
++     * Sets the parent of this option. This method is called when the option is
++     * added to a group. Storing the parent of an option makes it possible to
++     * keep track of hierarchical relations between options. For instance, if an
++     * option is identified while parsing a command line, the group this option
++     * belongs to can also be added to the command line.
++     *
++     * @param parent the parent option
++     */
++    void setParent(final Option parent);
+@@ -1,12 +1,11 @@
+-    Option getParent();
+-
+-    /**
+-     * Sets the parent of this option. This method is called when the option is
+-     * added to a group. Storing the parent of an option makes it possible to
+-     * keep track of hierarchical relations between options. For instance, if an
+-     * option is identified while parsing a command line, the group this option
+-     * belongs to can also be added to the command line.
+-     *
+-     * @param parent the parent option
+-     */
+-    void setParent(final Option parent);
++     */
++
++    /**
++     * Sets the parent of this option. This method is called when the option is
++     * added to a group. Storing the parent of an option makes it possible to
++     * keep track of hierarchical relations between options. For instance, if an
++     * option is identified while parsing a command line, the group this option
++     * belongs to can also be added to the command line.
++     *
++     * @param parent the parent option
++     */
+@@ -1,11 +1,12 @@
+-     */
+-
+-    /**
+-     * Sets the parent of this option. This method is called when the option is
+-     * added to a group. Storing the parent of an option makes it possible to
+-     * keep track of hierarchical relations between options. For instance, if an
+-     * option is identified while parsing a command line, the group this option
+-     * belongs to can also be added to the command line.
+-     *
+-     * @param parent the parent option
+-     */
++    Option getParent();
++
++    /**
++     * Sets the parent of this option. This method is called when the option is
++     * added to a group. Storing the parent of an option makes it possible to
++     * keep track of hierarchical relations between options. For instance, if an
++     * option is identified while parsing a command line, the group this option
++     * belongs to can also be added to the command line.
++     *
++     * @param parent the parent option
++     */
++    void setParent(final Option parent);
+@@ -1,12 +1,11 @@
+-    Option getParent();
+-
+-    /**
+-     * Sets the parent of this option. This method is called when the option is
+-     * added to a group. Storing the parent of an option makes it possible to
+-     * keep track of hierarchical relations between options. For instance, if an
+-     * option is identified while parsing a command line, the group this option
+-     * belongs to can also be added to the command line.
+-     *
+-     * @param parent the parent option
+-     */
+-    void setParent(final Option parent);
++     */
++
++    /**
++     * Sets the parent of this option. This method is called when the option is
++     * added to a group. Storing the parent of an option makes it possible to
++     * keep track of hierarchical relations between options. For instance, if an
++     * option is identified while parsing a command line, the group this option
++     * belongs to can also be added to the command line.
++     *
++     * @param parent the parent option
++     */
+@@ -1,11 +1,12 @@
+-     */
+-
+-    /**
+-     * Sets the parent of this option. This method is called when the option is
+-     * added to a group. Storing the parent of an option makes it possible to
+-     * keep track of hierarchical relations between options. For instance, if an
+-     * option is identified while parsing a command line, the group this option
+-     * belongs to can also be added to the command line.
+-     *
+-     * @param parent the parent option
+-     */
++    Option getParent();
++
++    /**
++     * Sets the parent of this option. This method is called when the option is
++     * added to a group. Storing the parent of an option makes it possible to
++     * keep track of hierarchical relations between options. For instance, if an
++     * option is identified while parsing a command line, the group this option
++     * belongs to can also be added to the command line.
++     *
++     * @param parent the parent option
++     */
++    void setParent(final Option parent);
+@@ -1,11 +1,12 @@
+-     */
+-
+-    /**
+-     * Sets the parent of this option. This method is called when the option is
+-     * added to a group. Storing the parent of an option makes it possible to
+-     * keep track of hierarchical relations between options. For instance, if an
+-     * option is identified while parsing a command line, the group this option
+-     * belongs to can also be added to the command line.
+-     *
+-     * @param parent the parent option
+-     */
++    Option getParent();
++
++    /**
++     * Sets the parent of this option. This method is called when the option is
++     * added to a group. Storing the parent of an option makes it possible to
++     * keep track of hierarchical relations between options. For instance, if an
++     * option is identified while parsing a command line, the group this option
++     * belongs to can also be added to the command line.
++     *
++     * @param parent the parent option
++     */
++    void setParent(final Option parent);
+@@ -1,16 +1,14 @@
+-     * @return the parent of this option
+-     Option getParent();
+-
+-    Option getParent();
+-
+-    /**
+-     * Sets the parent of this option. This method is called when the option is
+-     * added to a group. Storing the parent of an option makes it possible to
+-     * keep track of hierarchical relations between options. For instance, if an
+-     * option is identified while parsing a command line, the group this option
+-     * belongs to can also be added to the command line.
+-     *
+-     * @param parent the parent option
+-     */
+-    void setParent(final Option parent);
+-    void setParent(final Option parent);
++     * @return the parent of this option
++     */
++    Option getParent();
++
++    /**
++     * Sets the parent of this option. This method is called when the option is
++     * added to a group. Storing the parent of an option makes it possible to
++     * keep track of hierarchical relations between options. For instance, if an
++     * option is identified while parsing a command line, the group this option
++     * belongs to can also be added to the command line.
++     *
++     * @param parent the parent option
++     */
++    void setParent(final Option parent);
+@@ -1,11 +1,14 @@
+-     */
+-
+-    /**
+-     * Sets the parent of this option. This method is called when the option is
+-     * added to a group. Storing the parent of an option makes it possible to
+-     * keep track of hierarchical relations between options. For instance, if an
+-     * option is identified while parsing a command line, the group this option
+-     * belongs to can also be added to the command line.
+-     *
+-     * @param parent the parent option
+-     */
++     * @return the parent of this option
++     */
++    Option getParent();
++
++    /**
++     * Sets the parent of this option. This method is called when the option is
++     * added to a group. Storing the parent of an option makes it possible to
++     * keep track of hierarchical relations between options. For instance, if an
++     * option is identified while parsing a command line, the group this option
++     * belongs to can also be added to the command line.
++     *
++     * @param parent the parent option
++     */
++    void setParent(final Option parent);
+@@ -1,11 +1,14 @@
+-     */
+-
+-    /**
+-     * Sets the parent of this option. This method is called when the option is
+-     * added to a group. Storing the parent of an option makes it possible to
+-     * keep track of hierarchical relations between options. For instance, if an
+-     * option is identified while parsing a command line, the group this option
+-     * belongs to can also be added to the command line.
+-     *
+-     * @param parent the parent option
+-     */
++     * @return the parent of this option
++     */
++    Option getParent();
++
++    /**
++     * Sets the parent of this option. This method is called when the option is
++     * added to a group. Storing the parent of an option makes it possible to
++     * keep track of hierarchical relations between options. For instance, if an
++     * option is identified while parsing a command line, the group this option
++     * belongs to can also be added to the command line.
++     *
++     * @param parent the parent option
++     */
++    void setParent(final Option parent);
+
+--- a/src/java/org/apache/commons/cli2/builder/GroupBuilder.java
++++ b/src/java/org/apache/commons/cli2/builder/GroupBuilder.java
+@@ -1,4 +1,10 @@
+-        final GroupImpl group =
+-            new GroupImpl(options, name, description, minimum, maximum);
+-
+-        reset();
++        final GroupImpl group =
++            new GroupImpl(options, name, description, minimum, maximum);
++
++        // Set the parent for each child option
++        for (final Iterator i = options.iterator(); i.hasNext();) {
++            final Option option = (Option) i.next();
++            option.setParent(group);
++        }
++
++        reset();
+@@ -1,2 +1,3 @@
+-import java.util.ArrayList;
+-import java.util.List;
++import java.util.ArrayList;
++import java.util.List;
++import java.util.Iterator;
+@@ -1,3 +1,2 @@
+-import java.util.ArrayList;
+-import java.util.List;
+-import java.util.Iterator;
++import java.util.ArrayList;
++import java.util.List;
+@@ -1,10 +1,4 @@
+-        final GroupImpl group =
+-            new GroupImpl(options, name, description, minimum, maximum);
+-
+-        // Set the parent for each child option
+-        for (final Iterator i = options.iterator(); i.hasNext();) {
+-            final Option option = (Option) i.next();
+-            option.setParent(group);
+-        }
+-
+-        reset();
++        final GroupImpl group =
++            new GroupImpl(options, name, description, minimum, maximum);
++
++        reset();
+@@ -1,2 +1,3 @@
+-import java.util.ArrayList;
+-import java.util.List;
++import java.util.ArrayList;
++import java.util.List;
++import java.util.Iterator;
+@@ -1,4 +1,10 @@
+-        final GroupImpl group =
+-            new GroupImpl(options, name, description, minimum, maximum);
+-
+-        reset();
++        final GroupImpl group =
++            new GroupImpl(options, name, description, minimum, maximum);
++
++        // Set the parent for each child option
++        for (final Iterator i = options.iterator(); i.hasNext();) {
++            final Option option = (Option) i.next();
++            option.setParent(group);
++        }
++
++        reset();
+@@ -1,2 +1,3 @@
+-import java.util.ArrayList;
+-import java.util.List;
++import java.util.ArrayList;
++import java.util.List;
++import java.util.Iterator;
+@@ -1,4 +1,10 @@
+-        final GroupImpl group =
+-            new GroupImpl(options, name, description, minimum, maximum);
+-
+-        reset();
++        final GroupImpl group =
++            new GroupImpl(options, name, description, minimum, maximum);
++
++        // Set the parent for each child option
++        for (final Iterator i = options.iterator(); i.hasNext();) {
++            final Option option = (Option) i.next();
++            option.setParent(group);
++        }
++
++        reset();
+
+--- a/src/java/org/apache/commons/cli2/commandline/WriteableCommandLineImpl.java
++++ b/src/java/org/apache/commons/cli2/commandline/WriteableCommandLineImpl.java
+@@ -1,2 +1,5 @@
+-        // ensure that all parent options are also added
+-    }
++        // ensure that all parent options are also added
++        if (option.getParent() != null) {
++            addOption(option.getParent());
++        }
++    }
+@@ -1,5 +1,2 @@
+-        // ensure that all parent options are also added
+-        if (option.getParent() != null) {
+-            addOption(option.getParent());
+-        }
+-    }
++        // ensure that all parent options are also added
++    }
+@@ -1,2 +1,5 @@
+-        // ensure that all parent options are also added
+-    }
++        // ensure that all parent options are also added
++        if (option.getParent() != null) {
++            addOption(option.getParent());
++        }
++    }
+@@ -1,5 +1,2 @@
+-        // ensure that all parent options are also added
+-        if (option.getParent() != null) {
+-            addOption(option.getParent());
+-        }
+-    }
++        // ensure that all parent options are also added
++    }
+@@ -1,2 +1,5 @@
+-        // ensure that all parent options are also added
+-    }
++        // ensure that all parent options are also added
++        if (option.getParent() != null) {
++            addOption(option.getParent());
++        }
++    }
+@@ -1,13 +1,15 @@
+-    public void addOption(Option option) {
+-        options.add(option);
+-        nameToOption.put(option.getPreferredName(), option);
+-
+-        for (Iterator i = option.getTriggers().iterator(); i.hasNext();) {
+-            nameToOption.put(i.next(), option);
+-        }
+-
+-        // ensure that all parent options are also added
+-        if (option.getParent() != null) {
+-            addOption(option.getParent());
+-        }
+-    }
++    public void addOption(Option option) {
++        if (!options.contains(option)) {
++            options.add(option);
++            nameToOption.put(option.getPreferredName(), option);
++
++            for (Iterator i = option.getTriggers().iterator(); i.hasNext();) {
++                nameToOption.put(i.next(), option);
++            }
++
++            // ensure that all parent options are also added
++            if (option.getParent() != null) {
++                addOption(option.getParent());
++            }
++        }
++    }
+@@ -1,5 +1,23 @@
+-    public boolean hasOption(final Option option) {
+-        final boolean present = options.contains(option);
+-
+-        return present;
+-    }
++    public boolean hasOption(final Option option) {
++        // if the option is present
++        if (options.contains(option)) {
++            return true;
++        }
++
++        // if the option is a group, check if any of its children are present
++        if (option instanceof Group) {
++            Group group = (Group) option;
++            for (final Iterator i = group.getOptions().iterator(); i.hasNext();) {
++                if (hasOption((Option) i.next())) {
++                    return true;
++                }
++            }
++            for (final Iterator i = group.getAnonymous().iterator(); i.hasNext();) {
++                if (hasOption((Option) i.next())) {
++                    return true;
++                }
++            }
++        }
++
++        return false;
++    }
+@@ -1,5 +1,6 @@
+-import org.apache.commons.cli2.Option;
+-import org.apache.commons.cli2.WriteableCommandLine;
+-import org.apache.commons.cli2.option.PropertyOption;
+-import org.apache.commons.cli2.resource.ResourceConstants;
+-import org.apache.commons.cli2.resource.ResourceHelper;
++import org.apache.commons.cli2.Option;
++import org.apache.commons.cli2.WriteableCommandLine;
++import org.apache.commons.cli2.option.PropertyOption;
++import org.apache.commons.cli2.resource.ResourceConstants;
++import org.apache.commons.cli2.resource.ResourceHelper;
++import org.apache.commons.cli2.Group;
+@@ -1,32 +1,39 @@
+-    private final List options = new ArrayList();
+-    private final Map nameToOption = new HashMap();
+-    private final Map values = new HashMap();
+-    private final Map switches = new HashMap();
+-    private final Map defaultValues = new HashMap();
+-    private final Map defaultSwitches = new HashMap();
+-    private final List normalised;
+-    private final Set prefixes;
+-
+-    /**
+-     * Creates a new WriteableCommandLineImpl rooted on the specified Option, to
+-     * hold the parsed arguments.
+-     *
+-     * @param rootOption the CommandLine's root Option
+-     * @param arguments the arguments this CommandLine represents
+-     */
+-    public WriteableCommandLineImpl(final Option rootOption,
+-                                    final List arguments) {
+-        this.prefixes = rootOption.getPrefixes();
+-        this.normalised = arguments;
+-    }
+-
+-    public void addOption(Option option) {
+-        options.add(option);
+-        nameToOption.put(option.getPreferredName(), option);
+-
+-        for (Iterator i = option.getTriggers().iterator(); i.hasNext();) {
+-            nameToOption.put(i.next(), option);
+-        }
+-
+-        // ensure that all parent options are also added
+-    }
++    private final List options = new ArrayList();
++    private final Map nameToOption = new HashMap();
++    private final Map values = new HashMap();
++    private final Map switches = new HashMap();
++    private final Map defaultValues = new HashMap();
++    private final Map defaultSwitches = new HashMap();
++    private final List normalised;
++    private final Set prefixes;
++    private final Set presentOptions = new HashSet();
++
++    /**
++     * Creates a new WriteableCommandLineImpl rooted on the specified Option, to
++     * hold the parsed arguments.
++     *
++     * @param rootOption the CommandLine's root Option
++     * @param arguments the arguments this CommandLine represents
++     */
++    public WriteableCommandLineImpl(final Option rootOption,
++                                    final List arguments) {
++        this.prefixes = rootOption.getPrefixes();
++        this.normalised = arguments;
++    }
++
++    public void addOption(Option option) {
++        if (!options.contains(option)) {
++            options.add(option);
++        }
++        presentOptions.add(option);
++        nameToOption.put(option.getPreferredName(), option);
++
++        for (Iterator i = option.getTriggers().iterator(); i.hasNext();) {
++            nameToOption.put(i.next(), option);
++        }
++
++        // ensure that all parent options are also added
++        if (option.getParent() != null) {
++            markParentPresent(option.getParent());
++        }
++    }
+@@ -1,9 +1,14 @@
+-    public boolean hasOption(final Option option) {
+-        final boolean present = options.contains(option);
+-
+-        return present;
+-    }
+-
+-    public Option getOption(final String trigger) {
+-        return (Option) nameToOption.get(trigger);
+-    }
++    private void markParentPresent(final Option option) {
++        if (option != null && !presentOptions.contains(option)) {
++            presentOptions.add(option);
++            markParentPresent(option.getParent());
++        }
++    }
++
++    public boolean hasOption(final Option option) {
++        return presentOptions.contains(option);
++    }
++
++    public Option getOption(final String trigger) {
++        return (Option) nameToOption.get(trigger);
++    }
+@@ -1,2 +1,3 @@
+-import java.util.Properties;
+-import java.util.Set;
++import java.util.Properties;
++import java.util.Set;
++import java.util.HashSet;
+@@ -1,16 +1,16 @@
+-    public void addOption(Option option) {
+-        if (!options.contains(option)) {
+-            options.add(option);
+-        }
+-        presentOptions.add(option);
+-        nameToOption.put(option.getPreferredName(), option);
+-
+-        for (Iterator i = option.getTriggers().iterator(); i.hasNext();) {
+-            nameToOption.put(i.next(), option);
+-        }
+-
+-        // ensure that all parent options are also added
+-        if (option.getParent() != null) {
+-            markParentPresent(option.getParent());
+-        }
+-    }
++    public void addOption(Option option) {
++        if (!(option instanceof Group) && !options.contains(option)) {
++            options.add(option);
++        }
++        presentOptions.add(option);
++        nameToOption.put(option.getPreferredName(), option);
++
++        for (Iterator i = option.getTriggers().iterator(); i.hasNext();) {
++            nameToOption.put(i.next(), option);
++        }
++
++        // ensure that all parent options are also added
++        if (option.getParent() != null) {
++            markParentPresent(option.getParent());
++        }
++    }
+@@ -1,5 +1,6 @@
+-import org.apache.commons.cli2.Option;
+-import org.apache.commons.cli2.WriteableCommandLine;
+-import org.apache.commons.cli2.option.PropertyOption;
+-import org.apache.commons.cli2.resource.ResourceConstants;
+-import org.apache.commons.cli2.resource.ResourceHelper;
++import org.apache.commons.cli2.Option;
++import org.apache.commons.cli2.WriteableCommandLine;
++import org.apache.commons.cli2.option.PropertyOption;
++import org.apache.commons.cli2.resource.ResourceConstants;
++import org.apache.commons.cli2.resource.ResourceHelper;
++import org.apache.commons.cli2.Group;
+@@ -1,3 +1,3 @@
+-    public List getOptions() {
+-        return Collections.unmodifiableList(options);
+-    }
++    public List getOptions() {
++        return Collections.unmodifiableList(new ArrayList(presentOptions));
++    }
+@@ -1,10 +1,15 @@
+-    public void addOption(Option option) {
+-        options.add(option);
+-        nameToOption.put(option.getPreferredName(), option);
+-
+-        for (Iterator i = option.getTriggers().iterator(); i.hasNext();) {
+-            nameToOption.put(i.next(), option);
+-        }
+-
+-        // ensure that all parent options are also added
+-    }
++    public void addOption(Option option) {
++        if (!options.contains(option)) {
++            options.add(option);
++        }
++        nameToOption.put(option.getPreferredName(), option);
++
++        for (Iterator i = option.getTriggers().iterator(); i.hasNext();) {
++            nameToOption.put(i.next(), option);
++        }
++
++        // ensure that all parent options are also added
++        if (option.getParent() != null) {
++            addOption(option.getParent());
++        }
++    }
+@@ -1,9 +1,11 @@
+-import java.util.Properties;
+-import java.util.Set;
+-
+-import org.apache.commons.cli2.Argument;
+-import org.apache.commons.cli2.Option;
+-import org.apache.commons.cli2.WriteableCommandLine;
+-import org.apache.commons.cli2.option.PropertyOption;
+-import org.apache.commons.cli2.resource.ResourceConstants;
+-import org.apache.commons.cli2.resource.ResourceHelper;
++import java.util.Properties;
++import java.util.Set;
++import java.util.HashSet;
++
++import org.apache.commons.cli2.Argument;
++import org.apache.commons.cli2.Option;
++import org.apache.commons.cli2.WriteableCommandLine;
++import org.apache.commons.cli2.option.PropertyOption;
++import org.apache.commons.cli2.resource.ResourceConstants;
++import org.apache.commons.cli2.resource.ResourceHelper;
++import org.apache.commons.cli2.Group;
+@@ -1,9 +1,14 @@
+-    public boolean hasOption(final Option option) {
+-        final boolean present = options.contains(option);
+-
+-        return present;
+-    }
+-
+-    public Option getOption(final String trigger) {
+-        return (Option) nameToOption.get(trigger);
+-    }
++    private void markParentPresent(final Option option) {
++        if (option != null && !presentOptions.contains(option)) {
++            presentOptions.add(option);
++            markParentPresent(option.getParent());
++        }
++    }
++
++    public boolean hasOption(final Option option) {
++        return presentOptions.contains(option);
++    }
++
++    public Option getOption(final String trigger) {
++        return (Option) nameToOption.get(trigger);
++    }
+@@ -1,3 +1,3 @@
+-    public List getOptions() {
+-        return Collections.unmodifiableList(options);
+-    }
++    public List getOptions() {
++        return Collections.unmodifiableList(new ArrayList(presentOptions));
++    }
+
+--- a/src/java/org/apache/commons/cli2/option/GroupImpl.java
++++ b/src/java/org/apache/commons/cli2/option/GroupImpl.java
+@@ -1,9 +1,29 @@
+-            // if the child option is present then validate it
+-            if (commandLine.hasOption(option)) {
+-                if (++present > maximum) {
+-                    unexpected = option;
+-
+-                    break;
+-                }
+-                validate = true;
+-            }
++            // if the child option is present then validate it
++            boolean childOptionPresent = false;
++            if (option instanceof Group) {
++                // If it's a group, check if any of its children are present
++                Group childGroup = (Group) option;
++                for (final Iterator j = childGroup.getOptions().iterator(); j.hasNext();) {
++                    if (commandLine.hasOption((Option) j.next())) {
++                        childOptionPresent = true;
++                        break;
++                    }
++                }
++                for (final Iterator j = childGroup.getAnonymous().iterator(); j.hasNext();) {
++                    if (commandLine.hasOption((Option) j.next())) {
++                        childOptionPresent = true;
++                        break;
++                    }
++                }
++            } else {
++                childOptionPresent = commandLine.hasOption(option);
++            }
++
++            if (childOptionPresent) {
++                if (++present > maximum) {
++                    unexpected = option;
++
++                    break;
++                }
++                validate = true;
++            }
+@@ -1,1 +1,21 @@
+-            if (commandLine.hasOption(option)) {
++            boolean childOptionPresent = false;
++            if (option instanceof Group) {
++                // If it's a group, check if any of its children are present
++                Group childGroup = (Group) option;
++                for (final Iterator j = childGroup.getOptions().iterator(); j.hasNext();) {
++                    if (commandLine.hasOption((Option) j.next())) {
++                        childOptionPresent = true;
++                        break;
++                    }
++                }
++                for (final Iterator j = childGroup.getAnonymous().iterator(); j.hasNext();) {
++                    if (commandLine.hasOption((Option) j.next())) {
++                        childOptionPresent = true;
++                        break;
++                    }
++                }
++            } else {
++                childOptionPresent = commandLine.hasOption(option);
++            }
++
++            if (childOptionPresent) {
+
+--- a/src/java/org/apache/commons/cli2/option/OptionImpl.java
++++ b/src/java/org/apache/commons/cli2/option/OptionImpl.java
+@@ -1,15 +1,23 @@
+-public abstract class OptionImpl implements Option {
+-    private final int id;
+-    private final boolean required;
+-
+-    /**
+-     * Creates an OptionImpl with the specified id
+-     * @param id the unique id of this Option
+-     * @param required true iff this Option must be present
+-     */
+-    public OptionImpl(final int id,
+-                      final boolean required) {
+-        this.id = id;
+-        this.required = required;
+-    }
+-
++public abstract class OptionImpl implements Option {
++    private final int id;
++    private final boolean required;
++    private Option parent;
++
++    /**
++     * Creates an OptionImpl with the specified id
++     * @param id the unique id of this Option
++     * @param required true iff this Option must be present
++     */
++    public OptionImpl(final int id,
++                      final boolean required) {
++        this.id = id;
++        this.required = required;
++    }
++
++    public Option getParent() {
++        return parent;
++    }
++
++    public void setParent(final Option parent) {
++        this.parent = parent;
++    }
+@@ -1,23 +1,14 @@
+-public abstract class OptionImpl implements Option {
+-    private final int id;
+-    private final boolean required;
+-    private Option parent;
+-
+-    /**
+-     * Creates an OptionImpl with the specified id
+-     * @param id the unique id of this Option
+-     * @param required true iff this Option must be present
+-     */
+-    public OptionImpl(final int id,
+-                      final boolean required) {
+-        this.id = id;
+-        this.required = required;
+-    }
+-
+-    public Option getParent() {
+-        return parent;
+-    }
+-
+-    public void setParent(final Option parent) {
+-        this.parent = parent;
+-    }
++public abstract class OptionImpl implements Option {
++    private final int id;
++    private final boolean required;
++
++    /**
++     * Creates an OptionImpl with the specified id
++     * @param id the unique id of this Option
++     * @param required true iff this Option must be present
++     */
++    public OptionImpl(final int id,
++                      final boolean required) {
++        this.id = id;
++        this.required = required;
++    }
+@@ -1,15 +1,23 @@
+-public abstract class OptionImpl implements Option {
+-    private final int id;
+-    private final boolean required;
+-
+-    /**
+-     * Creates an OptionImpl with the specified id
+-     * @param id the unique id of this Option
+-     * @param required true iff this Option must be present
+-     */
+-    public OptionImpl(final int id,
+-                      final boolean required) {
+-        this.id = id;
+-        this.required = required;
+-    }
+-
++public abstract class OptionImpl implements Option {
++    private final int id;
++    private final boolean required;
++    private Option parent;
++
++    /**
++     * Creates an OptionImpl with the specified id
++     * @param id the unique id of this Option
++     * @param required true iff this Option must be present
++     */
++    public OptionImpl(final int id,
++                      final boolean required) {
++        this.id = id;
++        this.required = required;
++    }
++
++    public Option getParent() {
++        return parent;
++    }
++
++    public void setParent(final Option parent) {
++        this.parent = parent;
++    }
+@@ -1,23 +1,14 @@
+-public abstract class OptionImpl implements Option {
+-    private final int id;
+-    private final boolean required;
+-    private Option parent;
+-
+-    /**
+-     * Creates an OptionImpl with the specified id
+-     * @param id the unique id of this Option
+-     * @param required true iff this Option must be present
+-     */
+-    public OptionImpl(final int id,
+-                      final boolean required) {
+-        this.id = id;
+-        this.required = required;
+-    }
+-
+-    public Option getParent() {
+-        return parent;
+-    }
+-
+-    public void setParent(final Option parent) {
+-        this.parent = parent;
+-    }
++public abstract class OptionImpl implements Option {
++    private final int id;
++    private final boolean required;
++
++    /**
++     * Creates an OptionImpl with the specified id
++     * @param id the unique id of this Option
++     * @param required true iff this Option must be present
++     */
++    public OptionImpl(final int id,
++                      final boolean required) {
++        this.id = id;
++        this.required = required;
++    }
+@@ -1,15 +1,23 @@
+-public abstract class OptionImpl implements Option {
+-    private final int id;
+-    private final boolean required;
+-
+-    /**
+-     * Creates an OptionImpl with the specified id
+-     * @param id the unique id of this Option
+-     * @param required true iff this Option must be present
+-     */
+-    public OptionImpl(final int id,
+-                      final boolean required) {
+-        this.id = id;
+-        this.required = required;
+-    }
+-
++public abstract class OptionImpl implements Option {
++    private final int id;
++    private final boolean required;
++    private Option parent;
++
++    /**
++     * Creates an OptionImpl with the specified id
++     * @param id the unique id of this Option
++     * @param required true iff this Option must be present
++     */
++    public OptionImpl(final int id,
++                      final boolean required) {
++        this.id = id;
++        this.required = required;
++    }
++
++    public Option getParent() {
++        return parent;
++    }
++
++    public void setParent(final Option parent) {
++        this.parent = parent;
++    }
+@@ -1,15 +1,23 @@
+-public abstract class OptionImpl implements Option {
+-    private final int id;
+-    private final boolean required;
+-
+-    /**
+-     * Creates an OptionImpl with the specified id
+-     * @param id the unique id of this Option
+-     * @param required true iff this Option must be present
+-     */
+-    public OptionImpl(final int id,
+-                      final boolean required) {
+-        this.id = id;
+-        this.required = required;
+-    }
+-
++public abstract class OptionImpl implements Option {
++    private final int id;
++    private final boolean required;
++    private Option parent;
++
++    /**
++     * Creates an OptionImpl with the specified id
++     * @param id the unique id of this Option
++     * @param required true iff this Option must be present
++     */
++    public OptionImpl(final int id,
++                      final boolean required) {
++        this.id = id;
++        this.required = required;
++    }
++
++    public Option getParent() {
++        return parent;
++    }
++
++    public void setParent(final Option parent) {
++        this.parent = parent;
++    }
+@@ -1,15 +1,23 @@
+-public abstract class OptionImpl implements Option {
+-    private final int id;
+-    private final boolean required;
+-
+-    /**
+-     * Creates an OptionImpl with the specified id
+-     * @param id the unique id of this Option
+-     * @param required true iff this Option must be present
+-     */
+-    public OptionImpl(final int id,
+-                      final boolean required) {
+-        this.id = id;
+-        this.required = required;
+-    }
+-
++public abstract class OptionImpl implements Option {
++    private final int id;
++    private final boolean required;
++    private Option parent;
++
++    /**
++     * Creates an OptionImpl with the specified id
++     * @param id the unique id of this Option
++     * @param required true iff this Option must be present
++     */
++    public OptionImpl(final int id,
++                      final boolean required) {
++        this.id = id;
++        this.required = required;
++    }
++
++    public Option getParent() {
++        return parent;
++    }
++
++    public void setParent(final Option parent) {
++        this.parent = parent;
++    }

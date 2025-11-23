@@ -1,0 +1,153 @@
+--- a/source/org/jfree/data/DefaultKeyedValues.java
++++ b/source/org/jfree/data/DefaultKeyedValues.java
+@@ -1,3 +1,1 @@
+-        if (index < this.keys.size()) {
+-        rebuildIndex();
+-        }
++        rebuildIndex();
+
+--- a/source/org/jfree/data/DefaultKeyedValues2D.java
++++ b/source/org/jfree/data/DefaultKeyedValues2D.java
+@@ -1,6 +1,6 @@
+-        Iterator iterator = this.rows.iterator();
+-        while (iterator.hasNext()) {
+-            DefaultKeyedValues rowData = (DefaultKeyedValues) iterator.next();
+-                rowData.removeValue(columnKey);
+-        }
+-        this.columnKeys.remove(columnKey);
++        this.columnKeys.remove(columnKey);
++        Iterator iterator = this.rows.iterator();
++        while (iterator.hasNext()) {
++            DefaultKeyedValues rowData = (DefaultKeyedValues) iterator.next();
++                rowData.removeValue(columnKey);
++        }
+@@ -1,6 +1,11 @@
+-        this.columnKeys.remove(columnKey);
+-        Iterator iterator = this.rows.iterator();
+-        while (iterator.hasNext()) {
+-            DefaultKeyedValues rowData = (DefaultKeyedValues) iterator.next();
+-                rowData.removeValue(columnKey);
+-        }
++        this.columnKeys.remove(columnKey);
++
++        for (int i = 0; i < this.rows.size(); i++) {
++            DefaultKeyedValues rowData = (DefaultKeyedValues) this.rows.get(i);
++            rowData.removeValue(columnKey);
++            if (rowData.getItemCount() == 0) {
++                this.rowKeys.remove(i);
++                this.rows.remove(i);
++                i--;
++            }
++        }
+@@ -1,11 +1,6 @@
+-        this.columnKeys.remove(columnKey);
+-
+-        for (int i = 0; i < this.rows.size(); i++) {
+-            DefaultKeyedValues rowData = (DefaultKeyedValues) this.rows.get(i);
+-            rowData.removeValue(columnKey);
+-            if (rowData.getItemCount() == 0) {
+-                this.rowKeys.remove(i);
+-                this.rows.remove(i);
+-                i--;
+-            }
+-        }
++        Iterator iterator = this.rows.iterator();
++        while (iterator.hasNext()) {
++            DefaultKeyedValues rowData = (DefaultKeyedValues) iterator.next();
++                rowData.removeValue(columnKey);
++        }
++        this.columnKeys.remove(columnKey);
+@@ -1,6 +1,11 @@
+-        Iterator iterator = this.rows.iterator();
+-        while (iterator.hasNext()) {
+-            DefaultKeyedValues rowData = (DefaultKeyedValues) iterator.next();
+-                rowData.removeValue(columnKey);
+-        }
+-        this.columnKeys.remove(columnKey);
++        this.columnKeys.remove(columnKey);
++
++        for (int i = 0; i < this.rows.size(); i++) {
++            DefaultKeyedValues rowData = (DefaultKeyedValues) this.rows.get(i);
++            rowData.removeValue(columnKey);
++            if (rowData.getItemCount() == 0) {
++                this.rowKeys.remove(i);
++                this.rows.remove(i);
++                i--;
++            }
++        }
+
+--- a/tests/org/jfree/data/junit/DefaultKeyedValues2DTests.java
++++ b/tests/org/jfree/data/junit/DefaultKeyedValues2DTests.java
+@@ -1,18 +1,15 @@
+-    public void testRemoveColumnByKey() {
+-    	DefaultKeyedValues2D d = new DefaultKeyedValues2D();
+-    	d.addValue(new Double(1.0), "R1", "C1");
+-    	d.addValue(new Double(2.0), "R2", "C2");
+-    	d.removeColumn("C2");
+-    	d.addValue(new Double(3.0), "R2", "C2");
+-    	assertEquals(3.0, d.getValue("R2", "C2").doubleValue(), EPSILON);
+-    	
+-    	// check for unknown column
+-    	boolean pass = false;
+-    	try {
+-    		d.removeColumn("XXX");
+-    	}
+-    	catch (UnknownKeyException e) {
+-    		pass = true;
+-    	}
+-    	assertTrue(pass);
+-    }
++    public void testRemoveColumnByKey() {
++    	DefaultKeyedValues2D d = new DefaultKeyedValues2D();
++    	d.addValue(new Double(1.0), "R1", "C1");
++    	d.addValue(new Double(2.0), "R2", "C2");
++    	d.removeColumn("C2");
++    	d.addValue(new Double(3.0), "R2", "C2");
++    	assertEquals(3.0, d.getValue("R2", "C2").doubleValue(), EPSILON);
++
++    	// check for unknown column (should do nothing)
++    	d.removeColumn("XXX");
++    	// no exception should be thrown, and the data should remain the same
++    	assertEquals(2, d.getRowCount());
++    	assertEquals(2, d.getColumnCount());
++    	assertEquals(3.0, d.getValue("R2", "C2").doubleValue(), EPSILON);
++    }
+
+--- a/tests/org/jfree/data/junit/DefaultKeyedValuesTests.java
++++ b/tests/org/jfree/data/junit/DefaultKeyedValuesTests.java
+@@ -1,19 +1,16 @@
+-    public void testRemoveValue() {
+-        DefaultKeyedValues data = new DefaultKeyedValues();
+-        data.addValue("A", new Double(1.0));
+-        data.addValue("B", null);
+-        data.addValue("C", new Double(3.0));
+-        data.addValue("D", new Double(2.0));
+-        assertEquals(1, data.getIndex("B"));
+-        data.removeValue("B");
+-        assertEquals(-1, data.getIndex("B"));
+-        
+-        boolean pass = false;
+-        try {
+-            data.removeValue("XXX");
+-        }
+-        catch (UnknownKeyException e) {
+-            pass = true;   
+-        }
+-        assertTrue(pass);
+-    }
++    public void testRemoveValue() {
++        DefaultKeyedValues data = new DefaultKeyedValues();
++        data.addValue("A", new Double(1.0));
++        data.addValue("B", null);
++        data.addValue("C", new Double(3.0));
++        data.addValue("D", new Double(2.0));
++        assertEquals(1, data.getIndex("B"));
++        data.removeValue("B");
++        assertEquals(-1, data.getIndex("B"));
++        assertEquals(3, data.getItemCount());
++        assertEquals("C", data.getKey(1));
++
++        // Test removing a non-existent key (should do nothing)
++        data.removeValue("XXX");
++        assertEquals(3, data.getItemCount());
++    }

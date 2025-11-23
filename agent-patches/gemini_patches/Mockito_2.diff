@@ -1,0 +1,98 @@
+--- a/src/org/mockito/internal/util/Timer.java
++++ b/src/org/mockito/internal/util/Timer.java
+@@ -1,3 +1,6 @@
+-    public Timer(long durationMillis) {
+-        this.durationMillis = durationMillis;
+-    }
++    public Timer(long durationMillis) {
++        if (durationMillis < 0) {
++            throw new IllegalArgumentException("Duration cannot be negative");
++        }
++        this.durationMillis = durationMillis;
++    }
+@@ -1,6 +1,3 @@
+-    public Timer(long durationMillis) {
+-        if (durationMillis < 0) {
+-            throw new IllegalArgumentException("Duration cannot be negative");
+-        }
+-        this.durationMillis = durationMillis;
+-    }
++    public Timer(long durationMillis) {
++        this.durationMillis = durationMillis;
++    }
+@@ -1,4 +1,5 @@
+-package org.mockito.internal.util;
+-
+-
+-public class Timer {
++package org.mockito.internal.util;
++
++import org.mockito.exceptions.Reporter;
++
++public class Timer {
+@@ -1,3 +1,6 @@
+-    public Timer(long durationMillis) {
+-        this.durationMillis = durationMillis;
+-    }
++    public Timer(long durationMillis) {
++        if (durationMillis < 0) {
++            new Reporter().cannotCreateTimerWithNegativeDurationTime(durationMillis);
++        }
++        this.durationMillis = durationMillis;
++    }
+
+--- a/src/org/mockito/verification/After.java
++++ b/src/org/mockito/verification/After.java
+@@ -1,1 +1,2 @@
+-import org.mockito.internal.verification.VerificationOverTimeImpl;
++import org.mockito.exceptions.Reporter;
++import org.mockito.internal.verification.VerificationOverTimeImpl;
+@@ -1,3 +1,6 @@
+-    public After(long pollingPeriod, long delayMillis, VerificationMode verificationMode) {
+-        super(new VerificationOverTimeImpl(pollingPeriod, delayMillis, verificationMode, false));
+-    }
++    public After(long pollingPeriod, long delayMillis, VerificationMode verificationMode) {
++        if (delayMillis < 0) {
++            new Reporter().cannotCreateTimerWithNegativeDurationTime(delayMillis);
++        }
++        super(new VerificationOverTimeImpl(pollingPeriod, delayMillis, verificationMode, false));
++    }
+@@ -1,6 +1,6 @@
+-    public After(long pollingPeriod, long delayMillis, VerificationMode verificationMode) {
+-        if (delayMillis < 0) {
+-            new Reporter().cannotCreateTimerWithNegativeDurationTime(delayMillis);
+-        }
+-        super(new VerificationOverTimeImpl(pollingPeriod, delayMillis, verificationMode, false));
+-    }
++    public After(long pollingPeriod, long delayMillis, VerificationMode verificationMode) {
++        super(new VerificationOverTimeImpl(pollingPeriod, delayMillis, verificationMode, false));
++        if (delayMillis < 0) {
++            new Reporter().cannotCreateTimerWithNegativeDurationTime(delayMillis);
++        }
++    }
+
+--- a/src/org/mockito/verification/Timeout.java
++++ b/src/org/mockito/verification/Timeout.java
+@@ -1,3 +1,6 @@
+-    Timeout(long pollingPeriodMillis, long millis, VerificationMode delegate) {
+-        super(new VerificationOverTimeImpl(pollingPeriodMillis, millis, delegate, true));
+-    }
++    Timeout(long pollingPeriodMillis, long millis, VerificationMode delegate) {
++        if (millis < 0) {
++            new Reporter().cannotCreateTimerWithNegativeDurationTime(millis);
++        }
++        super(new VerificationOverTimeImpl(pollingPeriodMillis, millis, delegate, true));
++    }
+@@ -1,6 +1,6 @@
+-    Timeout(long pollingPeriodMillis, long millis, VerificationMode delegate) {
+-        if (millis < 0) {
+-            new Reporter().cannotCreateTimerWithNegativeDurationTime(millis);
+-        }
+-        super(new VerificationOverTimeImpl(pollingPeriodMillis, millis, delegate, true));
+-    }
++    Timeout(long pollingPeriodMillis, long millis, VerificationMode delegate) {
++        super(new VerificationOverTimeImpl(pollingPeriodMillis, millis, delegate, true));
++        if (millis < 0) {
++            new Reporter().cannotCreateTimerWithNegativeDurationTime(millis);
++        }
++    }

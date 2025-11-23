@@ -1,0 +1,117 @@
+diff --git a/src/com/google/javascript/jscomp/FunctionToBlockMutator.java b/src/com/google/javascript/jscomp/FunctionToBlockMutator.java
+index 64764c09..3a92f6e9 100644
+--- a/src/com/google/javascript/jscomp/FunctionToBlockMutator.java
++++ b/src/com/google/javascript/jscomp/FunctionToBlockMutator.java
+@@ -1,6 +1,5 @@
+-/*
+- * Copyright 2009 The Closure Compiler Authors.
+- *
++/* Copyright 2009 The Closure Compiler Authors.
++
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+  * You may obtain a copy of the License at
+@@ -28,6 +27,7 @@ import java.util.List;
+ import java.util.Map;
+ import java.util.Set;
+ import java.util.Map.Entry;
++import java.util.HashSet;
+ 
+ /**
+  * A class to transform the body of a function into a generic block suitable
+@@ -149,6 +149,55 @@ class FunctionToBlockMutator {
+                 "inline_",
+                 isCallInLoop)));
+     // Make label names unique to this instance.
++    // We need to specifically handle label names to prevent conflicts
++    // with existing labels in the containing scope.
++    makeLabelNamesUnique(fnNode);
++  }
++
++  /**
++   * Ensures label names within the inlined function are unique with respect
++   * to labels in the containing scope.
++   * @param fnNode A mutable instance of the function to be inlined.
++   */
++  private void makeLabelNamesUnique(Node fnNode) {
++    // Collect all label names in the containing scope
++    Set<String> existingLabels = new HashSet<String>();
++    collectLabelNames(fnNode, existingLabels);
++
++    // Rename labels in the function body that conflict with existing labels
++    renameConflictingLabels(fnNode, existingLabels);
++  }
++
++  /**
++   * Recursively collect all label names in the node tree.
++   */
++  private void collectLabelNames(Node node, Set<String> labelNames) {
++    if (node.getType() == Token.LABEL_NAME) {
++      labelNames.add(node.getString());
++    }
++
++    for (Node child = node.getFirstChild(); child != null; child = child.getNext()) {
++      collectLabelNames(child, labelNames);
++    }
++  }
++
++  /**
++   * Rename labels that conflict with existing label names in the containing scope.
++   */
++  private void renameConflictingLabels(Node node, Set<String> existingLabels) {
++    Supplier<String> idSupplier = compiler.getUniqueNameIdSupplier();
++    if (node.getType() == Token.LABEL_NAME) {
++      String labelName = node.getString();
++      if (existingLabels.contains(labelName)) {
++        // Generate a new unique label name
++        String newName = "JSCompiler_inline_label_" + idSupplier.get();
++        node.setString(newName);
++      }
++    }
++
++    for (Node child = node.getFirstChild(); child != null; child = child.getNext()) {
++      renameConflictingLabels(child, existingLabels);
++    }
+   }
+ 
+   static class LabelNameSupplier implements Supplier<String> {
+@@ -235,19 +284,19 @@ class FunctionToBlockMutator {
+   /**
+    *  Convert returns to assignments and breaks, as needed.
+    *  For example, with a lableName of 'foo':
+-   *    {
+-   *      return a;
+-   *    }
+-   *  becomes:
+-   *    foo: {
+-   *      a;
+-   *      break foo;
+-   *    }
+-   *  or
+-   *    foo: {
+-   *      resultName = a;
+-   *      break foo;
+-   *    }
++   *    {\n
++   *      return a;\n
++   *    }\n
++   *  becomes:\n
++   *    foo: {\n
++   *      a;\n
++   *      break foo;\n
++   *    }\n
++   *  or\n
++   *    foo: {\n
++   *      resultName = a;\n
++   *      break foo;\n
++   *    }\n
+    *
+    * @param resultMustBeSet Whether the result must always be set to a value.
+    * @return The node containing the transformed block, this may be different
+@@ -444,4 +493,4 @@ class FunctionToBlockMutator {
+ 
+     return current;
+   }
+-}
++}
+\ No newline at end of file

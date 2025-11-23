@@ -1,0 +1,5 @@
+--- a/run_bug_exposing_tests.sh
++++ b/run_bug_exposing_tests.sh
+@@ -1,1 +1,1 @@
+-  java -cp "$CP" org.junit.runner.JUnitCore "$cls" >> "$LOGFILE" 2>&1
++  java -cp "$CP" junit.textui.TestRunner "$cls" >> "$LOGFILE" 2>&1

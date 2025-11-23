@@ -1,0 +1,419 @@
+--- a/src/main/java/org/apache/commons/lang3/reflect/TypeUtils.java
++++ b/src/main/java/org/apache/commons/lang3/reflect/TypeUtils.java
+@@ -1,2 +1,1 @@
+-            typeVarAssigns.put(typeParams[i], typeVarAssigns.containsKey(typeArg) ? typeVarAssigns
+-                    .get(typeArg) : typeArg);
++            typeVarAssigns.put(typeParams[i], unrollVariableAssignments(typeArg, subtypeVarAssigns));
+@@ -1,1 +1,1 @@
+-            typeVarAssigns.put(typeParams[i], unrollVariableAssignments(typeArg, subtypeVarAssigns));
++            typeVarAssigns.put(typeParams[i], typeArg instanceof TypeVariable<?> ? unrollVariableAssignments((TypeVariable<?>) typeArg, subtypeVarAssigns) : typeArg);
+@@ -1,12 +1,15 @@
+-    private static Type unrollVariableAssignments(TypeVariable<?> var, Map<TypeVariable<?>, Type> typeVarAssigns) {
+-        Type result;
+-        do {
+-            result = typeVarAssigns.get(var);
+-            if (result instanceof TypeVariable<?> && !result.equals(var)) {
+-                var = (TypeVariable<?>) result;
+-                continue;
+-            }
+-            break;
+-        } while (true);
+-        return result;
+-    }
++    private static Type unrollVariableAssignments(TypeVariable<?> var, Map<TypeVariable<?>, Type> typeVarAssigns) {
++        if (typeVarAssigns == null) {
++            return var;
++        }
++        Type result;
++        do {
++            result = typeVarAssigns.get(var);
++            if (result instanceof TypeVariable<?> && !result.equals(var)) {
++                var = (TypeVariable<?>) result;
++                continue;
++            }
++            break;
++        } while (true);
++        return result;
++    }
+@@ -1,15 +1,12 @@
+-    private static Type unrollVariableAssignments(TypeVariable<?> var, Map<TypeVariable<?>, Type> typeVarAssigns) {
+-        if (typeVarAssigns == null) {
+-            return var;
+-        }
+-        Type result;
+-        do {
+-            result = typeVarAssigns.get(var);
+-            if (result instanceof TypeVariable<?> && !result.equals(var)) {
+-                var = (TypeVariable<?>) result;
+-                continue;
+-            }
+-            break;
+-        } while (true);
+-        return result;
+-    }
++    private static Type unrollVariableAssignments(TypeVariable<?> var, Map<TypeVariable<?>, Type> typeVarAssigns) {
++        Type result;
++        do {
++            result = typeVarAssigns.get(var);
++            if (result instanceof TypeVariable<?> && !result.equals(var)) {
++                var = (TypeVariable<?>) result;
++                continue;
++            }
++            break;
++        } while (true);
++        return result;
++    }
+@@ -1,2 +1,8 @@
+-            Type typeArg = typeArgs[i];
+-            typeVarAssigns.put(typeParams[i], typeArg instanceof TypeVariable<?> ? unrollVariableAssignments((TypeVariable<?>) typeArg, subtypeVarAssigns) : typeArg);
++            Type resolvedTypeArg = typeArgs[i];
++            if (typeArgs[i] instanceof TypeVariable<?>) {
++                TypeVariable<?> typeVar = (TypeVariable<?>) typeArgs[i];
++                if (subtypeVarAssigns != null && subtypeVarAssigns.containsKey(typeVar)) {
++                    resolvedTypeArg = subtypeVarAssigns.get(typeVar);
++                }
++            }
++            typeVarAssigns.put(typeParams[i], resolvedTypeArg);
+@@ -1,3 +1,4 @@
+-    public static Map<TypeVariable<?>, Type> getTypeArguments(Type type, Class<?> toClass) {
+-        return getTypeArguments(type, toClass, null);
+-    }
++    public static Map<TypeVariable<?>, Type> getTypeArguments(Type type, Class<?> toClass) {
++        Map<TypeVariable<?>, Type> typeVarAssigns = new HashMap<>();
++        return getTypeArguments(type, toClass, typeVarAssigns);
++    }
+@@ -1,4 +1,4 @@
+-    public static Map<TypeVariable<?>, Type> getTypeArguments(Type type, Class<?> toClass) {
+-        Map<TypeVariable<?>, Type> typeVarAssigns = new HashMap<>();
+-        return getTypeArguments(type, toClass, typeVarAssigns);
+-    }
++    public static Map<TypeVariable<?>, Type> getTypeArguments(Type type, Class<?> toClass) {
++        Map<TypeVariable<?>, Type> typeVarAssigns = new HashMap<TypeVariable<?>, Type>();
++        return getTypeArguments(type, toClass, typeVarAssigns);
++    }
+@@ -1,1 +1,1 @@
+-        Map<TypeVariable<?>, Type> currentTypeVarAssigns = new HashMap<>(contextTypeVarAssigns);
++        Map<TypeVariable<?>, Type> currentTypeVarAssigns = new HashMap<TypeVariable<?>, Type>(contextTypeVarAssigns);
+@@ -1,5 +1,9 @@
+-        for (int i = 0; i < typeParams.length; i++) {
+-            Type typeArg = typeArgs[i];
+-            typeVarAssigns.put(typeParams[i], typeVarAssigns.containsKey(typeArg) ? typeVarAssigns
+-                    .get(typeArg) : typeArg);
+-        }
++        for (int i = 0; i < typeParams.length; i++) {
++            Type typeArg = typeArgs[i];
++            // Resolve typeArg against the subtypeVarAssigns (assignments from the original subtype)
++            Type resolvedTypeArg = typeArg;
++            if (typeArg instanceof TypeVariable<?>) {
++                resolvedTypeArg = unrollVariableAssignments((TypeVariable<?>) typeArg, subtypeVarAssigns);
++            }
++            typeVarAssigns.put(typeParams[i], resolvedTypeArg);
++        }
+@@ -1,12 +1,15 @@
+-    private static Type unrollVariableAssignments(TypeVariable<?> var, Map<TypeVariable<?>, Type> typeVarAssigns) {
+-        Type result;
+-        do {
+-            result = typeVarAssigns.get(var);
+-            if (result instanceof TypeVariable<?> && !result.equals(var)) {
+-                var = (TypeVariable<?>) result;
+-                continue;
+-            }
+-            break;
+-        } while (true);
+-        return result;
+-    }
++    private static Type unrollVariableAssignments(TypeVariable<?> var, Map<TypeVariable<?>, Type> typeVarAssigns) {
++        if (typeVarAssigns == null) {
++            return var;
++        }
++        Type result;
++        do {
++            result = typeVarAssigns.get(var);
++            if (result instanceof TypeVariable<?> && !result.equals(var)) {
++                var = (TypeVariable<?>) result;
++                continue;
++            }
++            break;
++        } while (true);
++        return result;
++    }
+@@ -1,5 +1,1 @@
+-            Type resolvedTypeArg = typeArg;
+-            if (typeArg instanceof TypeVariable<?>) {
+-                resolvedTypeArg = unrollVariableAssignments((TypeVariable<?>) typeArg, subtypeVarAssigns);
+-            }
+-            typeVarAssigns.put(typeParams[i], resolvedTypeArg);
++            typeVarAssigns.put(typeParams[i], typeArg instanceof TypeVariable<?> && subtypeVarAssigns != null ? unrollVariableAssignments((TypeVariable<?>) typeArg, subtypeVarAssigns) : typeArg);
+@@ -1,3 +1,10 @@
+-        // create a copy of the incoming map, or an empty one if it's null
+-        HashMap<TypeVariable<?>, Type> typeVarAssigns = subtypeVarAssigns == null ? new HashMap<TypeVariable<?>, Type>()
+-                : new HashMap<TypeVariable<?>, Type>(subtypeVarAssigns);
++        // create a copy of the incoming map, or an empty one if it's null
++        HashMap<TypeVariable<?>, Type> typeVarAssigns = subtypeVarAssigns == null ? new HashMap<TypeVariable<?>, Type>()
++                : new HashMap<TypeVariable<?>, Type>(subtypeVarAssigns);
++
++        // Add type parameters of the current class to the map
++        for (TypeVariable<?> typeParam : cls.getTypeParameters()) {
++            if (!typeVarAssigns.containsKey(typeParam)) {
++                typeVarAssigns.put(typeParam, typeParam); // Map to itself initially
++            }
++        }
+@@ -1,5 +1,12 @@
+-        for (int i = 0; i < typeParams.length; i++) {
+-            Type typeArg = typeArgs[i];
+-            typeVarAssigns.put(typeParams[i], typeVarAssigns.containsKey(typeArg) ? typeVarAssigns
+-                    .get(typeArg) : typeArg);
+-        }
++        for (int i = 0; i < typeParams.length; i++) {
++            Type typeArg = typeArgs[i];
++            // Resolve typeArg against the subtypeVarAssigns (assignments from the original subtype)
++            Type resolvedTypeArg = typeArg;
++            if (typeArg instanceof TypeVariable<?>) {
++                // Only unroll if subtypeVarAssigns is not null and contains the type variable
++                if (subtypeVarAssigns != null && subtypeVarAssigns.containsKey(typeArg)) {
++                    resolvedTypeArg = unrollVariableAssignments((TypeVariable<?>) typeArg, subtypeVarAssigns);
++                }
++            }
++            typeVarAssigns.put(typeParams[i], resolvedTypeArg);
++        }
+@@ -1,3 +1,10 @@
+-        // create a copy of the incoming map, or an empty one if it's null
+-        HashMap<TypeVariable<?>, Type> typeVarAssigns = subtypeVarAssigns == null ? new HashMap<TypeVariable<?>, Type>()
+-                : new HashMap<TypeVariable<?>, Type>(subtypeVarAssigns);
++        // create a copy of the incoming map, or an empty one if it's null
++        HashMap<TypeVariable<?>, Type> typeVarAssigns = subtypeVarAssigns == null ? new HashMap<TypeVariable<?>, Type>()
++                : new HashMap<TypeVariable<?>, Type>(subtypeVarAssigns);
++
++        // Add type parameters of the current class to the map
++        for (TypeVariable<?> typeParam : cls.getTypeParameters()) {
++            if (!typeVarAssigns.containsKey(typeParam)) {
++                typeVarAssigns.put(typeParam, typeParam); // Map to itself initially
++            }
++        }
+@@ -1,5 +1,14 @@
+-        for (int i = 0; i < typeParams.length; i++) {
+-            Type typeArg = typeArgs[i];
+-            typeVarAssigns.put(typeParams[i], typeVarAssigns.containsKey(typeArg) ? typeVarAssigns
+-                    .get(typeArg) : typeArg);
+-        }
++        for (int i = 0; i < typeParams.length; i++) {
++            Type typeArg = typeArgs[i];
++            // Resolve typeArg against the subtypeVarAssigns (assignments from the original subtype)
++            Type resolvedTypeArg = typeArg;
++            if (typeArg instanceof TypeVariable<?>) {
++                // Only unroll if subtypeVarAssigns is not null and contains the type variable
++                if (subtypeVarAssigns != null && subtypeVarAssigns.containsKey(typeArg)) {
++                    resolvedTypeArg = unrollVariableAssignments((TypeVariable<?>) typeArg, subtypeVarAssigns);
++                } else if (typeVarAssigns.containsKey(typeArg)) { // Also check the current map
++                    resolvedTypeArg = unrollVariableAssignments((TypeVariable<?>) typeArg, typeVarAssigns);
++                }
++            }
++            typeVarAssigns.put(typeParams[i], resolvedTypeArg);
++        }
+@@ -1,3 +1,10 @@
+-        // create a copy of the incoming map, or an empty one if it's null
+-        HashMap<TypeVariable<?>, Type> typeVarAssigns = subtypeVarAssigns == null ? new HashMap<TypeVariable<?>, Type>()
+-                : new HashMap<TypeVariable<?>, Type>(subtypeVarAssigns);
++        // create a copy of the incoming map, or an empty one if it's null
++        HashMap<TypeVariable<?>, Type> typeVarAssigns = subtypeVarAssigns == null ? new HashMap<TypeVariable<?>, Type>()
++                : new HashMap<TypeVariable<?>, Type>(subtypeVarAssigns);
++
++        // Add type parameters of the current class to the map
++        for (TypeVariable<?> typeParam : cls.getTypeParameters()) {
++            if (!typeVarAssigns.containsKey(typeParam)) {
++                typeVarAssigns.put(typeParam, typeParam); // Map to itself initially
++            }
++        }
+@@ -1,5 +1,14 @@
+-        for (int i = 0; i < typeParams.length; i++) {
+-            Type typeArg = typeArgs[i];
+-            typeVarAssigns.put(typeParams[i], typeVarAssigns.containsKey(typeArg) ? typeVarAssigns
+-                    .get(typeArg) : typeArg);
+-        }
++        for (int i = 0; i < typeParams.length; i++) {
++            Type typeArg = typeArgs[i];
++            // Resolve typeArg against the subtypeVarAssigns (assignments from the original subtype)
++            Type resolvedTypeArg = typeArg;
++            if (typeArg instanceof TypeVariable<?>) {
++                // Only unroll if subtypeVarAssigns is not null and contains the type variable
++                if (subtypeVarAssigns != null && subtypeVarAssigns.containsKey(typeArg)) {
++                    resolvedTypeArg = unrollVariableAssignments((TypeVariable<?>) typeArg, subtypeVarAssigns);
++                } else if (typeVarAssigns.containsKey(typeArg)) { // Also check the current map
++                    resolvedTypeArg = unrollVariableAssignments((TypeVariable<?>) typeArg, typeVarAssigns);
++                }
++            }
++            typeVarAssigns.put(typeParams[i], resolvedTypeArg);
++        }
+@@ -1,3 +1,10 @@
+-        // create a copy of the incoming map, or an empty one if it's null
+-        HashMap<TypeVariable<?>, Type> typeVarAssigns = subtypeVarAssigns == null ? new HashMap<TypeVariable<?>, Type>()
+-                : new HashMap<TypeVariable<?>, Type>(subtypeVarAssigns);
++        // create a copy of the incoming map, or an empty one if it's null
++        HashMap<TypeVariable<?>, Type> typeVarAssigns = subtypeVarAssigns == null ? new HashMap<TypeVariable<?>, Type>()
++                : new HashMap<TypeVariable<?>, Type>(subtypeVarAssigns);
++
++        // Add type parameters of the current class to the map
++        for (TypeVariable<?> typeParam : cls.getTypeParameters()) {
++            if (!typeVarAssigns.containsKey(typeParam)) {
++                typeVarAssigns.put(typeParam, typeParam); // Map to itself initially
++            }
++        }
+@@ -1,5 +1,13 @@
+-        for (int i = 0; i < typeParams.length; i++) {
+-            Type typeArg = typeArgs[i];
+-            typeVarAssigns.put(typeParams[i], typeVarAssigns.containsKey(typeArg) ? typeVarAssigns
+-                    .get(typeArg) : typeArg);
+-        }
++        for (int i = 0; i < typeParams.length; i++) {
++            Type typeArg = typeArgs[i];
++            // Resolve typeArg against the subtypeVarAssigns (assignments from the original subtype) and then against the current typeVarAssigns
++            Type resolvedTypeArg = typeArg;
++            if (typeArg instanceof TypeVariable<?>) {
++                if (subtypeVarAssigns != null && subtypeVarAssigns.containsKey(typeArg)) {
++                    resolvedTypeArg = unrollVariableAssignments((TypeVariable<?>) typeArg, subtypeVarAssigns);
++                } else if (typeVarAssigns.containsKey(typeArg)) {
++                    resolvedTypeArg = unrollVariableAssignments((TypeVariable<?>) typeArg, typeVarAssigns);
++                }
++            }
++            typeVarAssigns.put(typeParams[i], resolvedTypeArg);
++        }
+@@ -1,3 +1,10 @@
+-        // create a copy of the incoming map, or an empty one if it's null
+-        HashMap<TypeVariable<?>, Type> typeVarAssigns = subtypeVarAssigns == null ? new HashMap<TypeVariable<?>, Type>()
+-                : new HashMap<TypeVariable<?>, Type>(subtypeVarAssigns);
++        // create a copy of the incoming map, or an empty one if it's null
++        HashMap<TypeVariable<?>, Type> typeVarAssigns = subtypeVarAssigns == null ? new HashMap<TypeVariable<?>, Type>()
++                : new HashMap<TypeVariable<?>, Type>(subtypeVarAssigns);
++
++        // Add type parameters of the current class to the map
++        for (TypeVariable<?> typeParam : cls.getTypeParameters()) {
++            if (!typeVarAssigns.containsKey(typeParam)) {
++                typeVarAssigns.put(typeParam, typeParam); // Map to itself initially
++            }
++        }
+@@ -1,5 +1,13 @@
+-        for (int i = 0; i < typeParams.length; i++) {
+-            Type typeArg = typeArgs[i];
+-            typeVarAssigns.put(typeParams[i], typeVarAssigns.containsKey(typeArg) ? typeVarAssigns
+-                    .get(typeArg) : typeArg);
+-        }
++        for (int i = 0; i < typeParams.length; i++) {
++            Type typeArg = typeArgs[i];
++            // Resolve typeArg against the subtypeVarAssigns (assignments from the original subtype) and then against the current typeVarAssigns
++            Type resolvedTypeArg = typeArg;
++            if (typeArg instanceof TypeVariable<?>) {
++                if (subtypeVarAssigns != null && subtypeVarAssigns.containsKey(typeArg)) {
++                    resolvedTypeArg = unrollVariableAssignments((TypeVariable<?>) typeArg, subtypeVarAssigns);
++                } else if (typeVarAssigns.containsKey(typeArg)) {
++                    resolvedTypeArg = unrollVariableAssignments((TypeVariable<?>) typeArg, typeVarAssigns);
++                }
++            }
++            typeVarAssigns.put(typeParams[i], resolvedTypeArg);
++        }
+@@ -1,3 +1,10 @@
+-        // create a copy of the incoming map, or an empty one if it's null
+-        HashMap<TypeVariable<?>, Type> typeVarAssigns = subtypeVarAssigns == null ? new HashMap<TypeVariable<?>, Type>()
+-                : new HashMap<TypeVariable<?>, Type>(subtypeVarAssigns);
++        // create a copy of the incoming map, or an empty one if it's null
++        HashMap<TypeVariable<?>, Type> typeVarAssigns = subtypeVarAssigns == null ? new HashMap<TypeVariable<?>, Type>()
++                : new HashMap<TypeVariable<?>, Type>(subtypeVarAssigns);
++
++        // Add type parameters of the current class to the map
++        for (TypeVariable<?> typeParam : cls.getTypeParameters()) {
++            if (!typeVarAssigns.containsKey(typeParam)) {
++                typeVarAssigns.put(typeParam, typeParam); // Map to itself initially
++            }
++        }
+@@ -1,1 +1,1 @@
+-        if (toType == null || toTope instanceof Class<?>) {
++        if (toType == null || toType instanceof Class<?>) {
+@@ -1,5 +1,13 @@
+-        for (int i = 0; i < typeParams.length; i++) {
+-            Type typeArg = typeArgs[i];
+-            typeVarAssigns.put(typeParams[i], typeVarAssigns.containsKey(typeArg) ? typeVarAssigns
+-                    .get(typeArg) : typeArg);
+-        }
++        for (int i = 0; i < typeParams.length; i++) {
++            Type typeArg = typeArgs[i];
++            // Resolve typeArg against the subtypeVarAssigns (assignments from the original subtype) and then against the current typeVarAssigns
++            Type resolvedTypeArg = typeArg;
++            if (typeArg instanceof TypeVariable<?>) {
++                if (subtypeVarAssigns != null && subtypeVarAssigns.containsKey(typeArg)) {
++                    resolvedTypeArg = unrollVariableAssignments((TypeVariable<?>) typeArg, subtypeVarAssigns);
++                } else if (typeVarAssigns.containsKey(typeArg)) {
++                    resolvedTypeArg = unrollVariableAssignments((TypeVariable<?>) typeArg, typeVarAssigns);
++                }
++            }
++            typeVarAssigns.put(typeParams[i], resolvedTypeArg);
++        }
+@@ -1,3 +1,10 @@
+-        // create a copy of the incoming map, or an empty one if it's null
+-        HashMap<TypeVariable<?>, Type> typeVarAssigns = subtypeVarAssigns == null ? new HashMap<TypeVariable<?>, Type>()
+-                : new HashMap<TypeVariable<?>, Type>(subtypeVarAssigns);
++        // create a copy of the incoming map, or an empty one if it's null
++        HashMap<TypeVariable<?>, Type> typeVarAssigns = subtypeVarAssigns == null ? new HashMap<TypeVariable<?>, Type>()
++                : new HashMap<TypeVariable<?>, Type>(subtypeVarAssigns);
++
++        // Add type parameters of the current class to the map
++        for (TypeVariable<?> typeParam : cls.getTypeParameters()) {
++            if (!typeVarAssigns.containsKey(typeParam)) {
++                typeVarAssigns.put(typeParam, typeParam); // Map to itself initially
++            }
++        }
+
+--- a/src/test/java/org/apache/commons/lang3/reflect/TypeUtilsTest.java
++++ b/src/test/java/org/apache/commons/lang3/reflect/TypeUtilsTest.java
+@@ -1,2 +1,15 @@
+-        Assert.assertEquals(Other.class.getTypeParameters()[0], typeVarAssigns.get(This.class.getTypeParameters()[1]));
+-    }
++        Assert.assertEquals(Other.class.getTypeParameters()[0], typeVarAssigns.get(This.class.getTypeParameters()[1]));
++
++        typeVarAssigns = TypeUtils.getTypeArguments(Other.class, This.class);
++        Assert.assertEquals(2, typeVarAssigns.size());
++        Assert.assertEquals(
++                String
++                        .class, typeVarAssigns.get(This
++                        .class
++                        .getTypeParameters()[0]));
++        Assert.assertEquals(Other
++                .class
++                .getTypeParameters()[0], typeVarAssigns.get(This
++                .class
++                .getTypeParameters()[1]));
++    }
+@@ -1,15 +1,2 @@
+-        Assert.assertEquals(Other.class.getTypeParameters()[0], typeVarAssigns.get(This.class.getTypeParameters()[1]));
+-
+-        typeVarAssigns = TypeUtils.getTypeArguments(Other.class, This.class);
+-        Assert.assertEquals(2, typeVarAssigns.size());
+-        Assert.assertEquals(
+-                String
+-                        .class, typeVarAssigns.get(This
+-                        .class
+-                        .getTypeParameters()[0]));
+-        Assert.assertEquals(Other
+-                .class
+-                .getTypeParameters()[0], typeVarAssigns.get(This
+-                .class
+-                .getTypeParameters()[1]));
+-    }
++        Assert.assertEquals(Other.class.getTypeParameters()[0], typeVarAssigns.get(This.class.getTypeParameters()[1]));
++    }
+@@ -1,2 +1,15 @@
+-        Assert.assertEquals(Other.class.getTypeParameters()[0], typeVarAssigns.get(This.class.getTypeParameters()[1]));
+-    }
++        Assert.assertEquals(Other.class.getTypeParameters()[0], typeVarAssigns.get(This.class.getTypeParameters()[1]));
++
++        typeVarAssigns = TypeUtils.getTypeArguments(Other.class, This.class);
++        Assert.assertEquals(2, typeVarAssigns.size());
++        Assert.assertEquals(
++                String
++                        .class, typeVarAssigns.get(This
++                        .class
++                        .getTypeParameters()[0]));
++        Assert.assertEquals(Other
++                .class
++                .getTypeParameters()[0], typeVarAssigns.get(This
++                .class
++                .getTypeParameters()[1]));
++    }

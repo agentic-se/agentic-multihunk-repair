@@ -1,0 +1,40 @@
+diff --git a/source/org/jfree/chart/plot/PiePlot3D.java b/source/org/jfree/chart/plot/PiePlot3D.java
+index e8fbaf2..f6a66e3 100644
+--- a/source/org/jfree/chart/plot/PiePlot3D.java
++++ b/source/org/jfree/chart/plot/PiePlot3D.java
+@@ -277,7 +277,18 @@ public class PiePlot3D extends PiePlot implements Serializable {
+             linkH = 2 * min;
+         }
+         
+-        PiePlotState state = initialise(g2, plotArea, this, null, info);
++        // if the dataset is null or empty, display the 'no data' message
++        // and return early before initialising any state that depends on
++        // the dataset (to avoid IllegalArgumentException on null dataset).
++        PieDataset dataset = getDataset();
++        if (DatasetUtilities.isEmptyOrNull(dataset)) {
++            drawNoDataMessage(g2, plotArea);
++            g2.setClip(savedClip);
++            drawOutline(g2, plotArea);
++            return;
++        }
++
++        PiePlotState state = initialise(g2, plotArea, this, null, info);
+ 
+         // the link area defines the dog leg points for the linking lines to 
+         // the labels
+@@ -328,14 +339,7 @@ public class PiePlot3D extends PiePlot implements Serializable {
+         state.setPieWRadius(pieArea.getWidth() / 2.0);
+         state.setPieHRadius((pieArea.getHeight() - depth) / 2.0);
+ 
+-        // get the data source - return if null;
+-        PieDataset dataset = getDataset();
+-        if (DatasetUtilities.isEmptyOrNull(getDataset())) {
+-            drawNoDataMessage(g2, plotArea);
+-            g2.setClip(savedClip);
+-            drawOutline(g2, plotArea);
+-            return;
+-        }
++        // dataset has been validated above
+ 
+         // if too any elements
+         if (dataset.getKeys().size() > plotArea.getWidth()) {

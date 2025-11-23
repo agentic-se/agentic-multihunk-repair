@@ -1,0 +1,198 @@
+--- a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
+@@ -1,9 +1,13 @@
+-            if (namespace == null || namespace.equals("")) {
+-                namespace = NodePointer.UNKNOWN_NAMESPACE;
+-            }
+-        }
+-
+-        namespaces.put(prefix, namespace);
+-        if (namespace == UNKNOWN_NAMESPACE) {
+-            return null;
+-        }
++            if (namespace == null || namespace.equals("")) {
++                // Delegate to JXPathContext to resolve the namespace
++                namespace = getJXPathContext().getNamespaceURI(prefix);
++                if (namespace == null) {
++                    namespace = NodePointer.UNKNOWN_NAMESPACE;
++                }
++            }
++        }
++
++        namespaces.put(prefix, namespace);
++        if (namespace == UNKNOWN_NAMESPACE) {
++            return null;
++        }
+@@ -1,13 +1,9 @@
+-            if (namespace == null || namespace.equals("")) {
+-                // Delegate to JXPathContext to resolve the namespace
+-                namespace = getJXPathContext().getNamespaceURI(prefix);
+-                if (namespace == null) {
+-                    namespace = NodePointer.UNKNOWN_NAMESPACE;
+-                }
+-            }
+-        }
+-
+-        namespaces.put(prefix, namespace);
+-        if (namespace == UNKNOWN_NAMESPACE) {
+-            return null;
+-        }
++            if (namespace == null || namespace.equals("")) {
++                namespace = NodePointer.UNKNOWN_NAMESPACE;
++            }
++        }
++
++        namespaces.put(prefix, namespace);
++        if (namespace == UNKNOWN_NAMESPACE) {
++            return null;
++        }
+@@ -1,9 +1,13 @@
+-            if (namespace == null || namespace.equals("")) {
+-                namespace = NodePointer.UNKNOWN_NAMESPACE;
+-            }
+-        }
+-
+-        namespaces.put(prefix, namespace);
+-        if (namespace == UNKNOWN_NAMESPACE) {
+-            return null;
+-        }
++            if (namespace == null || namespace.equals("")) {
++                // Delegate to JXPathContext to resolve the namespace
++                namespace = this.getJXPathContext().getNamespaceURI(prefix);
++                if (namespace == null) {
++                    namespace = NodePointer.UNKNOWN_NAMESPACE;
++                }
++            }
++        }
++
++        namespaces.put(prefix, namespace);
++        if (namespace == UNKNOWN_NAMESPACE) {
++            return null;
++        }
+@@ -1,13 +1,9 @@
+-            if (namespace == null || namespace.equals("")) {
+-                // Delegate to JXPathContext to resolve the namespace
+-                namespace = this.getJXPathContext().getNamespaceURI(prefix);
+-                if (namespace == null) {
+-                    namespace = NodePointer.UNKNOWN_NAMESPACE;
+-                }
+-            }
+-        }
+-
+-        namespaces.put(prefix, namespace);
+-        if (namespace == UNKNOWN_NAMESPACE) {
+-            return null;
+-        }
++            if (namespace == null || namespace.equals("")) {
++                namespace = NodePointer.UNKNOWN_NAMESPACE;
++            }
++        }
++
++        namespaces.put(prefix, namespace);
++        if (namespace == UNKNOWN_NAMESPACE) {
++            return null;
++        }
+@@ -1,9 +1,13 @@
+-            if (namespace == null || namespace.equals("")) {
+-                namespace = NodePointer.UNKNOWN_NAMESPACE;
+-            }
+-        }
+-
+-        namespaces.put(prefix, namespace);
+-        if (namespace == UNKNOWN_NAMESPACE) {
+-            return null;
+-        }
++            if (namespace == null || namespace.equals("")) {
++                // Delegate to JXPathContext to resolve the namespace
++                namespace = context.getNamespaceURI(prefix);
++                if (namespace == null) {
++                    namespace = NodePointer.UNKNOWN_NAMESPACE;
++                }
++            }
++        }
++
++        namespaces.put(prefix, namespace);
++        if (namespace == UNKNOWN_NAMESPACE) {
++            return null;
++        }
+@@ -1,13 +1,9 @@
+-            if (namespace == null || namespace.equals("")) {
+-                // Delegate to JXPathContext to resolve the namespace
+-                namespace = context.getNamespaceURI(prefix);
+-                if (namespace == null) {
+-                    namespace = NodePointer.UNKNOWN_NAMESPACE;
+-                }
+-            }
+-        }
+-
+-        namespaces.put(prefix, namespace);
+-        if (namespace == UNKNOWN_NAMESPACE) {
+-            return null;
+-        }
++            if (namespace == null || namespace.equals("")) {
++                namespace = NodePointer.UNKNOWN_NAMESPACE;
++            }
++        }
++
++        namespaces.put(prefix, namespace);
++        if (namespace == UNKNOWN_NAMESPACE) {
++            return null;
++        }
+@@ -1,9 +1,13 @@
+-            if (namespace == null || namespace.equals("")) {
+-                namespace = NodePointer.UNKNOWN_NAMESPACE;
+-            }
+-        }
+-
+-        namespaces.put(prefix, namespace);
+-        if (namespace == UNKNOWN_NAMESPACE) {
+-            return null;
+-        }
++            if (namespace == null || namespace.equals("")) {
++                // Delegate to JXPathContext to resolve the namespace
++                namespace = this.jxpathContext.getNamespaceURI(prefix);
++                if (namespace == null) {
++                    namespace = NodePointer.UNKNOWN_NAMESPACE;
++                }
++            }
++        }
++
++        namespaces.put(prefix, namespace);
++        if (namespace == UNKNOWN_NAMESPACE) {
++            return null;
++        }
+@@ -1,13 +1,9 @@
+-            if (namespace == null || namespace.equals("")) {
+-                // Delegate to JXPathContext to resolve the namespace
+-                namespace = this.jxpathContext.getNamespaceURI(prefix);
+-                if (namespace == null) {
+-                    namespace = NodePointer.UNKNOWN_NAMESPACE;
+-                }
+-            }
+-        }
+-
+-        namespaces.put(prefix, namespace);
+-        if (namespace == UNKNOWN_NAMESPACE) {
+-            return null;
+-        }
++            if (namespace == null || namespace.equals("")) {
++                namespace = NodePointer.UNKNOWN_NAMESPACE;
++            }
++        }
++
++        namespaces.put(prefix, namespace);
++        if (namespace == UNKNOWN_NAMESPACE) {
++            return null;
++        }
+@@ -1,4 +1,7 @@
+-            String ns = getNamespaceURI(prefix);
+-            if (ns == null) {
+-                throw new JXPathException(
+-                    "Unknown namespace prefix: " + prefix);
++            String ns = context.getNamespaceURI(prefix); // First, try JXPathContext
++            if (ns == null) { // If not found in JXPathContext, try DOMNodePointer's method
++                ns = getNamespaceURI(prefix);
++            }
++            if (ns == null) { // If still null, then it's an unknown prefix
++                throw new JXPathException(
++                    "Unknown namespace prefix: " + prefix);

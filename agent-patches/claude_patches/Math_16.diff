@@ -1,0 +1,66 @@
+diff --git a/src/main/java/org/apache/commons/math3/util/FastMath.java b/src/main/java/org/apache/commons/math3/util/FastMath.java
+index 377812006..0d352b3d2 100644
+--- a/src/main/java/org/apache/commons/math3/util/FastMath.java
++++ b/src/main/java/org/apache/commons/math3/util/FastMath.java
+@@ -391,12 +391,26 @@ public class FastMath {
+       // exp(-z) can be ignored in comparison with exp(z)
+ 
+       if (x > 20) {
+-              // Avoid overflow (MATH-905).
++          // Avoid overflow (MATH-905).
++          // For large values, use exp(x/2) * exp(x/2) / 2 to avoid intermediate overflow
++          if (x >= StrictMath.log(Double.MAX_VALUE)) {
++              // For very large values, compute exp(x/2) and square it
++              final double t = exp(x * 0.5);
++              return (0.5 * t) * t;
++          } else {
+               return 0.5 * exp(x);
+           }
++      }
+       if (x < -20) {
+-              // Avoid overflow (MATH-905).
++          // Avoid overflow (MATH-905).
++          // For large negative values, use exp(-x/2) * exp(-x/2) / 2 to avoid intermediate overflow
++          if (-x >= StrictMath.log(Double.MAX_VALUE)) {
++              // For very large values, compute exp(-x/2) and square it
++              final double t = exp(-x * 0.5);
++              return (0.5 * t) * t;
++          } else {
+               return 0.5 * exp(-x);
++          }
+       }
+ 
+       final double hiPrec[] = new double[2];
+@@ -452,12 +466,26 @@ public class FastMath {
+       // exp(-z) can be ignored in comparison with exp(z)
+ 
+       if (x > 20) {
+-              // Avoid overflow (MATH-905).
++          // Avoid overflow (MATH-905).
++          // For large values, use exp(x/2) * exp(x/2) / 2 to avoid intermediate overflow
++          if (x >= StrictMath.log(Double.MAX_VALUE)) {
++              // For very large values, compute exp(x/2) and square it
++              final double t = exp(x * 0.5);
++              return (0.5 * t) * t;
++          } else {
+               return 0.5 * exp(x);
+           }
++      }
+       if (x < -20) {
+-              // Avoid overflow (MATH-905).
++          // Avoid overflow (MATH-905).
++          // For large negative values, use exp(-x/2) * exp(-x/2) / 2 to avoid intermediate overflow
++          if (-x >= StrictMath.log(Double.MAX_VALUE)) {
++              // For very large values, compute exp(-x/2) and square it
++              final double t = exp(-x * 0.5);
++              return -(0.5 * t) * t;
++          } else {
+               return -0.5 * exp(-x);
++          }
+       }
+ 
+       if (x == 0) {
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

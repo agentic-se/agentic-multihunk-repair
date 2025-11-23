@@ -1,0 +1,27 @@
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/FieldProperty.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/FieldProperty.java
+@@ -1,2 +1,4 @@
+-        // 07-May-2019, tatu: As per [databind#2303], must keep VD/NVP in-sync if they were
+-        return new FieldProperty(this, deser, _nullProvider);
++        // 07-May-2019, tatu: As per [databind#2303], must keep VD/NVP in-sync if they were
++        // 29-Jan-2017, tatu: Bit messy, but for now has to do...
++        NullValueProvider newNuller = (deser == MISSING_VALUE_DESERIALIZER) ? _nullProvider : deser;
++        return new FieldProperty(this, deser, newNuller);
+
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/AtomicReferenceDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/AtomicReferenceDeserializer.java
+@@ -1,4 +1,10 @@
+-    @Override
+-    public AtomicReference<Object> getNullValue(DeserializationContext ctxt) throws JsonMappingException {
+-        return new AtomicReference<Object>();
+-    }
++    @Override
++    public AtomicReference<Object> getNullValue(DeserializationContext ctxt) throws JsonMappingException {
++        // 23-Oct-2016, tatu: This is tricky: `_valueDeserializer` may be null if content type
++        //   is not explicitly defined (or is raw type).
++        //   If so, we can only return empty AtomicReference.
++        if (_valueDeserializer == null) {
++            return new AtomicReference<Object>();
++        }
++        return new AtomicReference<Object>(_valueDeserializer.getNullValue(ctxt));
++    }

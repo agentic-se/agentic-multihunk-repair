@@ -1,0 +1,107 @@
+diff --git a/source/org/jfree/chart/renderer/category/StatisticalBarRenderer.java b/source/org/jfree/chart/renderer/category/StatisticalBarRenderer.java
+index ab65ba3..b7e3f3c 100644
+--- a/source/org/jfree/chart/renderer/category/StatisticalBarRenderer.java
++++ b/source/org/jfree/chart/renderer/category/StatisticalBarRenderer.java
+@@ -256,6 +256,9 @@ public class StatisticalBarRenderer extends BarRenderer
+ 
+         // BAR X
+         Number meanValue = dataset.getMeanValue(row, column);
++        if (meanValue == null) {
++            return;
++        }
+ 
+         double value = meanValue.doubleValue();
+         double base = 0.0;
+@@ -312,10 +315,12 @@ public class StatisticalBarRenderer extends BarRenderer
+         }
+ 
+         // standard deviation lines
+-            double valueDelta = dataset.getStdDevValue(row, column).doubleValue();
+-            double highVal = rangeAxis.valueToJava2D(meanValue.doubleValue() 
++        Number stdDevValue = dataset.getStdDevValue(row, column);
++        if (stdDevValue != null) {
++            double valueDelta = stdDevValue.doubleValue();
++            double highVal = rangeAxis.valueToJava2D(meanValue.doubleValue()
+                     + valueDelta, dataArea, yAxisLocation);
+-            double lowVal = rangeAxis.valueToJava2D(meanValue.doubleValue() 
++            double lowVal = rangeAxis.valueToJava2D(meanValue.doubleValue()
+                     - valueDelta, dataArea, yAxisLocation);
+ 
+             if (this.errorIndicatorStroke != null) {
+@@ -325,22 +330,23 @@ public class StatisticalBarRenderer extends BarRenderer
+                 g2.setStroke(getItemOutlineStroke(row, column));
+             }
+             if (this.errorIndicatorPaint != null) {
+-                g2.setPaint(this.errorIndicatorPaint);  
++                g2.setPaint(this.errorIndicatorPaint);
+             }
+             else {
+-                g2.setPaint(getItemOutlinePaint(row, column));   
++                g2.setPaint(getItemOutlinePaint(row, column));
+             }
+-        
++
+             Line2D line = null;
+-            line = new Line2D.Double(lowVal, rectY + rectHeight / 2.0d, 
++            line = new Line2D.Double(lowVal, rectY + rectHeight / 2.0d,
+                                      highVal, rectY + rectHeight / 2.0d);
+             g2.draw(line);
+-            line = new Line2D.Double(highVal, rectY + rectHeight * 0.25, 
++            line = new Line2D.Double(highVal, rectY + rectHeight * 0.25,
+                                      highVal, rectY + rectHeight * 0.75);
+             g2.draw(line);
+-            line = new Line2D.Double(lowVal, rectY + rectHeight * 0.25, 
++            line = new Line2D.Double(lowVal, rectY + rectHeight * 0.25,
+                                      lowVal, rectY + rectHeight * 0.75);
+             g2.draw(line);
++        }
+         
+         CategoryItemLabelGenerator generator = getItemLabelGenerator(row, 
+                 column);
+@@ -400,6 +406,9 @@ public class StatisticalBarRenderer extends BarRenderer
+ 
+         // BAR Y
+         Number meanValue = dataset.getMeanValue(row, column);
++        if (meanValue == null) {
++            return;
++        }
+ 
+         double value = meanValue.doubleValue();
+         double base = 0.0;
+@@ -456,10 +465,12 @@ public class StatisticalBarRenderer extends BarRenderer
+         }
+ 
+         // standard deviation lines
+-            double valueDelta = dataset.getStdDevValue(row, column).doubleValue();
+-            double highVal = rangeAxis.valueToJava2D(meanValue.doubleValue() 
++        Number stdDevValue = dataset.getStdDevValue(row, column);
++        if (stdDevValue != null) {
++            double valueDelta = stdDevValue.doubleValue();
++            double highVal = rangeAxis.valueToJava2D(meanValue.doubleValue()
+                     + valueDelta, dataArea, yAxisLocation);
+-            double lowVal = rangeAxis.valueToJava2D(meanValue.doubleValue() 
++            double lowVal = rangeAxis.valueToJava2D(meanValue.doubleValue()
+                     - valueDelta, dataArea, yAxisLocation);
+ 
+             if (this.errorIndicatorStroke != null) {
+@@ -469,10 +480,10 @@ public class StatisticalBarRenderer extends BarRenderer
+                 g2.setStroke(getItemOutlineStroke(row, column));
+             }
+             if (this.errorIndicatorPaint != null) {
+-                g2.setPaint(this.errorIndicatorPaint);  
++                g2.setPaint(this.errorIndicatorPaint);
+             }
+             else {
+-                g2.setPaint(getItemOutlinePaint(row, column));   
++                g2.setPaint(getItemOutlinePaint(row, column));
+             }
+             Line2D line = null;
+             line = new Line2D.Double(rectX + rectWidth / 2.0d, lowVal,
+@@ -484,6 +495,7 @@ public class StatisticalBarRenderer extends BarRenderer
+             line = new Line2D.Double(rectX + rectWidth / 2.0d - 5.0d, lowVal,
+                                      rectX + rectWidth / 2.0d + 5.0d, lowVal);
+             g2.draw(line);
++        }
+         
+         CategoryItemLabelGenerator generator = getItemLabelGenerator(row, 
+                 column);

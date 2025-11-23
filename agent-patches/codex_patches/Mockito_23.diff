@@ -1,0 +1,110 @@
+diff --git a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+index c4384f7fc..348376dca 100644
+--- a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
++++ b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+@@ -58,9 +58,9 @@ public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+ 
+ 
+ 
+-    private Object getMock(InvocationOnMock invocation, GenericMetadataSupport returnTypeGenericMetadata) throws Throwable {
+-    	InternalMockHandler<Object> handler = new MockUtil().getMockHandler(invocation.getMock());
+-    	InvocationContainerImpl container = (InvocationContainerImpl) handler.getInvocationContainer();
++    private Object getMock(InvocationOnMock invocation, GenericMetadataSupport returnTypeGenericMetadata) throws Throwable {
++    	InternalMockHandler<Object> handler = new MockUtil().getMockHandler(invocation.getMock());
++    	InvocationContainerImpl container = (InvocationContainerImpl) handler.getInvocationContainer();
+ 
+         // matches invocation for verification
+         for (StubbedInvocationMatcher stubbedInvocationMatcher : container.getStubbedInvocations()) {
+@@ -69,9 +69,9 @@ public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+     		}
+ 		}
+ 
+-        // deep stub
+-        return recordDeepStubMock(createNewDeepStubMock(returnTypeGenericMetadata), container);
+-    }
++        // deep stub
++        return recordDeepStubMock(createNewDeepStubMock(returnTypeGenericMetadata, (CreationSettings) handler.getMockSettings()), container);
++    }
+ 
+     /**
+      * Creates a mock using the Generics Metadata.
+@@ -83,22 +83,27 @@ public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+      * @param returnTypeGenericMetadata The metadata to use to create the new mock.
+      * @return The mock
+      */
+-    private Object createNewDeepStubMock(GenericMetadataSupport returnTypeGenericMetadata) {
+-        return mockitoCore.mock(
+-                returnTypeGenericMetadata.rawType(),
+-                withSettingsUsing(returnTypeGenericMetadata)
+-        );
+-    }
+-
+-    private MockSettings withSettingsUsing(GenericMetadataSupport returnTypeGenericMetadata) {
+-        MockSettings mockSettings =
+-                returnTypeGenericMetadata.rawExtraInterfaces().length > 0 ?
+-                withSettings().extraInterfaces(returnTypeGenericMetadata.rawExtraInterfaces())
+-                : withSettings();
+-
+-        return mockSettings
+-                .defaultAnswer(returnsDeepStubsAnswerUsing(returnTypeGenericMetadata));
+-    }
++    private Object createNewDeepStubMock(GenericMetadataSupport returnTypeGenericMetadata, CreationSettings parentSettings) {
++        return mockitoCore.mock(
++                returnTypeGenericMetadata.rawType(),
++                withSettingsUsing(returnTypeGenericMetadata, parentSettings)
++        );
++    }
++
++    private MockSettings withSettingsUsing(GenericMetadataSupport returnTypeGenericMetadata, CreationSettings parentSettings) {
++        MockSettings mockSettings =
++                returnTypeGenericMetadata.rawExtraInterfaces().length > 0 ?
++                withSettings().extraInterfaces(returnTypeGenericMetadata.rawExtraInterfaces())
++                : withSettings();
++
++        // Propagate serializable mode from the parent mock if set
++        if (parentSettings.isSerializable()) {
++            mockSettings.serializable(parentSettings.getSerializableMode());
++        }
++
++        return mockSettings
++                .defaultAnswer(returnsDeepStubsAnswerUsing(returnTypeGenericMetadata));
++    }
+ 
+     private ReturnsDeepStubs returnsDeepStubsAnswerUsing(final GenericMetadataSupport returnTypeGenericMetadata) {
+         return new ReturnsDeepStubs() {
+@@ -109,16 +114,25 @@ public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+         };
+     }
+ 
+-    private Object recordDeepStubMock(final Object mock, InvocationContainerImpl container) throws Throwable {
+-
+-        container.addAnswer(new Answer<Object>() {
+-            public Object answer(InvocationOnMock invocation) throws Throwable {
+-                return mock;
+-            }
+-        }, false);
+-
+-        return mock;
+-    }
++    private Object recordDeepStubMock(final Object mock, InvocationContainerImpl container) throws Throwable {
++
++        container.addAnswer(new DeepStubAnswer(mock), false);
++
++        return mock;
++    }
++
++    private static class DeepStubAnswer implements Answer<Object>, Serializable {
++        private static final long serialVersionUID = 1L;
++        private final Object mock;
++
++        private DeepStubAnswer(Object mock) {
++            this.mock = mock;
++        }
++
++        public Object answer(InvocationOnMock invocation) throws Throwable {
++            return mock;
++        }
++    }
+ 	
+ 		
+ 	

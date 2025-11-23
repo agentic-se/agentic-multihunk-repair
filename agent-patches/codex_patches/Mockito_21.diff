@@ -1,0 +1,28 @@
+diff --git a/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java b/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java
+index 0cc8226d8..f3fbbc9e7 100644
+--- a/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java
++++ b/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java
+@@ -19,9 +19,21 @@ public class ConstructorInstantiator implements Instantiator {
+ 
+     private <T> T withOuterClass(Class<T> cls) {
+         try {
+-            //this is kind of overengineered because we don't need to support more params
+-            //however, I know we will be needing it :)
++            // Try to find a constructor that accepts the outer instance type
++            // or any of its super types (inner classes take the enclosing type).
++            for (Constructor<?> constructor : cls.getDeclaredConstructors()) {
++                Class<?>[] paramTypes = constructor.getParameterTypes();
++                if (paramTypes.length == 1 && paramTypes[0].isAssignableFrom(outerClassInstance.getClass())) {
++                    @SuppressWarnings("unchecked")
++                    Constructor<T> matched = (Constructor<T>) constructor;
++                    matched.setAccessible(true);
++                    return matched.newInstance(outerClassInstance);
++                }
++            }
++
++            // Fallback to exact match (legacy behavior)
+             Constructor<T> c = cls.getDeclaredConstructor(outerClassInstance.getClass());
++            c.setAccessible(true);
+             return c.newInstance(outerClassInstance);
+         } catch (Exception e) {
+             throw paramsException(cls, e);

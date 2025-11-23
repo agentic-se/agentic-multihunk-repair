@@ -1,0 +1,42 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/std/EnumSerializer.java b/src/main/java/com/fasterxml/jackson/databind/ser/std/EnumSerializer.java
+index 75c12b5c4..83bdfe9ef 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/EnumSerializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/EnumSerializer.java
+@@ -96,17 +96,29 @@ public class EnumSerializer
+     public JsonSerializer<?> createContextual(SerializerProvider serializers,
+             BeanProperty property) throws JsonMappingException
+     {
++        // First, check for per-property overrides (annotations on the property itself
++        // or per-type config overrides associated with this property)
++        Boolean serializeAsIndex = null;
+         if (property != null) {
+-            JsonFormat.Value format = findFormatOverrides(serializers,
+-                    property, handledType());
+-            if (format != null) {
+-                Boolean serializeAsIndex = _isShapeWrittenUsingIndex(property.getType().getRawClass(),
+-                        format, false);
+-                if (serializeAsIndex != _serializeAsIndex) {
+-                    return new EnumSerializer(_values, serializeAsIndex);
+-                }
++            JsonFormat.Value propFormat = findFormatOverrides(serializers, property, handledType());
++            if (propFormat != null) {
++                serializeAsIndex = _isShapeWrittenUsingIndex(property.getType().getRawClass(),
++                        propFormat, false);
++            }
++        }
++        // If property-level settings did not determine shape, fall back to
++        // class-level defaults for the Enum type (annotations on Enum type)
++        if (serializeAsIndex == null) {
++            SerializationConfig config = serializers.getConfig();
++            BeanDescription desc = config.introspectClassAnnotations(handledType());
++            JsonFormat.Value classFormat = desc.findExpectedFormat(null);
++            if (classFormat != null) {
++                serializeAsIndex = _isShapeWrittenUsingIndex(handledType(), classFormat, true);
+             }
+         }
++        if (serializeAsIndex != null && serializeAsIndex != _serializeAsIndex) {
++            return new EnumSerializer(_values, serializeAsIndex);
++        }
+         return this;
+     }
+ 

@@ -1,0 +1,54 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/axes/AttributeContext.java b/src/java/org/apache/commons/jxpath/ri/axes/AttributeContext.java
+index 4198333..72a6c3d 100644
+--- a/src/java/org/apache/commons/jxpath/ri/axes/AttributeContext.java
++++ b/src/java/org/apache/commons/jxpath/ri/axes/AttributeContext.java
+@@ -16,10 +16,12 @@
+  */
+ package org.apache.commons.jxpath.ri.axes;
+ 
++import org.apache.commons.jxpath.ri.Compiler;
+ import org.apache.commons.jxpath.ri.EvalContext;
+ import org.apache.commons.jxpath.ri.QName;
+ import org.apache.commons.jxpath.ri.compiler.NodeNameTest;
+ import org.apache.commons.jxpath.ri.compiler.NodeTest;
++import org.apache.commons.jxpath.ri.compiler.NodeTypeTest;
+ import org.apache.commons.jxpath.ri.model.NodeIterator;
+ import org.apache.commons.jxpath.ri.model.NodePointer;
+ 
+@@ -31,6 +33,8 @@ import org.apache.commons.jxpath.ri.model.NodePointer;
+  */
+ public class AttributeContext extends EvalContext {
+ 
++    private static final QName WILDCARD = new QName(null, "*");
++
+     private NodeTest nodeTest;
+     private boolean setStarted = false;
+     private NodeIterator iterator;
+@@ -72,10 +76,21 @@ public class AttributeContext extends EvalContext {
+         super.setPosition(getCurrentPosition() + 1);
+         if (!setStarted) {
+             setStarted = true;
+-            if (!(nodeTest instanceof NodeNameTest)) {
++            final QName name;
++            if (nodeTest instanceof NodeTypeTest) {
++                if (((NodeTypeTest) nodeTest).getNodeType() == Compiler.NODE_TYPE_NODE) {
++                    name = WILDCARD;
++                }
++                else {
++                    return false;
++                }
++            }
++            else if (nodeTest instanceof NodeNameTest) {
++                name = ((NodeNameTest) nodeTest).getNodeName();
++            }
++            else {
+                 return false;
+             }
+-            QName name = ((NodeNameTest) nodeTest).getNodeName();
+             iterator =
+                 parentContext.getCurrentNodePointer().attributeIterator(name);
+         }
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

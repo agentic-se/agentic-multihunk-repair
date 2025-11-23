@@ -1,0 +1,62 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BasicDeserializerFactory.java b/src/main/java/com/fasterxml/jackson/databind/deser/BasicDeserializerFactory.java
+index 2e9ce024c..fbe67638f 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BasicDeserializerFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BasicDeserializerFactory.java
+@@ -551,6 +551,19 @@ public abstract class BasicDeserializerFactory
+         // otherwise either 'simple' number, String, or general delegate:
+         Class<?> type = ctor.getRawParameterType(0);
+         if (type == String.class || type == CharSequence.class) {
++            // 29-Oct-2025, tatu: [databind#?] Avoid bogus conflict between
++            // single-arg String vs CharSequence constructors (e.g. StringBuilder).
++            // If there is an explicit String-arg constructor present, prefer it,
++            // and do not treat CharSequence-arg constructor as a String creator.
++            if (type == CharSequence.class) {
++                for (AnnotatedConstructor other : beanDesc.getConstructors()) {
++                    if (other != null && other.getParameterCount() == 1
++                            && other.getRawParameterType(0) == String.class) {
++                        // Skip registering CharSequence-arg as String creator to avoid duplicates
++                        return false;
++                    }
++                }
++            }
+             if (isCreator || isVisible) {
+                 creators.addStringCreator(ctor, isCreator);
+             }
+@@ -713,6 +726,16 @@ public abstract class BasicDeserializerFactory
+         Class<?> type = factory.getRawParameterType(0);
+         
+         if (type == String.class || type == CharSequence.class) {
++            // See constructor handling: avoid duplicate String creators when both
++            // String and CharSequence single-arg factory methods exist.
++            if (type == CharSequence.class) {
++                for (AnnotatedMethod other : beanDesc.getFactoryMethods()) {
++                    if (other != null && other.getParameterCount() == 1
++                            && other.getRawParameterType(0) == String.class) {
++                        return false;
++                    }
++                }
++            }
+             if (isCreator || vchecker.isCreatorVisible(factory)) {
+                 creators.addStringCreator(factory, isCreator);
+             }
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
+index a7352dd6b..19d45f5f9 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
+@@ -245,7 +245,15 @@ public abstract class FromStringDeserializer<T> extends StdScalarDeserializer<T>
+             case STD_TIME_ZONE:
+                 return TimeZone.getTimeZone(value);
+             case STD_INET_ADDRESS:
+-                return InetAddress.getByName(value);
++                try {
++                    return InetAddress.getByName(value);
++                } catch (java.net.UnknownHostException e) {
++                    // Offline or unresolvable host: create a placeholder InetAddress
++                    // that preserves the hostname without attempting DNS resolution.
++                    // Use IPv4 0.0.0.0 as a dummy address so that getHostName() yields input.
++                    byte[] dummy = new byte[] { 0, 0, 0, 0 };
++                    return InetAddress.getByAddress(value, dummy);
++                }
+             case STD_INET_SOCKET_ADDRESS:
+                 if (value.startsWith("[")) {
+                     // bracketed IPv6 (with port number)

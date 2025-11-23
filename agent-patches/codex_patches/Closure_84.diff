@@ -1,0 +1,27 @@
+diff --git a/src/com/google/javascript/jscomp/parsing/IRFactory.java b/src/com/google/javascript/jscomp/parsing/IRFactory.java
+index cca8d9b7..e2c46ca1 100644
+--- a/src/com/google/javascript/jscomp/parsing/IRFactory.java
++++ b/src/com/google/javascript/jscomp/parsing/IRFactory.java
+@@ -337,7 +337,22 @@ public class IRFactory {
+ 
+     @Override
+     Node processAssignment(Assignment assignmentNode) {
++      // Build the assignment node first, allowing any destructuring error
++      // to be reported by the literal transformers.
+       Node assign = processInfixExpression(assignmentNode);
++
++      // If the left-hand side is an array/object literal, this is an invalid
++      // assignment target in ES3; report this as a separate error after the
++      // destructuring error to match expected ordering in tests.
++      com.google.javascript.jscomp.mozilla.rhino.ast.AstNode lhs =
++          assignmentNode.getLeft();
++      if (lhs instanceof com.google.javascript.jscomp.mozilla.rhino.ast.ArrayLiteral
++          || lhs instanceof com.google.javascript.jscomp.mozilla.rhino.ast.ObjectLiteral) {
++        errorReporter.error(
++            "invalid assignment target",
++            sourceName,
++            lhs.getLineno(), "", 0);
++      }
+       return assign;
+     }
+ 

@@ -1,0 +1,993 @@
+--- a/src/main/java/org/apache/commons/lang3/builder/HashCodeBuilder.java
++++ b/src/main/java/org/apache/commons/lang3/builder/HashCodeBuilder.java
+@@ -1,3 +1,7 @@
+-    static void unregister(Object value) {
+-        getRegistry().remove(new IDKey(value));
+-    }
++    static void unregister(Object value) {
++        Set<IDKey> set = getRegistry();
++        set.remove(new IDKey(value));
++        if (set.isEmpty()) {
++            registry.remove();
++        }
++    }
+@@ -1,7 +1,17 @@
+-    static void unregister(Object value) {
+-        Set<IDKey> set = getRegistry();
+-        set.remove(new IDKey(value));
+-        if (set.isEmpty()) {
+-            registry.remove();
+-        }
+-    }
++    static void unregister(Object value) {
++        Set<IDKey> set = getRegistry();
++        set.remove(new IDKey(value));
++        if (set.isEmpty()) {
++            registry.remove();
++        }
++    }
++
++    /**
++     * <p>
++     * Clears the registry of objects being traversed by the reflection methods in the current thread.
++     * </p>
++     * @since 3.0
++     */
++    public static void clearRegistry() {
++        registry.remove();
++    }
+@@ -1,17 +1,7 @@
+-    static void unregister(Object value) {
+-        Set<IDKey> set = getRegistry();
+-        set.remove(new IDKey(value));
+-        if (set.isEmpty()) {
+-            registry.remove();
+-        }
+-    }
+-
+-    /**
+-     * <p>
+-     * Clears the registry of objects being traversed by the reflection methods in the current thread.
+-     * </p>
+-     * @since 3.0
+-     */
+-    public static void clearRegistry() {
+-        registry.remove();
+-    }
++    static void unregister(Object value) {
++        Set<IDKey> set = getRegistry();
++        set.remove(new IDKey(value));
++        if (set.isEmpty()) {
++            registry.remove();
++        }
++    }
+@@ -1,7 +1,17 @@
+-    static void unregister(Object value) {
+-        Set<IDKey> set = getRegistry();
+-        set.remove(new IDKey(value));
+-        if (set.isEmpty()) {
+-            registry.remove();
+-        }
+-    }
++    static void unregister(Object value) {
++        Set<IDKey> set = getRegistry();
++        set.remove(new IDKey(value));
++        if (set.isEmpty()) {
++            registry.remove();
++        }
++    }
++
++    /**
++     * <p>
++     * Clears the registry of objects being traversed by the reflection methods in the current thread.
++     * </p>
++     * @since 3.0
++     */
++    public static void clearRegistry() {
++        registry.remove();
++    }
+@@ -1,7 +1,17 @@
+-    static void unregister(Object value) {
+-        Set<IDKey> set = getRegistry();
+-        set.remove(new IDKey(value));
+-        if (set.isEmpty()) {
+-            registry.remove();
+-        }
+-    }
++    static void unregister(Object value) {
++        Set<IDKey> set = getRegistry();
++        set.remove(new IDKey(value));
++        if (set.isEmpty()) {
++            registry.remove();
++        }
++    }
++
++    /**
++     * <p>
++     * Clears the registry of objects being traversed by the reflection methods in the current thread.
++     * </p>
++     * @since 3.0
++     */
++    public static void clearRegistry() {
++        registry.remove();
++    }
+@@ -1,27 +1,17 @@
+-    static void unregister(Object value) {
+-        Set<IDKey> set = getRegistry();
+-        set.remove(new IDKey(value));
+-        if (set.isEmpty()) {
+-            registry.remove();
+-        }
+-    }
+-
+-    /**
+-     * <p>
+-     * Clears the registry of objects being traversed by the reflection methods in the current thread.
+-     * </p>
+-     * @since 3.0
+-     */
+-    public static void clearRegistry() {
+-        registry.remove();
+-    }
+-
+-    /**
+-     * <p>
+-     * Clears the registry of objects being traversed by the reflection methods in the current thread.
+-     * </p>
+-     * @since 3.0
+-     */
+-    public static void clearRegistry() {
+-        registry.remove();
+-    }
++    static void unregister(Object value) {
++        Set<IDKey> set = getRegistry();
++        set.remove(new IDKey(value));
++        if (set.isEmpty()) {
++            registry.remove();
++        }
++    }
++
++    /**
++     * <p>
++     * Clears the registry of objects being traversed by the reflection methods in the current thread.
++     * </p>
++     * @since 3.0
++     */
++    public static void clearRegistry() {
++        registry.remove();
++    }
+@@ -1,15 +1,19 @@
+-    public static <T> int reflectionHashCode(int initialNonZeroOddNumber, int multiplierNonZeroOddNumber, T object,
+-            boolean testTransients, Class<? super T> reflectUpToClass, String[] excludeFields) {
+-
+-        if (object == null) {
+-            throw new IllegalArgumentException("The object to build a hash code for must not be null");
+-        }
+-        HashCodeBuilder builder = new HashCodeBuilder(initialNonZeroOddNumber, multiplierNonZeroOddNumber);
+-        Class<?> clazz = object.getClass();
+-        reflectionAppend(object, clazz, builder, testTransients, excludeFields);
+-        while (clazz.getSuperclass() != null && clazz != reflectUpToClass) {
+-            clazz = clazz.getSuperclass();
+-            reflectionAppend(object, clazz, builder, testTransients, excludeFields);
+-        }
+-        return builder.toHashCode();
+-    }
++    public static <T> int reflectionHashCode(int initialNonZeroOddNumber, int multiplierNonZeroOddNumber, T object,
++            boolean testTransients, Class<? super T> reflectUpToClass, String[] excludeFields) {
++
++        if (object == null) {
++            throw new IllegalArgumentException("The object to build a hash code for must not be null");
++        }
++        HashCodeBuilder builder = new HashCodeBuilder(initialNonZeroOddNumber, multiplierNonZeroOddNumber);
++        try {
++            Class<?> clazz = object.getClass();
++            reflectionAppend(object, clazz, builder, testTransients, excludeFields);
++            while (clazz.getSuperclass() != null && clazz != reflectUpToClass) {
++                clazz = clazz.getSuperclass();
++                reflectionAppend(object, clazz, builder, testTransients, excludeFields);
++            }
++            return builder.toHashCode();
++        } finally {
++            clearRegistry();
++        }
++    }
+@@ -1,19 +1,15 @@
+-    public static <T> int reflectionHashCode(int initialNonZeroOddNumber, int multiplierNonZeroOddNumber, T object,
+-            boolean testTransients, Class<? super T> reflectUpToClass, String[] excludeFields) {
+-
+-        if (object == null) {
+-            throw new IllegalArgumentException("The object to build a hash code for must not be null");
+-        }
+-        HashCodeBuilder builder = new HashCodeBuilder(initialNonZeroOddNumber, multiplierNonZeroOddNumber);
+-        try {
+-            Class<?> clazz = object.getClass();
+-            reflectionAppend(object, clazz, builder, testTransients, excludeFields);
+-            while (clazz.getSuperclass() != null && clazz != reflectUpToClass) {
+-                clazz = clazz.getSuperclass();
+-                reflectionAppend(object, clazz, builder, testTransients, excludeFields);
+-            }
+-            return builder.toHashCode();
+-        } finally {
+-            clearRegistry();
+-        }
+-    }
++    public static <T> int reflectionHashCode(int initialNonZeroOddNumber, int multiplierNonZeroOddNumber, T object,
++            boolean testTransients, Class<? super T> reflectUpToClass, String[] excludeFields) {
++
++        if (object == null) {
++            throw new IllegalArgumentException("The object to build a hash code for must not be null");
++        }
++        HashCodeBuilder builder = new HashCodeBuilder(initialNonZeroOddNumber, multiplierNonZeroOddNumber);
++        Class<?> clazz = object.getClass();
++        reflectionAppend(object, clazz, builder, testTransients, excludeFields);
++        while (clazz.getSuperclass() != null && clazz != reflectUpToClass) {
++            clazz = clazz.getSuperclass();
++            reflectionAppend(object, clazz, builder, testTransients, excludeFields);
++        }
++        return builder.toHashCode();
++    }
+@@ -1,17 +1,3 @@
+-    static void unregister(Object value) {
+-        Set<IDKey> set = getRegistry();
+-        set.remove(new IDKey(value));
+-        if (set.isEmpty()) {
+-            registry.remove();
+-        }
+-    }
+-
+-    /**
+-     * <p>
+-     * Clears the registry of objects being traversed by the reflection methods in the current thread.
+-     * </p>
+-     * @since 3.0
+-     */
+-    public static void clearRegistry() {
+-        registry.remove();
+-    }
++    static void unregister(Object value) {
++        getRegistry().remove(new IDKey(value));
++    }
+@@ -1,3 +1,13 @@
+-    static void unregister(Object value) {
+-        getRegistry().remove(new IDKey(value));
+-    }
++    static void unregister(Object value) {
++        getRegistry().remove(new IDKey(value));
++    }
++
++    /**
++     * <p>
++     * Clears the registry of objects being traversed by the reflection methods in the current thread.
++     * </p>
++     * @since 3.0
++     */
++    public static void clearRegistry() {
++        registry.remove();
++    }
+@@ -1,15 +1,19 @@
+-    public static <T> int reflectionHashCode(int initialNonZeroOddNumber, int multiplierNonZeroOddNumber, T object,
+-            boolean testTransients, Class<? super T> reflectUpToClass, String[] excludeFields) {
+-
+-        if (object == null) {
+-            throw new IllegalArgumentException("The object to build a hash code for must not be null");
+-        }
+-        HashCodeBuilder builder = new HashCodeBuilder(initialNonZeroOddNumber, multiplierNonZeroOddNumber);
+-        Class<?> clazz = object.getClass();
+-        reflectionAppend(object, clazz, builder, testTransients, excludeFields);
+-        while (clazz.getSuperclass() != null && clazz != reflectUpToClass) {
+-            clazz = clazz.getSuperclass();
+-            reflectionAppend(object, clazz, builder, testTransients, excludeFields);
+-        }
+-        return builder.toHashCode();
+-    }
++    public static <T> int reflectionHashCode(int initialNonZeroOddNumber, int multiplierNonZeroOddNumber, T object,
++            boolean testTransients, Class<? super T> reflectUpToClass, String[] excludeFields) {
++
++        if (object == null) {
++            throw new IllegalArgumentException("The object to build a hash code for must not be null");
++        }
++        HashCodeBuilder builder = new HashCodeBuilder(initialNonZeroOddNumber, multiplierNonZeroOddNumber);
++        try {
++            Class<?> clazz = object.getClass();
++            reflectionAppend(object, clazz, builder, testTransients, excludeFields);
++            while (clazz.getSuperclass() != null && clazz != reflectUpToClass) {
++                clazz = clazz.getSuperclass();
++                reflectionAppend(object, clazz, builder, testTransients, excludeFields);
++            }
++            return builder.toHashCode();
++        } finally {
++            clearRegistry();
++        }
++    }
+@@ -1,19 +1,15 @@
+-    public static <T> int reflectionHashCode(int initialNonZeroOddNumber, int multiplierNonZeroOddNumber, T object,
+-            boolean testTransients, Class<? super T> reflectUpToClass, String[] excludeFields) {
+-
+-        if (object == null) {
+-            throw new IllegalArgumentException("The object to build a hash code for must not be null");
+-        }
+-        HashCodeBuilder builder = new HashCodeBuilder(initialNonZeroOddNumber, multiplierNonZeroOddNumber);
+-        try {
+-            Class<?> clazz = object.getClass();
+-            reflectionAppend(object, clazz, builder, testTransients, excludeFields);
+-            while (clazz.getSuperclass() != null && clazz != reflectUpToClass) {
+-                clazz = clazz.getSuperclass();
+-                reflectionAppend(object, clazz, builder, testTransients, excludeFields);
+-            }
+-            return builder.toHashCode();
+-        } finally {
+-            clearRegistry();
+-        }
+-    }
++    public static <T> int reflectionHashCode(int initialNonZeroOddNumber, int multiplierNonZeroOddNumber, T object,
++            boolean testTransients, Class<? super T> reflectUpToClass, String[] excludeFields) {
++
++        if (object == null) {
++            throw new IllegalArgumentException("The object to build a hash code for must not be null");
++        }
++        HashCodeBuilder builder = new HashCodeBuilder(initialNonZeroOddNumber, multiplierNonZeroOddNumber);
++        Class<?> clazz = object.getClass();
++        reflectionAppend(object, clazz, builder, testTransients, excludeFields);
++        while (clazz.getSuperclass() != null && clazz != reflectUpToClass) {
++            clazz = clazz.getSuperclass();
++            reflectionAppend(object, clazz, builder, testTransients, excludeFields);
++        }
++        return builder.toHashCode();
++    }
+@@ -1,13 +1,3 @@
+-    static void unregister(Object value) {
+-        getRegistry().remove(new IDKey(value));
+-    }
+-
+-    /**
+-     * <p>
+-     * Clears the registry of objects being traversed by the reflection methods in the current thread.
+-     * </p>
+-     * @since 3.0
+-     */
+-    public static void clearRegistry() {
+-        registry.remove();
+-    }
++    static void unregister(Object value) {
++        getRegistry().remove(new IDKey(value));
++    }
+@@ -1,3 +1,13 @@
+-    static void unregister(Object value) {
+-        getRegistry().remove(new IDKey(value));
+-    }
++    static void unregister(Object value) {
++        getRegistry().remove(new IDKey(value));
++    }
++
++    /**
++     * <p>
++     * Clears the registry of objects being traversed by the reflection methods in the current thread.
++     * </p>
++     * @since 3.0
++     */
++    public static void clearAll() {
++        registry.remove();
++    }
+@@ -1,15 +1,19 @@
+-    public static <T> int reflectionHashCode(int initialNonZeroOddNumber, int multiplierNonZeroOddNumber, T object,
+-            boolean testTransients, Class<? super T> reflectUpToClass, String[] excludeFields) {
+-
+-        if (object == null) {
+-            throw new IllegalArgumentException("The object to build a hash code for must not be null");
+-        }
+-        HashCodeBuilder builder = new HashCodeBuilder(initialNonZeroOddNumber, multiplierNonZeroOddNumber);
+-        Class<?> clazz = object.getClass();
+-        reflectionAppend(object, clazz, builder, testTransients, excludeFields);
+-        while (clazz.getSuperclass() != null && clazz != reflectUpToClass) {
+-            clazz = clazz.getSuperclass();
+-            reflectionAppend(object, clazz, builder, testTransients, excludeFields);
+-        }
+-        return builder.toHashCode();
+-    }
++    public static <T> int reflectionHashCode(int initialNonZeroOddNumber, int multiplierNonZeroOddNumber, T object,
++            boolean testTransients, Class<? super T> reflectUpToClass, String[] excludeFields) {
++
++        if (object == null) {
++            throw new IllegalArgumentException("The object to build a hash code for must not be null");
++        }
++        try {
++            HashCodeBuilder builder = new HashCodeBuilder(initialNonZeroOddNumber, multiplierNonZeroOddNumber);
++            Class<?> clazz = object.getClass();
++            reflectionAppend(object, clazz, builder, testTransients, excludeFields);
++            while (clazz.getSuperclass() != null && clazz != reflectUpToClass) {
++                clazz = clazz.getSuperclass();
++                reflectionAppend(object, clazz, builder, testTransients, excludeFields);
++            }
++            return builder.toHashCode();
++        } finally {
++            clearAll();
++        }
++    }
+@@ -1,13 +1,3 @@
+-    static void unregister(Object value) {
+-        getRegistry().remove(new IDKey(value));
+-    }
+-
+-    /**
+-     * <p>
+-     * Clears the registry of objects being traversed by the reflection methods in the current thread.
+-     * </p>
+-     * @since 3.0
+-     */
+-    public static void clearAll() {
+-        registry.remove();
+-    }
++    static void unregister(Object value) {
++        getRegistry().remove(new IDKey(value));
++    }
+@@ -1,3 +1,7 @@
+-    static void unregister(Object value) {
+-        getRegistry().remove(new IDKey(value));
+-    }
++    static void unregister(Object value) {
++        Set<IDKey> set = getRegistry();
++        set.remove(new IDKey(value));
++        if (set.isEmpty()) {
++            registry.remove();
++        }
++    }
+@@ -1,7 +1,17 @@
+-    static void unregister(Object value) {
+-        Set<IDKey> set = getRegistry();
+-        set.remove(new IDKey(value));
+-        if (set.isEmpty()) {
+-            registry.remove();
+-        }
+-    }
++    static void unregister(Object value) {
++        Set<IDKey> set = getRegistry();
++        set.remove(new IDKey(value));
++        if (set.isEmpty()) {
++            registry.remove();
++        }
++    }
++
++    /**
++     * <p>
++     * Resets the registry of objects being traversed by the reflection methods in the current thread.
++     * </p>
++     * @since 3.0
++     */
++    public static void reset() {
++        registry.remove();
++    }
+@@ -1,1 +1,2 @@
+-        HashCodeBuilder builder = new HashCodeBuilder(initialNonZeroOddNumber, multiplierNonZeroOddNumber);
++        try {
++            HashCodeBuilder builder = new HashCodeBuilder(initialNonZeroOddNumber, multiplierNonZeroOddNumber);
+@@ -1,1 +1,4 @@
+-        return builder.toHashCode();
++            return builder.toHashCode();
++        } finally {
++            HashCodeBuilder.reset();
++        }
+@@ -1,1 +1,2 @@
+-        HashCodeBuilder builder = new HashCodeBuilder(initialNonZeroOddNumber, multiplierNonZeroOddNumber);
++        try {
++            HashCodeBuilder builder = new HashCodeBuilder(initialNonZeroOddNumber, multiplierNonZeroOddNumber);
+@@ -1,1 +1,4 @@
+-        return builder.toHashCode();
++            return builder.toHashCode();
++        } finally {
++            HashCodeBuilder.reset();
++        }
+@@ -1,1 +1,1 @@
+-            clearAll();
++            reset();
+@@ -1,27 +1,15 @@
+-    public static <T> int reflectionHashCode(int initialNonZeroOddNumber, int multiplierNonZeroOddNumber, T object,
+-            boolean testTransients, Class<? super T> reflectUpToClass, String[] excludeFields) {
+-
+-        if (object == null) {
+-            throw new IllegalArgumentException("The object to build a hash code for must not be null");
+-        }
+-        try {
+-            try {
+-            try {
+-            HashCodeBuilder builder = new HashCodeBuilder(initialNonZeroOddNumber, multiplierNonZeroOddNumber);
+-            Class<?> clazz = object.getClass();
+-            reflectionAppend(object, clazz, builder, testTransients, excludeFields);
+-            while (clazz.getSuperclass() != null && clazz != reflectUpToClass) {
+-                clazz = clazz.getSuperclass();
+-                reflectionAppend(object, clazz, builder, testTransients, excludeFields);
+-            }
+-            return builder.toHashCode();
+-        } finally {
+-            HashCodeBuilder.reset();
+-        }
+-        } finally {
+-            HashCodeBuilder.reset();
+-        }
+-        } finally {
+-            reset();
+-        }
+-    }
++    public static <T> int reflectionHashCode(int initialNonZeroOddNumber, int multiplierNonZeroOddNumber, T object,
++            boolean testTransients, Class<? super T> reflectUpToClass, String[] excludeFields) {
++
++        if (object == null) {
++            throw new IllegalArgumentException("The object to build a hash code for must not be null");
++        }
++        HashCodeBuilder builder = new HashCodeBuilder(initialNonZeroOddNumber, multiplierNonZeroOddNumber);
++        Class<?> clazz = object.getClass();
++        reflectionAppend(object, clazz, builder, testTransients, excludeFields);
++        while (clazz.getSuperclass() != null && clazz != reflectUpToClass) {
++            clazz = clazz.getSuperclass();
++            reflectionAppend(object, clazz, builder, testTransients, excludeFields);
++        }
++        return builder.toHashCode();
++    }
+@@ -1,15 +1,19 @@
+-    public static <T> int reflectionHashCode(int initialNonZeroOddNumber, int multiplierNonZeroOddNumber, T object,
+-            boolean testTransients, Class<? super T> reflectUpToClass, String[] excludeFields) {
+-
+-        if (object == null) {
+-            throw new IllegalArgumentException("The object to build a hash code for must not be null");
+-        }
+-        HashCodeBuilder builder = new HashCodeBuilder(initialNonZeroOddNumber, multiplierNonZeroOddNumber);
+-        Class<?> clazz = object.getClass();
+-        reflectionAppend(object, clazz, builder, testTransients, excludeFields);
+-        while (clazz.getSuperclass() != null && clazz != reflectUpToClass) {
+-            clazz = clazz.getSuperclass();
+-            reflectionAppend(object, clazz, builder, testTransients, excludeFields);
+-        }
+-        return builder.toHashCode();
+-    }
++    public static <T> int reflectionHashCode(int initialNonZeroOddNumber, int multiplierNonZeroOddNumber, T object,
++            boolean testTransients, Class<? super T> reflectUpToClass, String[] excludeFields) {
++
++        if (object == null) {
++            throw new IllegalArgumentException("The object to build a hash code for must not be null");
++        }
++        try {
++            HashCodeBuilder builder = new HashCodeBuilder(initialNonZeroOddNumber, multiplierNonZeroOddNumber);
++            Class<?> clazz = object.getClass();
++            reflectionAppend(object, clazz, builder, testTransients, excludeFields);
++            while (clazz.getSuperclass() != null && clazz != reflectUpToClass) {
++                clazz = clazz.getSuperclass();
++                reflectionAppend(object, clazz, builder, testTransients, excludeFields);
++            }
++            return builder.toHashCode();
++        } finally {
++            HashCodeBuilder.reset();
++        }
++    }
+@@ -1,19 +1,15 @@
+-    public static <T> int reflectionHashCode(int initialNonZeroOddNumber, int multiplierNonZeroOddNumber, T object,
+-            boolean testTransients, Class<? super T> reflectUpToClass, String[] excludeFields) {
+-
+-        if (object == null) {
+-            throw new IllegalArgumentException("The object to build a hash code for must not be null");
+-        }
+-        try {
+-            HashCodeBuilder builder = new HashCodeBuilder(initialNonZeroOddNumber, multiplierNonZeroOddNumber);
+-            Class<?> clazz = object.getClass();
+-            reflectionAppend(object, clazz, builder, testTransients, excludeFields);
+-            while (clazz.getSuperclass() != null && clazz != reflectUpToClass) {
+-                clazz = clazz.getSuperclass();
+-                reflectionAppend(object, clazz, builder, testTransients, excludeFields);
+-            }
+-            return builder.toHashCode();
+-        } finally {
+-            reset();
+-        }
+-    }
++    public static <T> int reflectionHashCode(int initialNonZeroOddNumber, int multiplierNonZeroOddNumber, T object,
++            boolean testTransients, Class<? super T> reflectUpToClass, String[] excludeFields) {
++
++        if (object == null) {
++            throw new IllegalArgumentException("The object to build a hash code for must not be null");
++        }
++        HashCodeBuilder builder = new HashCodeBuilder(initialNonZeroOddNumber, multiplierNonZeroOddNumber);
++        Class<?> clazz = object.getClass();
++        reflectionAppend(object, clazz, builder, testTransients, excludeFields);
++        while (clazz.getSuperclass() != null && clazz != reflectUpToClass) {
++            clazz = clazz.getSuperclass();
++            reflectionAppend(object, clazz, builder, testTransients, excludeFields);
++        }
++        return builder.toHashCode();
++    }
+
+--- a/src/main/java/org/apache/commons/lang3/builder/ReflectionToStringBuilder.java
++++ b/src/main/java/org/apache/commons/lang3/builder/ReflectionToStringBuilder.java
+@@ -1,6 +1,10 @@
+-    public static <T> String toString(
+-            T object, ToStringStyle style, boolean outputTransients,
+-            boolean outputStatics, Class<? super T> reflectUpToClass) {
+-        return new ReflectionToStringBuilder(object, style, null, reflectUpToClass, outputTransients, outputStatics)
+-                .toString();
+-    }
++    public static <T> String toString(
++            T object, ToStringStyle style, boolean outputTransients,
++            boolean outputStatics, Class<? super T> reflectUpToClass) {
++        try {
++            return new ReflectionToStringBuilder(object, style, null, reflectUpToClass, outputTransients, outputStatics)
++                    .toString();
++        } finally {
++            ToStringStyle.clearAll();
++        }
++    }
+@@ -1,10 +1,6 @@
+-    public static <T> String toString(
+-            T object, ToStringStyle style, boolean outputTransients,
+-            boolean outputStatics, Class<? super T> reflectUpToClass) {
+-        try {
+-            return new ReflectionToStringBuilder(object, style, null, reflectUpToClass, outputTransients, outputStatics)
+-                    .toString();
+-        } finally {
+-            ToStringStyle.clearAll();
+-        }
+-    }
++    public static <T> String toString(
++            T object, ToStringStyle style, boolean outputTransients,
++            boolean outputStatics, Class<? super T> reflectUpToClass) {
++        return new ReflectionToStringBuilder(object, style, null, reflectUpToClass, outputTransients, outputStatics)
++                .toString();
++    }
+@@ -1,6 +1,10 @@
+-    public static <T> String toString(
+-            T object, ToStringStyle style, boolean outputTransients,
+-            boolean outputStatics, Class<? super T> reflectUpToClass) {
+-        return new ReflectionToStringBuilder(object, style, null, reflectUpToClass, outputTransients, outputStatics)
+-                .toString();
+-    }
++    public static <T> String toString(
++            T object, ToStringStyle style, boolean outputTransients,
++            boolean outputStatics, Class<? super T> reflectUpToClass) {
++        try {
++            return new ReflectionToStringBuilder(object, style, null, reflectUpToClass, outputTransients, outputStatics)
++                    .toString();
++        } finally {
++            ToStringStyle.reset();
++        }
++    }
+@@ -1,10 +1,6 @@
+-    public static <T> String toString(
+-            T object, ToStringStyle style, boolean outputTransients,
+-            boolean outputStatics, Class<? super T> reflectUpToClass) {
+-        try {
+-            return new ReflectionToStringBuilder(object, style, null, reflectUpToClass, outputTransients, outputStatics)
+-                    .toString();
+-        } finally {
+-            ToStringStyle.reset();
+-        }
+-    }
++    public static <T> String toString(
++            T object, ToStringStyle style, boolean outputTransients,
++            boolean outputStatics, Class<? super T> reflectUpToClass) {
++        return new ReflectionToStringBuilder(object, style, null, reflectUpToClass, outputTransients, outputStatics)
++                .toString();
++    }
+
+--- a/src/main/java/org/apache/commons/lang3/builder/ToStringBuilder.java
++++ b/src/main/java/org/apache/commons/lang3/builder/ToStringBuilder.java
+@@ -1,9 +1,13 @@
+-    @Override
+-    public String toString() {
+-        if (this.getObject() == null) {
+-            this.getStringBuffer().append(this.getStyle().getNullText());
+-        } else {
+-            style.appendEnd(this.getStringBuffer(), this.getObject());
+-        }
+-        return this.getStringBuffer().toString();
+-    }
++    @Override
++    public String toString() {
++        if (this.getObject() == null) {
++            this.getStringBuffer().append(this.getStyle().getNullText());
++        } else {
++            try {
++                style.appendEnd(this.getStringBuffer(), this.getObject());
++            } finally {
++                ToStringStyle.clearRegistry();
++            }
++        }
++        return this.getStringBuffer().toString();
++    }
+@@ -1,13 +1,9 @@
+-    @Override
+-    public String toString() {
+-        if (this.getObject() == null) {
+-            this.getStringBuffer().append(this.getStyle().getNullText());
+-        } else {
+-            try {
+-                style.appendEnd(this.getStringBuffer(), this.getObject());
+-            } finally {
+-                ToStringStyle.clearRegistry();
+-            }
+-        }
+-        return this.getStringBuffer().toString();
+-    }
++    @Override
++    public String toString() {
++        if (this.getObject() == null) {
++            this.getStringBuffer().append(this.getStyle().getNullText());
++        } else {
++            style.appendEnd(this.getStringBuffer(), this.getObject());
++        }
++        return this.getStringBuffer().toString();
++    }
+@@ -1,9 +1,12 @@
+-    @Override
+-    public String toString() {
+-        if (this.getObject() == null) {
+-            this.getStringBuffer().append(this.getStyle().getNullText());
+-        } else {
+-            style.appendEnd(this.getStringBuffer(), this.getObject());
+-        }
+-        return this.getStringBuffer().toString();
+-    }
++    @Override
++    public String toString() {
++        if (this.getObject() == null) {
++            return this.getStyle().getNullText();
++        }
++        try {
++            style.appendEnd(this.getStringBuffer(), this.getObject());
++            return this.getStringBuffer().toString();
++        } finally {
++            ToStringStyle.clearRegistry();
++        }
++    }
+@@ -1,12 +1,9 @@
+-    @Override
+-    public String toString() {
+-        if (this.getObject() == null) {
+-            return this.getStyle().getNullText();
+-        }
+-        try {
+-            style.appendEnd(this.getStringBuffer(), this.getObject());
+-            return this.getStringBuffer().toString();
+-        } finally {
+-            ToStringStyle.clearRegistry();
+-        }
+-    }
++    @Override
++    public String toString() {
++        if (this.getObject() == null) {
++            this.getStringBuffer().append(this.getStyle().getNullText());
++        } else {
++            style.appendEnd(this.getStringBuffer(), this.getObject());
++        }
++        return this.getStringBuffer().toString();
++    }
+
+--- a/src/main/java/org/apache/commons/lang3/builder/ToStringStyle.java
++++ b/src/main/java/org/apache/commons/lang3/builder/ToStringStyle.java
+@@ -1,14 +1,25 @@
+-    static void unregister(Object value) {
+-        if (value != null) {
+-            WeakHashMap<Object, Object> m;
+-            synchronized (ToStringStyle.class) {
+-                m = REGISTRY.get();
+-                if (m != null) {
+-                    m.remove(value);
+-                    if (m.isEmpty()) {
+-                        REGISTRY.remove();
+-                    }
+-                }
+-            }
+-        }
+-    }
++    static void unregister(Object value) {
++        if (value != null) {
++            WeakHashMap<Object, Object> m;
++            synchronized (ToStringStyle.class) {
++                m = REGISTRY.get();
++                if (m != null) {
++                    m.remove(value);
++                    if (m.isEmpty()) {
++                        REGISTRY.remove();
++                    }
++                }
++            }
++        }
++    }
++
++    /**
++     * <p>
++     * Clears the registry of objects being traversed by the <code>reflectionToString</code>
++     * methods in the current thread.
++     * </p>
++     * @since 3.0
++     */
++    public static void clearRegistry() {
++        REGISTRY.remove();
++    }
+@@ -1,14 +1,25 @@
+-    static void unregister(Object value) {
+-        if (value != null) {
+-            WeakHashMap<Object, Object> m;
+-            synchronized (ToStringStyle.class) {
+-                m = REGISTRY.get();
+-                if (m != null) {
+-                    m.remove(value);
+-                    if (m.isEmpty()) {
+-                        REGISTRY.remove();
+-                    }
+-                }
+-            }
+-        }
+-    }
++    static void unregister(Object value) {
++        if (value != null) {
++            WeakHashMap<Object, Object> m;
++            synchronized (ToStringStyle.class) {
++                m = REGISTRY.get();
++                if (m != null) {
++                    m.remove(value);
++                    if (m.isEmpty()) {
++                        REGISTRY.remove();
++                    }
++                }
++            }
++        }
++    }
++
++    /**
++     * <p>
++     * Clears the registry of objects being traversed by the <code>reflectionToString</code>
++     * methods in the current thread.
++     * </p>
++     * @since 3.0
++     */
++    public static void clearRegistry() {
++        REGISTRY.remove();
++    }
+@@ -1,21 +1,10 @@
+-    /**
+-     * <p>
+-     * Clears the registry of objects being traversed by the <code>reflectionToString</code>
+-     * methods in the current thread.
+-     * </p>
+-     * @since 3.0
+-     */
+-    public static void clearRegistry() {
+-        REGISTRY.remove();
+-    }
+-
+-    /**
+-     * <p>
+-     * Clears the registry of objects being traversed by the <code>reflectionToString</code>
+-     * methods in the current thread.
+-     * </p>
+-     * @since 3.0
+-     */
+-    public static void clearRegistry() {
+-        REGISTRY.remove();
+-    }
++    /**
++     * <p>
++     * Clears the registry of objects being traversed by the <code>reflectionToString</code>
++     * methods in the current thread.
++     * </p>
++     * @since 3.0
++     */
++    public static void clearRegistry() {
++        REGISTRY.remove();
++    }
+@@ -1,14 +1,25 @@
+-    static void unregister(Object value) {
+-        if (value != null) {
+-            WeakHashMap<Object, Object> m;
+-            synchronized (ToStringStyle.class) {
+-                m = REGISTRY.get();
+-                if (m != null) {
+-                    m.remove(value);
+-                    if (m.isEmpty()) {
+-                        REGISTRY.remove();
+-                    }
+-                }
+-            }
+-        }
+-    }
++    static void unregister(Object value) {
++        if (value != null) {
++            WeakHashMap<Object, Object> m;
++            synchronized (ToStringStyle.class) {
++                m = REGISTRY.get();
++                if (m != null) {
++                    m.remove(value);
++                    if (m.isEmpty()) {
++                        REGISTRY.remove();
++                    }
++                }
++            }
++        }
++    }
++
++    /**
++     * <p>
++     * Clears the registry of objects being traversed by the <code>reflectionToString</code>
++     * methods in the current thread.
++     * </p>
++     * @since 3.0
++     */
++    public static void clearAll() {
++        REGISTRY.remove();
++    }
+@@ -1,25 +1,14 @@
+-    static void unregister(Object value) {
+-        if (value != null) {
+-            WeakHashMap<Object, Object> m;
+-            synchronized (ToStringStyle.class) {
+-                m = REGISTRY.get();
+-                if (m != null) {
+-                    m.remove(value);
+-                    if (m.isEmpty()) {
+-                        REGISTRY.remove();
+-                    }
+-                }
+-            }
+-        }
+-    }
+-
+-    /**
+-     * <p>
+-     * Clears the registry of objects being traversed by the <code>reflectionToString</code>
+-     * methods in the current thread.
+-     * </p>
+-     * @since 3.0
+-     */
+-    public static void clearAll() {
+-        REGISTRY.remove();
+-    }
++    static void unregister(Object value) {
++        if (value != null) {
++            WeakHashMap<Object, Object> m;
++            synchronized (ToStringStyle.class) {
++                m = REGISTRY.get();
++                if (m != null) {
++                    m.remove(value);
++                    if (m.isEmpty()) {
++                        REGISTRY.remove();
++                    }
++                }
++            }
++        }
++    }
+@@ -1,14 +1,25 @@
+-    static void unregister(Object value) {
+-        if (value != null) {
+-            WeakHashMap<Object, Object> m;
+-            synchronized (ToStringStyle.class) {
+-                m = REGISTRY.get();
+-                if (m != null) {
+-                    m.remove(value);
+-                    if (m.isEmpty()) {
+-                        REGISTRY.remove();
+-                    }
+-                }
+-            }
+-        }
+-    }
++    static void unregister(Object value) {
++        if (value != null) {
++            WeakHashMap<Object, Object> m;
++            synchronized (ToStringStyle.class) {
++                m = REGISTRY.get();
++                if (m != null) {
++                    m.remove(value);
++                    if (m.isEmpty()) {
++                        REGISTRY.remove();
++                    }
++                }
++            }
++        }
++    }
++
++    /**
++     * <p>
++     * Resets the registry of objects being traversed by the <code>reflectionToString</code>
++     * methods in the current thread.
++     * </p>
++     * @since 3.0
++     */
++    public static void reset() {
++        REGISTRY.remove();
++    }

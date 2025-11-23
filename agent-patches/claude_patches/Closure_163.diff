@@ -1,0 +1,78 @@
+diff --git a/src/com/google/javascript/jscomp/AnalyzePrototypeProperties.java b/src/com/google/javascript/jscomp/AnalyzePrototypeProperties.java
+index 10989ec0..c91d9e1f 100644
+--- a/src/com/google/javascript/jscomp/AnalyzePrototypeProperties.java
++++ b/src/com/google/javascript/jscomp/AnalyzePrototypeProperties.java
+@@ -226,6 +226,17 @@ class AnalyzePrototypeProperties implements CompilerPass {
+             parent.getString() /* VAR */ :
+             n.getFirstChild().getString() /* named function */;
+         symbolStack.push(new NameContext(getNameInfoForName(name, VAR)));
++      } else if (isPrototypePropertyInObjectLiteral(n, parent)) {
++        // Handle properties in object literals assigned to prototypes
++        // e.g., Foo.prototype = { bar: function() {...} }
++        NameInfo propNameInfo = getNameInfoForName(n.getString(), PROPERTY);
++        // If the prototype assignment is inside a non-global scope AND
++        // the object being assigned to is not global, mark the property
++        // as reading closure variables to prevent moving
++        if (!t.inGlobalScope() && !isPrototypeOfGlobalVar(parent.getParent(), t)) {
++          propNameInfo.readClosureVariables = true;
++        }
++        symbolStack.push(new NameContext(propNameInfo));
+       } else if (n.isFunction()) {
+         symbolStack.push(new NameContext(anonymousNode));
+       }
+@@ -302,6 +313,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
+       // Process prototype assignments to non-functions.
+       if (isPrototypePropertyAssign(n) ||
+           isGlobalFunctionDeclaration(t, n) ||
++          isPrototypePropertyInObjectLiteral(n, parent) ||
+           n.isFunction()) {
+         symbolStack.pop();
+       }
+@@ -341,6 +353,47 @@ class AnalyzePrototypeProperties implements CompilerPass {
+            n.getParent().isName());
+     }
+ 
++    /**
++     * Checks if the given node is a property key in an object literal
++     * that is being assigned to a prototype.
++     * e.g., for "Foo.prototype = {bar: ...}", when n is the "bar" key node
++     */
++    private boolean isPrototypePropertyInObjectLiteral(Node n, Node parent) {
++      if (parent != null && parent.isObjectLit()) {
++        Node objectLiteral = parent;
++        Node gramps = objectLiteral.getParent();
++        if (gramps != null && gramps.isAssign()) {
++          Node assignTarget = gramps.getFirstChild();
++          if (assignTarget.isGetProp() &&
++              assignTarget.getLastChild().getString().equals("prototype")) {
++            // This is a property in an object literal assigned to a prototype
++            return n.isString() || n.isGetterDef() || n.isSetterDef();
++          }
++        }
++      }
++      return false;
++    }
++
++    /**
++     * Checks if the given ASSIGN node assigns to a prototype of a global variable.
++     * e.g., for "Foo.prototype = {...}", checks if Foo is a global variable
++     */
++    private boolean isPrototypeOfGlobalVar(Node assignNode, NodeTraversal t) {
++      if (assignNode != null && assignNode.isAssign()) {
++        Node assignTarget = assignNode.getFirstChild();
++        if (assignTarget.isGetProp() &&
++            assignTarget.getLastChild().getString().equals("prototype")) {
++          Node objectNode = assignTarget.getFirstChild();
++          if (objectNode.isName()) {
++            String varName = objectNode.getString();
++            Var var = t.getScope().getVar(varName);
++            return var != null && var.isGlobal();
++          }
++        }
++      }
++      return false;
++    }
++
+     /**
+      * Returns true if this is the r-value of an assignment.
+      */

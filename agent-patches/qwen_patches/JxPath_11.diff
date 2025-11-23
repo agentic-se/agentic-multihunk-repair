@@ -1,0 +1,13 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMAttributeIterator.java b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMAttributeIterator.java
+index f4c2ac6..a156ada 100644
+--- a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMAttributeIterator.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMAttributeIterator.java
+@@ -94,6 +94,8 @@ public class DOMAttributeIterator implements NodeIterator {
+             if (nodePrefix != null) {
+                 nodeNS = parent.getNamespaceURI(nodePrefix);
+             }
++            
++            // Simple and correct namespace matching
+             return equalStrings(testNS, nodeNS);
+         }
+         return false;

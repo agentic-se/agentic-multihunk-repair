@@ -1,0 +1,118 @@
+--- a/src/java/org/apache/commons/cli2/WriteableCommandLine.java
++++ b/src/java/org/apache/commons/cli2/WriteableCommandLine.java
+@@ -1,11 +1,12 @@
+-    /**
+-     * Retrieves the Argument values specified on the command line for the
+-     * specified Option, this doesn't return any values supplied
+-     * programmatically as defaults.
+-     *
+-     * @param option the Option associated with the values
+-     * @return a list of values or an empty List if none are found
+-     */
+-
+-    /**
+-     * Sets the default values for an Option in the CommandLine
++    /**
++     * Retrieves the Argument values specified on the command line for the
++     * specified Option, this doesn't return any values supplied
++     * programmatically as defaults.
++     *
++     * @param option the Option associated with the values
++     * @return a list of values or an empty List if none are found
++     */
++    List getUndefaultedValues(final Option option);
++
++    /**
++     * Sets the default values for an Option in the CommandLine
+
+--- a/src/java/org/apache/commons/cli2/commandline/WriteableCommandLineImpl.java
++++ b/src/java/org/apache/commons/cli2/commandline/WriteableCommandLineImpl.java
+@@ -1,6 +1,12 @@
+-      // First grab the command line values
+-
+-      // Finally use an empty list
+-
+-    public Boolean getSwitch(final Option option,
+-                             final Boolean defaultValue) {
++    public List getUndefaultedValues(final Option option) {
++        List valueList = (List) values.get(option);
++
++        if (valueList == null) {
++            valueList = Collections.EMPTY_LIST;
++        }
++
++        return valueList;
++    }
++
++    public Boolean getSwitch(final Option option,
++                             final Boolean defaultValue) {
+
+--- a/src/java/org/apache/commons/cli2/option/ArgumentImpl.java
++++ b/src/java/org/apache/commons/cli2/option/ArgumentImpl.java
+@@ -1,6 +1,6 @@
+-    public void validate(final WriteableCommandLine commandLine,
+-                         final Option option)
+-        throws OptionException {
+-        final List values = commandLine.getValues(option);
+-
+-        if (values.size() < minimum) {
++    public void validate(final WriteableCommandLine commandLine,
++                         final Option option)
++        throws OptionException {
++        final List values = commandLine.getUndefaultedValues(option);
++
++        if (values.size() < minimum) {
+@@ -1,2 +1,2 @@
+-        // count of arguments processed for this option.
+-        int argumentCount = 0;
++        // count of arguments processed for this option.
++        int argumentCount = commandLine.getUndefaultedValues(option).size();
+@@ -1,2 +1,2 @@
+-        // count of arguments processed for this option.
+-        int argumentCount = commandLine.getUndefaultedValues(option).size();
++        // count of arguments processed for this option.
++        int argumentCount = 0;
+@@ -1,2 +1,2 @@
+-        // count of arguments processed for this option.
+-        int argumentCount = commandLine.getUndefaultedValues(option).size();
++        // count of arguments processed for this option.
++        int argumentCount = 0;
+@@ -1,2 +1,2 @@
+-        // count of arguments processed for this option.
+-        int argumentCount = 0;
++        // count of arguments processed for this option.
++        int argumentCount = commandLine.getUndefaultedValues(option).size();
+@@ -1,6 +1,6 @@
+-    public void validate(final WriteableCommandLine commandLine,
+-                         final Option option)
+-        throws OptionException {
+-        final List values = commandLine.getUndefaultedValues(option);
+-
+-        if (values.size() < minimum) {
++    public void validate(final WriteableCommandLine commandLine,
++                         final Option option)
++        throws OptionException {
++        final List values = commandLine.getValues(option);
++
++        if (values.size() < minimum) {
+
+--- a/src/java/org/apache/commons/cli2/option/SourceDestArgument.java
++++ b/src/java/org/apache/commons/cli2/option/SourceDestArgument.java
+@@ -1,4 +1,4 @@
+-    public void validate(WriteableCommandLine commandLine,
+-                         Option option)
+-        throws OptionException {
+-        final List values = commandLine.getValues(option);
++    public void validate(WriteableCommandLine commandLine,
++                         Option option)
++        throws OptionException {
++        final List values = commandLine.getUndefaultedValues(option);
+@@ -1,4 +1,4 @@
+-    public void validate(WriteableCommandLine commandLine,
+-                         Option option)
+-        throws OptionException {
+-        final List values = commandLine.getUndefaultedValues(option);
++    public void validate(WriteableCommandLine commandLine,
++                         Option option)
++        throws OptionException {
++        final List values = commandLine.getValues(option);

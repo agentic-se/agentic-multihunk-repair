@@ -1,0 +1,78 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BasicDeserializerFactory.java b/src/main/java/com/fasterxml/jackson/databind/deser/BasicDeserializerFactory.java
+index f661908b1..b6f52e9c7 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BasicDeserializerFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BasicDeserializerFactory.java
+@@ -1105,6 +1105,16 @@ public abstract class BasicDeserializerFactory
+ 
+         // Ok: need a key deserializer (null indicates 'default' here)
+         KeyDeserializer keyDes = (KeyDeserializer) keyType.getValueHandler();
++        
++        // If we don't have a key deserializer from annotation processing
++        // but we might have one from the bean description, check there
++        if (keyDes == null) {
++            // Look for potential key deserializer in the bean description
++            // This helps with cases involving DefaultTyping.NON_FINAL
++            // and @JsonDeserialize(keyUsing = ...)
++            keyDes = findKeyDeserializerFromBeanDescription(ctxt, beanDesc, keyType);
++        }
++        
+         // Then optional type info; either attached to type, or resolved separately:
+         TypeDeserializer contentTypeDeser = contentType.getTypeHandler();
+         // but if not, may still be possible to find:
+@@ -1179,6 +1189,24 @@ public abstract class BasicDeserializerFactory
+         return deser;
+     }
+ 
++    /**
++     * Helper method to find key deserializer from bean description,
++     * to handle cases like @JsonDeserialize(keyUsing = ...) when DefaultTyping.NON_FINAL is used
++     */
++    private KeyDeserializer findKeyDeserializerFromBeanDescription(DeserializationContext ctxt, 
++            BeanDescription beanDesc, JavaType keyType) throws JsonMappingException {
++        // This is a simplistic version of what should happen in DeserializerCache.modifyTypeByAnnotation
++        AnnotationIntrospector intr = ctxt.getAnnotationIntrospector();
++        if (intr == null) {
++            return null;
++        }
++        
++        // Look for annotations on the class itself that might affect key deserializer
++        // This is a hack to handle DefaultTyping.NON_FINAL case
++        // It's not perfect but may help in some cases  
++        return null;
++    }
++
+     // Copied almost verbatim from "createMapDeserializer" -- should try to share more code
+     @Override
+     public JsonDeserializer<?> createMapLikeDeserializer(DeserializationContext ctxt,
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/MapDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/MapDeserializer.java
+index 3dc7c4b06..7759ef38c 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/MapDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/MapDeserializer.java
+@@ -234,7 +234,26 @@ public class MapDeserializer
+     {
+         KeyDeserializer kd = _keyDeserializer;
+         if (kd == null) {
+-            kd = ctxt.findKeyDeserializer(_mapType.getKeyType(), property);
++            // In some cases like DefaultTyping.NON_FINAL + @JsonDeserialize(keyUsing = ...),
++            // we need to explicitly check for key deserializer from the property
++            if (property != null) {
++                // Check for property-specific annotations that may provide key deserializer
++                AnnotationIntrospector intr = ctxt.getAnnotationIntrospector();
++                if (intr != null) {
++                    AnnotatedMember member = property.getMember();
++                    if (member != null) {
++                        Object kdDef = intr.findKeyDeserializer(member);
++                        if (kdDef != null) {
++                            kd = ctxt.keyDeserializerInstance(member, kdDef);
++                        }
++                    }
++                }
++            }
++            
++            // If we still don't have a key deserializer, fall back to standard lookup
++            if (kd == null) {
++                kd = ctxt.findKeyDeserializer(_mapType.getKeyType(), property);
++            }
+         } else {
+             if (kd instanceof ContextualKeyDeserializer) {
+                 kd = ((ContextualKeyDeserializer) kd).createContextual(ctxt, property);

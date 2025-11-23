@@ -1,0 +1,93 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/introspect/JacksonAnnotationIntrospector.java b/src/main/java/com/fasterxml/jackson/databind/introspect/JacksonAnnotationIntrospector.java
+index df4c2a770..78b94d9c7 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/introspect/JacksonAnnotationIntrospector.java
++++ b/src/main/java/com/fasterxml/jackson/databind/introspect/JacksonAnnotationIntrospector.java
+@@ -762,6 +762,9 @@ public class JacksonAnnotationIntrospector
+                     } else if (currRaw.isAssignableFrom(serClass)) { // specialization, ok as well
+                         type = tf.constructSpecializedType(type, serClass);
+                         // 27-Apr-2017, tatu: [databind#1592] ignore primitive<->wrapper refinements
++                    } else if (_isPrimitiveWrapperPair(currRaw, serClass)) {
++                        // Ignore mismatch between primitive and its wrapper
++                        // and leave original type as-is
+                     } else {
+                         throw new JsonMappingException(null,
+                                 String.format("Can not refine serialization type %s into %s; types not related",
+@@ -795,6 +798,9 @@ public class JacksonAnnotationIntrospector
+                         } else if (currRaw.isAssignableFrom(keyClass)) { // specialization, ok as well
+                             keyType = tf.constructSpecializedType(keyType, keyClass);
+                             // 27-Apr-2017, tatu: [databind#1592] ignore primitive<->wrapper refinements
++                        } else if (_isPrimitiveWrapperPair(currRaw, keyClass)) {
++                            // Ignore mismatch between primitive and its wrapper
++                            // and leave original type as-is
+                         } else {
+                             throw new JsonMappingException(null,
+                                     String.format("Can not refine serialization key type %s into %s; types not related",
+@@ -829,6 +835,9 @@ public class JacksonAnnotationIntrospector
+                        } else if (currRaw.isAssignableFrom(contentClass)) { // specialization, ok as well
+                            contentType = tf.constructSpecializedType(contentType, contentClass);
+                            // 27-Apr-2017, tatu: [databind#1592] ignore primitive<->wrapper refinements
++                       } else if (_isPrimitiveWrapperPair(currRaw, contentClass)) {
++                           // Ignore mismatch between primitive and its wrapper
++                           // and leave original type as-is
+                        } else {
+                            throw new JsonMappingException(null,
+                                    String.format("Can not refine serialization content type %s into %s; types not related",
+@@ -1118,7 +1127,12 @@ public class JacksonAnnotationIntrospector
+         final Class<?> valueClass = (jsonDeser == null) ? null : _classIfExplicit(jsonDeser.as());
+         if ((valueClass != null) && !type.hasRawClass(valueClass)) {
+             try {
+-                type = tf.constructSpecializedType(type, valueClass);
++                Class<?> currRaw = type.getRawClass();
++                if (_isPrimitiveWrapperPair(currRaw, valueClass)) {
++                    // 27-Apr-2017, tatu: [databind#1592] ignore primitive<->wrapper refinements
++                } else {
++                    type = tf.constructSpecializedType(type, valueClass);
++                }
+             } catch (IllegalArgumentException iae) {
+                 throw new JsonMappingException(null,
+                         String.format("Failed to narrow type %s with annotation (value %s), from '%s': %s",
+@@ -1134,7 +1148,12 @@ public class JacksonAnnotationIntrospector
+             final Class<?> keyClass = (jsonDeser == null) ? null : _classIfExplicit(jsonDeser.keyAs());
+             if (keyClass != null) {
+                 try {
+-                    keyType = tf.constructSpecializedType(keyType, keyClass);
++                    Class<?> currRaw = keyType.getRawClass();
++                    if (_isPrimitiveWrapperPair(currRaw, keyClass)) {
++                        // ignore primitive<->wrapper refinements
++                    } else {
++                        keyType = tf.constructSpecializedType(keyType, keyClass);
++                    }
+                     type = ((MapLikeType) type).withKeyType(keyType);
+                 } catch (IllegalArgumentException iae) {
+                     throw new JsonMappingException(null,
+@@ -1150,7 +1169,12 @@ public class JacksonAnnotationIntrospector
+             final Class<?> contentClass = (jsonDeser == null) ? null : _classIfExplicit(jsonDeser.contentAs());
+             if (contentClass != null) {
+                 try {
+-                    contentType = tf.constructSpecializedType(contentType, contentClass);
++                    Class<?> currRaw = contentType.getRawClass();
++                    if (_isPrimitiveWrapperPair(currRaw, contentClass)) {
++                        // ignore primitive<->wrapper refinements
++                    } else {
++                        contentType = tf.constructSpecializedType(contentType, contentClass);
++                    }
+                     type = type.withContentType(contentType);
+                 } catch (IllegalArgumentException iae) {
+                     throw new JsonMappingException(null,
+@@ -1320,6 +1344,16 @@ public class JacksonAnnotationIntrospector
+     /**********************************************************
+      */
+ 
++    // @since 2.9: [databind#1592]
++    private static boolean _isPrimitiveWrapperPair(Class<?> a, Class<?> b) {
++        Class<?> pa = com.fasterxml.jackson.databind.util.ClassUtil.primitiveType(a);
++        if (pa == null) {
++            return false;
++        }
++        Class<?> pb = com.fasterxml.jackson.databind.util.ClassUtil.primitiveType(b);
++        return (pb != null) && (pa == pb);
++    }
++
+     protected boolean _isIgnorable(Annotated a)
+     {
+         JsonIgnore ann = _findAnnotation(a, JsonIgnore.class);

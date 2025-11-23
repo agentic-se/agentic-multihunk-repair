@@ -1,0 +1,24 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+index 6c43863fc..e31b2a82f 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+@@ -599,7 +599,8 @@ public final class TypeFactory
+      */
+     @Deprecated
+     public JavaType constructType(Type type, Class<?> contextClass) {
+-        return constructType(type, constructType(contextClass));
++        JavaType contextType = (contextClass == null) ? null : constructType(contextClass);
++        return constructType(type, contextType);
+     }
+ 
+     /**
+@@ -607,7 +608,8 @@ public final class TypeFactory
+      */
+     @Deprecated
+     public JavaType constructType(Type type, JavaType contextType) {
+-        return _fromAny(null, type, contextType.getBindings());
++        TypeBindings bindings = (contextType == null) ? EMPTY_BINDINGS : contextType.getBindings();
++        return _fromAny(null, type, bindings);
+     }
+ 
+     /*

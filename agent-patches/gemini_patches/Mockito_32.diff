@@ -1,0 +1,15 @@
+--- a/src/org/mockito/internal/configuration/SpyAnnotationEngine.java
++++ b/src/org/mockito/internal/configuration/SpyAnnotationEngine.java
+@@ -1,3 +1,9 @@
+-                    } else {
+-                        field.set(testClass, Mockito.spy(instance));
+-                    }
++                    } else {
++                        field.set(testClass, Mockito.mock(
++                                (Class<Object>) instance.getClass(),
++                                Mockito.withSettings()
++                                        .spiedInstance(instance)
++                                        .defaultAnswer(Mockito.CALLS_REAL_METHODS)
++                                        .name(field.getName())
++                        ));
++                    }

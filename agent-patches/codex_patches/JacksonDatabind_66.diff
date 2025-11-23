@@ -1,0 +1,27 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
+index f827c318d..f997fdfef 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
+@@ -312,8 +312,15 @@ public class StdKeyDeserializer extends KeyDeserializer
+                 return null;
+             }
+             try {
+-                // Ugh... should not have to give parser which may or may not be correct one...
+-                Object result = _delegate.deserialize(ctxt.getParser(), ctxt);
++                // Create a parser over the String key to avoid relying on
++                // context's parser (which may point at wrong token, especially
++                // with polymorphic handling that buffers ahead).
++                com.fasterxml.jackson.databind.util.TokenBuffer tb =
++                        new com.fasterxml.jackson.databind.util.TokenBuffer(ctxt.getParser(), ctxt);
++                tb.writeString(key);
++                com.fasterxml.jackson.core.JsonParser p = tb.asParser();
++                p.nextToken();
++                Object result = _delegate.deserialize(p, ctxt);
+                 if (result != null) {
+                     return result;
+                 }
+@@ -427,4 +434,3 @@ public class StdKeyDeserializer extends KeyDeserializer
+         }
+     }
+ }
+-

@@ -1,0 +1,30 @@
+diff --git a/src/main/java/org/jsoup/nodes/DocumentType.java b/src/main/java/org/jsoup/nodes/DocumentType.java
+index f9f77da..ef4c03a 100644
+--- a/src/main/java/org/jsoup/nodes/DocumentType.java
++++ b/src/main/java/org/jsoup/nodes/DocumentType.java
+@@ -18,6 +18,11 @@ public class DocumentType extends Node {
+     public DocumentType(String name, String publicId, String systemId, String baseUri) {
+         super(baseUri);
+ 
++        if (StringUtil.isBlank(name))
++            throw new IllegalArgumentException("Doctype name must not be blank");
++        if (publicId == null || systemId == null)
++            throw new IllegalArgumentException("Public and System IDs must not be null");
++
+         attr("name", name);
+         attr("publicId", publicId);
+         attr("systemId", systemId);
+@@ -30,11 +35,11 @@ public class DocumentType extends Node {
+ 
+     @Override
+     void outerHtmlHead(StringBuilder accum, int depth, Document.OutputSettings out) {
+-        accum.append("<!DOCTYPE html");
++        accum.append("<!DOCTYPE ").append(attr("name"));
+         if (!StringUtil.isBlank(attr("publicId")))
+             accum.append(" PUBLIC \"").append(attr("publicId")).append("\"");
+         if (!StringUtil.isBlank(attr("systemId")))
+-            accum.append(' ').append(attr("systemId")).append("\"");
++            accum.append(' ').append('\"').append(attr("systemId")).append('\"');
+         accum.append('>');
+     }
+ 

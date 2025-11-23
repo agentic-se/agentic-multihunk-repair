@@ -1,0 +1,58 @@
+diff --git a/src/main/java/org/jsoup/helper/W3CDom.java b/src/main/java/org/jsoup/helper/W3CDom.java
+index f58a925..a9650b1 100644
+--- a/src/main/java/org/jsoup/helper/W3CDom.java
++++ b/src/main/java/org/jsoup/helper/W3CDom.java
+@@ -71,6 +71,8 @@ public class W3CDom {
+ 
+         private final Document doc;
+         private final HashMap<String, String> namespaces = new HashMap<>();
++        // Track namespace changes per element to correctly scope declarations
++        private final java.util.ArrayDeque<java.util.HashMap<String, String>> namespaceStack = new java.util.ArrayDeque<>();
+         private Element dest;
+ 
+         public W3CBuilder(Document doc) {
+@@ -113,6 +115,21 @@ public class W3CDom {
+             if (source instanceof org.jsoup.nodes.Element && dest.getParentNode() instanceof Element) {
+                 dest = (Element) dest.getParentNode(); // undescend. cromulent.
+             }
++            // Restore any namespace declarations that were introduced at this element scope
++            if (source instanceof org.jsoup.nodes.Element) {
++                java.util.HashMap<String, String> prev = namespaceStack.pollLast();
++                if (prev != null) {
++                    for (java.util.Map.Entry<String, String> entry : prev.entrySet()) {
++                        String prefix = entry.getKey();
++                        String prior = entry.getValue();
++                        if (prior == null) {
++                            namespaces.remove(prefix);
++                        } else {
++                            namespaces.put(prefix, prior);
++                        }
++                    }
++                }
++            }
+         }
+ 
+         private void copyAttributes(org.jsoup.nodes.Node source, Element el) {
+@@ -131,6 +148,7 @@ public class W3CDom {
+             // scan the element for namespace declarations
+             // like: xmlns="blah" or xmlns:prefix="blah"
+             Attributes attributes = el.attributes();
++            java.util.HashMap<String, String> previousMappings = new java.util.HashMap<>();
+             for (Attribute attr : attributes) {
+                 String key = attr.getKey();
+                 String prefix;
+@@ -141,8 +159,14 @@ public class W3CDom {
+                 } else {
+                     continue;
+                 }
++                // record prior value to restore on scope exit
++                if (!previousMappings.containsKey(prefix)) {
++                    previousMappings.put(prefix, namespaces.get(prefix));
++                }
+                 namespaces.put(prefix, attr.getValue());
+             }
++            // push this element's namespace changes onto the stack
++            namespaceStack.addLast(previousMappings);
+ 
+             // get the element prefix if any
+             int pos = el.tagName().indexOf(":");

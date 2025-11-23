@@ -1,0 +1,43 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index 82c17c9..3037d61 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -1,5 +1,6 @@
+ package org.jsoup.helper;
+ 
++import org.jsoup.UncheckedIOException;
+ import org.jsoup.internal.ConstrainableInputStream;
+ import org.jsoup.nodes.Document;
+ import org.jsoup.nodes.Element;
+@@ -148,8 +149,12 @@ public final class DataUtil {
+             if (charsetName == null)
+                 charsetName = defaultCharset;
+             BufferedReader reader = new BufferedReader(new InputStreamReader(input, charsetName), bufferSize);
++            try {
+                 doc = parser.parseInput(reader, baseUri);
++            } catch (UncheckedIOException e) {
+                 // io exception when parsing (not seen before because reading the stream as we go)
++                throw e.ioException();
++            }
+             doc.outputSettings().charset(charsetName);
+         }
+         input.close();
+diff --git a/src/main/java/org/jsoup/parser/CharacterReader.java b/src/main/java/org/jsoup/parser/CharacterReader.java
+index b3b82e9..6cdaa8b 100644
+--- a/src/main/java/org/jsoup/parser/CharacterReader.java
++++ b/src/main/java/org/jsoup/parser/CharacterReader.java
+@@ -52,7 +52,9 @@ public final class CharacterReader {
+             reader.mark(maxBufferLen);
+             final int read = reader.read(charBuf);
+             reader.reset();
+-            if (read != -1) {
++            if (read == 0) {
++                throw new IOException("Underlying input stream returned zero bytes");
++            } else if (read != -1) {
+                 bufLength = read;
+                 readerPos += bufPos;
+                 bufPos = 0;
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

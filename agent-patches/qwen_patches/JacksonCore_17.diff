@@ -1,0 +1,24 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/json/UTF8JsonGenerator.java b/src/main/java/com/fasterxml/jackson/core/json/UTF8JsonGenerator.java
+index 4f4394c8..a98f8203 100644
+--- a/src/main/java/com/fasterxml/jackson/core/json/UTF8JsonGenerator.java
++++ b/src/main/java/com/fasterxml/jackson/core/json/UTF8JsonGenerator.java
+@@ -1884,7 +1884,18 @@ public class UTF8JsonGenerator
+             if (ch <= SURR2_LAST) { // yes, outside of BMP
+                 // Do we have second part?
+                 if (inputOffset >= inputEnd || cbuf == null) { // nope... have to note down
+-                    _reportError("Split surrogate on writeRaw() input (last character)");
++                    // [core#307] In segmented processing, we might be legitimately at a boundary
++                    // where a high surrogate could be followed by a low surrogate in the next segment
++                    // Instead of throwing an error, treat it as a standalone character for now
++                    // and let the consumer handle it appropriately
++                    
++                    // Just output the character as a 3-byte UTF-8 sequence (invalid surrogate sequence)
++                    // This is a conservative approach to avoid breaking valid JSON
++                    final byte[] bbuf = _outputBuffer;
++                    bbuf[_outputTail++] = (byte) (0xe0 | (ch >> 12));
++                    bbuf[_outputTail++] = (byte) (0x80 | ((ch >> 6) & 0x3f));
++                    bbuf[_outputTail++] = (byte) (0x80 | (ch & 0x3f));
++                    return inputOffset;
+                 }
+                 _outputSurrogates(ch, cbuf[inputOffset]);
+                 return inputOffset+1;

@@ -1,0 +1,55 @@
+--- a/src/java/org/apache/commons/cli2/validation/FileValidator.java
++++ b/src/java/org/apache/commons/cli2/validation/FileValidator.java
+@@ -1,1 +1,5 @@
+-            final String name = (String)i.next();
++            final Object value = i.next();
++
++            // Only process if it's a String, otherwise assume it's already a File or other validated object
++            if (value instanceof String) {
++                final String name = (String) value;
+@@ -1,22 +1,23 @@
+-    public void validate(final List values) throws InvalidArgumentException {
+-        for (final ListIterator i = values.listIterator(); i.hasNext();) {
+-            final Object value = i.next();
+-
+-            // Only process if it's a String, otherwise assume it's already a File or other validated object
+-            if (value instanceof String) {
+-                final String name = (String) value;
+-            final File f = new File(name);
+-
+-            if ((existing && !f.exists())
+-                || (file && !f.isFile())
+-                || (directory && !f.isDirectory())
+-                || (hidden && !f.isHidden())
+-                || (readable && !f.canRead())
+-                || (writable && !f.canWrite())) {
+-
+-                throw new InvalidArgumentException(name);
+-            }
+-
+-            i.set(f);
+-        }
+-    }
++    public void validate(final List values) throws InvalidArgumentException {
++        for (final ListIterator i = values.listIterator(); i.hasNext();) {
++            final Object value = i.next();
++
++            // Only process if it's a String, otherwise assume it's already a File or other validated object
++            if (value instanceof String) {
++                final String name = (String) value;
++                final File f = new File(name);
++
++                if ((existing && !f.exists())
++                    || (file && !f.isFile())
++                    || (directory && !f.isDirectory())
++                    || (hidden && !f.isHidden())
++                    || (readable && !f.canRead())
++                    || (writable && !f.canWrite())) {
++
++                    throw new InvalidArgumentException(name);
++                }
++
++                i.set(f); // Replace String with File object
++            }
++        }
++    }

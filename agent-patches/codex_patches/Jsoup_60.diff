@@ -1,0 +1,128 @@
+diff --git a/src/main/java/org/jsoup/parser/TokenQueue.java b/src/main/java/org/jsoup/parser/TokenQueue.java
+index fc22b04..dda62d3 100644
+--- a/src/main/java/org/jsoup/parser/TokenQueue.java
++++ b/src/main/java/org/jsoup/parser/TokenQueue.java
+@@ -285,6 +285,10 @@ public class TokenQueue {
+                 end = pos; // don't include the outer match pair in the return
+             last = c;
+         } while (depth > 0);
++        // If we ran out of input before closing, or we're still inside a quote, that's an unbalanced input.
++        if (depth > 0 || inQuote) {
++            throw new IllegalStateException("Unbalanced quote or bracket in chompBalanced");
++        }
+         final String out = (end >= 0) ? queue.substring(start, end) : "";
+         return out;
+     }
+diff --git a/src/main/java/org/jsoup/select/QueryParser.java b/src/main/java/org/jsoup/select/QueryParser.java
+index 923cfe9..f3e3267 100644
+--- a/src/main/java/org/jsoup/select/QueryParser.java
++++ b/src/main/java/org/jsoup/select/QueryParser.java
+@@ -39,6 +39,17 @@ public class QueryParser {
+             return p.parse();
+     }
+ 
++    // Helper to safely chomp a balanced section and surface a selector parse exception if unbalanced
++    private String chompBalancedOrFail(char open, char close) {
++        try {
++            return tq.chompBalanced(open, close);
++        } catch (IllegalStateException e) {
++            throw new Selector.SelectorParseException(
++                "Could not parse query '%s': unmatched %s in '%s'",
++                query, String.valueOf(open), tq.toString());
++        }
++    }
++
+     /**
+      * Parse the query
+      * @return Evaluator
+@@ -128,9 +139,9 @@ public class QueryParser {
+         StringBuilder sq = new StringBuilder();
+         while (!tq.isEmpty()) {
+             if (tq.matches("("))
+-                sq.append("(").append(tq.chompBalanced('(', ')')).append(")");
++                sq.append("(").append(chompBalancedOrFail('(', ')')).append(")");
+             else if (tq.matches("["))
+-                sq.append("[").append(tq.chompBalanced('[', ']')).append("]");
++                sq.append("[").append(chompBalancedOrFail('[', ']')).append("]");
+             else if (tq.matchesAny(combinators))
+                 break;
+             else
+@@ -229,7 +240,7 @@ public class QueryParser {
+     }
+ 
+     private void byAttribute() {
+-        TokenQueue cq = new TokenQueue(tq.chompBalanced('[', ']')); // content queue
++        TokenQueue cq = new TokenQueue(chompBalancedOrFail('[', ']')); // content queue
+         String key = cq.consumeToAny(AttributeEvals); // eq, not, start, end, contain, match, (no val)
+         Validate.notEmpty(key);
+         cq.consumeWhitespace();
+@@ -325,7 +336,12 @@ public class QueryParser {
+     // pseudo selector :has(el)
+     private void has() {
+         tq.consume(":has");
+-        String subQuery = tq.chompBalanced('(', ')');
++        String subQuery;
++        try {
++            subQuery = tq.chompBalanced('(', ')');
++        } catch (IllegalStateException e) {
++            throw new Selector.SelectorParseException("Could not parse query '%s': unmatched ( in '%s'", query, tq.toString());
++        }
+         Validate.notEmpty(subQuery, ":has(el) subselect must not be empty");
+         evals.add(new StructuralEvaluator.Has(parse(subQuery)));
+     }
+@@ -333,7 +349,12 @@ public class QueryParser {
+     // pseudo selector :contains(text), containsOwn(text)
+     private void contains(boolean own) {
+         tq.consume(own ? ":containsOwn" : ":contains");
+-        String searchText = TokenQueue.unescape(tq.chompBalanced('(', ')'));
++        String searchText;
++        try {
++            searchText = TokenQueue.unescape(tq.chompBalanced('(', ')'));
++        } catch (IllegalStateException e) {
++            throw new Selector.SelectorParseException("Could not parse query '%s': unmatched ( in '%s'", query, tq.toString());
++        }
+         Validate.notEmpty(searchText, ":contains(text) query must not be empty");
+         if (own)
+             evals.add(new Evaluator.ContainsOwnText(searchText));
+@@ -344,7 +365,12 @@ public class QueryParser {
+     // pseudo selector :containsData(data)
+     private void containsData() {
+         tq.consume(":containsData");
+-        String searchText = TokenQueue.unescape(tq.chompBalanced('(', ')'));
++        String searchText;
++        try {
++            searchText = TokenQueue.unescape(tq.chompBalanced('(', ')'));
++        } catch (IllegalStateException e) {
++            throw new Selector.SelectorParseException("Could not parse query '%s': unmatched ( in '%s'", query, tq.toString());
++        }
+         Validate.notEmpty(searchText, ":containsData(text) query must not be empty");
+         evals.add(new Evaluator.ContainsData(searchText));
+     }
+@@ -352,7 +378,12 @@ public class QueryParser {
+     // :matches(regex), matchesOwn(regex)
+     private void matches(boolean own) {
+         tq.consume(own ? ":matchesOwn" : ":matches");
+-        String regex = tq.chompBalanced('(', ')'); // don't unescape, as regex bits will be escaped
++        String regex;
++        try {
++            regex = tq.chompBalanced('(', ')'); // don't unescape, as regex bits will be escaped
++        } catch (IllegalStateException e) {
++            throw new Selector.SelectorParseException("Could not parse query '%s': unmatched ( in '%s'", query, tq.toString());
++        }
+         Validate.notEmpty(regex, ":matches(regex) query must not be empty");
+ 
+         if (own)
+@@ -364,7 +395,12 @@ public class QueryParser {
+     // :not(selector)
+     private void not() {
+         tq.consume(":not");
+-        String subQuery = tq.chompBalanced('(', ')');
++        String subQuery;
++        try {
++            subQuery = tq.chompBalanced('(', ')');
++        } catch (IllegalStateException e) {
++            throw new Selector.SelectorParseException("Could not parse query '%s': unmatched ( in '%s'", query, tq.toString());
++        }
+         Validate.notEmpty(subQuery, ":not(selector) subselect must not be empty");
+ 
+         evals.add(new StructuralEvaluator.Not(parse(subQuery)));

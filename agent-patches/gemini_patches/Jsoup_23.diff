@@ -1,0 +1,64 @@
+--- a/src/main/java/org/jsoup/parser/CharacterReader.java
++++ b/src/main/java/org/jsoup/parser/CharacterReader.java
+@@ -1,12 +1,24 @@
+-    String consumeLetterSequence() {
+-        int start = pos;
+-        while (!isEmpty()) {
+-            char c = input.charAt(pos);
+-            if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))
+-                pos++;
+-            else
+-                break;
+-        }
+-
+-        return input.substring(start, pos);
+-    }
++    String consumeLetterSequence() {
++        int start = pos;
++        while (!isEmpty()) {
++            char c = input.charAt(pos);
++            if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))
++                pos++;
++            else
++                break;
++        }
++
++        return input.substring(start, pos);
++    }
++
++    String consumeLetterDigitSequence() {
++        int start = pos;
++        while (!isEmpty()) {
++            char c = input.charAt(pos);
++            if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9'))
++                pos++;
++            else
++                break;
++        }
++        return input.substring(start, pos);
++    }
+
+--- a/src/main/java/org/jsoup/parser/Tokeniser.java
++++ b/src/main/java/org/jsoup/parser/Tokeniser.java
+@@ -1,1 +1,1 @@
+-            String nameRef = reader.consumeLetterSequence();
++            String nameRef = reader.consumeLetterDigitSequence();
+
+--- a/src/test/java/org/jsoup/nodes/EntitiesTest.java
++++ b/src/test/java/org/jsoup/nodes/EntitiesTest.java
+@@ -1,7 +1,8 @@
+-    @Test public void letterDigitEntities() {
+-        String html = "<p>&sup1;&sup2;&sup3;&frac14;&frac12;&frac34;</p>";
+-        Document doc = Jsoup.parse(html);
+-        Element p = doc.select("p").first();
+-        assertEquals("&sup1;&sup2;&sup3;&frac14;&frac12;&frac34;", p.html());
+-        assertEquals("¹²³¼½¾", p.text());
+-    }
++    @Test public void letterDigitEntities() {
++        String html = "<p>&sup1;&sup2;&sup3;&frac14;&frac12;&frac34;</p>";
++        org.jsoup.safety.Whitelist whitelist = org.jsoup.safety.Whitelist.none();
++        whitelist
++            .addTags("p");
++        String cleanedHtml = org.jsoup.Jsoup.clean(html, whitelist);
++        assertEquals("<p>&sup1;&sup2;&sup3;&frac14;&frac12;&frac34;</p>", cleanedHtml);
++    }

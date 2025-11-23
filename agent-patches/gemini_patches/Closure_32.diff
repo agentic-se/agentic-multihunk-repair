@@ -1,0 +1,58 @@
+--- a/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java
++++ b/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java
+@@ -1,13 +1,14 @@
+-                case LICENSE:
+-                case PRESERVE:
+-                  ExtractionInfo preserveInfo =
+-                      extractMultilineTextualBlock(token,
+-                                                   WhitespaceOption.PRESERVE);
+-
+-                  String preserve = preserveInfo.string;
+-
+-                  if (preserve.length() > 0) {
+-                    if (fileLevelJsDocBuilder != null) {
+-                      fileLevelJsDocBuilder.append(preserve);
+-                    }
+-                  }
++                case LICENSE:
++                case PRESERVE:
++                  ExtractionInfo preserveInfo =
++                      extractMultilineTextualBlock(token,
++                                                   WhitespaceOption.PRESERVE);
++
++                  String preserve = preserveInfo.string;
++
++                  if (preserve.length() > 0) {
++                    if (fileLevelJsDocBuilder != null) {
++                      fileLevelJsDocBuilder.append(preserve);
++                    }
++                    jsdocBuilder.recordLicense(preserve);
++                  }
+@@ -1,14 +1,13 @@
+-                case LICENSE:
+-                case PRESERVE:
+-                  ExtractionInfo preserveInfo =
+-                      extractMultilineTextualBlock(token,
+-                                                   WhitespaceOption.PRESERVE);
+-
+-                  String preserve = preserveInfo.string;
+-
+-                  if (preserve.length() > 0) {
+-                    if (fileLevelJsDocBuilder != null) {
+-                      fileLevelJsDocBuilder.append(preserve);
+-                    }
+-                    jsdocBuilder.recordLicense(preserve);
+-                  }
++                case LICENSE:
++                case PRESERVE:
++                  ExtractionInfo preserveInfo =
++                      extractMultilineTextualBlock(token,
++                                                   WhitespaceOption.PRESERVE);
++
++                  String preserve = preserveInfo.string;
++
++                  if (preserve.length() > 0) {
++                    if (fileLevelJsDocBuilder != null) {
++                      fileLevelJsDocBuilder.append(preserve);
++                    }
++                  }

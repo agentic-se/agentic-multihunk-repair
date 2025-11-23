@@ -1,0 +1,132 @@
+--- a/maven-build.xml
++++ b/maven-build.xml
+@@ -1,1 +1,3 @@
+-    <pathelement location="${maven.repo.local}/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar"/>
++    <pathelement location="${maven.repo.local}/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar"/>
++    <pathelement location="${basedir}/lib/jackson-databind-2.6.1.jar"/>
++    <pathelement location="${basedir}/lib/testng-6.8.8.jar"/>
+@@ -1,1 +1,2 @@
+-    <pathelement location="${basedir}/lib/testng-6.8.8.jar"/>
++    <pathelement location="${basedir}/lib/testng-6.8.8.jar"/>
++    <pathelement location="${basedir}/lib/jcommander-1.27.jar"/>
+@@ -1,4 +1,1 @@
+-    <pathelement location="${maven.repo.local}/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar"/>
+-    <pathelement location="${basedir}/lib/jackson-databind-2.6.1.jar"/>
+-    <pathelement location="${basedir}/lib/testng-6.8.8.jar"/>
+-    <pathelement location="${basedir}/lib/jcommander-1.27.jar"/>
++    <pathelement location="${maven.repo.local}/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar"/>
+
+--- a/pom.xml
++++ b/pom.xml
+@@ -1,2 +1,17 @@
+-  <build>
+-    <plugins>
++  <dependencies>
++    <dependency>
++      <groupId>com.fasterxml.jackson.core</groupId>
++      <artifactId>jackson-databind</artifactId>
++      <version>2.6.1</version>
++      <scope>test</scope>
++    </dependency>
++    <dependency>
++      <groupId>org.testng</groupId>
++      <artifactId>testng</artifactId>
++      <version>6.8</version>
++      <scope>test</scope>
++    </dependency>
++  </dependencies>
++
++  <build>
++    <plugins>
+@@ -1,17 +1,2 @@
+-  <dependencies>
+-    <dependency>
+-      <groupId>com.fasterxml.jackson.core</groupId>
+-      <artifactId>jackson-databind</artifactId>
+-      <version>2.6.1</version>
+-      <scope>test</scope>
+-    </dependency>
+-    <dependency>
+-      <groupId>org.testng</groupId>
+-      <artifactId>testng</artifactId>
+-      <version>6.8</version>
+-      <scope>test</scope>
+-    </dependency>
+-  </dependencies>
+-
+-  <build>
+-    <plugins>
++  <build>
++    <plugins>
+
+--- a/src/main/java/com/fasterxml/jackson/core/sym/ByteQuadsCanonicalizer.java
++++ b/src/main/java/com/fasterxml/jackson/core/sym/ByteQuadsCanonicalizer.java
+@@ -1,2 +1,6 @@
+-            int newSize = _hashArea.length + Math.max(toAdd, minAdd);
+-            _hashArea = Arrays.copyOf(_hashArea, newSize);
++            int newHashAreaSize = _hashArea.length + Math.max(toAdd, minAdd);
++            _hashArea = Arrays.copyOf(_hashArea, newHashAreaSize);
++
++            // Also expand _names array proportionally
++            int newNamesSize = newHashAreaSize >> 2; // newHashAreaSize / 4
++            _names = Arrays.copyOf(_names, newNamesSize);
+@@ -1,1 +1,1 @@
+-        if (_spilloverEnd >= hashArea.length) {
++        if (_spilloverEnd >= (_hashSize << 3)) {
+@@ -1,1 +1,1 @@
+-        if (_spilloverEnd >= (_hashSize << 3)) {
++        if ((_spilloverEnd + 4) > (_hashSize << 3)) { // Check if next spillover would exceed main hash area
+@@ -1,2 +1,6 @@
+-            int newSize = _hashArea.length + Math.max(toAdd, minAdd);
+-            _hashArea = Arrays.copyOf(_hashArea, newSize);
++            int newHashAreaSize = _hashArea.length + Math.max(toAdd, minAdd);
++            _hashArea = Arrays.copyOf(_hashArea, newHashAreaSize);
++
++            // Also expand _names array proportionally
++            int newNamesSize = newHashAreaSize >> 2; // newHashAreaSize / 4
++            _names = Arrays.copyOf(_names, newNamesSize);
+@@ -1,1 +1,1 @@
+-        if (_spilloverEnd >= hashArea.length) {
++        if ((_spilloverEnd + 4) > (_hashSize << 3)) { // Check if next spillover would exceed main hash area
+@@ -1,1 +1,2 @@
+-        if (_spilloverEnd >= hashArea.length) {
++        final int end = (_hashSize << 3);
++        if (_spilloverEnd >= end) {
+@@ -1,2 +1,3 @@
+-        hash += (hash >>> 16); // to xor hi- and low- 16-bits
+-        hash ^= (hash >>> 12);
++        hash += (hash >>> 16); // to xor hi- and low- 16-bits
++        hash ^= (hash << 3); // shuffle back a bit
++        hash += (hash >>> 12); // and bit more
+
+--- a/src/test/java/com/fasterxml/jackson/core/UTF8ByteStreamTest.java
++++ b/src/test/java/com/fasterxml/jackson/core/UTF8ByteStreamTest.java
+@@ -1,2 +1,7 @@
+-        objectMapper.readValue(stringBuilder.toString().getBytes(StandardCharsets.UTF_8), Map.class);
+-
++        try {
++            objectMapper.readValue(stringBuilder.toString().getBytes(StandardCharsets.UTF_8), Map.class);
++        } catch (Exception e) {
++            e.printStackTrace(System.err);
++            throw e;
++        }
++
+@@ -1,7 +1,1 @@
+-        try {
+-            objectMapper.readValue(stringBuilder.toString().getBytes(StandardCharsets.UTF_8), Map.class);
+-        } catch (Exception e) {
+-            e.printStackTrace(System.err);
+-            throw e;
+-        }
+-
++        objectMapper.readValue(stringBuilder.toString().getBytes(StandardCharsets.UTF_8), Map.class);
+@@ -1,2 +1,7 @@
+-        objectMapper.readValue(stringBuilder.toString().getBytes(StandardCharsets.UTF_8), Map.class);
+-
++        try {
++            objectMapper.readValue(stringBuilder.toString().getBytes(StandardCharsets.UTF_8), Map.class);
++        } catch (Exception e) {
++            e.printStackTrace(System.err);
++            throw e;
++        }
++

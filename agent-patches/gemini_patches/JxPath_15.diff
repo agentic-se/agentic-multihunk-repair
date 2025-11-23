@@ -1,0 +1,110 @@
+--- a/src/java/org/apache/commons/jxpath/ri/axes/UnionContext.java
++++ b/src/java/org/apache/commons/jxpath/ri/axes/UnionContext.java
+@@ -1,12 +1,15 @@
+-            for (int i = 0; i < contexts.length; i++) {
+-                EvalContext ctx = (EvalContext) contexts[i];
+-                while (ctx.nextSet()) {
+-                    while (ctx.nextNode()) {
+-                        NodePointer ptr = ctx.getCurrentNodePointer();
+-                        if (!pointers.contains(ptr)) {
+-                            nodeSet.add(ptr);
+-                            pointers.add(ptr);
+-                        }
+-                    }
+-                }
+-            }
++            for (int i = 0; i < contexts.length; i++) {
++                EvalContext ctx = contexts[i];
++                while (ctx.nextSet()) {
++                    while (ctx.nextNode()) {
++                        NodePointer ptr = ctx.getCurrentNodePointer();
++                        if (!pointers.contains(ptr)) {
++                            pointers.add(ptr);
++                        }
++                    }
++                }
++            }
++            NodePointer.sortNodePointers(pointers);
++            for (int i = 0; i < pointers.size(); i++) {
++                nodeSet.add((NodePointer) pointers.get(i));
++            }
+@@ -1,12 +1,15 @@
+-            for (int i = 0; i < contexts.length; i++) {
+-                EvalContext ctx = (EvalContext) contexts[i];
+-                while (ctx.nextSet()) {
+-                    while (ctx.nextNode()) {
+-                        NodePointer ptr = ctx.getCurrentNodePointer();
+-                        if (!pointers.contains(ptr)) {
+-                            nodeSet.add(ptr);
+-                            pointers.add(ptr);
+-                        }
+-                    }
+-                }
+-            }
++            for (int i = 0; i < contexts.length; i++) {
++                EvalContext ctx = contexts[i];
++                while (ctx.nextSet()) {
++                    while (ctx.nextNode()) {
++                        NodePointer ptr = ctx.getCurrentNodePointer();
++                        if (!pointers.contains(ptr)) {
++                            pointers.add(ptr);
++                        }
++                    }
++                }
++            }
++            java.util.Collections.sort(pointers);
++            for (int i = 0; i < pointers.size(); i++) {
++                nodeSet.add((NodePointer) pointers.get(i));
++            }
+@@ -1,28 +1,23 @@
+-    public boolean setPosition(int position) {
+-        if (!prepared) {
+-            prepared = true;
+-            BasicNodeSet nodeSet = (BasicNodeSet) getNodeSet();
+-            ArrayList pointers = new ArrayList();
+-            for (int i = 0; i < contexts.length; i++) {
+-                EvalContext ctx = (EvalContext) contexts[i];
+-                while (ctx.nextSet()) {
+-                    while (ctx.nextNode()) {
+-                        NodePointer ptr = ctx.getCurrentNodePointer();
+-                        if (!pointers.contains(ptr)) {
+-                            nodeSet.add(ptr);
+-                            pointers.add(ptr);
+-                        }
+-                    }
+-                }
+-            }
+-            java.util.Collections.sort(pointers);
+-            for (int i = 0; i < pointers.size(); i++) {
+-                nodeSet.add((NodePointer) pointers.get(i));
+-            }
+-            NodePointer.sortNodePointers(pointers);
+-            for (int i = 0; i < pointers.size(); i++) {
+-                nodeSet.add((NodePointer) pointers.get(i));
+-            }
+-        }
+-        return super.setPosition(position);
+-    }
++    public boolean setPosition(int position) {
++        if (!prepared) {
++            prepared = true;
++            BasicNodeSet nodeSet = (BasicNodeSet) getNodeSet();
++            ArrayList pointers = new ArrayList();
++            for (int i = 0; i < contexts.length; i++) {
++                EvalContext ctx = contexts[i];
++                while (ctx.nextSet()) {
++                    while (ctx.nextNode()) {
++                        NodePointer ptr = ctx.getCurrentNodePointer();
++                        if (!pointers.contains(ptr)) {
++                            pointers.add(ptr);
++                        }
++                    }
++                }
++            }
++            java.util.Collections.sort(pointers);
++            for (int i = 0; i < pointers.size(); i++) {
++                nodeSet.add((NodePointer) pointers.get(i));
++            }
++        }
++        return super.setPosition(position);
++    }

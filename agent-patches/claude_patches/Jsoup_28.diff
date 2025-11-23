@@ -1,0 +1,56 @@
+diff --git a/src/main/java/org/jsoup/nodes/Entities.java b/src/main/java/org/jsoup/nodes/Entities.java
+index be73e32..59e64df 100644
+--- a/src/main/java/org/jsoup/nodes/Entities.java
++++ b/src/main/java/org/jsoup/nodes/Entities.java
+@@ -58,6 +58,9 @@ public class Entities {
+      * @return true if a known named entity in the base set
+      * @see #isNamedEntity(String)
+      */
++    public static boolean isBaseNamedEntity(String name) {
++        return base.containsKey(name);
++    }
+ 
+     /**
+      * Get the Character value of the named entity
+@@ -115,10 +118,12 @@ public class Entities {
+                 }
+             } else {
+                 String name = m.group(1);
+-                if (full.containsKey(name))
++                // Base entities can be decoded without a trailing semicolon, but extended entities require one
++                boolean hasSemicolon = m.group(0).endsWith(";");
++                if (full.containsKey(name) && (hasSemicolon || base.containsKey(name)))
+                     charval = full.get(name);
+             }
+-            if (charval != -1 || charval > 0xFFFF) {
++            if (charval != -1 && charval <= 0xFFFF) {
+                 String c = Character.toString((char) charval);
+                 m.appendReplacement(accum, Matcher.quoteReplacement(c));
+             } else {
+diff --git a/src/main/java/org/jsoup/parser/Tokeniser.java b/src/main/java/org/jsoup/parser/Tokeniser.java
+index 5c40cf7..845a183 100644
+--- a/src/main/java/org/jsoup/parser/Tokeniser.java
++++ b/src/main/java/org/jsoup/parser/Tokeniser.java
+@@ -138,9 +138,19 @@ class Tokeniser {
+             // found if a base named entity without a ;, or an extended entity with the ;.
+             boolean found = false;
+             while (nameRef.length() > 0 && !found) {
+-                if (Entities.isNamedEntity(nameRef))
+-                    found = true;
+-                else {
++                if (Entities.isNamedEntity(nameRef)) {
++                    // Check if there's a semicolon at current position
++                    boolean hasSemicolon = reader.matches(';');
++                    // If we have a semicolon, any entity is valid
++                    // If we don't have a semicolon, only base entities are valid
++                    if (hasSemicolon || Entities.isBaseNamedEntity(nameRef)) {
++                        found = true;
++                    } else {
++                        // Extended entity without semicolon - keep looking for shorter match
++                        nameRef = nameRef.substring(0, nameRef.length()-1);
++                        reader.unconsume();
++                    }
++                } else {
+                     nameRef = nameRef.substring(0, nameRef.length()-1);
+                     reader.unconsume();
+                 }

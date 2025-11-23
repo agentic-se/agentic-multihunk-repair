@@ -1,0 +1,25 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java b/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
+index 9dadc51f..a96b5575 100644
+--- a/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
++++ b/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
+@@ -103,11 +103,18 @@ public class JsonParserSequence extends JsonParserDelegate
+     @Override
+     public JsonToken nextToken() throws IOException, JsonParseException
+     {
++        // Try to get next token from the current delegate
+         JsonToken t = delegate.nextToken();
+-        if (t != null) return t;
++        if (t != null) {
++            return t;
++        }
++        // If we've exhausted the current delegate, try to switch to the next one
+         while (switchToNext()) {
++            // After switching, check if the new delegate has a token
+             t = delegate.nextToken();
+-            if (t != null) return t;
++            if (t != null) {
++                return t;
++            }
+         }
+         return null;
+     }

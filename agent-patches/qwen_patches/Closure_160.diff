@@ -1,0 +1,31 @@
+diff --git a/src/.DS_Store b/src/.DS_Store
+index 3a3e70a059eba975ca14a8ccce39a2a849daed9d..3452f45e439975986438120e7ec1ce452997d82e 100644
+GIT binary patch
+delta 12
+Tc-m_*Xfc?ul=1q;WpUyFA?XD|
+
+delta 12
+Tc-m_*Xfc?ul+kkIvN&-79@7M*
+
+diff --git a/src/com/google/javascript/jscomp/WarningLevel.java b/src/com/google/javascript/jscomp/WarningLevel.java
+index 0070f586..6940ceb3 100644
+--- a/src/com/google/javascript/jscomp/WarningLevel.java
++++ b/src/com/google/javascript/jscomp/WarningLevel.java
+@@ -33,7 +33,9 @@ public enum WarningLevel {
+   public void setOptionsForWarningLevel(CompilerOptions options) {
+     switch (this) {
+       case QUIET:
+-        silenceAllWarnings(options);
++        // For QUIET mode, we allow warnings to be configured explicitly via
++        // --jscomp_error, --jscomp_warning, and --jscomp_off flags.
++        // This allows --jscomp_error=undefinedVars to still work in QUIET mode.
+         break;
+       case DEFAULT:
+         addDefaultWarnings(options);
+@@ -97,4 +99,4 @@ public enum WarningLevel {
+     options.setWarningLevel(
+         DiagnosticGroups.DEPRECATED, CheckLevel.WARNING);
+   }
+-}
++}
+\ No newline at end of file

@@ -1,0 +1,124 @@
+diff --git a/src/main/java/org/apache/commons/cli/HelpFormatter.java b/src/main/java/org/apache/commons/cli/HelpFormatter.java
+index 3322f76..d1faebe 100644
+--- a/src/main/java/org/apache/commons/cli/HelpFormatter.java
++++ b/src/main/java/org/apache/commons/cli/HelpFormatter.java
+@@ -519,14 +519,16 @@ public class HelpFormatter
+ 
+         if ((header != null) && (header.trim().length() > 0))
+         {
+-            printWrapped(pw, width, header);
++            // Preserve leading spaces in header lines (CLI-207)
++            printWrappedBlock(pw, width, header);
+         }
+ 
+         printOptions(pw, width, options, leftPad, descPad);
+ 
+         if ((footer != null) && (footer.trim().length() > 0))
+         {
+-            printWrapped(pw, width, footer);
++            // Preserve leading spaces in footer lines (CLI-207)
++            printWrappedBlock(pw, width, footer);
+         }
+     }
+ 
+@@ -731,6 +733,36 @@ public class HelpFormatter
+         pw.println(sb.toString());
+     }
+ 
++    /**
++     * Print the specified text to the specified PrintWriter, preserving any leading spaces
++     * on lines after a newline. This variant is intended for headers/footers.
++     *
++     * @param pw The printWriter to write the help to
++     * @param width The number of characters to display per line
++     * @param text The text to be written to the PrintWriter
++     */
++    public void printWrappedBlock(PrintWriter pw, int width, String text)
++    {
++        printWrappedBlock(pw, width, 0, text);
++    }
++
++    /**
++     * Print the specified text to the specified PrintWriter, preserving any leading spaces
++     * on lines after a newline. This variant is intended for headers/footers.
++     *
++     * @param pw The printWriter to write the help to
++     * @param width The number of characters to display per line
++     * @param nextLineTabStop The position on the next line for the first tab.
++     * @param text The text to be written to the PrintWriter
++     */
++    public void printWrappedBlock(PrintWriter pw, int width, int nextLineTabStop, String text)
++    {
++        StringBuffer sb = new StringBuffer(text.length());
++
++        renderWrappedTextBlock(sb, width, nextLineTabStop, text);
++        pw.println(sb.toString());
++    }
++
+     // --------------------------------------------------------------- Protected
+ 
+     /**
+@@ -889,15 +921,59 @@ public class HelpFormatter
+     }
+ 
+     /**
+-     * Render the specified text width a maximum width. This method differs
+-     * from renderWrappedText by not removing leading spaces after a new line.
+-     * 
++     * Render the specified text with a maximum width. This method differs
++     * from {@link #renderWrappedText(StringBuffer, int, int, String)} by NOT removing
++     * leading spaces after a new line, thus preserving indentation across lines.
++     *
+      * @param sb The StringBuffer to place the rendered text into.
+      * @param width The number of characters to display per line
+      * @param nextLineTabStop The position on the next line for the first tab.
+      * @param text The text to be rendered.
++     * @return the StringBuffer with the rendered contents.
+      */
+-            // cannot happen
++    protected StringBuffer renderWrappedTextBlock(StringBuffer sb, int width,
++                                             int nextLineTabStop, String text)
++    {
++        int pos = findWrapPos(text, width, 0);
++
++        if (pos == -1)
++        {
++            sb.append(rtrim(text));
++
++            return sb;
++        }
++        sb.append(rtrim(text.substring(0, pos))).append(defaultNewLine);
++
++        if (nextLineTabStop >= width)
++        {
++            // stops infinite loop happening
++            nextLineTabStop = 1;
++        }
++
++        // all following lines must be padded with nextLineTabStop space characters
++        final String padding = createPadding(nextLineTabStop);
++
++        while (true)
++        {
++            // Do not trim leading spaces here to preserve indentation
++            text = padding + text.substring(pos);
++            pos = findWrapPos(text, width, 0);
++
++            if (pos == -1)
++            {
++                sb.append(text);
++
++                return sb;
++            }
++
++            if ((text.length() > width) && (pos == nextLineTabStop - 1))
++            {
++                pos = width;
++            }
++
++            sb.append(rtrim(text.substring(0, pos))).append(defaultNewLine);
++        }
++    }
+ 
+ 
+     /**

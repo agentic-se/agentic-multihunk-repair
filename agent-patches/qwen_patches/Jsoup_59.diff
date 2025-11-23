@@ -1,0 +1,20 @@
+diff --git a/src/main/java/org/jsoup/nodes/Attribute.java b/src/main/java/org/jsoup/nodes/Attribute.java
+index 38be823..d07e8e7 100644
+--- a/src/main/java/org/jsoup/nodes/Attribute.java
++++ b/src/main/java/org/jsoup/nodes/Attribute.java
+@@ -32,7 +32,14 @@ public class Attribute implements Map.Entry<String, String>, Cloneable  {
+         Validate.notNull(key);
+         Validate.notNull(value);
+         this.key = key.trim();
+-        Validate.notEmpty(key); // trimming could potentially make empty, so validate here
++        // Allow empty keys after trimming only if they contain non-whitespace control characters
++        // This avoids the IllegalArgumentException for control characters in attributes
++        if (this.key.isEmpty() && !key.isEmpty()) {
++            // If key is not empty but becomes empty after trimming, it's probably a control char
++            // In that case, we'll keep the original key to avoid validation issues
++            this.key = key;
++        }
++        Validate.notEmpty(this.key); // trimming could potentially make empty, so validate here
+         this.value = value;
+     }
+ 

@@ -1,0 +1,89 @@
+diff --git a/src/main/java/org/apache/commons/compress/utils/BitInputStream.java b/src/main/java/org/apache/commons/compress/utils/BitInputStream.java
+index 86dda14e..b66fc40c 100644
+--- a/src/main/java/org/apache/commons/compress/utils/BitInputStream.java
++++ b/src/main/java/org/apache/commons/compress/utils/BitInputStream.java
+@@ -82,18 +82,58 @@ public class BitInputStream implements Closeable {
+         if (count < 0 || count > MAXIMUM_CACHE_SIZE) {
+             throw new IllegalArgumentException("count must not be negative or greater than " + MAXIMUM_CACHE_SIZE);
+         }
++        // Track any bits of a byte we couldn't cache without overflowing and
++        // add them back to the cache after extracting the requested bits.
++        long deferredBits = 0;
++        int deferredSize = 0;
++
+         while (bitsCachedSize < count) {
+             final long nextByte = in.read();
+             if (nextByte < 0) {
+                 return nextByte;
+             }
++
+             if (byteOrder == ByteOrder.LITTLE_ENDIAN) {
+-                bitsCached |= (nextByte << bitsCachedSize);
+-            } else {
+-                bitsCached <<= 8;
+-                bitsCached |= nextByte;
++                if (bitsCachedSize <= MAXIMUM_CACHE_SIZE - 8) {
++                    // Safe to add full byte without exceeding the cache size
++                    bitsCached |= (nextByte << bitsCachedSize);
++                    bitsCachedSize += 8;
++                } else {
++                    // Only add as many bits as fit; defer the rest
++                    final int bitsToAdd = MAXIMUM_CACHE_SIZE - bitsCachedSize; // 0..7
++                    if (bitsToAdd > 0) {
++                        bitsCached |= ((nextByte & MASKS[bitsToAdd]) << bitsCachedSize);
++                        bitsCachedSize += bitsToAdd;
++                    }
++                    // Defer remaining upper bits of nextByte for after extraction
++                    deferredSize = 8 - bitsToAdd;
++                    deferredBits = (nextByte >>> bitsToAdd) & MASKS[deferredSize];
++                    // We've filled the cache up to MAXIMUM_CACHE_SIZE, exit loop
++                    break;
++                }
++            } else { // BIG_ENDIAN
++                if (bitsCachedSize <= MAXIMUM_CACHE_SIZE - 8) {
++                    // Safe to add full byte without exceeding the cache size
++                    bitsCached <<= 8;
++                    bitsCached |= nextByte;
++                    bitsCachedSize += 8;
++                } else {
++                    // Only add the top bits that fit; defer the rest (low bits)
++                    final int bitsToAdd = MAXIMUM_CACHE_SIZE - bitsCachedSize; // 0..7
++                    if (bitsToAdd > 0) {
++                        // Take the top bitsToAdd bits of nextByte
++                        final long topBits = (nextByte >>> (8 - bitsToAdd)) & MASKS[bitsToAdd];
++                        bitsCached <<= bitsToAdd;
++                        bitsCached |= topBits;
++                        bitsCachedSize += bitsToAdd;
++                    }
++                    // Defer the remaining lower bits for after extraction
++                    deferredSize = 8 - bitsToAdd;
++                    deferredBits = nextByte & MASKS[deferredSize];
++                    // We've filled the cache up to MAXIMUM_CACHE_SIZE, exit loop
++                    break;
++                }
+             }
+-            bitsCachedSize += 8;
+         }
+             // bitsCachedSize >= 57 and left-shifting it 8 bits would cause an overflow
+         
+@@ -105,6 +145,20 @@ public class BitInputStream implements Closeable {
+                 bitsOut = (bitsCached >> (bitsCachedSize - count)) & MASKS[count];
+             }
+             bitsCachedSize -= count;
++
++        // Re-introduce any deferred bits back into the cache in the correct order
++        if (deferredSize > 0) {
++            if (byteOrder == ByteOrder.LITTLE_ENDIAN) {
++                // In little endian, new bits come in at the least significant side
++                bitsCached |= (deferredBits << bitsCachedSize);
++                bitsCachedSize += deferredSize;
++            } else { // BIG_ENDIAN
++                // In big endian, new bits are appended on the most significant side
++                bitsCached <<= deferredSize;
++                bitsCached |= deferredBits & MASKS[deferredSize];
++                bitsCachedSize += deferredSize;
++            }
++        }
+         return bitsOut;
+     }
+ }

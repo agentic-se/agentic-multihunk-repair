@@ -1,0 +1,85 @@
+--- a/gson/src/main/java/com/google/gson/internal/$Gson$Types.java
++++ b/gson/src/main/java/com/google/gson/internal/$Gson$Types.java
+@@ -1,17 +1,2 @@
+-      } else if (toResolve instanceof WildcardType) {
+-        WildcardType original = (WildcardType) toResolve;
+-        Type[] originalLowerBound = original.getLowerBounds();
+-        Type[] originalUpperBound = original.getUpperBounds();
+-
+-        if (originalLowerBound.length == 1) {
+-          Type lowerBound = resolve(context, contextRawType, originalLowerBound[0]);
+-          if (lowerBound != originalLowerBound[0]) {
+-            return supertypeOf(lowerBound);
+-          }
+-        } else if (originalUpperBound.length == 1) {
+-          Type upperBound = resolve(context, contextRawType, originalUpperBound[0]);
+-          if (upperBound != originalUpperBound[0]) {
+-            return subtypeOf(upperBound);
+-          }
+-        }
+-        return original;
++      } else if (toResolve instanceof WildcardType) {
++        return resolveWildcardType(context, contextRawType, (WildcardType) toResolve);
+@@ -1,2 +1,17 @@
+-      } else if (toResolve instanceof WildcardType) {
+-        return resolveWildcardType(context, contextRawType, (WildcardType) toResolve);
++      } else if (toResolve instanceof WildcardType) {
++        WildcardType original = (WildcardType) toResolve;
++        Type[] originalLowerBound = original.getLowerBounds();
++        Type[] originalUpperBound = original.getUpperBounds();
++
++        if (originalLowerBound.length == 1) {
++          Type lowerBound = resolve(context, contextRawType, originalLowerBound[0]);
++          if (lowerBound != originalLowerBound[0]) {
++            return supertypeOf(lowerBound);
++          }
++        } else if (originalUpperBound.length == 1) {
++          Type upperBound = resolve(context, contextRawType, originalUpperBound[0]);
++          if (upperBound != originalUpperBound[0]) {
++            return subtypeOf(upperBound);
++          }
++        }
++        return original;
+@@ -1,5 +1,13 @@
+-  public static WildcardType subtypeOf(Type bound) {
+-    Type[] upperBounds;
+-      upperBounds = new Type[] { bound };
+-    return new WildcardTypeImpl(upperBounds, EMPTY_TYPE_ARRAY);
+-  }
++  public static WildcardType subtypeOf(Type bound) {
++    if (bound instanceof WildcardType) {
++      WildcardType wildcard = (WildcardType) bound;
++      if (wildcard.getUpperBounds().length == 1 && Arrays.equals(wildcard.getLowerBounds(), EMPTY_TYPE_ARRAY)) {
++        // ? extends (? extends X) => ? extends X
++        return subtypeOf(wildcard.getUpperBounds()[0]);
++      } else if (wildcard.getLowerBounds().length == 1 && Arrays.equals(wildcard.getUpperBounds(), new Type[] { Object.class })) {
++        // ? extends (? super X) => ?
++        return subtypeOf(Object.class);
++      }
++    }
++    return new WildcardTypeImpl(new Type[] { bound }, EMPTY_TYPE_ARRAY);
++  }
+@@ -1,5 +1,13 @@
+-  public static WildcardType supertypeOf(Type bound) {
+-    Type[] lowerBounds;
+-      lowerBounds = new Type[] { bound };
+-    return new WildcardTypeImpl(new Type[] { Object.class }, lowerBounds);
+-  }
++  public static WildcardType supertypeOf(Type bound) {
++    if (bound instanceof WildcardType) {
++      WildcardType wildcard = (WildcardType) bound;
++      if (wildcard.getLowerBounds().length == 1 && Arrays.equals(wildcard.getUpperBounds(), new Type[] { Object.class })) {
++        // ? super (? super X) => ? super X
++        return supertypeOf(wildcard.getLowerBounds()[0]);
++      } else if (wildcard.getUpperBounds().length == 1 && Arrays.equals(wildcard.getLowerBounds(), EMPTY_TYPE_ARRAY)) {
++        // ? super (? extends X) => ?
++        return supertypeOf(Object.class);
++      }
++    }
++    return new WildcardTypeImpl(new Type[] { Object.class }, new Type[] { bound });
++  }
+@@ -1,2 +1,2 @@
+-        // ? super (? extends X) => ?
+-        return supertypeOf(Object.class);
++        // ? super (? extends X) => ?
++        return subtypeOf(Object.class);

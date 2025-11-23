@@ -1,0 +1,256 @@
+--- a/src/com/google/javascript/jscomp/RenameVars.java
++++ b/src/com/google/javascript/jscomp/RenameVars.java
+@@ -1,5 +1,16 @@
+-      // Check if we can rename this.
+-      if (!okToRenameVar(name, local)) {
+-          // Blindly de-uniquify for the Prototype library for issue 103.
+-        return;
+-      }
++      // Check if we can rename this.
++      if (!okToRenameVar(name, local)) {
++          // Blindly de-uniquify for the Prototype library for issue 103.
++        return;
++      }
++
++      // Special handling for $super as a function parameter when using DefaultCodingConvention.
++      // The DefaultCodingConvention.isExported method relies on the 'local' flag,
++      // which might be incorrectly determined for $super parameters in some cases.
++      // This ensures $super parameters are never renamed when DefaultCodingConvention is active.
++      if (compiler.getCodingConvention() instanceof DefaultCodingConvention &&
++          name.equals("$super") &&
++          parent != null && parent.getType() == Token.PARAM_LIST) {
++        reservedNames.add(name);
++        return;
++      }
+@@ -1,16 +1,17 @@
+-      // Check if we can rename this.
+-      if (!okToRenameVar(name, local)) {
+-          // Blindly de-uniquify for the Prototype library for issue 103.
+-        return;
+-      }
+-
+-      // Special handling for $super as a function parameter when using DefaultCodingConvention.
+-      // The DefaultCodingConvention.isExported method relies on the 'local' flag,
+-      // which might be incorrectly determined for $super parameters in some cases.
+-      // This ensures $super parameters are never renamed when DefaultCodingConvention is active.
+-      if (compiler.getCodingConvention() instanceof DefaultCodingConvention &&
+-          name.equals("$super") &&
+-          parent != null && parent.getType() == Token.PARAM_LIST) {
+-        reservedNames.add(name);
+-        return;
+-      }
++      // Check if we can rename this.
++      if (!okToRenameVar(name, local)) {
++          // Blindly de-uniquify for the Prototype library for issue 103.
++        return;
++      }
++
++      // Special handling for $super as a function parameter when using DefaultCodingConvention.
++      // The DefaultCodingConvention.isExported method relies on the 'local' flag,
++      // which might be incorrectly determined for $super parameters in some cases.
++      // This ensures $super parameters are never renamed when DefaultCodingConvention is active.
++      if (compiler.getCodingConvention() instanceof DefaultCodingConvention &&
++          name.equals("$super") &&
++          parent != null && parent.getType() == Token.BLOCK &&
++          parent.getParent() != null && parent.getParent().getType() == Token.FUNCTION) {
++        reservedNames.add(name);
++        return;
++      }
+@@ -1,17 +1,18 @@
+-      // Check if we can rename this.
+-      if (!okToRenameVar(name, local)) {
+-          // Blindly de-uniquify for the Prototype library for issue 103.
+-        return;
+-      }
+-
+-      // Special handling for $super as a function parameter when using DefaultCodingConvention.
+-      // The DefaultCodingConvention.isExported method relies on the 'local' flag,
+-      // which might be incorrectly determined for $super parameters in some cases.
+-      // This ensures $super parameters are never renamed when DefaultCodingConvention is active.
+-      if (compiler.getCodingConvention() instanceof DefaultCodingConvention &&
+-          name.equals("$super") &&
+-          parent != null && parent.getType() == Token.BLOCK &&
+-          parent.getParent() != null && parent.getParent().getType() == Token.FUNCTION) {
+-        reservedNames.add(name);
+-        return;
+-      }
++      // Check if we can rename this.
++      if (!okToRenameVar(name, local)) {
++          // Blindly de-uniquify for the Prototype library for issue 103.
++        return;
++      }
++
++      // Special handling for $super as a function parameter when using DefaultCodingConvention.
++      // The DefaultCodingConvention.isExported method relies on the 'local' flag,
++      // which might be incorrectly determined for $super parameters in some cases.
++      // This ensures $super parameters are never renamed when DefaultCodingConvention is active.
++      if (compiler.getCodingConvention() instanceof DefaultCodingConvention &&
++          name.equals("$super") &&
++          parent != null && parent.getType() == Token.BLOCK &&
++          parent.getParent() != null && parent.getParent().getType() == Token.FUNCTION &&
++          parent.getParent().getChildAtIndex(1) == parent) {
++        reservedNames.add(name);
++        return;
++      }
+@@ -1,18 +1,5 @@
+-      // Check if we can rename this.
+-      if (!okToRenameVar(name, local)) {
+-          // Blindly de-uniquify for the Prototype library for issue 103.
+-        return;
+-      }
+-
+-      // Special handling for $super as a function parameter when using DefaultCodingConvention.
+-      // The DefaultCodingConvention.isExported method relies on the 'local' flag,
+-      // which might be incorrectly determined for $super parameters in some cases.
+-      // This ensures $super parameters are never renamed when DefaultCodingConvention is active.
+-      if (compiler.getCodingConvention() instanceof DefaultCodingConvention &&
+-          name.equals("$super") &&
+-          parent != null && parent.getType() == Token.BLOCK &&
+-          parent.getParent() != null && parent.getParent().getType() == Token.FUNCTION &&
+-          parent.getParent().getChildAtIndex(1) == parent) {
+-        reservedNames.add(name);
+-        return;
+-      }
++      // Check if we can rename this.
++      if (!okToRenameVar(name, local)) {
++          // Blindly de-uniquify for the Prototype library for issue 103.
++        return;
++      }
+@@ -1,5 +1,15 @@
+-      // Is this local or Global?
+-      Scope.Var var = t.getScope().getVar(name);
+-      boolean local = (var != null) && var.isLocal();
+-
+-      // Are we renaming global variables?
++      // Is this local or Global?
++      Scope.Var var = t.getScope().getVar(name);
++      boolean local = (var != null) && var.isLocal();
++
++      // Force 'local' to true for $super parameters when using DefaultCodingConvention.
++      // This addresses the bug where var.isLocal() might be incorrect for $super parameters.
++      if (compiler.getCodingConvention() instanceof DefaultCodingConvention &&
++          name.equals("$super") &&
++          parent != null && parent.getType() == Token.BLOCK && // parent is the parameter list block
++          parent.getParent() != null && parent.getParent().getType() == Token.FUNCTION && // grandparent is the function
++          parent.getParent().getChildAtIndex(1) == parent) { // parent is the second child of the function (the parameter list)
++        local = true;
++      }
++
++      // Are we renaming global variables?
+@@ -1,15 +1,5 @@
+-      // Is this local or Global?
+-      Scope.Var var = t.getScope().getVar(name);
+-      boolean local = (var != null) && var.isLocal();
+-
+-      // Force 'local' to true for $super parameters when using DefaultCodingConvention.
+-      // This addresses the bug where var.isLocal() might be incorrect for $super parameters.
+-      if (compiler.getCodingConvention() instanceof DefaultCodingConvention &&
+-          name.equals("$super") &&
+-          parent != null && parent.getType() == Token.BLOCK && // parent is the parameter list block
+-          parent.getParent() != null && parent.getParent().getType() == Token.FUNCTION && // grandparent is the function
+-          parent.getParent().getChildAtIndex(1) == parent) { // parent is the second child of the function (the parameter list)
+-        local = true;
+-      }
+-
+-      // Are we renaming global variables?
++      // Is this local or Global?
++      Scope.Var var = t.getScope().getVar(name);
++      boolean local = (var != null) && var.isLocal();
++
++      // Are we renaming global variables?
+@@ -1,6 +1,17 @@
+-      // Ignore anonymous functions
+-      if (name.length() == 0) {
+-        return;
+-      }
+-
+-      // Is this local or Global?
++      // Ignore anonymous functions
++      if (name.length() == 0) {
++        return;
++      }
++
++      // Special handling for $super as a function parameter when using DefaultCodingConvention.
++      // This ensures $super parameters are never renamed when DefaultCodingConvention is active.
++      if (compiler.getCodingConvention() instanceof DefaultCodingConvention &&
++          name.equals("$super") &&
++          parent != null && parent.getType() == Token.BLOCK && // parent is the parameter list block
++          parent.getParent() != null && parent.getParent().getType() == Token.FUNCTION && // grandparent is the function
++          parent.getParent().getChildAtIndex(1) == parent) { // parent is the second child of the function (the parameter list)
++        reservedNames.add(name);
++        return;
++      }
++
++      // Is this local or Global?
+@@ -1,17 +1,6 @@
+-      // Ignore anonymous functions
+-      if (name.length() == 0) {
+-        return;
+-      }
+-
+-      // Special handling for $super as a function parameter when using DefaultCodingConvention.
+-      // This ensures $super parameters are never renamed when DefaultCodingConvention is active.
+-      if (compiler.getCodingConvention() instanceof DefaultCodingConvention &&
+-          name.equals("$super") &&
+-          parent != null && parent.getType() == Token.BLOCK && // parent is the parameter list block
+-          parent.getParent() != null && parent.getParent().getType() == Token.FUNCTION && // grandparent is the function
+-          parent.getParent().getChildAtIndex(1) == parent) { // parent is the second child of the function (the parameter list)
+-        reservedNames.add(name);
+-        return;
+-      }
+-
+-      // Is this local or Global?
++      // Ignore anonymous functions
++      if (name.length() == 0) {
++        return;
++      }
++
++      // Is this local or Global?
+@@ -1,6 +1,17 @@
+-      // Ignore anonymous functions
+-      if (name.length() == 0) {
+-        return;
+-      }
+-
+-      // Is this local or Global?
++      // Ignore anonymous functions
++      if (name.length() == 0) {
++        return;
++      }
++
++      // Special handling for $super as a function parameter when using DefaultCodingConvention.
++      // This ensures $super parameters are never renamed when DefaultCodingConvention is active.
++      if (compiler.getCodingConvention() instanceof DefaultCodingConvention &&
++          name.equals("$super") &&
++          parent != null && parent.getType() == Token.BLOCK && // parent is the parameter list block
++          parent.getParent() != null && parent.getParent().getType() == Token.FUNCTION && // grandparent is the function
++          parent.getParent().getChildAtIndex(1) == parent) { // parent is the second child of the function (the parameter list)
++        n.setString("$super_preserved"); // HACK: Change the name to prevent renaming
++        return;
++      }
++
++      // Is this local or Global?
+@@ -1,17 +1,6 @@
+-      // Ignore anonymous functions
+-      if (name.length() == 0) {
+-        return;
+-      }
+-
+-      // Special handling for $super as a function parameter when using DefaultCodingConvention.
+-      // This ensures $super parameters are never renamed when DefaultCodingConvention is active.
+-      if (compiler.getCodingConvention() instanceof DefaultCodingConvention &&
+-          name.equals("$super") &&
+-          parent != null && parent.getType() == Token.BLOCK && // parent is the parameter list block
+-          parent.getParent() != null && parent.getParent().getType() == Token.FUNCTION && // grandparent is the function
+-          parent.getParent().getChildAtIndex(1) == parent) { // parent is the second child of the function (the parameter list)
+-        n.setString("$super_preserved"); // HACK: Change the name to prevent renaming
+-        return;
+-      }
+-
+-      // Is this local or Global?
++      // Ignore anonymous functions
++      if (name.length() == 0) {
++        return;
++      }
++
++      // Is this local or Global?

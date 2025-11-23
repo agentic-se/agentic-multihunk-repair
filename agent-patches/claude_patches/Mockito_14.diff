@@ -1,0 +1,47 @@
+diff --git a/src/org/mockito/internal/MockHandler.java b/src/org/mockito/internal/MockHandler.java
+index bc18218c6..6466cf79d 100644
+--- a/src/org/mockito/internal/MockHandler.java
++++ b/src/org/mockito/internal/MockHandler.java
+@@ -69,13 +69,26 @@ public class MockHandler<T> implements MockitoInvocationHandler, MockHandlerInte
+ 
+         mockingProgress.validateState();
+ 
+-        //if verificationMode is not null then someone is doing verify()        
++        //if verificationMode is not null then someone is doing verify()
+         if (verificationMode != null) {
+-            //We need to check if verification was started on the correct mock 
++            //We need to check if verification was started on the correct mock
+             // - see VerifyingWithAnExtraCallToADifferentMockTest
+-                VerificationDataImpl data = new VerificationDataImpl(invocationContainerImpl.getInvocations(), invocationMatcher);            
++            if (verificationMode instanceof org.mockito.internal.verification.MockAwareVerificationMode) {
++                org.mockito.internal.verification.MockAwareVerificationMode mockAwareMode =
++                    (org.mockito.internal.verification.MockAwareVerificationMode) verificationMode;
++                if (mockAwareMode.getMock() == invocation.getMock()) {
++                    VerificationDataImpl data = new VerificationDataImpl(invocationContainerImpl.getInvocations(), invocationMatcher);
++                    verificationMode.verify(data);
++                    return null;
++                } else {
++                    // This invocation is not on the mock under verification, so just return stubbed value
++                    // and continue without verification
++                }
++            } else {
++                VerificationDataImpl data = new VerificationDataImpl(invocationContainerImpl.getInvocations(), invocationMatcher);
+                 verificationMode.verify(data);
+                 return null;
++            }
+         }
+         
+         invocationContainerImpl.setInvocationForPotentialStubbing(invocationMatcher);
+diff --git a/src/org/mockito/internal/MockitoCore.java b/src/org/mockito/internal/MockitoCore.java
+index fc99ea90f..011b61cf1 100755
+--- a/src/org/mockito/internal/MockitoCore.java
++++ b/src/org/mockito/internal/MockitoCore.java
+@@ -70,7 +70,7 @@ public class MockitoCore {
+         } else if (!mockUtil.isMock(mock)) {
+             reporter.notAMockPassedToVerify();
+         }
+-        mockingProgress.verificationStarted(mode);
++        mockingProgress.verificationStarted(new org.mockito.internal.verification.MockAwareVerificationMode(mock, mode));
+         return mock;
+     }
+     

@@ -1,0 +1,46 @@
+diff --git a/src/main/java/org/apache/commons/codec/language/bm/PhoneticEngine.java b/src/main/java/org/apache/commons/codec/language/bm/PhoneticEngine.java
+index 97cedb29..e538aea5 100644
+--- a/src/main/java/org/apache/commons/codec/language/bm/PhoneticEngine.java
++++ b/src/main/java/org/apache/commons/codec/language/bm/PhoneticEngine.java
+@@ -29,6 +29,7 @@ import java.util.Locale;
+ import java.util.Map;
+ import java.util.Set;
+ import java.util.TreeSet;
++import java.util.TreeMap;
+ 
+ import org.apache.commons.codec.language.bm.Languages.LanguageSet;
+ import org.apache.commons.codec.language.bm.Rule.Phoneme;
+@@ -335,7 +336,8 @@ public class PhoneticEngine {
+             return phonemeBuilder;
+         }
+ 
+-        final Set<Rule.Phoneme> phonemes = new TreeSet<Rule.Phoneme>(Rule.Phoneme.COMPARATOR);
++        // Collect resulting phonemes while merging language sets for identical phoneme text
++        final Map<String, Languages.LanguageSet> phonemeMap = new TreeMap<String, Languages.LanguageSet>();
+ 
+         for (final Rule.Phoneme phoneme : phonemeBuilder.getPhonemes()) {
+             PhonemeBuilder subBuilder = PhonemeBuilder.empty(phoneme.getLanguages());
+@@ -355,10 +357,19 @@ public class PhoneticEngine {
+                 i = rulesApplication.getI();
+             }
+ 
+-            // the phonemes map orders the phonemes only based on their text, but ignores the language set
+-            // when adding new phonemes, check for equal phonemes and merge their language set, otherwise
+-            // phonemes with the same text but different language set get lost
+-            phonemes.addAll(subBuilder.getPhonemes());
++            // Merge language sets for phonemes that have the same text
++            for (final Rule.Phoneme ph : subBuilder.getPhonemes()) {
++                final String text = ph.getPhonemeText().toString();
++                final Languages.LanguageSet languages = ph.getLanguages();
++                final Languages.LanguageSet existing = phonemeMap.get(text);
++                phonemeMap.put(text, existing == null ? languages : existing.merge(languages));
++            }
++        }
++
++        // Build a sorted set of phonemes from the merged map to keep deterministic ordering
++        final Set<Rule.Phoneme> phonemes = new TreeSet<Rule.Phoneme>(Rule.Phoneme.COMPARATOR);
++        for (final Map.Entry<String, Languages.LanguageSet> e : phonemeMap.entrySet()) {
++            phonemes.add(new Rule.Phoneme(e.getKey(), e.getValue()));
+         }
+ 
+         return new PhonemeBuilder(phonemes);

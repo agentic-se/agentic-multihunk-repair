@@ -1,0 +1,42 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+index b8acda873..80b3f80fe 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+@@ -355,6 +355,14 @@ public final class TypeFactory
+                 newType = _fromClass(null, subclass, TypeBindings.emptyBindings());
+                 break;
+             }
++            // Special case: for primitives, allow wrapper types to be used
++            // This addresses issue with type resolvers where primitive types
++            // get converted to their wrapper when serialized with type information
++            if (rawBase.isPrimitive() && subclass.equals(rawBaseWrapper(rawBase))) {
++                // Use the primitive type for further processing to maintain compatibility
++                newType = _fromClass(null, rawBase, TypeBindings.emptyBindings());
++                break;
++            }
+             if (!rawBase.isAssignableFrom(subclass)) {
+                 throw new IllegalArgumentException(String.format(
+                         "Class %s not subtype of %s", subclass.getName(), baseType));
+@@ -496,6 +504,22 @@ public final class TypeFactory
+         // Otherwise, two choices: match N first, or empty. Do latter, for now
+         return TypeBindings.emptyBindings();
+     }
++    
++    /**
++     * Helper method to get the wrapper class for a primitive type
++     */
++    private Class<?> rawBaseWrapper(Class<?> primitiveClass) {
++        if (primitiveClass == boolean.class) return Boolean.class;
++        if (primitiveClass == byte.class) return Byte.class;
++        if (primitiveClass == char.class) return Character.class;
++        if (primitiveClass == double.class) return Double.class;
++        if (primitiveClass == float.class) return Float.class;
++        if (primitiveClass == int.class) return Integer.class;
++        if (primitiveClass == long.class) return Long.class;
++        if (primitiveClass == short.class) return Short.class;
++        if (primitiveClass == void.class) return Void.class;
++        return primitiveClass;
++    }
+ 
+     /**
+      * Method similar to {@link #constructSpecializedType}, but that creates a

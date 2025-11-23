@@ -1,0 +1,25 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveEntry.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveEntry.java
+index 6a7c1e93..da581e35 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveEntry.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveEntry.java
+@@ -459,13 +459,13 @@ public class ZipArchiveEntry extends java.util.zip.ZipEntry
+             return false;
+         }
+         ZipArchiveEntry other = (ZipArchiveEntry) obj;
+-        if (name == null) {
+-            if (other.name != null) {
+-                return false;
+-            }
+-        } else if (!name.equals(other.name)) {
+-            return false;
++        // Consistently use the name field for both equality and hash code
++        // to avoid inconsistencies between hash codes and equals
++        String thisName = getName();
++        String otherName = other.getName();
++        if (thisName == null) {
++            return otherName == null;
+         }
+-        return true;
++        return thisName.equals(otherName);
+     }
+ }

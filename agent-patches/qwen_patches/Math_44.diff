@@ -1,0 +1,38 @@
+diff --git a/src/main/java/org/apache/commons/math/ode/events/EventState.java b/src/main/java/org/apache/commons/math/ode/events/EventState.java
+index 8e9ff46a5..2b933e67e 100644
+--- a/src/main/java/org/apache/commons/math/ode/events/EventState.java
++++ b/src/main/java/org/apache/commons/math/ode/events/EventState.java
+@@ -150,7 +150,8 @@ public class EventState {
+      * @param interpolator valid for the current step
+      */
+     public void reinitializeBegin(final StepInterpolator interpolator) {
+-
++        // Reset all state variables when reinitializing for a new step
++        // This ensures clean state for processing subsequent events in the same step
+         t0 = interpolator.getPreviousTime();
+         interpolator.setInterpolatedTime(t0);
+         g0 = handler.g(t0, interpolator.getInterpolatedState());
+@@ -175,7 +176,10 @@ public class EventState {
+             g0 = handler.g(tStart, interpolator.getInterpolatedState());
+         }
+         g0Positive = g0 >= 0;
+-
++        pendingEvent = false;
++        pendingEventTime = Double.NaN;
++        // Clear previousEventTime to avoid carrying over state from previous events
++        previousEventTime = Double.NaN;
+     }
+ 
+     /** Evaluate the impact of the proposed step on the event handler.
+@@ -335,6 +339,11 @@ public class EventState {
+         }
+         pendingEvent      = false;
+         pendingEventTime  = Double.NaN;
++        
++        // Clear previous event time to allow for subsequent events
++        // This fixes the issue where subsequent events could not be properly evaluated
++        // after a reset from a previous event in the same step
++        previousEventTime = Double.NaN;
+ 
+         return (nextAction == EventHandler.Action.RESET_STATE) ||
+                (nextAction == EventHandler.Action.RESET_DERIVATIVES);

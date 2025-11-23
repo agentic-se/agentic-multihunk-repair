@@ -1,0 +1,26 @@
+diff --git a/src/java/org/apache/commons/cli/Options.java b/src/java/org/apache/commons/cli/Options.java
+index 2309da3..6e6123f 100644
+--- a/src/java/org/apache/commons/cli/Options.java
++++ b/src/java/org/apache/commons/cli/Options.java
+@@ -204,7 +204,7 @@ public class Options implements Serializable {
+         return new ArrayList(opts);
+     }
+ 
+-    /** 
++    /**
+      * Returns the required options as a
+      * <code>java.util.Collection</code>.
+      *
+@@ -212,7 +212,7 @@ public class Options implements Serializable {
+      */
+     public List getRequiredOptions()
+     {
+-        return requiredOpts;
++        return new ArrayList(requiredOpts);
+     }
+ 
+     /** 
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

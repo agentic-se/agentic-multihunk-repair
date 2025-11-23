@@ -1,0 +1,127 @@
+diff --git a/src/main/java/org/apache/commons/lang3/StringUtils.java b/src/main/java/org/apache/commons/lang3/StringUtils.java
+index dd2f5cf1..dc697012 100644
+--- a/src/main/java/org/apache/commons/lang3/StringUtils.java
++++ b/src/main/java/org/apache/commons/lang3/StringUtils.java
+@@ -1374,12 +1374,22 @@ public class StringUtils {
+         }
+         int csLen = cs.length();
+         int searchLen = searchChars.length;
++        int csLast = csLen - 1;
++        int searchLast = searchLen - 1;
+         for (int i = 0; i < csLen; i++) {
+             char ch = cs.charAt(i);
+             for (int j = 0; j < searchLen; j++) {
+                 if (searchChars[j] == ch) {
+-                        // ch is a supplementary character
++                    // If this is a high surrogate, ensure the low surrogate also matches
++                    if (i < csLast && j < searchLast && ch >= Character.MIN_HIGH_SURROGATE && ch <= Character.MAX_HIGH_SURROGATE) {
++                        if (searchChars[j + 1] == cs.charAt(i + 1)) {
++                            return i;
++                        }
++                        // otherwise, not a real match; continue checking
++                    } else {
++                        // BMP or end of sequence
+                         return i;
++                    }
+                 }
+             }
+         }
+@@ -1452,13 +1462,18 @@ public class StringUtils {
+             char ch = cs.charAt(i);
+             for (int j = 0; j < searchLength; j++) {
+                 if (searchChars[j] == ch) {
+-                    if (i < csLast && j < searchLast && ch >= Character.MIN_HIGH_SURROGATE && ch <= Character.MAX_HIGH_SURROGATE) {
+-                            // missing low surrogate, fine, like String.indexOf(String)
+-                        if (searchChars[j + 1] == cs.charAt(i + 1)) {
++                    if (ch >= Character.MIN_HIGH_SURROGATE && ch <= Character.MAX_HIGH_SURROGATE) {
++                        // If the search set only contains the high surrogate, consider it a match
++                        if (j == searchLast) {
+                             return true;
+                         }
++                        // Otherwise, only match if both sides have matching low surrogate
++                        if (i < csLast && searchChars[j + 1] == cs.charAt(i + 1)) {
++                            return true;
++                        }
++                        // Not a real match; continue
+                     } else {
+-                        // ch is in the Basic Multilingual Plane
++                        // BMP or non-surrogate match
+                         return true;
+                     }
+                 }
+@@ -1531,15 +1546,28 @@ public class StringUtils {
+         }
+         int csLen = cs.length();
+         int searchLen = searchChars.length;
+-        outer:
++        int csLast = csLen - 1;
++        int searchLast = searchLen - 1;
+         for (int i = 0; i < csLen; i++) {
+             char ch = cs.charAt(i);
++            boolean inSet = false;
+             for (int j = 0; j < searchLen; j++) {
+                 if (searchChars[j] == ch) {
+-                        continue outer;
++                    if (ch >= Character.MIN_HIGH_SURROGATE && ch <= Character.MAX_HIGH_SURROGATE) {
++                        if (i < csLast && j < searchLast && searchChars[j + 1] == cs.charAt(i + 1)) {
++                            inSet = true;
++                            break;
++                        }
++                        // high surrogate without matching low; not in set
++                    } else {
++                        inSet = true;
++                        break;
++                    }
+                 }
+             }
+-            return i;
++            if (!inSet) {
++                return i;
++            }
+         }
+         return INDEX_NOT_FOUND;
+     }
+@@ -1570,14 +1598,7 @@ public class StringUtils {
+         if (isEmpty(str) || isEmpty(searchChars)) {
+             return INDEX_NOT_FOUND;
+         }
+-        int strLen = str.length();
+-        for (int i = 0; i < strLen; i++) {
+-            char ch = str.charAt(i);
+-            if (searchChars.indexOf(ch) < 0) {
+-                    return i;
+-            }
+-        }
+-        return INDEX_NOT_FOUND;
++        return indexOfAnyBut((CharSequence) str, searchChars.toCharArray());
+     }
+ 
+     // ContainsOnly
+@@ -1676,13 +1697,25 @@ public class StringUtils {
+         }
+         int csLen = cs.length();
+         int searchLen = searchChars.length;
++        int csLast = csLen - 1;
++        int searchLast = searchLen - 1;
+         for (int i = 0; i < csLen; i++) {
+             char ch = cs.charAt(i);
+             for (int j = 0; j < searchLen; j++) {
+                 if (searchChars[j] == ch) {
+-                            // missing low surrogate, fine, like String.indexOf(String)
+-                        // ch is in the Basic Multilingual Plane
++                    if (ch >= Character.MIN_HIGH_SURROGATE && ch <= Character.MAX_HIGH_SURROGATE) {
++                        // If searching for just the high surrogate, treat as found
++                        if (j == searchLast) {
++                            return false;
++                        }
++                        // Otherwise only treat as found if low surrogate matches too
++                        if (i < csLast && searchChars[j + 1] == cs.charAt(i + 1)) {
++                            return false;
++                        }
++                        // Not a real match; continue
++                    } else {
+                         return false;
++                    }
+                 }
+             }
+         }

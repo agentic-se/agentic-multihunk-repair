@@ -1,0 +1,105 @@
+diff --git a/src/main/java/org/jsoup/nodes/DocumentType.java b/src/main/java/org/jsoup/nodes/DocumentType.java
+index cd0c8df..7ea06d2 100644
+--- a/src/main/java/org/jsoup/nodes/DocumentType.java
++++ b/src/main/java/org/jsoup/nodes/DocumentType.java
+@@ -57,8 +57,17 @@ public class DocumentType extends Node {
+             accum.append(" ").append(attr(NAME));
+         if (has(PUBLIC_ID))
+             accum.append(" PUBLIC \"").append(attr(PUBLIC_ID)).append('"');
+-        if (has(SYSTEM_ID))
+-            accum.append(" \"").append(attr(SYSTEM_ID)).append('"');
++        if (has(SYSTEM_ID)) {
++            if (!has(PUBLIC_ID)) {
++                if (has(SYSTEM_KEY))
++                    accum.append(" SYSTEM ");
++                else
++                    accum.append(' ');
++            } else {
++                accum.append(' ');
++            }
++            accum.append('"').append(attr(SYSTEM_ID)).append('"');
++        }
+         accum.append('>');
+     }
+ 
+diff --git a/src/main/java/org/jsoup/parser/HtmlTreeBuilderState.java b/src/main/java/org/jsoup/parser/HtmlTreeBuilderState.java
+index 9a40814..89c8eb4 100644
+--- a/src/main/java/org/jsoup/parser/HtmlTreeBuilderState.java
++++ b/src/main/java/org/jsoup/parser/HtmlTreeBuilderState.java
+@@ -21,6 +21,10 @@ enum HtmlTreeBuilderState {
+                 Token.Doctype d = t.asDoctype();
+                 DocumentType doctype = new DocumentType(
+                     tb.settings.normalizeTag(d.getName()), d.getPublicIdentifier(), d.getSystemIdentifier(), tb.getBaseUri());
++                // Preserve whether SYSTEM keyword was present in source for round-trip fidelity
++                if (DocumentType.SYSTEM_KEY.equals(d.getPubSysKey())) {
++                    doctype.attr(DocumentType.SYSTEM_KEY, DocumentType.SYSTEM_KEY);
++                }
+                 tb.getDocument().appendChild(doctype);
+                 if (d.isForceQuirks())
+                     tb.getDocument().quirksMode(Document.QuirksMode.quirks);
+diff --git a/src/main/java/org/jsoup/parser/Token.java b/src/main/java/org/jsoup/parser/Token.java
+index 0eccbbe..a02056f 100644
+--- a/src/main/java/org/jsoup/parser/Token.java
++++ b/src/main/java/org/jsoup/parser/Token.java
+@@ -35,6 +35,8 @@ abstract class Token {
+         final StringBuilder publicIdentifier = new StringBuilder();
+         final StringBuilder systemIdentifier = new StringBuilder();
+         boolean forceQuirks = false;
++        // Tracks which keyword was used in source: "PUBLIC" or "SYSTEM"; may be null if none
++        String pubSysKey = null;
+ 
+         Doctype() {
+             type = TokenType.Doctype;
+@@ -46,6 +48,7 @@ abstract class Token {
+             reset(publicIdentifier);
+             reset(systemIdentifier);
+             forceQuirks = false;
++            pubSysKey = null;
+             return this;
+         }
+ 
+@@ -65,6 +68,14 @@ abstract class Token {
+         public boolean isForceQuirks() {
+             return forceQuirks;
+         }
++
++        String getPubSysKey() {
++            return pubSysKey;
++        }
++
++        void setPubSysKey(String key) {
++            this.pubSysKey = key;
++        }
+     }
+ 
+     static abstract class Tag extends Token {
+diff --git a/src/main/java/org/jsoup/parser/TokeniserState.java b/src/main/java/org/jsoup/parser/TokeniserState.java
+index 24c2f89..4cf2def 100644
+--- a/src/main/java/org/jsoup/parser/TokeniserState.java
++++ b/src/main/java/org/jsoup/parser/TokeniserState.java
+@@ -1192,8 +1192,10 @@ enum TokeniserState {
+                 t.emitDoctypePending();
+                 t.advanceTransition(Data);
+             } else if (r.matchConsumeIgnoreCase(DocumentType.PUBLIC_KEY)) {
++                t.doctypePending.setPubSysKey(DocumentType.PUBLIC_KEY);
+                 t.transition(AfterDoctypePublicKeyword);
+             } else if (r.matchConsumeIgnoreCase(DocumentType.SYSTEM_KEY)) {
++                t.doctypePending.setPubSysKey(DocumentType.SYSTEM_KEY);
+                 t.transition(AfterDoctypeSystemKeyword);
+             } else {
+                 t.error(this);
+diff --git a/src/main/java/org/jsoup/parser/XmlTreeBuilder.java b/src/main/java/org/jsoup/parser/XmlTreeBuilder.java
+index 2ac525f..8c38ba0 100644
+--- a/src/main/java/org/jsoup/parser/XmlTreeBuilder.java
++++ b/src/main/java/org/jsoup/parser/XmlTreeBuilder.java
+@@ -98,6 +98,10 @@ public class XmlTreeBuilder extends TreeBuilder {
+ 
+     void insert(Token.Doctype d) {
+         DocumentType doctypeNode = new DocumentType(settings.normalizeTag(d.getName()), d.getPublicIdentifier(), d.getSystemIdentifier(), baseUri);
++        // Preserve SYSTEM keyword if present for XML parsing round-trip
++        if (DocumentType.SYSTEM_KEY.equals(d.getPubSysKey())) {
++            doctypeNode.attr(DocumentType.SYSTEM_KEY, DocumentType.SYSTEM_KEY);
++        }
+         insertNode(doctypeNode);
+     }
+ 

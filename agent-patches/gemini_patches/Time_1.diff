@@ -1,0 +1,36 @@
+--- a/src/main/java/org/joda/time/Partial.java
++++ b/src/main/java/org/joda/time/Partial.java
+@@ -1,10 +1,23 @@
+-                        } else if (compare == 0) {
+-                            if (fieldType.getRangeDurationType() == null) {
+-                                break;
+-                            }
+-                            DurationField rangeField = fieldType.getRangeDurationType().getField(iChronology);
+-                            DurationField loopRangeField = loopType.getRangeDurationType().getField(iChronology);
+-                            if (rangeField.compareTo(loopRangeField) > 0) {
+-                                break;
+-                            }
+-                        }
++                        } else if (compare == 0) {
++                            // The unit durations are equal, now compare the range durations.
++                            // A null range duration implies a smaller field.
++                            if (fieldType.getRangeDurationType() == null) {
++                                // fieldType has no range duration, so it is 'smaller'
++                                // than a field with a range duration.
++                                // If loopType also has no range duration, they are equal.
++                                // If loopType has a range duration, fieldType is smaller.
++                                // In both cases, we break to insert fieldType at 'i'.
++                                break;
++                            }
++                            if (loopType.getRangeDurationType() == null) {
++                                // fieldType has a range duration, but loopType does not.
++                                // fieldType is 'larger' than loopType, so continue to find a smaller field.
++                                continue;
++                            }
++                            // Both have range durations, so compare them.
++                            DurationField rangeField = fieldType.getRangeDurationType().getField(iChronology);
++                            DurationField loopRangeField = loopType.getRangeDurationType().getField(iChronology);
++                            if (rangeField.compareTo(loopRangeField) > 0) {
++                                break;
++                            }
++                        }

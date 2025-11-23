@@ -1,0 +1,36 @@
+diff --git a/src/java/org/apache/commons/lang/time/FastDateFormat.java b/src/java/org/apache/commons/lang/time/FastDateFormat.java
+index 89d8073e..48bbc7f7 100644
+--- a/src/java/org/apache/commons/lang/time/FastDateFormat.java
++++ b/src/java/org/apache/commons/lang/time/FastDateFormat.java
+@@ -136,8 +136,11 @@ public class FastDateFormat extends Format {
+     private final boolean mLocaleForced;
+     /**
+      * The parsed rules.
++     *
++     * Marked transient to avoid serializing non-serializable Rule instances.
++     * Rules are rebuilt on deserialization via {@link #init()} in {@link #readObject}.
+      */
+-    private Rule[] mRules;
++    private transient Rule[] mRules;
+     /**
+      * The estimated maximum length.
+      */
+@@ -570,6 +573,18 @@ public class FastDateFormat extends Format {
+         mMaxLengthEstimate = len;
+     }
+ 
++    /**
++     * Custom deserialization to rebuild transient state.
++     *
++     * @param in the input stream
++     * @throws IOException if an I/O error occurs
++     * @throws ClassNotFoundException if a class cannot be found
++     */
++    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
++        in.defaultReadObject();
++        init();
++    }
++
+     // Parse the pattern
+     //-----------------------------------------------------------------------
+     /**

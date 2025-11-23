@@ -1,0 +1,115 @@
+--- a/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java
++++ b/src/main/java/org/apache/commons/math/optimization/direct/MultiDirectional.java
+@@ -1,34 +1,34 @@
+-        while (true) {
+-
+-            incrementIterationsCounter();
+-
+-            // save the original vertex
+-            final RealPointValuePair[] original = simplex;
+-            final RealPointValuePair best = original[0];
+-
+-            // perform a reflection step
+-            final RealPointValuePair reflected = evaluateNewSimplex(original, 1.0, comparator);
+-            if (comparator.compare(reflected, best) < 0) {
+-
+-                // compute the expanded simplex
+-                final RealPointValuePair[] reflectedSimplex = simplex;
+-                final RealPointValuePair expanded = evaluateNewSimplex(original, khi, comparator);
+-                if (comparator.compare(reflected, expanded) <= 0) {
+-                    // accept the reflected simplex
+-                    simplex = reflectedSimplex;
+-                }
+-
+-                return;
+-
+-            }
+-
+-            // compute the contracted simplex
+-            final RealPointValuePair contracted = evaluateNewSimplex(original, gamma, comparator);
+-            if (comparator.compare(contracted, best) < 0) {
+-                // accept the contracted simplex
+-
+-            // check convergence
+-                return;
+-            }
+-
+-        }
++        incrementIterationsCounter();
++
++        // save the original vertex
++        final RealPointValuePair[] original = simplex;
++        final RealPointValuePair best = original[0];
++
++        // perform a reflection step
++        final RealPointValuePair reflected = evaluateNewSimplex(original, 1.0, comparator);
++        if (comparator.compare(reflected, best) < 0) {
++
++            // compute the expanded simplex
++            final RealPointValuePair[] reflectedSimplex = simplex;
++            final RealPointValuePair expanded = evaluateNewSimplex(original, khi, comparator);
++            if (comparator.compare(reflected, expanded) <= 0) {
++                // accept the reflected simplex
++                simplex = reflectedSimplex;
++            }
++
++            return;
++
++        }
++
++        // compute the contracted simplex
++        final RealPointValuePair contracted = evaluateNewSimplex(original, gamma, comparator);
++        if (comparator.compare(contracted, best) < 0) {
++            // accept the contracted simplex
++            simplex = original; // Revert to original simplex if contraction is not better
++            return;
++        }
++
++        // If neither reflection nor contraction improves, the simplex remains unchanged.
++        // The outer optimize loop will handle convergence or further iterations.
++        simplex = original; // Revert to original simplex if no improvement
++        return;
+@@ -1,16 +1,17 @@
+-            }
+-        }
+-
+-    /** Compute and evaluate a new simplex.
+-     * @param original original simplex (to be preserved)
+-     * @param coeff linear coefficient
+-     * @param comparator comparator to use to sort simplex vertices from best to poorest
+-     * @return best point in the transformed simplex
+-     * @exception FunctionEvaluationException if the function cannot be evaluated at
+-     * some point
+-     * @exception OptimizationException if the maximal number of evaluations is exceeded
+-     */
+-    private RealPointValuePair evaluateNewSimplex(final RealPointValuePair[] original,
+-                                              final double coeff,
+-                                              final Comparator<RealPointValuePair> comparator)
+-        throws FunctionEvaluationException, OptimizationException {
++            }
++        }
++    } // Added closing brace for iterateSimplex
++
++    /** Compute and evaluate a new simplex.
++     * @param original original simplex (to be preserved)
++     * @param coeff linear coefficient
++     * @param comparator comparator to use to sort simplex vertices from best to poorest
++     * @return best point in the transformed simplex
++     * @exception FunctionEvaluationException if the function cannot be evaluated at
++     * some point
++     * @exception OptimizationException if the maximal number of evaluations is exceeded
++     */
++    private RealPointValuePair evaluateNewSimplex(final RealPointValuePair[] original,
++                                              final double coeff,
++                                              final Comparator<RealPointValuePair> comparator)
++        throws FunctionEvaluationException, OptimizationException {
+@@ -1,5 +1,4 @@
+-            } else {
+-                // Neither reflection nor contraction improved the simplex.
+-                // Revert to the original simplex.
+-                simplex = originalSimplex;
+-            }
++            } else {
++                // Neither reflection nor contraction improved the simplex.
++                // The simplex remains as the contracted simplex.
++            }

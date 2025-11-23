@@ -1,0 +1,49 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/filter/FilteringParserDelegate.java b/src/main/java/com/fasterxml/jackson/core/filter/FilteringParserDelegate.java
+index 4dc7c9ac..6ed0b285 100644
+--- a/src/main/java/com/fasterxml/jackson/core/filter/FilteringParserDelegate.java
++++ b/src/main/java/com/fasterxml/jackson/core/filter/FilteringParserDelegate.java
+@@ -431,12 +431,14 @@ public class FilteringParserDelegate extends JsonParserDelegate
+         default: // scalar value
+             f = _itemFilter;
+             if (f == TokenFilter.INCLUDE_ALL) {
++                ++_matchCount;
+                 return (_currToken = t);
+             }
+             if (f != null) {
+                 f = _headContext.checkValue(f);
+                 if ((f == TokenFilter.INCLUDE_ALL)
+                         || ((f != null) && f.includeValue(delegate))) {
++                        ++_matchCount;
+                         return (_currToken = t);
+                 }
+             }
+@@ -591,12 +593,14 @@ public class FilteringParserDelegate extends JsonParserDelegate
+             default: // scalar value
+                 f = _itemFilter;
+                 if (f == TokenFilter.INCLUDE_ALL) {
++                    ++_matchCount;
+                     return (_currToken = t);
+                 }
+                 if (f != null) {
+                     f = _headContext.checkValue(f);
+                     if ((f == TokenFilter.INCLUDE_ALL)
+                             || ((f != null) && f.includeValue(delegate))) {
++                            ++_matchCount;
+                             return (_currToken = t);
+                     }
+                 }
+@@ -723,12 +727,14 @@ public class FilteringParserDelegate extends JsonParserDelegate
+             default: // scalar value
+                 f = _itemFilter;
+                 if (f == TokenFilter.INCLUDE_ALL) {
++                    ++_matchCount;
+                     return _nextBuffered(buffRoot);
+                 }
+                 if (f != null) {
+                     f = _headContext.checkValue(f);
+                     if ((f == TokenFilter.INCLUDE_ALL)
+                             || ((f != null) && f.includeValue(delegate))) {
++                            ++_matchCount;
+                             return _nextBuffered(buffRoot);
+                     }
+                 }

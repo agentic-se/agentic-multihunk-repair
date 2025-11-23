@@ -1,0 +1,96 @@
+diff --git a/src/main/java/org/jsoup/select/Selector.java b/src/main/java/org/jsoup/select/Selector.java
+index 0e52007..6aa3e9a 100644
+--- a/src/main/java/org/jsoup/select/Selector.java
++++ b/src/main/java/org/jsoup/select/Selector.java
+@@ -136,8 +136,8 @@ public class Selector {
+     
+     private void combinator(char combinator) {
+         tq.consumeWhitespace();
+-        String subQuery = tq.consumeToAny(combinators);
+-        
++        String subQuery = consumeSubQuery();
++
+         Elements output;
+         if (combinator == '>')
+             output = filterForChildren(elements, select(subQuery, elements));
+@@ -149,10 +149,25 @@ public class Selector {
+             output = filterForGeneralSiblings(elements, select(subQuery, root));
+         else
+             throw new IllegalStateException("Unknown combinator: " + combinator);
+-        
++
+         elements.clear(); elements.addAll(output);
+     }
+ 
++    private String consumeSubQuery() {
++        StringBuilder sb = new StringBuilder();
++        while (!tq.isEmpty()) {
++            if (tq.matches("[")) {
++                sb.append('[');
++                sb.append(tq.chompBalanced('[', ']'));
++                sb.append(']');
++            } else if (tq.matchesAny(combinators))
++                break;
++            else
++                sb.append(tq.consume());
++        }
++        return sb.toString();
++    }
++
+     
+     private Elements findElements() {
+         if (tq.matchChomp("#")) {
+diff --git a/src/main/java/org/jsoup/select/ng/parser/Parser.java b/src/main/java/org/jsoup/select/ng/parser/Parser.java
+index a618479..580b372 100644
+--- a/src/main/java/org/jsoup/select/ng/parser/Parser.java
++++ b/src/main/java/org/jsoup/select/ng/parser/Parser.java
+@@ -82,11 +82,11 @@ public class Parser {
+     
+     private void combinator(char combinator) {
+         tq.consumeWhitespace();
+-        String subQuery = tq.consumeToAny(combinators); // support multi > childs
+-        
+-        
++        String subQuery = consumeSubQuery(); // support multi > childs
++
++
+         Evaluator e = null;
+-        
++
+         if(s.size() == 1)
+         	e = s.get(0);
+         else {
+@@ -94,7 +94,7 @@ public class Parser {
+         }
+     	s.clear();
+         Evaluator f = parse(subQuery);
+-        
++
+ 
+         if (combinator == '>') {
+         	s.add(BasicSelector.and(f, new ImmediateParentSelector(e)));
+@@ -106,8 +106,23 @@ public class Parser {
+         	s.add(BasicSelector.and(f, new PrevioustSiblingSelector(e)));
+         } else
+             throw new IllegalStateException("Unknown combinator: " + combinator);
+-        
+ 
++
++    }
++
++    private String consumeSubQuery() {
++        StringBuilder sb = new StringBuilder();
++        while (!tq.isEmpty()) {
++            if (tq.matches("[")) {
++                sb.append('[');
++                sb.append(tq.chompBalanced('[', ']'));
++                sb.append(']');
++            } else if (tq.matchesAny(combinators))
++                break;
++            else
++                sb.append(tq.consume());
++        }
++        return sb.toString();
+     }
+     
+     private void findElements() {

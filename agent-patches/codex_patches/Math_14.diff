@@ -1,0 +1,40 @@
+diff --git a/src/main/java/org/apache/commons/math3/optim/nonlinear/vector/Weight.java b/src/main/java/org/apache/commons/math3/optim/nonlinear/vector/Weight.java
+index b8225add6..08defb55e 100644
+--- a/src/main/java/org/apache/commons/math3/optim/nonlinear/vector/Weight.java
++++ b/src/main/java/org/apache/commons/math3/optim/nonlinear/vector/Weight.java
+@@ -39,11 +39,9 @@ public class Weight implements OptimizationData {
+      * @param weight List of the values of the diagonal.
+      */
+     public Weight(double[] weight) {
+-        final int dim = weight.length;
+-        weightMatrix = org.apache.commons.math3.linear.MatrixUtils.createRealMatrix(dim, dim);
+-        for (int i = 0; i < dim; i++) {
+-            weightMatrix.setEntry(i, i, weight[i]);
+-        }
++        // Use a diagonal matrix to avoid allocating an n x n dense matrix
++        // when only the diagonal elements are provided as a vector.
++        weightMatrix = new DiagonalMatrix(weight);
+     }
+ 
+     /**
+diff --git a/src/main/java/org/apache/commons/math3/optim/nonlinear/vector/jacobian/AbstractLeastSquaresOptimizer.java b/src/main/java/org/apache/commons/math3/optim/nonlinear/vector/jacobian/AbstractLeastSquaresOptimizer.java
+index d12ebeaf0..9edc3fdb9 100644
+--- a/src/main/java/org/apache/commons/math3/optim/nonlinear/vector/jacobian/AbstractLeastSquaresOptimizer.java
++++ b/src/main/java/org/apache/commons/math3/optim/nonlinear/vector/jacobian/AbstractLeastSquaresOptimizer.java
+@@ -264,6 +264,16 @@ public abstract class AbstractLeastSquaresOptimizer
+      * @return the square-root of the weight matrix.
+      */
+     private RealMatrix squareRoot(RealMatrix m) {
++            // If the weight matrix is diagonal, we can compute its
++            // square root efficiently without forming dense structures.
++            if (m instanceof DiagonalMatrix) {
++                final double[] diag = ((DiagonalMatrix) m).getDataRef();
++                final double[] sqrtDiag = new double[diag.length];
++                for (int i = 0; i < diag.length; i++) {
++                    sqrtDiag[i] = Math.sqrt(diag[i]);
++                }
++                return new DiagonalMatrix(sqrtDiag, false);
++            }
+             final EigenDecomposition dec = new EigenDecomposition(m);
+             return dec.getSquareRoot();
+     }

@@ -1,0 +1,32 @@
+diff --git a/src/java/org/apache/commons/math/util/MathUtils.java b/src/java/org/apache/commons/math/util/MathUtils.java
+index d51ec7a9f..b6be8165f 100644
+--- a/src/java/org/apache/commons/math/util/MathUtils.java
++++ b/src/java/org/apache/commons/math/util/MathUtils.java
+@@ -540,6 +540,11 @@ public final class MathUtils {
+         int u = p;
+         int v = q;
+         if ((u == 0) || (v == 0)) {
++            if ((u == Integer.MIN_VALUE) || (v == Integer.MIN_VALUE)) {
++                throw MathRuntimeException.createArithmeticException(
++                        "overflow: gcd({0}, {1}) is 2^31",
++                        new Object[] { p, q });
++            }
+             return (Math.abs(u) + Math.abs(v));
+         }
+         // keep u and v negative, as negative integers range down to
+@@ -711,6 +716,11 @@ public final class MathUtils {
+             return 0;
+         }
+         int lcm = Math.abs(mulAndCheck(a / gcd(a, b), b));
++        if (lcm < 0) {
++            throw MathRuntimeException.createArithmeticException(
++                    "overflow: lcm({0}, {1}) is 2^31",
++                    new Object[] { a, b });
++        }
+         return lcm;
+     }
+ 
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

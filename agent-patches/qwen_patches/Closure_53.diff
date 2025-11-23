@@ -1,0 +1,43 @@
+diff --git a/src/com/google/javascript/jscomp/InlineObjectLiterals.java b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+index 9061925d..d09da6ba 100644
+--- a/src/com/google/javascript/jscomp/InlineObjectLiterals.java
++++ b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+@@ -328,14 +328,22 @@ class InlineObjectLiterals implements CompilerPass {
+       }
+ 
+       Node replacement;
+-        // All assignments evaluate to true, so make sure that the
+-        // expr statement evaluates to true in case it matters.
+-        nodes.add(new Node(Token.TRUE));
+-
+-        // Join these using COMMA.  A COMMA node must have 2 children, so we
+-        // create a tree. In the tree the first child be the COMMA to match
+-        // the parser, otherwise tree equality tests fail.
+-        nodes = Lists.reverse(nodes);
++      // All assignments evaluate to true, so make sure that the
++      // expr statement evaluates to true in case it matters.
++      nodes.add(new Node(Token.TRUE));
++
++      // Join these using COMMA.  A COMMA node must have 2 children, so we
++      // create a tree. In the tree the first child be the COMMA to match
++      // the parser, otherwise tree equality tests fail.
++      nodes = Lists.reverse(nodes);
++      if (nodes.size() == 0) {
++        // Empty case - shouldn't really happen but just in case
++        replacement = new Node(Token.TRUE);
++      } else if (nodes.size() == 1) {
++        // Single element case
++        replacement = nodes.get(0);
++      } else {
++        // Multiple elements case - build a comma-separated tree
+         replacement = new Node(Token.COMMA);
+         Node cur = replacement;
+         int i;
+@@ -347,6 +355,7 @@ class InlineObjectLiterals implements CompilerPass {
+         }
+         cur.addChildToFront(nodes.get(i));
+         cur.addChildToFront(nodes.get(i + 1));
++      }
+ 
+       Node replace = ref.getParent();
+       replacement.copyInformationFromForTree(replace);

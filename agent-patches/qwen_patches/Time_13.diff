@@ -1,0 +1,21 @@
+diff --git a/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java b/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java
+index 6c8e9c60..794085cd 100644
+--- a/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java
++++ b/src/main/java/org/joda/time/format/PeriodFormatterBuilder.java
+@@ -1123,10 +1123,16 @@ public class PeriodFormatterBuilder {
+                 return;
+             }
+             int value = (int) valueLong;
++            boolean isNegative = valueLong < 0;
+             if (iFieldType >= SECONDS_MILLIS) {
+                 value = (int) (valueLong / DateTimeConstants.MILLIS_PER_SECOND);
+             }
+ 
++            // For SECONDS_OPTIONAL_MILLIS, we might need to add a minus sign if the original value is negative
++            // and we're about to print a zero value (which happens for small negative millisecond values)
++            if (iFieldType == SECONDS_OPTIONAL_MILLIS && isNegative && value == 0) {
++                buf.append('-');
++            }
+             if (iPrefix != null) {
+                 iPrefix.printTo(buf, value);
+             }

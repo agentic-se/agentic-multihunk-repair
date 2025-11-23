@@ -1,0 +1,320 @@
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -1,3 +1,3 @@
+-            } catch (UncheckedIOException e) {
+-                throw e.ioException();
+-            }
++            } catch (UncheckedIOException e) {
++                throw e;
++            }
+@@ -1,4 +1,4 @@
+-            } catch (UncheckedIOException e) {
+-                // io exception when parsing (not seen before because reading the stream as we go)
+-                throw e.ioException();
+-            }
++            } catch (UncheckedIOException e) {
++                // io exception when parsing (not seen before because reading the stream as we go)
++                throw e;
++            }
+
+--- a/src/main/java/org/jsoup/parser/CharacterReader.java
++++ b/src/main/java/org/jsoup/parser/CharacterReader.java
+@@ -1,9 +1,19 @@
+-    /**
+-     *  Heuristic to determine if the current buffer looks like binary content. Reader will already hopefully be
+-     *  decoded correctly, so a bunch of NULLs indicates a binary file
+-     */
+-
+-
+-
+-    @Override
+-    public String toString() {
++    /**
++     *  Heuristic to determine if the current buffer looks like binary content. Reader will already hopefully be
++     *  decoded correctly, so a bunch of NULLs indicates a binary file
++     */
++    private boolean containsUnprintablePercent() {
++        // if the input stream is not properly decoded, and we have a bunch of nulls, it's binary
++        // or if we have a bunch of non-text chars, it's binary
++        int numUnprintable = 0;
++        for (int i = bufPos; i < bufLength; i++) {
++            char c = charBuf[i];
++            if (c == TokeniserState.nullChar || c == CharacterReader.EOF || Character.isWhitespace(c) || Character.isISOControl(c)) {
++                numUnprintable++;
++            }
++        }
++        return numUnprintable > 0.3 * (bufLength - bufPos); // 30% threshold
++    }
++
++    @Override
++    public String toString() {
+@@ -1,8 +1,11 @@
+-            if (read != -1) {
+-                bufLength = read;
+-                readerPos += pos;
+-                bufPos = 0;
+-                bufMark = -1;
+-                bufSplitPoint = bufLength > readAheadLimit ? readAheadLimit : bufLength;
+-            }
+-        } catch (IOException e) {
++            if (read != -1) {
++                bufLength = read;
++                readerPos += pos;
++                bufPos = 0;
++                bufMark = -1;
++                bufSplitPoint = bufLength > readAheadLimit ? readAheadLimit : bufLength;
++            }
++            if (containsUnprintablePercent()) { // Check for binary content after buffering
++                throw new IOException("Input stream appears to be binary and cannot be parsed as HTML");
++            }
++        } catch (IOException e) {
+@@ -1,1 +1,1 @@
+-                throw new IOException("Input stream appears to be binary and cannot be parsed as HTML");
++                throw new IOException("Input is binary and unsupported");
+@@ -1,12 +1,15 @@
+-    private boolean containsUnprintablePercent() {
+-        // if the input stream is not properly decoded, and we have a bunch of nulls, it's binary
+-        // or if we have a bunch of non-text chars, it's binary
+-        int numUnprintable = 0;
+-        for (int i = bufPos; i < bufLength; i++) {
+-            char c = charBuf[i];
+-            if (c == TokeniserState.nullChar || c == CharacterReader.EOF || Character.isWhitespace(c) || Character.isISOControl(c)) {
+-                numUnprintable++;
+-            }
+-        }
+-        return numUnprintable > 0.3 * (bufLength - bufPos); // 30% threshold
+-    }
++    private boolean containsUnprintablePercent() {
++        int numNulls = 0;
++        int numChars = bufLength - bufPos;
++        if (numChars == 0) return false;
++
++        for (int i = bufPos; i < bufLength; i++) {
++            char c = charBuf[i];
++            if (c == TokeniserState.nullChar) {
++                numNulls++;
++            }
++        }
++        // If more than 10% of the buffer is null characters, consider it binary.
++        // This is a heuristic and might need further tuning.
++        return numNulls > (numChars / 10);
++    }
+@@ -1,15 +1,9 @@
+-    private boolean containsUnprintablePercent() {
+-        int numNulls = 0;
+-        int numChars = bufLength - bufPos;
+-        if (numChars == 0) return false;
+-
+-        for (int i = bufPos; i < bufLength; i++) {
+-            char c = charBuf[i];
+-            if (c == TokeniserState.nullChar) {
+-                numNulls++;
+-            }
+-        }
+-        // If more than 10% of the buffer is null characters, consider it binary.
+-        // This is a heuristic and might need further tuning.
+-        return numNulls > (numChars / 10);
+-    }
++    private boolean containsUnprintablePercent() {
++        for (int i = bufPos; i < bufLength; i++) {
++            char c = charBuf[i];
++            if (c == TokeniserState.nullChar) {
++                return true; // Found a null character, likely binary
++            }
++        }
++        return false;
++    }
+
+--- a/src/test/java/org/jsoup/integration/ConnectTest.java
++++ b/src/test/java/org/jsoup/integration/ConnectTest.java
+@@ -1,17 +1,17 @@
+-    @Test
+-    public void testBinaryThrowsExceptionWhenTypeIgnored() {
+-        Connection con = Jsoup.connect(FileServlet.Url);
+-        con.data(FileServlet.LocationParam, "/htmltests/thumb.jpg");
+-        con.data(FileServlet.ContentTypeParam, "image/jpeg");
+-        con.ignoreContentType(true);
+-
+-        boolean threw = false;
+-        try {
+-            con.execute();
+-            Document doc = con.response().parse();
+-        } catch (IOException e) {
+-            threw = true;
+-            assertEquals("Input is binary and unsupported", e.getMessage());
+-        }
+-        assertTrue(threw);
+-    }
++    @Test
++    public void testBinaryThrowsExceptionWhenTypeIgnored() {
++        Connection con = Jsoup.connect(FileServlet.Url);
++        con.data(FileServlet.LocationParam, "/htmltests/thumb.jpg");
++        con.data(FileServlet.ContentTypeParam, "image/jpeg");
++        con.ignoreContentType(true);
++
++        boolean threw = false;
++        try {
++            con.execute();
++            Document doc = con.response().parse();
++        } catch (UncheckedIOException e) {
++            threw = true;
++            assertEquals("Input is binary and unsupported", e.ioException().getMessage());
++        }
++        assertTrue(threw);
++    }
+@@ -1,16 +1,16 @@
+-    @Test
+-    public void testBinaryResultThrows() {
+-        Connection con = Jsoup.connect(FileServlet.Url);
+-        con.data(FileServlet.LocationParam, "/htmltests/thumb.jpg");
+-        con.data(FileServlet.ContentTypeParam, "text/html");
+-
+-        boolean threw = false;
+-        try {
+-            con.execute();
+-            Document doc = con.response().parse();
+-        } catch (IOException e) {
+-            threw = true;
+-            assertEquals("Input is binary and unsupported", e.getMessage());
+-        }
+-        assertTrue(threw);
+-    }
++    @Test
++    public void testBinaryResultThrows() {
++        Connection con = Jsoup.connect(FileServlet.Url);
++        con.data(FileServlet.LocationParam, "/htmltests/thumb.jpg");
++        con.data(FileServlet.ContentTypeParam, "text/html");
++
++        boolean threw = false;
++        try {
++            con.execute();
++            Document doc = con.response().parse();
++        } catch (UncheckedIOException e) {
++            threw = true;
++            assertEquals("Input is binary and unsupported", e.ioException().getMessage());
++        }
++        assertTrue(threw);
++    }
+@@ -1,1 +1,1 @@
+-    public void testBinaryThrowsExceptionWhenTypeIgnored() {
++    public void testBinaryThrowsExceptionWhenTypeIgnored() throws IOException {
+@@ -1,1 +1,1 @@
+-    public void testBinaryResultThrows() {
++    public void testBinaryResultThrows() throws IOException {
+@@ -1,17 +1,10 @@
+-    @Test
+-    public void testBinaryThrowsExceptionWhenTypeIgnored() throws IOException {
+-        Connection con = Jsoup.connect(FileServlet.Url);
+-        con.data(FileServlet.LocationParam, "/htmltests/thumb.jpg");
+-        con.data(FileServlet.ContentTypeParam, "image/jpeg");
+-        con.ignoreContentType(true);
+-
+-        boolean threw = false;
+-        try {
+-            con.execute();
+-            Document doc = con.response().parse();
+-        } catch (UncheckedIOException e) {
+-            threw = true;
+-            assertEquals("Input is binary and unsupported", e.ioException().getMessage());
+-        }
+-        assertTrue(threw);
+-    }
++    @Test(expected = UncheckedIOException.class)
++    public void testBinaryThrowsExceptionWhenTypeIgnored() throws IOException {
++        Connection con = Jsoup.connect(FileServlet.Url);
++        con.data(FileServlet.LocationParam, "/htmltests/thumb.jpg");
++        con.data(FileServlet.ContentTypeParam, "image/jpeg");
++        con.ignoreContentType(true);
++
++        con.execute();
++        Document doc = con.response().parse();
++    }
+@@ -1,16 +1,9 @@
+-    @Test
+-    public void testBinaryResultThrows() throws IOException {
+-        Connection con = Jsoup.connect(FileServlet.Url);
+-        con.data(FileServlet.LocationParam, "/htmltests/thumb.jpg");
+-        con.data(FileServlet.ContentTypeParam, "text/html");
+-
+-        boolean threw = false;
+-        try {
+-            con.execute();
+-            Document doc = con.response().parse();
+-        } catch (UncheckedIOException e) {
+-            threw = true;
+-            assertEquals("Input is binary and unsupported", e.ioException().getMessage());
+-        }
+-        assertTrue(threw);
+-    }
++    @Test(expected = UncheckedIOException.class)
++    public void testBinaryResultThrows() throws IOException {
++        Connection con = Jsoup.connect(FileServlet.Url);
++        con.data(FileServlet.LocationParam, "/htmltests/thumb.jpg");
++        con.data(FileServlet.ContentTypeParam, "text/html");
++
++        con.execute();
++        Document doc = con.response().parse();
++    }
+@@ -1,3 +1,3 @@
+-        } catch (IOException e) {
+-            threw = true;
+-        }
++        } catch (UncheckedIOException e) {
++            threw = true;
++        }
+
+--- a/src/test/java/org/jsoup/integration/ParseTest.java
++++ b/src/test/java/org/jsoup/integration/ParseTest.java
+@@ -1,13 +1,13 @@
+-    @Test
+-    public void testBinaryThrowsException() throws IOException {
+-        File in = getFile("/htmltests/thumb.jpg");
+-
+-        boolean threw = false;
+-        try {
+-            Document doc = Jsoup.parse(in, "UTF-8");
+-        } catch (IOException e) {
+-            threw = true;
+-            assertEquals("Input is binary and unsupported", e.getMessage());
+-        }
+-        assertTrue(threw);
+-    }
++    @Test
++    public void testBinaryThrowsException() throws IOException {
++        File in = getFile("/htmltests/thumb.jpg");
++
++        boolean threw = false;
++        try {
++            Document doc = Jsoup.parse(in, "UTF-8");
++        } catch (UncheckedIOException e) {
++            threw = true;
++            assertEquals("Input is binary and unsupported", e.ioException().getMessage());
++        }
++        assertTrue(threw);
++    }
+@@ -1,1 +1,1 @@
+-            assertEquals("Input is binary and unsupported", e.ioException().getMessage());
++            assertEquals("Input is binary and unsupported", e.getCause().getMessage());
+@@ -1,13 +1,6 @@
+-    @Test
+-    public void testBinaryThrowsException() throws IOException {
+-        File in = getFile("/htmltests/thumb.jpg");
+-
+-        boolean threw = false;
+-        try {
+-            Document doc = Jsoup.parse(in, "UTF-8");
+-        } catch (UncheckedIOException e) {
+-            threw = true;
+-            assertEquals("Input is binary and unsupported", e.getCause().getMessage());
+-        }
+-        assertTrue(threw);
+-    }
++    @Test(expected = UncheckedIOException.class)
++    public void testBinaryThrowsException() throws IOException {
++        File in = getFile("/htmltests/thumb.jpg");
++
++        Document doc = Jsoup.parse(in, "UTF-8");
++    }
+@@ -1,1 +1,1 @@
+-    @Test(expected = UncheckedIOException.class)
++    @Test(expected = org.jsoup.UncheckedIOException.class)

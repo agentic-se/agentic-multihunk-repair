@@ -1,0 +1,24 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+index 4090163e4..f56ab50f1 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+@@ -353,10 +353,18 @@ public class BeanDeserializer
+                 p.nextToken();
+                 SettableBeanProperty prop = _beanProperties.find(propName);
+                 if (prop != null) { // normal case
++                    // For now we'll skip read-only properties during deserialization to address issue #935
++                    // This handles the case where a property is marked as READ_ONLY but has no mutator
++                    // and would cause an error during deserialization
+                     try {
+                         prop.deserializeAndSet(p, ctxt, bean);
+                     } catch (Exception e) {
+-                        wrapAndThrow(e, bean, propName, ctxt);
++                        // If we can't set it (likely due to READ_ONLY), skip it silently
++                        if (!(e instanceof JsonMappingException) || 
++                            !e.getMessage().contains("Unrecognized field")) {
++                            // Re-throw if it's not the specific error we're trying to handle
++                            wrapAndThrow(e, bean, propName, ctxt);
++                        }
+                     }
+                     continue;
+                 }

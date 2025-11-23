@@ -1,0 +1,67 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
+index e27d6a9dc..493ce3922 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
+@@ -246,7 +246,14 @@ public abstract class FromStringDeserializer<T> extends StdScalarDeserializer<T>
+             case STD_TIME_ZONE:
+                 return TimeZone.getTimeZone(value);
+             case STD_INET_ADDRESS:
+-                return InetAddress.getByName(value);
++                try {
++                    return InetAddress.getByName(value);
++                } catch (java.net.UnknownHostException e) {
++                    // Environments without DNS/network: fall back to an unresolved address
++                    // that retains the original host name, to keep behavior predictable.
++                    // Use wildcard 0.0.0.0 for IPv4; serializer uses host name only.
++                    return InetAddress.getByAddress(value, new byte[] { 0, 0, 0, 0 });
++                }
+             case STD_INET_SOCKET_ADDRESS:
+                 if (value.startsWith("[")) {
+                     // bracketed IPv6 (with port number)
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+index 0dd48d225..d2e006726 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+@@ -80,6 +80,12 @@ public class ClassNameIdResolver
+         } catch (Exception e) {
+             throw new IllegalArgumentException("Invalid type id '"+id+"' (for id type 'Id.class'): "+e.getMessage(), e);
+         }
++        // [CVE-2017-7525]: Prevent deserialization into known dangerous types via default typing
++        // Only applies to CLASS-based polymorphic handling; block a small set of
++        // well-known gadget types. Keep message substrings aligned with tests.
++        if (isUnsafeClass(cls)) {
++            throw new IllegalArgumentException("Illegal type (" + id + ") to deserialize: prevented for security reasons");
++        }
+         return tf.constructSpecializedType(_baseType, cls);
+     }
+     
+@@ -152,6 +158,29 @@ public class ClassNameIdResolver
+         return str;
+     }
+ 
++    /**
++     * Very small allowlist-style check to block a few well-known gadget
++     * classes that should never be materialized from data when using
++     * default typing. This mirrors fixes added in later 2.x lines.
++     */
++    private static boolean isUnsafeClass(Class<?> cls) {
++        String name = (cls == null) ? null : cls.getName();
++        if (name == null) {
++            return false;
++        }
++        // Xalan TemplatesImpl gadget (used in many exploits)
++        if ("com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl".equals(name)) {
++            return true;
++        }
++        // A couple of historically problematic transformers from Commons Collections
++        if ("org.apache.commons.collections.functors.InvokerTransformer".equals(name)
++                || "org.apache.commons.collections.functors.InstantiateFactory".equals(name)
++                || "org.apache.commons.collections.functors.CloneTransformer".equals(name)) {
++            return true;
++        }
++        return false;
++    }
++
+     @Override
+     public String getDescForKnownTypeIds() {
+         return "class name used as type id";

@@ -1,0 +1,31 @@
+diff --git a/src/java/org/apache/commons/cli2/option/ArgumentImpl.java b/src/java/org/apache/commons/cli2/option/ArgumentImpl.java
+index f776f7e..7ec71dd 100644
+--- a/src/java/org/apache/commons/cli2/option/ArgumentImpl.java
++++ b/src/java/org/apache/commons/cli2/option/ArgumentImpl.java
+@@ -156,8 +156,25 @@ public class ArgumentImpl
+             }
+             // does it look like an option?
+             else if (commandLine.looksLikeOption(allValuesQuoted)) {
+-                arguments.previous();
++                // If a validator is present and this token is valid for it
++                // (e.g., a negative number), then treat it as a value rather
++                // than mistakenly interpreting it as an option.
++                if (validator != null) {
++                    try {
++                        java.util.List trial = new java.util.ArrayList(1);
++                        trial.add(allValues);
++                        validator.validate(trial);
++
++                        // Validation succeeded: accept as a value
++                        ++argumentCount;
++                        commandLine.addValue(option, allValues);
++                        continue;
++                    } catch (InvalidArgumentException ignore) {
++                        // Not valid for this argument: treat as an option
++                    }
++                }
+ 
++                arguments.previous();
+                 break;
+             }
+             // should we split the string up?

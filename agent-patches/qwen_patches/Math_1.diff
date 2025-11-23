@@ -1,0 +1,6 @@
+# No tracked changes detected in src/ or source/
+
+
+# Untracked source files (not included in patch):
++ src/main/java/org/apache/commons/math3/fraction/BigFraction.java.backup
++ src/main/java/org/apache/commons/math3/fraction/Fraction.java.backup

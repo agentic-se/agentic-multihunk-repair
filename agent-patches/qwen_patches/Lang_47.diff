@@ -1,0 +1,7 @@
+# No tracked changes detected in src/ or source/
+
+
+# Untracked source files (not included in patch):
++ src/java/org/apache/commons/lang/text/StrBuilder.java.backup
++ src/java/org/apache/commons/lang/text/StrBuilder.java.bak1
++ src/java/org/apache/commons/lang/text/StrBuilder.java.bak2

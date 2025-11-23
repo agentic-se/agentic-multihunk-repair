@@ -1,0 +1,122 @@
+diff --git a/src/main/java/org/jsoup/nodes/Element.java b/src/main/java/org/jsoup/nodes/Element.java
+index 12c68ca..5ce587d 100644
+--- a/src/main/java/org/jsoup/nodes/Element.java
++++ b/src/main/java/org/jsoup/nodes/Element.java
+@@ -266,14 +266,42 @@ public class Element extends Node {
+      */
+     public Element append(String html) {
+         Validate.notNull(html);
+-        
++
+         Element fragment = Parser.parseBodyFragment(html, baseUri).body();
+-        for (Node node : fragment.childNodes()) {
++        List<Node> nodes = new ArrayList<Node>(fragment.childNodes());
++        for (Node node : nodes) {
+             node.parentNode = null;
++            // If we're adding to a table-related element and the fragment created an implicit table wrapper, unwrap it
++            if (isTableRelated(this.tag()) && node instanceof Element) {
++                Element el = (Element) node;
++                if (el.tagName().equals("table") && shouldUnwrapTable(el, html)) {
++                    // unwrap: add table's children instead of the table itself
++                    List<Node> tableChildren = new ArrayList<Node>(el.childNodes());
++                    for (Node tableChild : tableChildren) {
++                        tableChild.parentNode = null;
++                        appendChild(tableChild);
++                    }
++                    continue;
++                }
++            }
+             appendChild(node);
+         }
+         return this;
+     }
++
++    private boolean isTableRelated(Tag tag) {
++        String tagName = tag.getName();
++        return tagName.equals("table") || tagName.equals("thead") || tagName.equals("tbody") ||
++               tagName.equals("tfoot") || tagName.equals("tr");
++    }
++
++    private boolean shouldUnwrapTable(Element table, String html) {
++        // Check if the HTML starts with a table row or other table element (not <table)
++        String trimmedHtml = html.trim();
++        return trimmedHtml.startsWith("<tr") || trimmedHtml.startsWith("<td") ||
++               trimmedHtml.startsWith("<th") || trimmedHtml.startsWith("<tbody") ||
++               trimmedHtml.startsWith("<thead") || trimmedHtml.startsWith("<tfoot");
++    }
+     
+     /**
+      * Add inner HTML to this element. The supplied HTML will be parsed, and each node prepended to the start of the children.
+@@ -283,12 +311,26 @@ public class Element extends Node {
+      */
+     public Element prepend(String html) {
+         Validate.notNull(html);
+-        
++
+         Element fragment = Parser.parseBodyFragment(html, baseUri).body();
+-        List<Node> nodes = fragment.childNodes();
++        List<Node> nodes = new ArrayList<Node>(fragment.childNodes());
+         for (int i = nodes.size() - 1; i >= 0; i--) {
+             Node node = nodes.get(i);
+             node.parentNode = null;
++            // If we're adding to a table-related element and the fragment created an implicit table wrapper, unwrap it
++            if (isTableRelated(this.tag()) && node instanceof Element) {
++                Element el = (Element) node;
++                if (el.tagName().equals("table") && shouldUnwrapTable(el, html)) {
++                    // unwrap: add table's children instead of the table itself (in reverse order for prepend)
++                    List<Node> tableChildren = new ArrayList<Node>(el.childNodes());
++                    for (int j = tableChildren.size() - 1; j >= 0; j--) {
++                        Node tableChild = tableChildren.get(j);
++                        tableChild.parentNode = null;
++                        prependChild(tableChild);
++                    }
++                    continue;
++                }
++            }
+             prependChild(node);
+         }
+         return this;
+diff --git a/src/main/java/org/jsoup/parser/Parser.java b/src/main/java/org/jsoup/parser/Parser.java
+index 0cedf8a..af68cdd 100644
+--- a/src/main/java/org/jsoup/parser/Parser.java
++++ b/src/main/java/org/jsoup/parser/Parser.java
+@@ -258,10 +258,21 @@ public class Parser {
+             if (parent2.isValidParent(childTag)) {
+                 return true;
+             }
++            // For table-related tags, stop searching when we hit a table boundary
++            // This prevents finding ancestors from an outer table when in a nested table
++            if (isTableRelatedTag(childTag) && parent2.getName().equals("table")) {
++                break;
++            }
+         }
+         return false;
+     }
+ 
++    private boolean isTableRelatedTag(Tag tag) {
++        String tagName = tag.getName();
++        return tagName.equals("tr") || tagName.equals("td") || tagName.equals("th") ||
++               tagName.equals("tbody") || tagName.equals("thead") || tagName.equals("tfoot");
++    }
++
+     private Element popStackToSuitableContainer(Tag tag) {
+         while (!stack.isEmpty()) {
+             if (last().tag().canContain(tag))
+diff --git a/src/main/java/org/jsoup/parser/Tag.java b/src/main/java/org/jsoup/parser/Tag.java
+index 6dff9e7..6baf0af 100644
+--- a/src/main/java/org/jsoup/parser/Tag.java
++++ b/src/main/java/org/jsoup/parser/Tag.java
+@@ -95,8 +95,12 @@ public class Tag {
+         if (this.tagName.equals("dd") && child.tagName.equals("dt"))
+             return false;
+ 
++        // table cells (td, th) cannot contain table rows
++        if ((this.tagName.equals("td") || this.tagName.equals("th")) && child.tagName.equals("tr"))
++            return false;
++
+         // don't allow children to contain their parent (directly)
+-        
++
+         return true;
+     }
+ 

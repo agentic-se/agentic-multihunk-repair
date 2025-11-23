@@ -1,0 +1,194 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
+index 5236867..2034dd4 100644
+--- a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
+@@ -629,18 +629,40 @@ public class DOMNodePointer extends NodePointer {
+     }
+ 
+     public Object getValue() {
++        int nodeType = node.getNodeType();
++        if (nodeType == Node.COMMENT_NODE) {
++            String text = ((Comment) node).getData();
++            return text == null ? "" : text.trim();
++        }
++        if (nodeType == Node.TEXT_NODE || nodeType == Node.CDATA_SECTION_NODE) {
++            String text = node.getNodeValue();
++            if (text == null) {
++                return "";
++            }
++            return isSpacePreserved(node) ? text : text.trim();
++        }
++        if (nodeType == Node.PROCESSING_INSTRUCTION_NODE) {
++            String text = ((ProcessingInstruction) node).getData();
++            return text == null ? "" : text.trim();
++        }
+         return stringValue(node);
+     }
+ 
++    /**
++     * Compute the string value of a node honoring xml:space and ignoring comments.
++     */
+     private String stringValue(Node node) {
+         int nodeType = node.getNodeType();
+         if (nodeType == Node.COMMENT_NODE) {
+-            String text = ((Comment) node).getData();
+-            return text == null ? "" : text.trim();
++            // Comments do not contribute to the string value
++            return "";
+         }
+         if (nodeType == Node.TEXT_NODE || nodeType == Node.CDATA_SECTION_NODE) {
+             String text = node.getNodeValue();
+-            return text == null ? "" : text.trim();
++            if (text == null) {
++                return "";
++            }
++            return isSpacePreserved(node) ? text : text.trim();
+         }
+         if (nodeType == Node.PROCESSING_INSTRUCTION_NODE) {
+             String text = ((ProcessingInstruction) node).getData();
+@@ -650,14 +672,38 @@ public class DOMNodePointer extends NodePointer {
+         StringBuffer buf = new StringBuffer(16);
+         for (int i = 0; i < list.getLength(); i++) {
+             Node child = list.item(i);
+-            if (child.getNodeType() == Node.TEXT_NODE) {
+-                buf.append(child.getNodeValue());
+-            }
+-            else {
+             buf.append(stringValue(child));
++        }
++        // Do not trim the overall buffer to preserve spaces from descendants
++        return buf.toString();
++    }
++
++    /**
++     * Determines whether xml:space is effectively set to 'preserve' for
++     * the supplied node. The nearest ancestor-or-self element with an
++     * xml:space attribute controls the behavior.
++     */
++    private boolean isSpacePreserved(Node node) {
++        Node current = node;
++        // For text/CDATA nodes, start with the parent element
++        if (current.getNodeType() != Node.ELEMENT_NODE) {
++            current = node.getParentNode();
++        }
++        while (current != null) {
++            if (current.getNodeType() == Node.ELEMENT_NODE) {
++                Element e = (Element) current;
++                // Prefer namespace-aware lookup, but fall back to prefixed form
++                String val = e.getAttributeNS(XML_NAMESPACE_URI, "space");
++                if (val == null || val.length() == 0) {
++                    val = e.getAttribute("xml:space");
++                }
++                if (val != null && val.length() != 0) {
++                    return "preserve".equals(val);
++                }
+             }
++            current = current.getParentNode();
+         }
+-        return buf.toString().trim();
++        return false; // default behavior: trim
+     }
+ 
+     /**
+diff --git a/src/java/org/apache/commons/jxpath/ri/model/jdom/JDOMNodePointer.java b/src/java/org/apache/commons/jxpath/ri/model/jdom/JDOMNodePointer.java
+index 975dbc4..58f541d 100644
+--- a/src/java/org/apache/commons/jxpath/ri/model/jdom/JDOMNodePointer.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/jdom/JDOMNodePointer.java
+@@ -237,9 +237,11 @@ public class JDOMNodePointer extends NodePointer {
+ 
+     public Object getValue() {
+         if (node instanceof Element) {
+-            return ((Element) node).getTextTrim();
++            // Build value from children, honoring xml:space and ignoring comments
++            return stringValue(node);
+         }
+         if (node instanceof Comment) {
++            // When selecting a comment() node, return its text value (trimmed)
+             String text = ((Comment) node).getText();
+             if (text != null) {
+                 text = text.trim();
+@@ -247,10 +249,18 @@ public class JDOMNodePointer extends NodePointer {
+             return text;
+         }
+         if (node instanceof Text) {
+-            return ((Text) node).getTextTrim();
++            String text = ((Text) node).getText();
++            if (text == null) {
++                return "";
++            }
++            return isSpacePreserved(node) ? text : text.trim();
+         }
+         if (node instanceof CDATA) {
+-            return ((CDATA) node).getTextTrim();
++            String text = ((CDATA) node).getText();
++            if (text == null) {
++                return "";
++            }
++            return isSpacePreserved(node) ? text : text.trim();
+         }
+         if (node instanceof ProcessingInstruction) {
+             String text = ((ProcessingInstruction) node).getData();
+@@ -262,6 +272,63 @@ public class JDOMNodePointer extends NodePointer {
+         return null;
+     }
+ 
++    private String stringValue(Object n) {
++        if (n instanceof Comment) {
++            // Ignore comments when computing element string values
++            return "";
++        }
++        if (n instanceof ProcessingInstruction) {
++            String text = ((ProcessingInstruction) n).getData();
++            return text == null ? "" : text.trim();
++        }
++        if (n instanceof Text) {
++            String text = ((Text) n).getText();
++            if (text == null) {
++                return "";
++            }
++            return isSpacePreserved(n) ? text : text.trim();
++        }
++        if (n instanceof CDATA) {
++            String text = ((CDATA) n).getText();
++            if (text == null) {
++                return "";
++            }
++            return isSpacePreserved(n) ? text : text.trim();
++        }
++        if (n instanceof Element) {
++            Element el = (Element) n;
++            StringBuilder buf = new StringBuilder(16);
++            List content = el.getContent();
++            for (int i = 0; i < content.size(); i++) {
++                buf.append(stringValue(content.get(i)));
++            }
++            return buf.toString();
++        }
++        return "";
++    }
++
++    /**
++     * Determine if xml:space is effectively set to 'preserve' for this node.
++     * Uses the nearest ancestor-or-self element with an xml:space attribute.
++     */
++    private boolean isSpacePreserved(Object n) {
++        Object current = n;
++        if (!(current instanceof Element)) {
++            current = nodeParent(current);
++        }
++        while (current != null) {
++            if (current instanceof Element) {
++                Element e = (Element) current;
++                String val = e.getAttributeValue("space", Namespace.XML_NAMESPACE);
++                if (val != null && val.length() != 0) {
++                    return "preserve".equals(val);
++                }
++            }
++            current = nodeParent(current);
++        }
++        return false; // default behavior: trim
++    }
++
+     public void setValue(Object value) {
+         if (node instanceof Text) {
+             String string = (String) TypeUtils.convert(value, String.class);

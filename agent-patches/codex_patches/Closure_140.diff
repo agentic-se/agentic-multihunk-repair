@@ -1,0 +1,86 @@
+diff --git a/src/com/google/javascript/jscomp/Compiler.java b/src/com/google/javascript/jscomp/Compiler.java
+index d2524b4f..35ff2369 100644
+--- a/src/com/google/javascript/jscomp/Compiler.java
++++ b/src/com/google/javascript/jscomp/Compiler.java
+@@ -86,6 +86,9 @@ public class Compiler extends AbstractCompiler {
+   Node externsRoot;
+   Node jsRoot;
+   Node externAndJsRoot;
++  // Insertion roots for modules that initially have no inputs.
++  private final Map<JSModule, Node> moduleInsertionRoots = new HashMap<JSModule, Node>();
++
+ 
+   private Map<String, CompilerInput> inputsByName;
+ 
+@@ -1579,13 +1582,45 @@ public class Compiler extends AbstractCompiler {
+     if (inputs.size() > 0) {
+       return inputs.get(0).getAstRoot(this);
+     }
+-    for (JSModule m : getModuleGraph().getTransitiveDepsDeepestFirst(module)) {
+-      inputs = m.getInputs();
+-      if (inputs.size() > 0) {
+-        return inputs.get(0).getAstRoot(this);
++    // If the module has no inputs, create a synthetic SCRIPT node for
++    // code insertion and attach it to the main JS root in module order.
++    Node syntheticRoot = moduleInsertionRoots.get(module);
++    if (syntheticRoot != null) {
++      return syntheticRoot;
++    }
++
++    // Determine insertion point based on module ordering.
++    int index = -1;
++    for (int i = 0; i < modules.length; i++) {
++      if (modules[i] == module) {
++        index = i;
++        break;
+       }
+     }
+-    throw new IllegalStateException("Root module has no inputs");
++    if (index == -1) {
++      throw new IllegalStateException("Unknown module: " + module.getName());
++    }
++
++    Node insertAfter = null;
++    // Find the last AST root associated with any previous module.
++    for (int i = index - 1; i >= 0 && insertAfter == null; i--) {
++      JSModule mPrev = modules[i];
++      List<CompilerInput> prevInputs = mPrev.getInputs();
++      if (prevInputs.size() > 0) {
++        insertAfter = prevInputs.get(prevInputs.size() - 1).getAstRoot(this);
++      } else {
++        insertAfter = moduleInsertionRoots.get(mPrev);
++      }
++    }
++
++    syntheticRoot = new Node(Token.SCRIPT);
++    if (insertAfter != null) {
++      jsRoot.addChildAfter(syntheticRoot, insertAfter);
++    } else {
++      jsRoot.addChildToFront(syntheticRoot);
++    }
++    moduleInsertionRoots.put(module, syntheticRoot);
++    return syntheticRoot;
+   }
+ 
+   public SourceMap getSourceMap() {
+diff --git a/src/com/google/javascript/jscomp/CrossModuleCodeMotion.java b/src/com/google/javascript/jscomp/CrossModuleCodeMotion.java
+index cfa335e4..86a737f4 100644
+--- a/src/com/google/javascript/jscomp/CrossModuleCodeMotion.java
++++ b/src/com/google/javascript/jscomp/CrossModuleCodeMotion.java
+@@ -118,6 +118,16 @@ class CrossModuleCodeMotion extends AbstractPostOrderCallback
+             // carefully. We must dissect them out of the VAR, and create a new
+             // VAR to hold them.
+             Node declParent = decl.node.getParent();
++
++            // If the computed destination parent is the same as the current
++            // container parent, then moving would be a no-op. This can happen
++            // when the destination module has no inputs and the insertion
++            // point falls back to a dependency that also contains the
++            // declaration. In that case, skip the move and do not report a
++            // code change.
++            if (declParent.getParent() == destParent) {
++              continue;
++            }
+             if (declParent.getType() == Token.VAR &&
+                 declParent.getChildCount() > 1) {
+               declParent.removeChild(decl.node);

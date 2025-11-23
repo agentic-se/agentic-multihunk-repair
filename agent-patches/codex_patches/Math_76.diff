@@ -1,0 +1,157 @@
+diff --git a/src/main/java/org/apache/commons/math/linear/SingularValueDecompositionImpl.java b/src/main/java/org/apache/commons/math/linear/SingularValueDecompositionImpl.java
+index 143688172..dd6895ae8 100644
+--- a/src/main/java/org/apache/commons/math/linear/SingularValueDecompositionImpl.java
++++ b/src/main/java/org/apache/commons/math/linear/SingularValueDecompositionImpl.java
+@@ -158,31 +158,53 @@ public class SingularValueDecompositionImpl implements SingularValueDecompositio
+             final int p = singularValues.length;
+             if (m >= n) {
+                 // the tridiagonal matrix is Bt.B, where B is upper bidiagonal
+-                final RealMatrix e =
+-                    eigenDecomposition.getV().getSubMatrix(0, p - 1, 0, p - 1);
++                final int mainLength = mainBidiagonal.length; // equals n when m >= n
++                final RealMatrix e = eigenDecomposition.getV().getSubMatrix(0, mainLength - 1, 0, p - 1);
+                 final double[][] eData = e.getData();
+                 final double[][] wData = new double[m][p];
+-                double[] ei1 = eData[0];
+-                for (int i = 0; i < p - 1; ++i) {
+-                    // compute W = B.E.S^(-1) where E is the eigenvectors matrix
+-                    final double mi = mainBidiagonal[i];
+-                    final double[] ei0 = ei1;
+-                    final double[] wi  = wData[i];
++                // compute W = B.E.S^(-1) where E is the eigenvectors matrix
++                final double[] ev = eigenDecomposition.getRealEigenvalues();
++                final boolean isTruncated = (p < ev.length) && (ev[p] > 0);
++                if (isTruncated) {
++                    double[] ei1 = eData[0];
++                    for (int i = 0; i < Math.max(0, p - 1); ++i) {
++                        final double mi = mainBidiagonal[i];
++                        final double[] ei0 = ei1;
++                        final double[] wi  = wData[i];
+                         ei1 = eData[i + 1];
+                         final double si = secondaryBidiagonal[i];
+                         for (int j = 0; j < p; ++j) {
+                             wi[j] = (mi * ei0[j] + si * ei1[j]) / singularValues[j];
+                         }
+-                }
++                    }
++                    if (p > 0) {
+                         for (int j = 0; j < p; ++j) {
+-                            wData[p - 1][j] = ei1[j] * mainBidiagonal[p - 1] / singularValues[j];
++                            wData[p - 1][j] = eData[p - 1][j] * mainBidiagonal[p - 1] / singularValues[j];
+                         }
+-
+-                for (int i = p; i < m; ++i) {
+-                    wData[i] = new double[p];
++                    }
++                    for (int i = p; i < m; ++i) {
++                        wData[i] = new double[p];
++                    }
++                } else {
++                    double[] ei1 = eData[0];
++                    for (int i = 0; i < mainLength - 1; ++i) {
++                        final double mi = mainBidiagonal[i];
++                        final double[] ei0 = ei1;
++                        final double[] wi  = wData[i];
++                        ei1 = eData[i + 1];
++                        final double si = secondaryBidiagonal[i];
++                        for (int j = 0; j < p; ++j) {
++                            wi[j] = (mi * ei0[j] + si * ei1[j]) / singularValues[j];
++                        }
++                    }
++                    for (int j = 0; j < p; ++j) {
++                        wData[mainLength - 1][j] = eData[mainLength - 1][j] * mainBidiagonal[mainLength - 1] / singularValues[j];
++                    }
++                    for (int i = mainLength; i < m; ++i) {
++                        wData[i] = new double[p];
++                    }
+                 }
+-                cachedU =
+-                    transformer.getU().multiply(MatrixUtils.createRealMatrix(wData));
++                cachedU = transformer.getU().multiply(MatrixUtils.createRealMatrix(wData));
+             } else {
+                 // the tridiagonal matrix is B.Bt, where B is lower bidiagonal
+                 final RealMatrix e =
+@@ -244,29 +266,52 @@ public class SingularValueDecompositionImpl implements SingularValueDecompositio
+             } else {
+                 // the tridiagonal matrix is B.Bt, where B is lower bidiagonal
+                 // compute W = Bt.E.S^(-1) where E is the eigenvectors matrix
+-                final RealMatrix e =
+-                    eigenDecomposition.getV().getSubMatrix(0, p - 1, 0, p - 1);
++                final int mainLength = mainBidiagonal.length; // equals m when m < n
++                final RealMatrix e = eigenDecomposition.getV().getSubMatrix(0, mainLength - 1, 0, p - 1);
+                 final double[][] eData = e.getData();
+                 final double[][] wData = new double[n][p];
+-                double[] ei1 = eData[0];
+-                for (int i = 0; i < p - 1; ++i) {
+-                    final double mi = mainBidiagonal[i];
+-                    final double[] ei0 = ei1;
+-                    final double[] wi  = wData[i];
++                final double[] ev = eigenDecomposition.getRealEigenvalues();
++                final boolean isTruncated = (p < ev.length) && (ev[p] > 0);
++                if (isTruncated) {
++                    double[] ei1 = eData[0];
++                    for (int i = 0; i < Math.max(0, p - 1); ++i) {
++                        final double mi = mainBidiagonal[i];
++                        final double[] ei0 = ei1;
++                        final double[] wi  = wData[i];
+                         ei1 = eData[i + 1];
+                         final double si = secondaryBidiagonal[i];
+                         for (int j = 0; j < p; ++j) {
+                             wi[j] = (mi * ei0[j] + si * ei1[j]) / singularValues[j];
+                         }
+-                }
++                    }
++                    if (p > 0) {
++                        for (int j = 0; j < p; ++j) {
++                            wData[p - 1][j] = eData[p - 1][j] * mainBidiagonal[p - 1] / singularValues[j];
++                        }
++                    }
++                    for (int i = p; i < n; ++i) {
++                        wData[i] = new double[p];
++                    }
++                } else {
++                    double[] ei1 = eData[0];
++                    for (int i = 0; i < mainLength - 1; ++i) {
++                        final double mi = mainBidiagonal[i];
++                        final double[] ei0 = ei1;
++                        final double[] wi  = wData[i];
++                        ei1 = eData[i + 1];
++                        final double si = secondaryBidiagonal[i];
+                         for (int j = 0; j < p; ++j) {
+-                            wData[p - 1][j] = ei1[j] * mainBidiagonal[p - 1] / singularValues[j];
++                            wi[j] = (mi * ei0[j] + si * ei1[j]) / singularValues[j];
+                         }
+-                for (int i = p; i < n; ++i) {
+-                    wData[i] = new double[p];
++                    }
++                    for (int j = 0; j < p; ++j) {
++                        wData[mainLength - 1][j] = eData[mainLength - 1][j] * mainBidiagonal[mainLength - 1] / singularValues[j];
++                    }
++                    for (int i = mainLength; i < n; ++i) {
++                        wData[i] = new double[p];
++                    }
+                 }
+-                cachedV =
+-                    transformer.getV().multiply(MatrixUtils.createRealMatrix(wData));
++                cachedV = transformer.getV().multiply(MatrixUtils.createRealMatrix(wData));
+             }
+ 
+         }
+@@ -391,7 +436,12 @@ public class SingularValueDecompositionImpl implements SingularValueDecompositio
+          */
+         public double[] solve(final double[] b)
+             throws IllegalArgumentException {
+-            return pseudoInverse.operate(b);
++            double[] x = pseudoInverse.operate(b);
++            // Debug: print for specific small systems
++            if (b.length == 3) {
++                System.out.println("Solver.solve: b=["+b[0]+","+b[1]+","+b[2]+"] -> x=["+x[0]+","+x[1]+","+x[2]+"]");
++            }
++            return x;
+         }
+ 
+         /** Solve the linear equation A &times; X = B in least square sense.
+
+
+# Untracked source files (not included in patch):
++ src/main/java/org/apache/commons/math/linear/DebugMain.java

@@ -1,0 +1,28 @@
+diff --git a/src/main/java/org/jsoup/nodes/LeafNode.java b/src/main/java/org/jsoup/nodes/LeafNode.java
+index 0e068b5..159c38a 100644
+--- a/src/main/java/org/jsoup/nodes/LeafNode.java
++++ b/src/main/java/org/jsoup/nodes/LeafNode.java
+@@ -2,6 +2,7 @@ package org.jsoup.nodes;
+ 
+ import org.jsoup.helper.Validate;
+ 
++import java.util.Collections;
+ import java.util.List;
+ 
+ abstract class LeafNode extends Node {
+@@ -89,6 +90,11 @@ abstract class LeafNode extends Node {
+         return 0;
+     }
+ 
++    @Override
++    public List<Node> childNodes() {
++        return Collections.emptyList();
++    }
++
+     @Override
+     protected List<Node> ensureChildNodes() {
+         throw new UnsupportedOperationException("Leaf Nodes do not have child nodes.");
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

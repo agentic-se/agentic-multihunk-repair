@@ -1,0 +1,17 @@
+diff --git a/src/com/google/javascript/jscomp/NodeUtil.java b/src/com/google/javascript/jscomp/NodeUtil.java
+index 7a882de7..b8fe201f 100644
+--- a/src/com/google/javascript/jscomp/NodeUtil.java
++++ b/src/com/google/javascript/jscomp/NodeUtil.java
+@@ -311,6 +311,12 @@ public final class NodeUtil {
+ 
+   static Double getStringNumberValue(String rawJsString) {
+       // vertical tab is not always whitespace
++      // Some JS engines (notably older IE) do not treat \u000B (vertical tab)
++      // as whitespace during numeric conversion. To avoid changing semantics
++      // across environments, bail out on any string containing this char.
++    if (rawJsString.indexOf('\u000B') != -1) {
++      return null;
++    }
+ 
+     String s = trimJsWhiteSpace(rawJsString);
+     // return ScriptRuntime.toNumber(s);

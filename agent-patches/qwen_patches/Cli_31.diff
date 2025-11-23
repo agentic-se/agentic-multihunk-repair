@@ -1,0 +1,40 @@
+diff --git a/src/main/java/org/apache/commons/cli/HelpFormatter.java b/src/main/java/org/apache/commons/cli/HelpFormatter.java
+index 1debaf6..e12a327 100644
+--- a/src/main/java/org/apache/commons/cli/HelpFormatter.java
++++ b/src/main/java/org/apache/commons/cli/HelpFormatter.java
+@@ -653,7 +653,15 @@ public class HelpFormatter
+         if (option.hasArg() && option.hasArgName())
+         {
+             buff.append(option.getOpt() == null ? longOptSeparator : " ");
+-            buff.append("<").append(option.getArgName()).append(">");
++            // Check if the option has the default arg name ("arg") and use the help formatter's arg name instead
++            if (option.getArgName().equals(DEFAULT_ARG_NAME))
++            {
++                buff.append("<").append(getArgName()).append(">");
++            }
++            else
++            {
++                buff.append("<").append(option.getArgName()).append(">");
++            }
+         }
+         
+         // if the Option is not a required option
+@@ -790,7 +798,17 @@ public class HelpFormatter
+                 else
+                 {
+                     optBuf.append(option.hasLongOpt() ? longOptSeparator : " ");
+-                    optBuf.append("<").append(argName != null ? option.getArgName() : getArgName()).append(">");
++                    // Check if the option has the default arg name ("arg") and use the help formatter's arg name instead
++                    if (argName != null && argName.equals(DEFAULT_ARG_NAME))
++                    {
++                        optBuf.append("<").append(getArgName()).append(">");
++                    }
++                    else
++                    {
++                        // If hasArgName() is true (meaning argName is not null and not empty),
++                        // use the option's argName. Otherwise, use the formatter's arg name.
++                        optBuf.append("<").append(option.hasArgName() ? option.getArgName() : getArgName()).append(">");
++                    }
+                 }
+             }
+ 

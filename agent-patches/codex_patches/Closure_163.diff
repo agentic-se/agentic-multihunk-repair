@@ -1,0 +1,161 @@
+diff --git a/src/com/google/javascript/jscomp/AnalyzePrototypeProperties.java b/src/com/google/javascript/jscomp/AnalyzePrototypeProperties.java
+index 10989ec0..a6155a16 100644
+--- a/src/com/google/javascript/jscomp/AnalyzePrototypeProperties.java
++++ b/src/com/google/javascript/jscomp/AnalyzePrototypeProperties.java
+@@ -227,6 +227,27 @@ class AnalyzePrototypeProperties implements CompilerPass {
+             n.getFirstChild().getString() /* named function */;
+         symbolStack.push(new NameContext(getNameInfoForName(name, VAR)));
+       } else if (n.isFunction()) {
++        // If this FUNCTION is the value of an object literal key that is
++        // being assigned to a prototype (e.g. Foo.prototype = {bar: function(){}}),
++        // then associate the function with the property name context instead
++        // of an anonymous context so we correctly record closure variable
++        // reads for that property.
++        if (parent != null && parent.getParent() != null && parent.getParent().isObjectLit()) {
++          Node objLit = parent.getParent();
++          Node maybeAssign = objLit.getParent();
++          if (maybeAssign != null && maybeAssign.isAssign()) {
++            Node lhs = maybeAssign.getFirstChild();
++            if (lhs != null && lhs.isGetProp()) {
++              Node propProp = lhs.getLastChild();
++              if (propProp != null && propProp.isString() && "prototype".equals(propProp.getString())) {
++                // Use the object literal key string as the property name context
++                symbolStack.push(new NameContext(
++                    getNameInfoForName(parent.getString(), PROPERTY)));
++                return true;
++              }
++            }
++          }
++        }
+         symbolStack.push(new NameContext(anonymousNode));
+       }
+       return true;
+@@ -421,9 +442,22 @@ class AnalyzePrototypeProperties implements CompilerPass {
+               NodeUtil.isExprAssign(grandParent) &&
+               NodeUtil.isVarOrSimpleAssignLhs(n, parent)) {
+             String name = dest.getString();
++            // Determine whether the owner of the prototype is a global name.
++            boolean ownerIsGlobal = false;
++            // n is GETPROP for 'Foo.prototype.bar', so firstChild is
++            // the GETPROP 'Foo.prototype'. Its first child is NAME 'Foo'.
++            Node owner = n.getFirstChild();
++            if (owner != null && owner.isGetProp()) {
++              owner = owner.getFirstChild();
++            }
++            if (owner != null && owner.isName()) {
++              Var v = t.getScope().getVar(owner.getString());
++              ownerIsGlobal = (v != null && v.isGlobal());
++            }
+             Property prop = new AssignmentProperty(
+                 grandParent,
+-                t.getModule());
++                t.getModule(),
++                ownerIsGlobal);
+             getNameInfoForName(name, PROPERTY).getDeclarations().add(prop);
+           }
+           break;
+@@ -436,9 +470,19 @@ class AnalyzePrototypeProperties implements CompilerPass {
+                  key != null; key = key.getNext()) {
+               // May be STRING, GET, or SET,
+               String name = key.getString();
++              // Determine whether the owner of the prototype is a global name.
++              boolean ownerIsGlobal = false;
++              Node lhs = n.getFirstChild(); // GETPROP Foo.prototype
++              if (lhs != null && lhs.isGetProp()) {
++                Node owner = lhs.getFirstChild();
++                if (owner != null && owner.isName()) {
++                  Var v = t.getScope().getVar(owner.getString());
++                  ownerIsGlobal = (v != null && v.isGlobal());
++                }
++              }
+               Property prop = new LiteralProperty(
+                   key, key.getFirstChild(), map, n,
+-                  t.getModule());
++                  t.getModule(), ownerIsGlobal);
+               getNameInfoForName(name, PROPERTY).getDeclarations().add(prop);
+             }
+           }
+@@ -562,6 +606,9 @@ class AnalyzePrototypeProperties implements CompilerPass {
+ 
+     /** Returns the value of this property. */
+     Node getValue();
++
++    /** Returns true if the prototype owner (constructor) is a global name. */
++    boolean isPrototypeOwnerGlobal();
+   }
+ 
+   /**
+@@ -573,13 +620,15 @@ class AnalyzePrototypeProperties implements CompilerPass {
+   static class AssignmentProperty implements Property {
+     private final Node exprNode;
+     private final JSModule module;
++    private final boolean ownerIsGlobal;
+ 
+     /**
+      * @param node An EXPR node.
+      */
+-    AssignmentProperty(Node node, JSModule module) {
++    AssignmentProperty(Node node, JSModule module, boolean ownerIsGlobal) {
+       this.exprNode = node;
+       this.module = module;
++      this.ownerIsGlobal = ownerIsGlobal;
+     }
+ 
+     @Override
+@@ -606,6 +655,11 @@ class AnalyzePrototypeProperties implements CompilerPass {
+     public JSModule getModule() {
+       return module;
+     }
++
++    @Override
++    public boolean isPrototypeOwnerGlobal() {
++      return ownerIsGlobal;
++    }
+   }
+ 
+   /**
+@@ -620,14 +674,16 @@ class AnalyzePrototypeProperties implements CompilerPass {
+     private final Node map;
+     private final Node assign;
+     private final JSModule module;
++    private final boolean ownerIsGlobal;
+ 
+     LiteralProperty(Node key, Node value, Node map, Node assign,
+-        JSModule module) {
++        JSModule module, boolean ownerIsGlobal) {
+       this.key = key;
+       this.value = value;
+       this.map = map;
+       this.assign = assign;
+       this.module = module;
++      this.ownerIsGlobal = ownerIsGlobal;
+     }
+ 
+     @Override
+@@ -650,6 +706,11 @@ class AnalyzePrototypeProperties implements CompilerPass {
+     public JSModule getModule() {
+       return module;
+     }
++
++    @Override
++    public boolean isPrototypeOwnerGlobal() {
++      return ownerIsGlobal;
++    }
+   }
+ 
+   /**
+diff --git a/src/com/google/javascript/jscomp/CrossModuleMethodMotion.java b/src/com/google/javascript/jscomp/CrossModuleMethodMotion.java
+index 1bd14b3a..8b25eccb 100644
+--- a/src/com/google/javascript/jscomp/CrossModuleMethodMotion.java
++++ b/src/com/google/javascript/jscomp/CrossModuleMethodMotion.java
+@@ -141,7 +141,9 @@ class CrossModuleMethodMotion implements CompilerPass {
+ 
+         Node value = prop.getValue();
+         if (moduleGraph.dependsOn(deepestCommonModuleRef, prop.getModule()) &&
+-            value.isFunction()) {
++            value.isFunction() &&
++            // Ensure the prototype owner (constructor) is globally accessible.
++            prop.isPrototypeOwnerGlobal()) {
+           Node valueParent = value.getParent();
+           if (valueParent.isGetterDef()
+               || valueParent.isSetterDef()) {

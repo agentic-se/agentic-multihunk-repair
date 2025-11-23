@@ -1,0 +1,56 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/X7875_NewUnix.java b/src/main/java/org/apache/commons/compress/archivers/zip/X7875_NewUnix.java
+index 14aebab1..9e66a766 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/X7875_NewUnix.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/X7875_NewUnix.java
+@@ -143,7 +143,9 @@ public class X7875_NewUnix implements ZipExtraField, Cloneable, Serializable {
+      * @return a <code>ZipShort</code> for the length of the data of this extra field
+      */
+     public ZipShort getCentralDirectoryLength() {
+-        return getLocalFileDataLength();
++        // According to Info-Zip's spec the central directory size (TSize)
++        // for this field is always 0.
++        return new ZipShort(0);
+     }
+ 
+     /**
+@@ -205,14 +207,40 @@ public class X7875_NewUnix implements ZipExtraField, Cloneable, Serializable {
+             byte[] data, int offset, int length
+     ) throws ZipException {
+         reset();
++        // Some archives may (incorrectly) carry a zero-sized local ux entry.
++        // In that case simply keep defaults and return without parsing.
++        if (length <= 0) {
++            return;
++        }
++
++        final int start = offset;
++        final int end = start + length; // exclusive
++
++        // Need at least version and uid-size byte
++        if (offset >= end) {
++            throw new ZipException("Malformed X7875 field: missing version");
++        }
+         this.version = signedByteToUnsignedInt(data[offset++]);
++
++        if (offset >= end) {
++            throw new ZipException("Malformed X7875 field: missing UID size");
++        }
+         int uidSize = signedByteToUnsignedInt(data[offset++]);
++        if (offset + uidSize > end) {
++            throw new ZipException("Malformed X7875 field: UID exceeds data length");
++        }
+         byte[] uidBytes = new byte[uidSize];
+         System.arraycopy(data, offset, uidBytes, 0, uidSize);
+         offset += uidSize;
+         this.uid = new BigInteger(1, reverse(uidBytes)); // sign-bit forced positive
+ 
++        if (offset >= end) {
++            throw new ZipException("Malformed X7875 field: missing GID size");
++        }
+         int gidSize = signedByteToUnsignedInt(data[offset++]);
++        if (offset + gidSize > end) {
++            throw new ZipException("Malformed X7875 field: GID exceeds data length");
++        }
+         byte[] gidBytes = new byte[gidSize];
+         System.arraycopy(data, offset, gidBytes, 0, gidSize);
+         this.gid = new BigInteger(1, reverse(gidBytes)); // sign-bit forced positive

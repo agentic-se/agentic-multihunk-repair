@@ -1,0 +1,206 @@
+diff --git a/src/com/google/javascript/jscomp/CodePrinter.java b/src/com/google/javascript/jscomp/CodePrinter.java
+index 695c740c..49d5ff27 100644
+--- a/src/com/google/javascript/jscomp/CodePrinter.java
++++ b/src/com/google/javascript/jscomp/CodePrinter.java
+@@ -84,7 +84,8 @@ class CodePrinter {
+     void startSourceMapping(Node node) {
+       if (createSrcMap
+           && node.getProp(Node.SOURCEFILE_PROP) != null
+-          && node.getLineno() > 0) {
++          && node.getLineno() > 0
++          && node.getType() != Token.SCRIPT) {
+         int line = getCurrentLineIndex();
+         int index = getCurrentCharIndex();
+ 
+@@ -107,7 +108,8 @@ class CodePrinter {
+     void endSourceMapping(Node node) {
+       if (createSrcMap
+           && node.getProp(Node.SOURCEFILE_PROP) != null
+-          && node.getLineno() > 0) {
++          && node.getLineno() > 0
++          && node.getType() != Token.SCRIPT) {
+         int line = getCurrentLineIndex();
+         int index = getCurrentCharIndex();
+ 
+diff --git a/src/com/google/javascript/jscomp/PeepholeFoldConstants.java b/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
+index 1df9098b..da3a1e79 100644
+--- a/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
++++ b/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
+@@ -179,6 +179,10 @@ public class PeepholeFoldConstants extends AbstractPeepholeOptimization {
+       case Token.ARRAYLIT:
+         typeNameString = "object";
+         break;
++      case Token.VOID:
++        // typeof(void <expr>) is always 'undefined'
++        typeNameString = "undefined";
++        break;
+       case Token.NAME:
+         // We assume here that programs don't change the value of the
+         // keyword undefined to something other than the value undefined.
+diff --git a/src/com/google/javascript/jscomp/SourceMap.java b/src/com/google/javascript/jscomp/SourceMap.java
+index ff61bddf..c452decd 100644
+--- a/src/com/google/javascript/jscomp/SourceMap.java
++++ b/src/com/google/javascript/jscomp/SourceMap.java
+@@ -309,7 +309,8 @@ public class SourceMap {
+     out.append(", \"count\": ");
+     out.append(String.valueOf(maxLine + 1));
+     out.append(" }\n");
+-    (new LineMapper(out)).appendLineMappings();
++    LineMapper lineMapper = new LineMapper(out);
++    lineMapper.appendLineMappings();
+ 
+     // Add the source file maps.
+     out.append("/** Begin file information. **/\n");
+@@ -320,13 +321,9 @@ public class SourceMap {
+       out.append("[]\n");
+     }
+ 
+-    // Add the mappings themselves.
++    // Add the mappings themselves (only those used, in used-id order).
+     out.append("/** Begin mapping definitions. **/\n");
+-
+-    for (Mapping mapping : mappings) {
+-      mapping.appendTo(out);
+-      out.append("\n");
+-    }
++    lineMapper.appendMappingDefinitions(out);
+   }
+ 
+   /**
+@@ -350,6 +347,10 @@ public class SourceMap {
+ 
+     private final static int UNMAPPED = -1;
+ 
++    // Track which original mapping ids are used, and their compact id mapping.
++    private boolean[] used;
++    private int[] origToNewId;
++
+     LineMapper(Appendable out) {
+       this.out = out;
+     }
+@@ -365,14 +366,66 @@ public class SourceMap {
+ 
+     // Append the line mapping entries.
+     void appendLineMappings() throws IOException {
+-      Preconditions.checkState(!mappings.isEmpty());
++      if (mappings.isEmpty()) {
++        // No mappings: emit a single empty line map.
++        openLine();
++        closeLine();
++        return;
++      }
+ 
+-      // Start the first line.
+-      openLine();
++      // First pass: determine which mapping ids are actually used.
++      used = new boolean[mappings.size()];
++      this.line = 0;
++      this.col = 0;
++      {
++        java.util.Deque<Mapping> stack = new ArrayDeque<Mapping>();
++        for (Mapping m : mappings) {
++          while (!stack.isEmpty() && !isOverlapped(stack.peek(), m)) {
++            Mapping previous = stack.pop();
++            markClosedMappingUsed(previous);
++          }
++          Mapping parent = stack.peek();
++          markBetweenUsed(parent, m);
++          stack.push(m);
++        }
++        while (!stack.isEmpty()) {
++          Mapping m = stack.pop();
++          markClosedMappingUsed(m);
++        }
++      }
+ 
++      // Build original-id -> compact-id map in original order.
++      origToNewId = new int[mappings.size()];
++      int next = 0;
++      for (int i = 0; i < mappings.size(); i++) {
++        if (used[i]) {
++          origToNewId[i] = next++;
++        } else {
++          origToNewId[i] = -1;
++        }
++      }
+ 
+-      // And close the final line.
++      // Second pass: emit the line mappings using compact ids.
++      this.line = 0;
++      this.col = 0;
++      openLine();
+ 
++      java.util.Deque<Mapping> stack = new ArrayDeque<Mapping>();
++      for (Mapping m : mappings) {
++        while (!stack.isEmpty() && !isOverlapped(stack.peek(), m)) {
++          Mapping previous = stack.pop();
++          writeClosedMapping(previous);
++        }
++        Mapping parent = stack.peek();
++        writeCharsBetween(parent, m);
++        stack.push(m);
++      }
++      while (!stack.isEmpty()) {
++        Mapping m = stack.pop();
++        writeClosedMapping(m);
++      }
++      // And close the final line.
++      
+     /**
+      * Begin the entry for a new line.
+      */
+@@ -530,7 +583,7 @@ public class SourceMap {
+         return;
+       }
+ 
+-      String idString = (id == UNMAPPED) ? UNMAPPED_STRING : String.valueOf(id);
++      String idString = (id == UNMAPPED) ? UNMAPPED_STRING : String.valueOf(origToNewId[id]);
+       for (int i = line; i <= nextLine; i++) {
+         if (i == nextLine) {
+           for (int j = col; j < nextCol; j++) {
+@@ -545,5 +598,45 @@ public class SourceMap {
+       line = nextLine;
+       col = nextCol;
+     }
++
++    // Mark used ids for the range up to nextLine/nextCol using id.
++    private void markUpTo(int nextLine, int nextCol, int id) {
++      if (line == nextLine && col == nextCol) {
++        return;
++      }
++      if (id != UNMAPPED && used != null) {
++        used[id] = true;
++      }
++      // Update current position as if we wrote.
++      line = nextLine;
++      col = nextCol;
++    }
++
++    private void markClosedMappingUsed(Mapping m) {
++      int nextLine = getAdjustedLine(m.endPosition);
++      int nextCol = getAdjustedCol(m.endPosition);
++      if (line < nextLine || (line == nextLine && col < nextCol)) {
++        markUpTo(nextLine, nextCol, m.id);
++      }
++    }
++
++    private void markBetweenUsed(Mapping prev, Mapping next) {
++      int nextLine = getAdjustedLine(next.startPosition);
++      int nextCol = getAdjustedCol(next.startPosition);
++      int id = (prev != null) ? prev.id : UNMAPPED;
++      markUpTo(nextLine, nextCol, id);
++    }
++
++    void appendMappingDefinitions(Appendable out) throws IOException {
++      if (used == null) {
++        return;
++      }
++      for (int i = 0; i < mappings.size(); i++) {
++        if (used[i]) {
++          mappings.get(i).appendTo(out);
++          out.append("\n");
++        }
++      }
++    }
+   }
+ }

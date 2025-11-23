@@ -1,0 +1,47 @@
+diff --git a/src/com/google/javascript/jscomp/InlineVariables.java b/src/com/google/javascript/jscomp/InlineVariables.java
+index c14c8456..2a02cc6d 100644
+--- a/src/com/google/javascript/jscomp/InlineVariables.java
++++ b/src/com/google/javascript/jscomp/InlineVariables.java
+@@ -281,6 +281,16 @@ class InlineVariables implements CompilerPass {
+               aliasInit = candidate.refInfo.getInitializingReference();
+               Node value = aliasInit.getAssignedValue();
+               Preconditions.checkNotNull(value);
++              // Guard against inlining aliases of variables that are declared
++              // within loop structures. Inlining such aliases can change
++              // closure capture semantics across iterations.
++              if (value.getType() == Token.NAME) {
++                Var rhsVar = candidate.alias.scope.getVar(value.getString());
++                if (rhsVar != null && isVarDeclaredInLoop(rhsVar)) {
++                  // Skip alias inlining in this unsafe case.
++                  continue;
++                }
++              }
+               inlineWellDefinedVariable(candidate.alias,
+                   value,
+                   candidate.refInfo.references);
+@@ -291,6 +301,25 @@ class InlineVariables implements CompilerPass {
+       }
+     }
+ 
++    /**
++     * Returns true if the given variable is declared syntactically within a
++     * loop structure (for/while/do) before the next function boundary.
++     * This is used to prevent inlining aliases of such variables, which
++     * could otherwise alter closure semantics across loop iterations.
++     */
++    private boolean isVarDeclaredInLoop(Var var) {
++      Node nameNode = var.getNameNode();
++      for (Node anc = nameNode.getParent(); anc != null; anc = anc.getParent()) {
++        if (NodeUtil.isLoopStructure(anc)) {
++          return true;
++        }
++        if (NodeUtil.isFunction(anc)) {
++          return false;
++        }
++      }
++      return false;
++    }
++
+     /**
+      * If there are any variable references in the given node tree, blacklist
+      * them to prevent the pass from trying to inline the variable.

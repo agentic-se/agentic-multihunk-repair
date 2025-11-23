@@ -1,0 +1,31 @@
+diff --git a/src/main/java/org/apache/commons/math/optimization/general/AbstractLeastSquaresOptimizer.java b/src/main/java/org/apache/commons/math/optimization/general/AbstractLeastSquaresOptimizer.java
+index 30ebfff21..e13277178 100644
+--- a/src/main/java/org/apache/commons/math/optimization/general/AbstractLeastSquaresOptimizer.java
++++ b/src/main/java/org/apache/commons/math/optimization/general/AbstractLeastSquaresOptimizer.java
+@@ -237,12 +237,9 @@ public abstract class AbstractLeastSquaresOptimizer implements DifferentiableMul
+      * @return RMS value
+      */
+     public double getRMS() {
+-        double criterion = 0;
+-        for (int i = 0; i < rows; ++i) {
+-            final double residual = residuals[i];
+-            criterion += residual * residual * residualsWeights[i];
+-        }
+-        return Math.sqrt(criterion / rows);
++        // RMS is the square root of the mean of weighted residuals squares
++        // It is directly related to chi-square by a factor 1/rows
++        return Math.sqrt(getChiSquare() / rows);
+     }
+ 
+     /**
+@@ -255,7 +252,9 @@ public abstract class AbstractLeastSquaresOptimizer implements DifferentiableMul
+         double chiSquare = 0;
+         for (int i = 0; i < rows; ++i) {
+             final double residual = residuals[i];
+-            chiSquare += residual * residual / residualsWeights[i];
++            // weights represent 1/sigma^2 for each observation, hence
++            // the chi-square is sum(residual^2 / sigma^2) = sum(residual^2 * weight)
++            chiSquare += residual * residual * residualsWeights[i];
+         }
+         return chiSquare;
+     }

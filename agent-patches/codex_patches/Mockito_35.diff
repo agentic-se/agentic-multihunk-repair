@@ -1,0 +1,62 @@
+diff --git a/src/org/mockito/Matchers.java b/src/org/mockito/Matchers.java
+index 16f1b5bb4..7de88a812 100644
+--- a/src/org/mockito/Matchers.java
++++ b/src/org/mockito/Matchers.java
+@@ -358,9 +358,11 @@ public class Matchers {
+      *            the class of the accepted type.
+      * @return <code>null</code>.
+      */
+-    public static <T> T isA(Class<T> clazz) {
+-        return reportMatcher(new InstanceOf(clazz)).<T>returnNull();
+-    }
++    public static <T> T isA(Class<T> clazz) {
++        // Return a sensible default for the given class to avoid NPEs when
++        // the matcher is used for primitive parameters (auto-unboxing).
++        return reportMatcher(new InstanceOf(clazz)).<T>returnFor(clazz);
++    }
+ 
+     /**
+      * boolean argument that is equal to the given value.
+@@ -475,9 +477,15 @@ public class Matchers {
+      *            the given value.
+      * @return <code>null</code>.
+      */
+-    public static <T> T eq(T value) {
+-        return reportMatcher(new Equals(value)).<T>returnNull();
+-    }  
++    public static <T> T eq(T value) {
++        // When used against primitive parameters, returning null would trigger
++        // a NullPointerException on auto-unboxing. Return a default value that
++        // matches the provided value's type when available.
++        if (value != null) {
++            return reportMatcher(new Equals(value)).<T>returnFor((Class<T>) value.getClass());
++        }
++        return reportMatcher(new Equals(value)).<T>returnNull();
++    }  
+ 
+     /**
+      * Object argument that is reflection-equal to the given value with support for excluding
+@@ -512,9 +520,13 @@ public class Matchers {
+      *            the given value.
+      * @return <code>null</code>.
+      */
+-    public static <T> T same(T value) {
+-        return reportMatcher(new Same(value)).<T>returnNull();
+-    }
++    public static <T> T same(T value) {
++        // As with eq(T), avoid returning null for primitive parameters.
++        if (value != null) {
++            return reportMatcher(new Same(value)).<T>returnFor((Class<T>) value.getClass());
++        }
++        return reportMatcher(new Same(value)).<T>returnNull();
++    }
+ 
+     /**
+      * null argument.
+@@ -716,4 +728,4 @@ public class Matchers {
+     private static HandyReturnValues reportMatcher(Matcher<?> matcher) {
+         return mockingProgress.getArgumentMatcherStorage().reportMatcher(matcher);
+     }
+-}
+\ No newline at end of file
++}

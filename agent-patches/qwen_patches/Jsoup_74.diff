@@ -1,0 +1,31 @@
+diff --git a/src/main/java/org/jsoup/nodes/TextNode.java b/src/main/java/org/jsoup/nodes/TextNode.java
+index 2037365e..e9bd3bf 100644
+--- a/src/main/java/org/jsoup/nodes/TextNode.java
++++ b/src/main/java/org/jsoup/nodes/TextNode.java
+@@ -43,7 +43,7 @@ public class TextNode extends LeafNode {
+      * @see TextNode#getWholeText()
+      */
+     public String text() {
+-        return normaliseWhitespace(getWholeText());
++        return normaliseWhitespace(stripInvisibleCharacters(getWholeText()));
+     }
+     
+     /**
+@@ -136,6 +136,17 @@ public class TextNode extends LeafNode {
+         return text;
+     }
+ 
++    public static String stripInvisibleCharacters(String text) {
++        if (text == null || text.isEmpty()) {
++            return text;
++        }
++        
++        // Remove common invisible Unicode characters that should not appear in plain text
++        // Soft hyphen (U+00AD), Zero Width Space (U+200B), Zero Width Non-Joiner (U+200C),
++        // Zero Width Joiner (U+200D), and non-breaking space (U+00A0)
++        return text.replaceAll("[\\u00AD\\u200B\\u200C\\u200D\\u00A0]", "");
++    }
++
+     static String stripLeadingWhitespace(String text) {
+         return text.replaceFirst("^\\s+", "");
+     }

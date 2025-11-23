@@ -1,0 +1,74 @@
+diff --git a/src/main/java/org/jsoup/nodes/Element.java b/src/main/java/org/jsoup/nodes/Element.java
+index fd2b542..4bf37bf 100644
+--- a/src/main/java/org/jsoup/nodes/Element.java
++++ b/src/main/java/org/jsoup/nodes/Element.java
+@@ -431,12 +431,19 @@ public class Element extends Node {
+      * @return sibling elements
+      */
+     public Elements siblingElements() {
+-
+-        return parent().children();
++        if (parent() == null)
++            return new Elements();
++        List<Element> elements = parent().children();
++        Elements siblings = new Elements();
++        for (Element el: elements) {
++            if (el != this)
++                siblings.add(el);
++        }
++        return siblings;
+     }
+ 
+     /**
+-     * Gets the next sibling element of this element. E.g., if a {@code div} contains two {@code p}s, 
++     * Gets the next sibling element of this element. E.g., if a {@code div} contains two {@code p}s,
+      * the {@code nextElementSibling} of the first {@code p} is the second {@code p}.
+      * <p/>
+      * This is similar to {@link #nextSibling()}, but specifically finds only Elements
+@@ -444,6 +451,7 @@ public class Element extends Node {
+      * @see #previousElementSibling()
+      */
+     public Element nextElementSibling() {
++        if (parent() == null) return null;
+         List<Element> siblings = parent().children();
+         Integer index = indexInList(this, siblings);
+         Validate.notNull(index);
+@@ -459,6 +467,7 @@ public class Element extends Node {
+      * @see #nextElementSibling()
+      */
+     public Element previousElementSibling() {
++        if (parent() == null) return null;
+         List<Element> siblings = parent().children();
+         Integer index = indexInList(this, siblings);
+         Validate.notNull(index);
+diff --git a/src/main/java/org/jsoup/nodes/Node.java b/src/main/java/org/jsoup/nodes/Node.java
+index 92a2f8f..ea4a701 100644
+--- a/src/main/java/org/jsoup/nodes/Node.java
++++ b/src/main/java/org/jsoup/nodes/Node.java
+@@ -441,8 +441,15 @@ public abstract class Node implements Cloneable {
+      @return node siblings. If the node has no parent, returns an empty list.
+      */
+     public List<Node> siblingNodes() {
+-
+-        return parent().childNodes();
++        if (parentNode == null)
++            return Collections.emptyList();
++        List<Node> nodes = parentNode.childNodes;
++        List<Node> siblings = new ArrayList<Node>(nodes.size() - 1);
++        for (Node node: nodes) {
++            if (node != this)
++                siblings.add(node);
++        }
++        return siblings;
+     }
+ 
+     /**
+@@ -467,6 +474,8 @@ public abstract class Node implements Cloneable {
+      @return the previous sibling, or null if this is the first sibling
+      */
+     public Node previousSibling() {
++        if (parentNode == null)
++            return null; // root
+ 
+         List<Node> siblings = parentNode.childNodes;
+         Integer index = siblingIndex();

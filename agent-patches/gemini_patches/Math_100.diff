@@ -1,0 +1,26 @@
+--- a/src/java/org/apache/commons/math/estimation/AbstractEstimator.java
++++ b/src/java/org/apache/commons/math/estimation/AbstractEstimator.java
+@@ -1,4 +1,4 @@
+-        // compute transpose(J).J, avoiding building big intermediate matrices
+-        final int rows = problem.getMeasurements().length;
+-        final int cols = problem.getAllParameters().length;
+-        final int max  = cols * rows;
++        // compute transpose(J).J, avoiding building big intermediate matrices
++        final int rows = problem.getMeasurements().length;
++        final int cols = problem.getUnboundParameters().length;
++        final int max  = cols * rows;
+@@ -1,7 +1,7 @@
+-        int m = problem.getMeasurements().length;
+-        int p = problem.getAllParameters().length;
+-        if (m <= p) {
+-            throw new EstimationException("no degrees of freedom ({0} measurements, {1} parameters)",
+-                                          new Object[] { new Integer(m), new Integer(p)});
+-        }
+-        double[] errors = new double[problem.getAllParameters().length];
++        int m = problem.getMeasurements().length;
++        int p = problem.getUnboundParameters().length;
++        if (m <= p) {
++            throw new EstimationException("no degrees of freedom ({0} measurements, {1} parameters)",
++                                          new Object[] { new Integer(m), new Integer(p)});
++        }
++        double[] errors = new double[problem.getUnboundParameters().length];

@@ -1,0 +1,64 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java
+index c41f7634c..e94739aa5 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java
+@@ -223,6 +223,7 @@ public class CollectionDeserializer
+                 new CollectionReferringAccumulator(_collectionType.getContentType().getRawClass(), result);
+ 
+         JsonToken t;
++        int index = 0;
+         while ((t = jp.nextToken()) != JsonToken.END_ARRAY) {
+             try {
+                 Object value;
+@@ -247,8 +248,9 @@ public class CollectionDeserializer
+                 reference.getRoid().appendReferring(ref);
+             } catch (Exception e) {
+                 // note: pass Object.class, not Object[].class, as we need element type for error info
+-                throw JsonMappingException.wrapWithPath(e, Object.class, result.size());
++                throw JsonMappingException.wrapWithPath(e, Object.class, index);
+             }
++            index++;
+         }
+         return result;
+     }
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringCollectionDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringCollectionDeserializer.java
+index fbbd3de7e..0624a17cd 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringCollectionDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringCollectionDeserializer.java
+@@ -168,6 +168,7 @@ public final class StringCollectionDeserializer
+             return deserializeUsingCustom(jp, ctxt, result, _valueDeserializer);
+         }
+         JsonToken t;
++        int index = 0;
+ 
+         try {
+             while ((t = jp.nextToken()) != JsonToken.END_ARRAY) {
+@@ -180,10 +181,11 @@ public final class StringCollectionDeserializer
+                     value = _parseString(jp, ctxt);
+                 }
+                 result.add(value);
++                index++;
+             }
+         } catch (Exception e) {
+             // note: pass String.class, not String[].class, as we need element type for error info
+-            throw JsonMappingException.wrapWithPath(e, String.class, result.size());
++            throw JsonMappingException.wrapWithPath(e, String.class, index);
+         }
+         return result;
+     }
+@@ -192,6 +194,7 @@ public final class StringCollectionDeserializer
+             Collection<String> result, final JsonDeserializer<String> deser) throws IOException
+     {
+         JsonToken t;
++        int index = 0;
+         while ((t = jp.nextToken()) != JsonToken.END_ARRAY) {
+             String value;
+ 
+@@ -201,6 +204,7 @@ public final class StringCollectionDeserializer
+                 value = deser.deserialize(jp, ctxt);
+             }
+             result.add(value);
++            index++;
+         }
+         return result;
+     }

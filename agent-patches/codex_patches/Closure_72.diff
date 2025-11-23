@@ -1,0 +1,104 @@
+diff --git a/src/com/google/javascript/jscomp/FunctionToBlockMutator.java b/src/com/google/javascript/jscomp/FunctionToBlockMutator.java
+index 64764c09..768b9cf3 100644
+--- a/src/com/google/javascript/jscomp/FunctionToBlockMutator.java
++++ b/src/com/google/javascript/jscomp/FunctionToBlockMutator.java
+@@ -23,6 +23,8 @@ import com.google.javascript.jscomp.MakeDeclaredNamesUnique.InlineRenamer;
+ import com.google.javascript.rhino.Node;
+ import com.google.javascript.rhino.Token;
+ 
++import java.util.ArrayDeque;
++import java.util.Deque;
+ import java.util.LinkedHashMap;
+ import java.util.List;
+ import java.util.Map;
+@@ -149,6 +151,12 @@ class FunctionToBlockMutator {
+                 "inline_",
+                 isCallInLoop)));
+     // Make label names unique to this instance.
++    // Labels can conflict with labels at the call site after inlining, so
++    // rename each declared label and all corresponding break/continue targets.
++    NodeTraversal.traverse(
++        compiler,
++        fnNode,
++        new RenameLabels(new LabelNameSupplier(compiler.getUniqueNameIdSupplier())));
+   }
+ 
+   static class LabelNameSupplier implements Supplier<String> {
+@@ -172,6 +180,77 @@ class FunctionToBlockMutator {
+     return "JSCompiler_inline_label_" + name + "_" + safeNameIdSupplier.get();
+   }
+ 
++  /**
++   * Traversal that renames label declarations and their corresponding
++   * break/continue targets to unique names to avoid collisions at
++   * the inlining site.
++   */
++  private static class RenameLabels implements NodeTraversal.Callback {
++    private final LabelNameSupplier nameSupplier;
++    // Stack of maps for label name resolution. Each frame maps the original
++    // label name in that scope to its unique replacement.
++    private final Deque<Map<String, String>> labelStack =
++        new ArrayDeque<Map<String, String>>();
++
++    RenameLabels(LabelNameSupplier nameSupplier) {
++      this.nameSupplier = nameSupplier;
++    }
++
++    @Override
++    public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
++      if (n.getType() == Token.LABEL) {
++        // Generate a unique name for this label and push mapping.
++        Node nameNode = n.getFirstChild();
++        String oldName = nameNode.getString();
++        String newName = nameSupplier.get();
++        if (!oldName.equals(newName)) {
++          nameNode.setString(newName);
++          t.getCompiler().reportCodeChange();
++        }
++        Map<String, String> frame = Maps.newHashMap();
++        frame.put(oldName, newName);
++        labelStack.push(frame);
++      }
++      return true;
++    }
++
++    @Override
++    public void visit(NodeTraversal t, Node n, Node parent) {
++      switch (n.getType()) {
++        case Token.BREAK:
++        case Token.CONTINUE:
++          if (n.hasChildren()) {
++            Node labelNameNode = n.getFirstChild();
++            if (labelNameNode.getType() == Token.LABEL_NAME) {
++              String old = labelNameNode.getString();
++              String replacement = lookup(old);
++              if (replacement != null && !old.equals(replacement)) {
++                labelNameNode.setString(replacement);
++                t.getCompiler().reportCodeChange();
++              }
++            }
++          }
++          break;
++        case Token.LABEL:
++          // Done with this label's scope; pop its mapping.
++          if (!labelStack.isEmpty()) {
++            labelStack.pop();
++          }
++          break;
++      }
++    }
++
++    private String lookup(String old) {
++      for (Map<String, String> frame : labelStack) {
++        String v = frame.get(old);
++        if (v != null) {
++          return v;
++        }
++      }
++      return null;
++    }
++  }
++
+   /**
+    * Inlines the arguments within the node tree using the given argument map,
+    * replaces "unsafe" names with local aliases.

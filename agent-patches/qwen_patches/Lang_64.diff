@@ -1,0 +1,41 @@
+diff --git a/src/java/org/apache/commons/lang/enums/ValuedEnum.java b/src/java/org/apache/commons/lang/enums/ValuedEnum.java
+index 6aca541b..ea2f0f5a 100644
+--- a/src/java/org/apache/commons/lang/enums/ValuedEnum.java
++++ b/src/java/org/apache/commons/lang/enums/ValuedEnum.java
+@@ -176,11 +176,23 @@ public abstract class ValuedEnum extends Enum {
+      * @param other  the other object to compare to
+      * @return -ve if this is less than the other object, +ve if greater than,
+      *  <code>0</code> of equal
+-     * @throws ClassCastException if other is not an <code>Enum</code>
++     * @throws ClassCastException if other is not an <code>Enum</code> or if 
++     *         other is of a different enum type
+      * @throws NullPointerException if other is <code>null</code>
+      */
+     public int compareTo(Object other) {
+-        return iValue - ((ValuedEnum) other).iValue;
++        if (other == null) {
++            throw new NullPointerException();
++        }
++        if (!(other instanceof ValuedEnum)) {
++            throw new ClassCastException();
++        }
++        ValuedEnum otherEnum = (ValuedEnum) other;
++        if (this.getClass() != otherEnum.getClass()) {
++            // Different enum types - should throw ClassCastException
++            throw new ClassCastException();
++        }
++        return iValue - otherEnum.iValue;
+     }
+ 
+     /**
+@@ -207,4 +219,4 @@ public abstract class ValuedEnum extends Enum {
+         }
+         return iToString;
+     }
+-}
++}
+\ No newline at end of file
+
+
+# Untracked source files (not included in patch):
++ src/java/org/apache/commons/lang/enums/ValuedEnum.java.backup

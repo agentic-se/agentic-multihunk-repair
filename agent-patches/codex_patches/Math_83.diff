@@ -1,0 +1,124 @@
+diff --git a/src/main/java/org/apache/commons/math/optimization/linear/SimplexSolver.java b/src/main/java/org/apache/commons/math/optimization/linear/SimplexSolver.java
+index 16d3baea1..e848e0706 100644
+--- a/src/main/java/org/apache/commons/math/optimization/linear/SimplexSolver.java
++++ b/src/main/java/org/apache/commons/math/optimization/linear/SimplexSolver.java
+@@ -78,8 +78,10 @@ public class SimplexSolver extends AbstractLinearOptimizer {
+         Integer minRatioPos = null;
+         for (int i = tableau.getNumObjectiveFunctions(); i < tableau.getHeight(); i++) {
+             double rhs = tableau.getEntry(i, tableau.getWidth() - 1);
+-            if (MathUtils.compareTo(tableau.getEntry(i, col), 0, epsilon) >= 0) {
+-                double ratio = rhs / tableau.getEntry(i, col);
++            double entry = tableau.getEntry(i, col);
++            // Only consider strictly positive pivot entries for the MRT.
++            if (MathUtils.compareTo(entry, 0, epsilon) > 0) {
++                double ratio = rhs / entry;
+                 if (ratio < minRatio) {
+                     minRatio = ratio;
+                     minRatioPos = i; 
+diff --git a/src/main/java/org/apache/commons/math/optimization/linear/SimplexTableau.java b/src/main/java/org/apache/commons/math/optimization/linear/SimplexTableau.java
+index 0cf01af09..890c57246 100644
+--- a/src/main/java/org/apache/commons/math/optimization/linear/SimplexTableau.java
++++ b/src/main/java/org/apache/commons/math/optimization/linear/SimplexTableau.java
+@@ -153,8 +153,8 @@ class SimplexTableau implements Serializable {
+                     LinearConstraint constraint = constraints.get(i);
+                     int row = getNumObjectiveFunctions() + i;
+ 
+-                    // decision variable coefficients
+-                    copyArray(constraint.getCoefficients().getData(), matrix[row], 1);
++                    // decision variable coefficients start after objective columns
++                    copyArray(constraint.getCoefficients().getData(), matrix[row], getNumObjectiveFunctions());
+ 
+                     // x-
+                     if (!restrictToNonNegative) {
+@@ -269,7 +269,7 @@ class SimplexTableau implements Serializable {
+      * @param col index of the column to check
+      * @return the row that the variable is basic in.  null if the column is not basic
+      */
+-    private Integer getBasicRow(final int col) {
++    protected Integer getBasicRow(final int col) {
+         return getBasicRow(col, true);
+     }
+ 
+@@ -328,7 +328,7 @@ class SimplexTableau implements Serializable {
+      */
+     private void copyArray(final double[] src, final double[] dest,
+                            final int destPos) {
+-        System.arraycopy(src, 0, dest, getNumObjectiveFunctions(), src.length); 
++        System.arraycopy(src, 0, dest, destPos, src.length); 
+     }
+ 
+     /**
+@@ -337,23 +337,56 @@ class SimplexTableau implements Serializable {
+      * @return current solution
+      */
+     protected RealPointValuePair getSolution() {
+-      double[] coefficients = new double[getOriginalNumDecisionVariables()];
+-      Integer negativeVarBasicRow = getBasicRow(getNegativeDecisionVariableOffset());
+-      double mostNegative = negativeVarBasicRow == null ? 0 : getEntry(negativeVarBasicRow, getRhsOffset());
+-      Set<Integer> basicRows = new HashSet<Integer>();
+-      for (int i = 0; i < coefficients.length; i++) {
+-          Integer basicRow = getBasicRow(getNumObjectiveFunctions() + i);
+-          if (basicRows.contains(basicRow)) {
+-              // if multiple variables can take a given value 
+-              // then we choose the first and set the rest equal to 0
+-              coefficients[i] = 0;
+-          } else {
+-              basicRows.add(basicRow);
+-              coefficients[i] =
+-                  (basicRow == null ? 0 : getEntry(basicRow, getRhsOffset())) -
+-                  (restrictToNonNegative ? 0 : mostNegative);
+-          }
+-      }
++        final int n = getOriginalNumDecisionVariables();
++        double[] coefficients = new double[n];
++
++        // Adjust for negative decision variable handling (if applicable)
++        Integer negativeVarBasicRow = getBasicRow(getNegativeDecisionVariableOffset());
++        double mostNegative = negativeVarBasicRow == null ? 0 : getEntry(negativeVarBasicRow, getRhsOffset());
++
++        // Determine a unique variable to take each basic row's value.
++        // If multiple decision variable columns correspond to the same basic row
++        // (e.g. an equality like x1 + x2 = b), prefer the variable whose reduced
++        // cost (objective row coefficient) is closest to zero (i.e. likely basic).
++        int[] varBasicRow = new int[n];
++        for (int i = 0; i < n; i++) {
++            Integer br = getBasicRow(getNumObjectiveFunctions() + i);
++            varBasicRow[i] = (br == null) ? -1 : br.intValue();
++        }
++        // Map each basic row to the selected decision variable index
++        int height = getHeight();
++        int[] selectedVarForRow = new int[height];
++        for (int r = 0; r < height; r++) {
++            selectedVarForRow[r] = -1;
++        }
++        for (int i = 0; i < n; i++) {
++            int br = varBasicRow[i];
++            if (br >= 0) {
++                int col = getNumObjectiveFunctions() + i;
++                double rc = Math.abs(getEntry(0, col));
++                int prevVar = selectedVarForRow[br];
++                if (prevVar < 0) {
++                    selectedVarForRow[br] = i;
++                } else {
++                    int prevCol = getNumObjectiveFunctions() + prevVar;
++                    double prevRc = Math.abs(getEntry(0, prevCol));
++                    if (rc < prevRc - epsilon) {
++                        selectedVarForRow[br] = i;
++                    }
++                }
++            }
++        }
++
++        // Assign values based on the selected mapping
++        for (int i = 0; i < n; i++) {
++            int br = varBasicRow[i];
++            if (br >= 0 && selectedVarForRow[br] == i) {
++                coefficients[i] = getEntry(br, getRhsOffset()) - (restrictToNonNegative ? 0 : mostNegative);
++            } else {
++                coefficients[i] = restrictToNonNegative ? 0.0 : -mostNegative;
++            }
++        }
++
+         return new RealPointValuePair(coefficients, f.getValue(coefficients));
+     }
+ 

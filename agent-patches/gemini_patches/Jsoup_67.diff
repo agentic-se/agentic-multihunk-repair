@@ -1,0 +1,14 @@
+--- a/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
++++ b/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
+@@ -1,4 +1,7 @@
+-    void insert(Element el) {
+-        insertNode(el);
+-        stack.add(el);
+-    }
++    void insert(Element el) {
++        if (stack.size() >= MAX_STACK_SIZE) {
++            throw new StackOverflowError("Maximum stack size reached. Deeply nested HTML detected.");
++        }
++        insertNode(el);
++        stack.add(el);
++    }

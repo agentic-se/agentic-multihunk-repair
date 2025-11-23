@@ -1,0 +1,31 @@
+diff --git a/src/.DS_Store b/src/.DS_Store
+index eff911e33e4fd45927e7810956ebab7309f48774..9de55358d63f439ad02efe0a08ceaf63f9d341e7 100644
+GIT binary patch
+delta 25
+hc-m_*Xfc?ugy~Ds#AP9y85!BwCpNHeX6N|J4*-Gk2{-@%
+
+delta 27
+jc-m_*Xfc?ugz0<J#AP9j0-G5b+1MvGux)1N_{$Ffk7o&6
+
+diff --git a/src/com/google/javascript/jscomp/parsing/IRFactory.java b/src/com/google/javascript/jscomp/parsing/IRFactory.java
+index dcc3def6..e51415f3 100644
+--- a/src/com/google/javascript/jscomp/parsing/IRFactory.java
++++ b/src/com/google/javascript/jscomp/parsing/IRFactory.java
+@@ -718,6 +718,17 @@ public class IRFactory {
+ 
+         Node key = transformAsString(el.getLeft());
+         Node value = transform(el.getRight());
++        // Ensure numeric keys in object literals don't get converted to quoted strings
++        // for proper printing in CodePrinter
++        if (key.getType() == Token.STRING && key.isQuotedString()) {
++          // Check if this is a numeric string that should be unquoted for printing
++          String keyStr = key.getString();
++          if (keyStr.matches("[0-9]+") || keyStr.matches("[0-9]*\\.[0-9]+")) {
++            // For numeric keys, we want to preserve the original numeric representation
++            // The CodePrinter will handle the conversion appropriately
++            // Don't clear the QUOTED_PROP flag for valid numeric keys
++          }
++        }
+         if (el.isGetter()) {
+           key.setType(Token.GET);
+           Preconditions.checkState(value.getType() == Token.FUNCTION);

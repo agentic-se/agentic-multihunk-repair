@@ -1,0 +1,34 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+index dd845b83..1029e23a 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+@@ -411,6 +411,14 @@ public ArchiveEntry getNextEntry() throws IOException {
+     public boolean canReadEntryData(final ArchiveEntry ae) {
+         if (ae instanceof ZipArchiveEntry) {
+             final ZipArchiveEntry ze = (ZipArchiveEntry) ae;
++            // For entries with unknown compressed size, we cannot read data of these methods
++            // as we cannot properly decompress without knowing the compressed size
++            if (ze.getCompressedSize() == ArchiveEntry.SIZE_UNKNOWN &&
++                (ze.getMethod() == ZipMethod.UNSHRINKING.getCode() ||
++                 ze.getMethod() == ZipMethod.IMPLODING.getCode() ||
++                 ze.getMethod() == ZipMethod.BZIP2.getCode())) {
++                return false;
++            }
+             return ZipUtil.canHandleEntryData(ze)
+                 && supportsDataDescriptorFor(ze);
+         }
+@@ -447,6 +455,14 @@ public int read(final byte[] buffer, final int offset, final int length) throws
+                 || current.entry.getMethod() == ZipMethod.IMPLODING.getCode()
+                 || current.entry.getMethod() == ZipMethod.ENHANCED_DEFLATED.getCode()
+                 || current.entry.getMethod() == ZipMethod.BZIP2.getCode()) {
++            // For bzip2, implode, unshrinking and enhanced deflated methods, 
++            // if compressed size is unknown and we don't have an input stream,
++            // we cannot properly decompress and should fail early with a meaningful error.
++            if (current.in == null) {
++                throw new UnsupportedZipFeatureException(
++                    UnsupportedZipFeatureException.Feature.UNKNOWN_COMPRESSED_SIZE, 
++                    current.entry);
++            }
+             read = current.in.read(buffer, offset, length);
+         } else {
+             throw new UnsupportedZipFeatureException(ZipMethod.getMethodByCode(current.entry.getMethod()),

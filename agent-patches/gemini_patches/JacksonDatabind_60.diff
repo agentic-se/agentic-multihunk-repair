@@ -1,0 +1,12 @@
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/JsonValueSerializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/JsonValueSerializer.java
+@@ -1,1 +1,8 @@
+-            ser.serializeWithType(value, gen, provider, typeSer0);
++            // 28-Sep-2016, tatu: As per [databind#1385], we do need to do some juggling
++            //    to use different Object for type id (logical type) and actual serialization
++            //    (delegate type).
++            //    Specifically, type id should be for the *original* type, not the
++            //    value type.
++            typeSer0.writeTypePrefixForScalar(bean, gen);
++            ser.serialize(value, gen, provider);
++            typeSer0.writeTypeSuffixForScalar(bean, gen);

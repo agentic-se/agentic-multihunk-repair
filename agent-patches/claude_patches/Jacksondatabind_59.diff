@@ -1,0 +1,46 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+index 8bf10e83f..50ff53512 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+@@ -425,6 +425,41 @@ public final class TypeFactory
+ 
+         // 25-Sep-2016, tatu: As per [databind#1384] also need to ensure handlers get
+         //   copied as well
++        Object h = baseType.getTypeHandler();
++        if (h != null) {
++            newType = newType.withTypeHandler(h);
++        }
++        h = baseType.getValueHandler();
++        if (h != null) {
++            newType = newType.withValueHandler(h);
++        }
++        // Also need to copy handlers for key/content types, for Maps/Collections
++        if (newType.isContainerType()) {
++            // First: content type
++            JavaType baseContentType = baseType.getContentType();
++            if (baseContentType != null) {
++                h = baseContentType.getValueHandler();
++                if (h != null) {
++                    JavaType contentType = newType.getContentType();
++                    if (contentType != null && contentType.getValueHandler() == null) {
++                        newType = newType.withContentValueHandler(h);
++                    }
++                }
++            }
++            // and for Map-like, key type
++            if (baseType.isMapLikeType()) {
++                JavaType baseKeyType = baseType.getKeyType();
++                if (baseKeyType != null) {
++                    h = baseKeyType.getValueHandler();
++                    if (h != null) {
++                        JavaType keyType = newType.getKeyType();
++                        if (keyType != null && keyType.getValueHandler() == null) {
++                            newType = ((MapLikeType) newType).withKeyValueHandler(h);
++                        }
++                    }
++                }
++            }
++        }
+         return newType;
+ 
+         // 20-Oct-2015, tatu: Old simplistic approach

@@ -1,0 +1,28 @@
+diff --git a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsSmartNulls.java b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsSmartNulls.java
+index 10d3b0fc8..21bd69182 100644
+--- a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsSmartNulls.java
++++ b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsSmartNulls.java
+@@ -57,7 +57,22 @@ public class ReturnsSmartNulls implements Answer<Object>, Serializable {
+         }
+ 
+ 		private String formatMethodCall() {
+-			return invocation.getMethod().getName() + "()";
++			String methodName = invocation.getMethod().getName();
++			Object[] arguments = invocation.getArguments();
++
++			if (arguments == null || arguments.length == 0) {
++				return methodName + "()";
++			}
++
++			StringBuilder argsString = new StringBuilder();
++			for (int i = 0; i < arguments.length; i++) {
++				if (i > 0) {
++					argsString.append(", ");
++				}
++				argsString.append(arguments[i]);
++			}
++
++			return methodName + "(" + argsString.toString() + ")";
+ 		}
+     }
+ 

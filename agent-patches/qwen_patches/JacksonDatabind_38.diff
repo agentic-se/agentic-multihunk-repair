@@ -1,0 +1,5 @@
+# No tracked changes detected in src/ or source/
+
+
+# Untracked source files (not included in patch):
++ src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java.bak

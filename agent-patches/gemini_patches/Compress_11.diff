@@ -1,0 +1,32 @@
+--- a/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
++++ b/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
+@@ -1,13 +1,16 @@
+-            if (TarArchiveInputStream.matches(tarheader, signatureLength)) {
+-                return new TarArchiveInputStream(in);
+-            }
+-            // COMPRESS-117 - improve auto-recognition
+-            try {
+-                TarArchiveInputStream tais = new TarArchiveInputStream(new ByteArrayInputStream(tarheader));
+-                tais.getNextEntry();
+-                return new TarArchiveInputStream(in);
+-            } catch (Exception e) { // NOPMD
+-                // can generate IllegalArgumentException as well as IOException
+-                // autodetection, simply not a TAR
+-                // ignored
+-            }
++            if (TarArchiveInputStream.matches(tarheader, signatureLength)) {
++                return new TarArchiveInputStream(in);
++            }
++            // COMPRESS-117 - improve auto-recognition
++            // Only try to create a TarArchiveInputStream if we have a full tar header
++            if (signatureLength == tarheader.length) {
++                try {
++                    TarArchiveInputStream tais = new TarArchiveInputStream(new ByteArrayInputStream(tarheader));
++                    tais.getNextEntry();
++                    return new TarArchiveInputStream(in);
++                } catch (Exception e) { // NOPMD
++                    // can generate IllegalArgumentException as well as IOException
++                    // autodetection, simply not a TAR
++                    // ignored
++                }
++            }

@@ -1,0 +1,33 @@
+--- a/src/com/google/javascript/jscomp/TypeValidator.java
++++ b/src/com/google/javascript/jscomp/TypeValidator.java
+@@ -1,7 +1,9 @@
+-  boolean expectCanAssignToPropertyOf(NodeTraversal t, Node n, JSType rightType,
+-      JSType leftType, Node owner, String propName) {
+-    // The NoType check is a hack to make typedefs work OK.
+-    if (!leftType.isNoType() && !rightType.canAssignTo(leftType)) {
+-      if ((leftType.isConstructor() || leftType.isEnumType()) && (rightType.isConstructor() || rightType.isEnumType())) {
+-        registerMismatch(rightType, leftType, null);
+-      } else {
++  boolean expectCanAssignToPropertyOf(NodeTraversal t, Node n, JSType rightType,
++      JSType leftType, Node owner, String propName) {
++    // The NoType check is a hack to make typedefs work OK.
++    if (!leftType.isNoType() && !rightType.canAssignTo(leftType)) {
++      if ((leftType.isConstructor() || leftType.isEnumType()) && (rightType.isConstructor() || rightType.isEnumType())) {
++        registerMismatch(rightType, leftType, report(t.makeError(n, TYPE_MISMATCH_WARNING,
++            formatFoundRequired("assignment to property " + propName + " of " +
++            getReadableJSTypeName(owner, true), rightType, leftType))));
++      } else {
+@@ -1,6 +1,7 @@
+-  boolean expectCanAssignTo(NodeTraversal t, Node n, JSType rightType,
+-      JSType leftType, String msg) {
+-    if (!rightType.canAssignTo(leftType)) {
+-      if ((leftType.isConstructor() || leftType.isEnumType()) && (rightType.isConstructor() || rightType.isEnumType())) {
+-        registerMismatch(rightType, leftType, null);
+-      } else {
++  boolean expectCanAssignTo(NodeTraversal t, Node n, JSType rightType,
++      JSType leftType, String msg) {
++    if (!rightType.canAssignTo(leftType)) {
++      if ((leftType.isConstructor() || leftType.isEnumType()) && (rightType.isConstructor() || rightType.isEnumType())) {
++        registerMismatch(rightType, leftType, report(t.makeError(n, TYPE_MISMATCH_WARNING,
++            formatFoundRequired(msg, rightType, leftType))));
++      } else {

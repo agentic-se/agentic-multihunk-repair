@@ -1,0 +1,55 @@
+--- a/src/main/java/org/apache/commons/codec/language/DoubleMetaphone.java
++++ b/src/main/java/org/apache/commons/codec/language/DoubleMetaphone.java
+@@ -1,3 +1,9 @@
+-    public boolean isDoubleMetaphoneEqual(final String value1, final String value2, final boolean alternate) {
+-        return doubleMetaphone(value1, alternate).equals(doubleMetaphone(value2, alternate));
+-    }
++    public boolean isDoubleMetaphoneEqual(final String value1, final String value2, final boolean alternate) {
++        final String primary1 = doubleMetaphone(value1, alternate);
++        final String primary2 = doubleMetaphone(value2, alternate);
++
++        if (primary1 == null && primary2 == null) {
++            return true;
++        }
++        return primary1 != null && primary1.equals(primary2);
++    }
+@@ -1,9 +1,3 @@
+-    public boolean isDoubleMetaphoneEqual(final String value1, final String value2, final boolean alternate) {
+-        final String primary1 = doubleMetaphone(value1, alternate);
+-        final String primary2 = doubleMetaphone(value2, alternate);
+-
+-        if (primary1 == null && primary2 == null) {
+-            return true;
+-        }
+-        return primary1 != null && primary1.equals(primary2);
+-    }
++    public boolean isDoubleMetaphoneEqual(final String value1, final String value2, final boolean alternate) {
++        return doubleMetaphone(value1, alternate).equals(doubleMetaphone(value2, alternate));
++    }
+@@ -1,3 +1,3 @@
+-        if (input.length() == 0) {
+-            return null;
+-        }
++        if (input.length() == 0) {
++            return "";
++        }
+@@ -1,3 +1,3 @@
+-        if (input.length() == 0) {
+-            return "";
+-        }
++        if (input.length() == 0) {
++            return null;
++        }
+@@ -1,3 +1,9 @@
+-    public boolean isDoubleMetaphoneEqual(final String value1, final String value2, final boolean alternate) {
+-        return doubleMetaphone(value1, alternate).equals(doubleMetaphone(value2, alternate));
+-    }
++    public boolean isDoubleMetaphoneEqual(final String value1, final String value2, final boolean alternate) {
++        final String primary1 = doubleMetaphone(value1, alternate);
++        final String primary2 = doubleMetaphone(value2, alternate);
++
++        if (primary1 == null && primary2 == null) {
++            return true;
++        }
++        return primary1 != null && primary1.equals(primary2);
++    }

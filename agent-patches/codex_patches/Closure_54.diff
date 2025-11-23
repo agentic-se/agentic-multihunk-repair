@@ -1,0 +1,165 @@
+diff --git a/src/com/google/javascript/jscomp/TypeCheck.java b/src/com/google/javascript/jscomp/TypeCheck.java
+index e1af6408..fe0d182a 100644
+--- a/src/com/google/javascript/jscomp/TypeCheck.java
++++ b/src/com/google/javascript/jscomp/TypeCheck.java
+@@ -1291,13 +1291,56 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
+     ObjectType objectType = childType.dereference();
+     if (objectType != null) {
+       JSType propType = getJSType(n);
++      // Suppress missing-property warnings on `this` inside constructors,
++      // as prototype methods/properties may be defined after the constructor
++      // is parsed (e.g., explicit prototype object literals).
++      boolean isThisOnConstructor = false;
++      boolean ctorProtoHasProp = false;
++      Node objNode = n.getFirstChild();
++      if (objNode.getType() == Token.THIS) {
++        Scope scope = t.getScope();
++        if (scope != null) {
++          // Find the nearest function scope.
++          Scope funcScope = scope;
++          while (funcScope != null && funcScope.getRootNode().getType() != Token.FUNCTION) {
++            funcScope = funcScope.getParent();
++          }
++          if (funcScope != null) {
++            Node scopeRoot = funcScope.getRootNode();
++            if (scopeRoot != null) {
++              JSType scopeType = scopeRoot.getJSType();
++              if (scopeType != null && scopeType.isFunctionType()) {
++                FunctionType fnType = scopeType.toMaybeFunctionType();
++                if (fnType != null && fnType.isConstructor()) {
++                  isThisOnConstructor = true;
++                  // If this is a constructor, and the property is declared on
++                  // its prototype (even if later in the source), suppress the
++                  // missing-property warning.
++                  String ctorName = fnType.getReferenceName();
++                  if (ctorName != null) {
++                    String qName = ctorName + ".prototype." + propName;
++                    Scope global = funcScope.getGlobalScope();
++                    if (global != null && global.getVar(qName) != null) {
++                      ctorProtoHasProp = true;
++                    }
++                  }
++                }
++              }
++            }
++          }
++        }
++      }
++
+       if ((!objectType.hasProperty(propName) ||
+            objectType.equals(typeRegistry.getNativeType(UNKNOWN_TYPE))) &&
+           propType.equals(typeRegistry.getNativeType(UNKNOWN_TYPE))) {
+         if (objectType instanceof EnumType) {
+           report(t, n, INEXISTENT_ENUM_ELEMENT, propName);
+         } else if (!objectType.isEmptyType() &&
+-            reportMissingProperties && !isPropertyTest(n)) {
++            reportMissingProperties && !isPropertyTest(n) &&
++            // Do not report missing properties on `this` in constructors when
++            // the property is declared on the constructor's prototype.
++            !(isThisOnConstructor && ctorProtoHasProp)) {
+           if (!typeRegistry.canPropertyBeDefined(objectType, propName)) {
+             report(t, n, INEXISTENT_PROPERTY, propName,
+                 validator.getReadableJSTypeName(n.getFirstChild(), true));
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index 8654ae65..7b717d0d 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -594,6 +594,24 @@ final class TypedScopeCreator implements ScopeCreator {
+         type = typeRegistry.createAnonymousObjectType();
+       }
+ 
++      // If this object literal is being assigned to a constructor's prototype
++      // (e.g. Foo.prototype = { ... }) and that prototype already exists
++      // (due to an explicit @extends or earlier declaration), then attach
++      // the properties to the real prototype object so that instances see them
++      // during type checking (including within the constructor body).
++      // This also preserves the declared inheritance chain.
++      if (lValueName != null && lValueName.endsWith(".prototype")) {
++        Var protoVar = scope.getVar(lValueName);
++        if (protoVar != null && !protoVar.isTypeInferred() && protoVar.getType() != null) {
++          // If the prototype variable was declared (not inferred), we should
++          // not replace it with a fresh anonymous type. Instead, assign
++          // properties directly to the existing prototype type.
++          // This allows constructor bodies to reference prototype methods
++          // even if the prototype is explicitly defined later.
++          type = protoVar.getType();
++        }
++      }
++
+       setDeferredType(objectLit, type);
+ 
+       // If this is an enum, the properties were already taken care of above.
+@@ -611,6 +629,39 @@ final class TypedScopeCreator implements ScopeCreator {
+      */
+     void processObjectLitProperties(
+         NodeTraversal t, Node objLit, ObjectType objLitType) {
++      // Determine if this object literal is assigned to a constructor prototype
++      // and whether that prototype's super chain is unknown. In that case,
++      // property types should be treated as unknown and inferred.
++      String ownerNameForObjLit = null;
++      ObjectType ownerProtoType = null;
++      boolean ownerIsCtorPrototype = false;
++      boolean ownerProtoDeclared = false;
++      boolean superChainUnknown = false;
++      Node objLitLValue = NodeUtil.getBestLValue(objLit);
++      if (objLitLValue != null) {
++        ownerNameForObjLit = NodeUtil.getBestLValueName(objLitLValue);
++        if (ownerNameForObjLit != null && ownerNameForObjLit.endsWith(".prototype")) {
++          ownerIsCtorPrototype = true;
++          Var ownerVar = scope.getVar(ownerNameForObjLit);
++          if (ownerVar != null) {
++            ownerProtoDeclared = !ownerVar.isTypeInferred();
++            JSType ownerVarType = ownerVar.getType();
++            ownerProtoType = ObjectType.cast(ownerVarType);
++            if (ownerProtoType != null) {
++              // Walk the implicit prototype chain to see if it contains unknowns.
++              ObjectType p = ownerProtoType.getImplicitPrototype();
++              while (p != null) {
++                if (p.isUnknownType()) {
++                  superChainUnknown = true;
++                  break;
++                }
++                p = p.getImplicitPrototype();
++              }
++            }
++          }
++        }
++      }
++
+       for (Node keyNode = objLit.getFirstChild(); keyNode != null;
+            keyNode = keyNode.getNext()) {
+         Node value = keyNode.getFirstChild();
+@@ -620,6 +671,14 @@ final class TypedScopeCreator implements ScopeCreator {
+             t.getSourceName(), info, keyNode, value);
+         JSType keyType = NodeUtil.getObjectLitKeyTypeFromValueType(
+             keyNode, valueType);
++
++        // If assigning to a constructor prototype whose super chain is unknown,
++        // treat the property type as unknown and inferred to avoid overly
++        // specific types (e.g., number) leaking through unknown inheritance.
++        boolean forceUnknownOnProto = ownerIsCtorPrototype && ownerProtoDeclared && superChainUnknown;
++        if (forceUnknownOnProto) {
++          keyType = typeRegistry.getNativeType(UNKNOWN_TYPE);
++        }
+         if (keyType != null) {
+           // Try to declare this property in the current scope if it
+           // has an authoritative name.
+@@ -631,10 +690,14 @@ final class TypedScopeCreator implements ScopeCreator {
+           }
+ 
+           if (objLitType != null) {
+-            // Declare this property on its object literal.
+-            boolean isExtern = t.getInput() != null && t.getInput().isExtern();
+-            objLitType.defineDeclaredProperty(
+-                memberName, keyType, keyNode);
++            // Declare this property on the object literal or target type.
++            // Only attach directly to the constructor prototype when that
++            // prototype was explicitly declared (i.e., has an explicit super).
++            if (ownerIsCtorPrototype && ownerProtoDeclared && ownerProtoType != null) {
++              ownerProtoType.defineInferredProperty(memberName, keyType, keyNode);
++            } else {
++              objLitType.defineDeclaredProperty(memberName, keyType, keyNode);
++            }
+           }
+         }
+       }

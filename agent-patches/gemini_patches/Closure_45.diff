@@ -1,0 +1,836 @@
+--- a/src/com/google/javascript/jscomp/RemoveUnusedVars.java
++++ b/src/com/google/javascript/jscomp/RemoveUnusedVars.java
+@@ -1,5 +1,4 @@
+-      this.maybeAliased = !assignNode.getParent().isExprResult();
+-      this.mayHaveSecondarySideEffects =
+-          maybeAliased ||
+-          NodeUtil.mayHaveSideEffects(assignNode.getFirstChild()) ||
+-          NodeUtil.mayHaveSideEffects(assignNode.getLastChild());
++      this.maybeAliased = !assignNode.getParent().isExprResult();
++      this.mayHaveSecondarySideEffects =
++          NodeUtil.mayHaveSideEffects(assignNode.getFirstChild()) ||
++          NodeUtil.mayHaveSideEffects(assignNode.getLastChild());
+@@ -1,4 +1,5 @@
+-      this.maybeAliased = !assignNode.getParent().isExprResult();
+-      this.mayHaveSecondarySideEffects =
+-          NodeUtil.mayHaveSideEffects(assignNode.getFirstChild()) ||
+-          NodeUtil.mayHaveSideEffects(assignNode.getLastChild());
++      this.maybeAliased = !assignNode.getParent().isExprResult();
++      this.mayHaveSecondarySideEffects =
++          maybeAliased ||
++          NodeUtil.mayHaveSideEffects(assignNode.getFirstChild()) ||
++          NodeUtil.mayHaveSideEffects(assignNode.getLastChild());
+@@ -1,27 +1,38 @@
+-    void remove() {
+-      Node parent = assignNode.getParent();
+-      if (mayHaveSecondarySideEffects) {
+-        Node replacement = assignNode.getLastChild().detachFromParent();
+-
+-        // Aggregate any expressions in GETELEMs.
+-        for (Node current = assignNode.getFirstChild();
+-             !current.isName();
+-             current = current.getFirstChild()) {
+-          if (current.isGetElem()) {
+-            replacement = IR.comma(
+-                current.getLastChild().detachFromParent(), replacement);
+-            replacement.copyInformationFrom(current);
+-          }
+-        }
+-
+-        parent.replaceChild(assignNode, replacement);
+-      } else {
+-        Node gramps = parent.getParent();
+-        if (parent.isExprResult()) {
+-          gramps.removeChild(parent);
+-        } else {
+-          parent.replaceChild(assignNode,
+-              assignNode.getLastChild().detachFromParent());
+-        }
+-      }
+-    }
++    void remove() {
++      Node parent = assignNode.getParent();
++      if (maybeAliased) {
++        // If the assignment is aliased, we can't remove it.
++        // We still need to remove any side effects from the left-hand side.
++        if (NodeUtil.mayHaveSideEffects(assignNode.getFirstChild())) {
++          Node replacement = assignNode.getFirstChild().detachFromParent();
++          parent.replaceChild(assignNode, replacement);
++        } else {
++          // If there are no side effects on the left-hand side,
++          // and the assignment is aliased, we can't remove it.
++          // Do nothing.
++        }
++      } else if (mayHaveSecondarySideEffects) {
++        Node replacement = assignNode.getLastChild().detachFromParent();
++
++        // Aggregate any expressions in GETELEMs.
++        for (Node current = assignNode.getFirstChild();
++             !current.isName();
++             current = current.getFirstChild()) {
++          if (current.isGetElem()) {
++            replacement = IR.comma(
++                current.getLastChild().detachFromParent(), replacement);
++            replacement.copyInformationFrom(current);
++          }
++        }
++
++        parent.replaceChild(assignNode, replacement);
++      } else {
++        Node gramps = parent.getParent();
++        if (parent.isExprResult()) {
++          gramps.removeChild(parent);
++        } else {
++          parent.replaceChild(assignNode,
++              assignNode.getLastChild().detachFromParent());
++        }
++      }
++    }
+@@ -1,38 +1,27 @@
+-    void remove() {
+-      Node parent = assignNode.getParent();
+-      if (maybeAliased) {
+-        // If the assignment is aliased, we can't remove it.
+-        // We still need to remove any side effects from the left-hand side.
+-        if (NodeUtil.mayHaveSideEffects(assignNode.getFirstChild())) {
+-          Node replacement = assignNode.getFirstChild().detachFromParent();
+-          parent.replaceChild(assignNode, replacement);
+-        } else {
+-          // If there are no side effects on the left-hand side,
+-          // and the assignment is aliased, we can't remove it.
+-          // Do nothing.
+-        }
+-      } else if (mayHaveSecondarySideEffects) {
+-        Node replacement = assignNode.getLastChild().detachFromParent();
+-
+-        // Aggregate any expressions in GETELEMs.
+-        for (Node current = assignNode.getFirstChild();
+-             !current.isName();
+-             current = current.getFirstChild()) {
+-          if (current.isGetElem()) {
+-            replacement = IR.comma(
+-                current.getLastChild().detachFromParent(), replacement);
+-            replacement.copyInformationFrom(current);
+-          }
+-        }
+-
+-        parent.replaceChild(assignNode, replacement);
+-      } else {
+-        Node gramps = parent.getParent();
+-        if (parent.isExprResult()) {
+-          gramps.removeChild(parent);
+-        } else {
+-          parent.replaceChild(assignNode,
+-              assignNode.getLastChild().detachFromParent());
+-        }
+-      }
+-    }
++    void remove() {
++      Node parent = assignNode.getParent();
++      if (mayHaveSecondarySideEffects) {
++        Node replacement = assignNode.getLastChild().detachFromParent();
++
++        // Aggregate any expressions in GETELEMs.
++        for (Node current = assignNode.getFirstChild();
++             !current.isName();
++             current = current.getFirstChild()) {
++          if (current.isGetElem()) {
++            replacement = IR.comma(
++                current.getLastChild().detachFromParent(), replacement);
++            replacement.copyInformationFrom(current);
++          }
++        }
++
++        parent.replaceChild(assignNode, replacement);
++      } else {
++        Node gramps = parent.getParent();
++        if (parent.isExprResult()) {
++          gramps.removeChild(parent);
++        } else {
++          parent.replaceChild(assignNode,
++              assignNode.getLastChild().detachFromParent());
++        }
++      }
++    }
+@@ -1,12 +1,10 @@
+-          if (var != null) {
+-            // If that var hasn't already been marked referenced, then
+-            // start tracking it.  If this is an assign, do nothing
+-            // for now.
+-            if (isRemovableVar(var)) {
+-              if (!assignsByNode.containsKey(n)) {
+-                markReferencedVar(var);
+-              }
+-            } else {
+-              markReferencedVar(var);
+-            }
+-          }
++          if (var != null) {
++            // If that var hasn't already been marked referenced, then
++            // start tracking it.  If this is an assign, do nothing
++            // for now.
++            if (isRemovableVar(var)) {
++              markReferencedVar(var);
++            } else {
++              markReferencedVar(var);
++            }
++          }
+@@ -1,10 +1,12 @@
+-          if (var != null) {
+-            // If that var hasn't already been marked referenced, then
+-            // start tracking it.  If this is an assign, do nothing
+-            // for now.
+-            if (isRemovableVar(var)) {
+-              markReferencedVar(var);
+-            } else {
+-              markReferencedVar(var);
+-            }
+-          }
++          if (var != null) {
++            // If that var hasn't already been marked referenced, then
++            // start tracking it.  If this is an assign, do nothing
++            // for now.
++            if (isRemovableVar(var)) {
++              if (!assignsByNode.containsKey(n)) {
++                markReferencedVar(var);
++              }
++            } else {
++              markReferencedVar(var);
++            }
++          }
+@@ -1,27 +1,14 @@
+-    static Assign maybeCreateAssign(Node assignNode) {
+-      Preconditions.checkState(NodeUtil.isAssignmentOp(assignNode));
+-
+-      // Skip one level of GETPROPs or GETELEMs.
+-      //
+-      // Don't skip more than one level, because then we get into
+-      // situations where assigns to properties of properties will always
+-      // trigger side-effects, and the variable they're on cannot be removed.
+-      boolean isPropAssign = false;
+-      Node current = assignNode.getFirstChild();
+-      if (NodeUtil.isGet(current)) {
+-        current = current.getFirstChild();
+-        isPropAssign = true;
+-
+-        if (current.isGetProp() &&
+-            current.getLastChild().getString().equals("prototype")) {
+-          // Prototype properties sets should be considered like normal
+-          // property sets.
+-          current = current.getFirstChild();
+-        }
+-      }
+-
+-      if (current.isName()) {
+-        return new Assign(assignNode, current, isPropAssign);
+-      }
+-      return null;
+-    }
++    static Assign maybeCreateAssign(Node assignNode) {
++      Preconditions.checkState(NodeUtil.isAssignmentOp(assignNode));
++
++      Node current = assignNode.getFirstChild();
++      if (current.isName()) {
++        return new Assign(assignNode, current, false); // isPropertyAssign is false for direct assignments
++      } else if (NodeUtil.isGet(current)) {
++        // This is a property assignment (e.g., x.foo = 3 or x[0] = 1).
++        // We don't want to create an Assign object for the base variable (x) here,
++        // as it's a usage of x, not a direct assignment to x.
++        return null;
++      }
++      return null;
++    }
+@@ -1,14 +1,27 @@
+-    static Assign maybeCreateAssign(Node assignNode) {
+-      Preconditions.checkState(NodeUtil.isAssignmentOp(assignNode));
+-
+-      Node current = assignNode.getFirstChild();
+-      if (current.isName()) {
+-        return new Assign(assignNode, current, false); // isPropertyAssign is false for direct assignments
+-      } else if (NodeUtil.isGet(current)) {
+-        // This is a property assignment (e.g., x.foo = 3 or x[0] = 1).
+-        // We don't want to create an Assign object for the base variable (x) here,
+-        // as it's a usage of x, not a direct assignment to x.
+-        return null;
+-      }
+-      return null;
+-    }
++    static Assign maybeCreateAssign(Node assignNode) {
++      Preconditions.checkState(NodeUtil.isAssignmentOp(assignNode));
++
++      // Skip one level of GETPROPs or GETELEMs.
++      //
++      // Don't skip more than one level, because then we get into
++      // situations where assigns to properties of properties will always
++      // trigger side-effects, and the variable they're on cannot be removed.
++      boolean isPropAssign = false;
++      Node current = assignNode.getFirstChild();
++      if (NodeUtil.isGet(current)) {
++        current = current.getFirstChild();
++        isPropAssign = true;
++
++        if (current.isGetProp() &&
++            current.getLastChild().getString().equals("prototype")) {
++          // Prototype properties sets should be considered like normal
++          // property sets.
++          current = current.getFirstChild();
++        }
++      }
++
++      if (current.isName()) {
++        return new Assign(assignNode, current, isPropAssign);
++      }
++      return null;
++    }
+@@ -1,12 +1,13 @@
+-          if (var != null) {
+-            // If that var hasn't already been marked referenced, then
+-            // start tracking it.  If this is an assign, do nothing
+-            // for now.
+-            if (isRemovableVar(var)) {
+-              if (!assignsByNode.containsKey(n)) {
+-                markReferencedVar(var);
+-              }
+-            } else {
+-              markReferencedVar(var);
+-            }
+-          }
++          if (var != null) {
++            // If that var hasn't already been marked referenced, then
++            // start tracking it.  If this is an assign, do nothing
++            // for now.
++            if (isRemovableVar(var)) {
++              // Only mark as referenced if it's not the LHS of a direct assignment.
++              if (!(parent.isAssign() && parent.getFirstChild() == n)) {
++                markReferencedVar(var);
++              }
++            } else {
++              markReferencedVar(var);
++            }
++          }
+@@ -1,27 +1,38 @@
+-    void remove() {
+-      Node parent = assignNode.getParent();
+-      if (mayHaveSecondarySideEffects) {
+-        Node replacement = assignNode.getLastChild().detachFromParent();
+-
+-        // Aggregate any expressions in GETELEMs.
+-        for (Node current = assignNode.getFirstChild();
+-             !current.isName();
+-             current = current.getFirstChild()) {
+-          if (current.isGetElem()) {
+-            replacement = IR.comma(
+-                current.getLastChild().detachFromParent(), replacement);
+-            replacement.copyInformationFrom(current);
+-          }
+-        }
+-
+-        parent.replaceChild(assignNode, replacement);
+-      } else {
+-        Node gramps = parent.getParent();
+-        if (parent.isExprResult()) {
+-          gramps.removeChild(parent);
+-        } else {
+-          parent.replaceChild(assignNode,
+-              assignNode.getLastChild().detachFromParent());
+-        }
+-      }
+-    }
++    void remove() {
++      Node parent = assignNode.getParent();
++      if (maybeAliased) {
++        // If the assignment is aliased (its result is used), we cannot remove it.
++        // We still need to ensure any side effects on the LHS are preserved if the
++        // assignment itself is removed later for other reasons (e.g., if the
++        // variable is truly unused and this is the only reference).
++        // However, for this bug, the assignment itself must be preserved.
++        // So, we do nothing here. The assignment will only be removed if the
++        // variable is truly unreferenced and this assignment is not aliased.
++        return;
++      }
++
++      if (mayHaveSecondarySideEffects) {
++        Node replacement = assignNode.getLastChild().detachFromParent();
++
++        // Aggregate any expressions in GETELEMs.
++        for (Node current = assignNode.getFirstChild();
++             !current.isName();
++             current = current.getFirstChild()) {
++          if (current.isGetElem()) {
++            replacement = IR.comma(
++                current.getLastChild().detachFromParent(), replacement);
++            replacement.copyInformationFrom(current);
++          }
++        }
++
++        parent.replaceChild(assignNode, replacement);
++      } else {
++        Node gramps = parent.getParent();
++        if (parent.isExprResult()) {
++          gramps.removeChild(parent);
++        } else {
++          parent.replaceChild(assignNode,
++              assignNode.getLastChild().detachFromParent());
++        }
++      }
++    }
+@@ -1,38 +1,27 @@
+-    void remove() {
+-      Node parent = assignNode.getParent();
+-      if (maybeAliased) {
+-        // If the assignment is aliased (its result is used), we cannot remove it.
+-        // We still need to ensure any side effects on the LHS are preserved if the
+-        // assignment itself is removed later for other reasons (e.g., if the
+-        // variable is truly unused and this is the only reference).
+-        // However, for this bug, the assignment itself must be preserved.
+-        // So, we do nothing here. The assignment will only be removed if the
+-        // variable is truly unreferenced and this assignment is not aliased.
+-        return;
+-      }
+-
+-      if (mayHaveSecondarySideEffects) {
+-        Node replacement = assignNode.getLastChild().detachFromParent();
+-
+-        // Aggregate any expressions in GETELEMs.
+-        for (Node current = assignNode.getFirstChild();
+-             !current.isName();
+-             current = current.getFirstChild()) {
+-          if (current.isGetElem()) {
+-            replacement = IR.comma(
+-                current.getLastChild().detachFromParent(), replacement);
+-            replacement.copyInformationFrom(current);
+-          }
+-        }
+-
+-        parent.replaceChild(assignNode, replacement);
+-      } else {
+-        Node gramps = parent.getParent();
+-        if (parent.isExprResult()) {
+-          gramps.removeChild(parent);
+-        } else {
+-          parent.replaceChild(assignNode,
+-              assignNode.getLastChild().detachFromParent());
+-        }
+-      }
+-    }
++    void remove() {
++      Node parent = assignNode.getParent();
++      if (mayHaveSecondarySideEffects) {
++        Node replacement = assignNode.getLastChild().detachFromParent();
++
++        // Aggregate any expressions in GETELEMs.
++        for (Node current = assignNode.getFirstChild();
++             !current.isName();
++             current = current.getFirstChild()) {
++          if (current.isGetElem()) {
++            replacement = IR.comma(
++                current.getLastChild().detachFromParent(), replacement);
++            replacement.copyInformationFrom(current);
++          }
++        }
++
++        parent.replaceChild(assignNode, replacement);
++      } else {
++        Node gramps = parent.getParent();
++        if (parent.isExprResult()) {
++          gramps.removeChild(parent);
++        } else {
++          parent.replaceChild(assignNode,
++              assignNode.getLastChild().detachFromParent());
++        }
++      }
++    }
+@@ -1,27 +1,14 @@
+-    static Assign maybeCreateAssign(Node assignNode) {
+-      Preconditions.checkState(NodeUtil.isAssignmentOp(assignNode));
+-
+-      // Skip one level of GETPROPs or GETELEMs.
+-      //
+-      // Don't skip more than one level, because then we get into
+-      // situations where assigns to properties of properties will always
+-      // trigger side-effects, and the variable they're on cannot be removed.
+-      boolean isPropAssign = false;
+-      Node current = assignNode.getFirstChild();
+-      if (NodeUtil.isGet(current)) {
+-        current = current.getFirstChild();
+-        isPropAssign = true;
+-
+-        if (current.isGetProp() &&
+-            current.getLastChild().getString().equals("prototype")) {
+-          // Prototype properties sets should be considered like normal
+-          // property sets.
+-          current = current.getFirstChild();
+-        }
+-      }
+-
+-      if (current.isName()) {
+-        return new Assign(assignNode, current, isPropAssign);
+-      }
+-      return null;
+-    }
++    static Assign maybeCreateAssign(Node assignNode) {
++      Preconditions.checkState(NodeUtil.isAssignmentOp(assignNode));
++
++      Node current = assignNode.getFirstChild();
++      if (current.isName()) {
++        return new Assign(assignNode, current, false); // isPropertyAssign is false for direct assignments
++      } else if (NodeUtil.isGet(current)) {
++        // This is a property assignment (e.g., x.foo = 3 or x[0] = 1).
++        // We don't want to create an Assign object for the base variable (x) here,
++        // as it's a usage of x, not a direct assignment to x.
++        return null;
++      }
++      return null;
++    }
+@@ -1,14 +1,27 @@
+-    static Assign maybeCreateAssign(Node assignNode) {
+-      Preconditions.checkState(NodeUtil.isAssignmentOp(assignNode));
+-
+-      Node current = assignNode.getFirstChild();
+-      if (current.isName()) {
+-        return new Assign(assignNode, current, false); // isPropertyAssign is false for direct assignments
+-      } else if (NodeUtil.isGet(current)) {
+-        // This is a property assignment (e.g., x.foo = 3 or x[0] = 1).
+-        // We don't want to create an Assign object for the base variable (x) here,
+-        // as it's a usage of x, not a direct assignment to x.
+-        return null;
+-      }
+-      return null;
+-    }
++    static Assign maybeCreateAssign(Node assignNode) {
++      Preconditions.checkState(NodeUtil.isAssignmentOp(assignNode));
++
++      // Skip one level of GETPROPs or GETELEMs.
++      //
++      // Don't skip more than one level, because then we get into
++      // situations where assigns to properties of properties will always
++      // trigger side-effects, and the variable they're on cannot be removed.
++      boolean isPropAssign = false;
++      Node current = assignNode.getFirstChild();
++      if (NodeUtil.isGet(current)) {
++        current = current.getFirstChild();
++        isPropAssign = true;
++
++        if (current.isGetProp() &&
++            current.getLastChild().getString().equals("prototype")) {
++          // Prototype properties sets should be considered like normal
++          // property sets.
++          current = current.getFirstChild();
++        }
++      }
++
++      if (current.isName()) {
++        return new Assign(assignNode, current, isPropAssign);
++      }
++      return null;
++    }
+@@ -1,5 +1,4 @@
+-      this.maybeAliased = !assignNode.getParent().isExprResult();
+-      this.mayHaveSecondarySideEffects =
+-          maybeAliased ||
+-          NodeUtil.mayHaveSideEffects(assignNode.getFirstChild()) ||
+-          NodeUtil.mayHaveSideEffects(assignNode.getLastChild());
++      this.maybeAliased = !assignNode.getParent().isExprResult();
++      this.mayHaveSecondarySideEffects =
++          NodeUtil.mayHaveSideEffects(assignNode.getFirstChild()) ||
++          NodeUtil.mayHaveSideEffects(assignNode.getLastChild());
+@@ -1,27 +1,34 @@
+-    void remove() {
+-      Node parent = assignNode.getParent();
+-      if (mayHaveSecondarySideEffects) {
+-        Node replacement = assignNode.getLastChild().detachFromParent();
+-
+-        // Aggregate any expressions in GETELEMs.
+-        for (Node current = assignNode.getFirstChild();
+-             !current.isName();
+-             current = current.getFirstChild()) {
+-          if (current.isGetElem()) {
+-            replacement = IR.comma(
+-                current.getLastChild().detachFromParent(), replacement);
+-            replacement.copyInformationFrom(current);
+-          }
+-        }
+-
+-        parent.replaceChild(assignNode, replacement);
+-      } else {
+-        Node gramps = parent.getParent();
+-        if (parent.isExprResult()) {
+-          gramps.removeChild(parent);
+-        } else {
+-          parent.replaceChild(assignNode,
+-              assignNode.getLastChild().detachFromParent());
+-        }
+-      }
+-    }
++    void remove() {
++      Node parent = assignNode.getParent();
++      if (maybeAliased) {
++        // If the assignment is aliased (its result is used), we cannot remove it.
++        // So, we do nothing here. The assignment will only be removed if the
++        // variable is truly unreferenced and this assignment is not aliased.
++        return;
++      }
++
++      if (mayHaveSecondarySideEffects) {
++        Node replacement = assignNode.getLastChild().detachFromParent();
++
++        // Aggregate any expressions in GETELEMs.
++        for (Node current = assignNode.getFirstChild();
++             !current.isName();
++             current = current.getFirstChild()) {
++          if (current.isGetElem()) {
++            replacement = IR.comma(
++                current.getLastChild().detachFromParent(), replacement);
++            replacement.copyInformationFrom(current);
++          }
++        }
++
++        parent.replaceChild(assignNode, replacement);
++      } else {
++        Node gramps = parent.getParent();
++        if (parent.isExprResult()) {
++          gramps.removeChild(parent);
++        } else {
++          parent.replaceChild(assignNode,
++              assignNode.getLastChild().detachFromParent());
++        }
++      }
++    }
+@@ -1,4 +1,5 @@
+-      this.maybeAliased = !assignNode.getParent().isExprResult();
+-      this.mayHaveSecondarySideEffects =
+-          NodeUtil.mayHaveSideEffects(assignNode.getFirstChild()) ||
+-          NodeUtil.mayHaveSideEffects(assignNode.getLastChild());
++      this.maybeAliased = !assignNode.getParent().isExprResult();
++      this.mayHaveSecondarySideEffects =
++          maybeAliased ||
++          NodeUtil.mayHaveSideEffects(assignNode.getFirstChild()) ||
++          NodeUtil.mayHaveSideEffects(assignNode.getLastChild());
+@@ -1,34 +1,27 @@
+-    void remove() {
+-      Node parent = assignNode.getParent();
+-      if (maybeAliased) {
+-        // If the assignment is aliased (its result is used), we cannot remove it.
+-        // So, we do nothing here. The assignment will only be removed if the
+-        // variable is truly unreferenced and this assignment is not aliased.
+-        return;
+-      }
+-
+-      if (mayHaveSecondarySideEffects) {
+-        Node replacement = assignNode.getLastChild().detachFromParent();
+-
+-        // Aggregate any expressions in GETELEMs.
+-        for (Node current = assignNode.getFirstChild();
+-             !current.isName();
+-             current = current.getFirstChild()) {
+-          if (current.isGetElem()) {
+-            replacement = IR.comma(
+-                current.getLastChild().detachFromParent(), replacement);
+-            replacement.copyInformationFrom(current);
+-          }
+-        }
+-
+-        parent.replaceChild(assignNode, replacement);
+-      } else {
+-        Node gramps = parent.getParent();
+-        if (parent.isExprResult()) {
+-          gramps.removeChild(parent);
+-        } else {
+-          parent.replaceChild(assignNode,
+-              assignNode.getLastChild().detachFromParent());
+-        }
+-      }
+-    }
++    void remove() {
++      Node parent = assignNode.getParent();
++      if (mayHaveSecondarySideEffects) {
++        Node replacement = assignNode.getLastChild().detachFromParent();
++
++        // Aggregate any expressions in GETELEMs.
++        for (Node current = assignNode.getFirstChild();
++             !current.isName();
++             current = current.getFirstChild()) {
++          if (current.isGetElem()) {
++            replacement = IR.comma(
++                current.getLastChild().detachFromParent(), replacement);
++            replacement.copyInformationFrom(current);
++          }
++        }
++
++        parent.replaceChild(assignNode, replacement);
++      } else {
++        Node gramps = parent.getParent();
++        if (parent.isExprResult()) {
++          gramps.removeChild(parent);
++        } else {
++          parent.replaceChild(assignNode,
++              assignNode.getLastChild().detachFromParent());
++        }
++      }
++    }
+@@ -1,13 +1,13 @@
+-          if (var != null) {
+-            // If that var hasn't already been marked referenced, then
+-            // start tracking it.  If this is an assign, do nothing
+-            // for now.
+-            if (isRemovableVar(var)) {
+-              // Only mark as referenced if it's not the LHS of a direct assignment.
+-              if (!(parent.isAssign() && parent.getFirstChild() == n)) {
+-                markReferencedVar(var);
+-              }
+-            } else {
+-              markReferencedVar(var);
+-            }
+-          }
++          if (var != null) {
++            // If that var hasn't already been marked referenced, then
++            // start tracking it.  If this is an assign, do nothing
++            // for now.
++            if (isRemovableVar(var)) {
++              Assign assign = assignsByNode.get(n);
++              if (assign == null || assign.isPropertyAssign) {
++                markReferencedVar(var);
++              }
++            } else {
++              markReferencedVar(var);
++            }
++          }
+@@ -1,13 +1,12 @@
+-          if (var != null) {
+-            // If that var hasn't already been marked referenced, then
+-            // start tracking it.  If this is an assign, do nothing
+-            // for now.
+-            if (isRemovableVar(var)) {
+-              Assign assign = assignsByNode.get(n);
+-              if (assign == null || assign.isPropertyAssign) {
+-                markReferencedVar(var);
+-              }
+-            } else {
+-              markReferencedVar(var);
+-            }
+-          }
++          if (var != null) {
++            // If that var hasn't already been marked referenced, then
++            // start tracking it.  If this is an assign, do nothing
++            // for now.
++            if (isRemovableVar(var)) {
++              if (!assignsByNode.containsKey(n)) {
++                markReferencedVar(var);
++              }
++            } else {
++              markReferencedVar(var);
++            }
++          }
+@@ -1,27 +1,33 @@
+-    void remove() {
+-      Node parent = assignNode.getParent();
+-      if (mayHaveSecondarySideEffects) {
+-        Node replacement = assignNode.getLastChild().detachFromParent();
+-
+-        // Aggregate any expressions in GETELEMs.
+-        for (Node current = assignNode.getFirstChild();
+-             !current.isName();
+-             current = current.getFirstChild()) {
+-          if (current.isGetElem()) {
+-            replacement = IR.comma(
+-                current.getLastChild().detachFromParent(), replacement);
+-            replacement.copyInformationFrom(current);
+-          }
+-        }
+-
+-        parent.replaceChild(assignNode, replacement);
+-      } else {
+-        Node gramps = parent.getParent();
+-        if (parent.isExprResult()) {
+-          gramps.removeChild(parent);
+-        } else {
+-          parent.replaceChild(assignNode,
+-              assignNode.getLastChild().detachFromParent());
+-        }
+-      }
+-    }
++    void remove() {
++      Node parent = assignNode.getParent();
++      if (maybeAliased) {
++        // If the assignment is aliased (its result is used), we cannot remove it.
++        // The assignment itself must be preserved.
++        return;
++      }
++
++      if (mayHaveSecondarySideEffects) {
++        Node replacement = assignNode.getLastChild().detachFromParent();
++
++        // Aggregate any expressions in GETELEMs.
++        for (Node current = assignNode.getFirstChild();
++             !current.isName();
++             current = current.getFirstChild()) {
++          if (current.isGetElem()) {
++            replacement = IR.comma(
++                current.getLastChild().detachFromParent(), replacement);
++            replacement.copyInformationFrom(current);
++          }
++        }
++
++        parent.replaceChild(assignNode, replacement);
++      } else {
++        Node gramps = parent.getParent();
++        if (parent.isExprResult()) {
++          gramps.removeChild(parent);
++        } else {
++          parent.replaceChild(assignNode,
++              assignNode.getLastChild().detachFromParent());
++        }
++      }
++    }
+@@ -1,12 +1,13 @@
+-          if (var != null) {
+-            // If that var hasn't already been marked referenced, then
+-            // start tracking it.  If this is an assign, do nothing
+-            // for now.
+-            if (isRemovableVar(var)) {
+-              if (!assignsByNode.containsKey(n)) {
+-                markReferencedVar(var);
+-              }
+-            } else {
+-              markReferencedVar(var);
+-            }
+-          }
++          if (var != null) {
++            // If that var hasn't already been marked referenced, then
++            // start tracking it.  If this is an assign, do nothing
++            // for now.
++            if (isRemovableVar(var)) {
++              Assign assign = assignsByNode.get(n);
++              if (assign == null || assign.isPropertyAssign) {
++                markReferencedVar(var);
++              }
++            } else {
++              markReferencedVar(var);
++            }
++          }
+@@ -1,13 +1,12 @@
+-          if (var != null) {
+-            // If that var hasn't already been marked referenced, then
+-            // start tracking it.  If this is an assign, do nothing
+-            // for now.
+-            if (isRemovableVar(var)) {
+-              Assign assign = assignsByNode.get(n);
+-              if (assign == null || assign.isPropertyAssign) {
+-                markReferencedVar(var);
+-              }
+-            } else {
+-              markReferencedVar(var);
+-            }
+-          }
++          if (var != null) {
++            // If that var hasn't already been marked referenced, then
++            // start tracking it.  If this is an assign, do nothing
++            // for now.
++            if (isRemovableVar(var)) {
++              if (!assignsByNode.containsKey(n)) {
++                markReferencedVar(var);
++              }
++            } else {
++              markReferencedVar(var);
++            }
++          }

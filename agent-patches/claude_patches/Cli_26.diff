@@ -1,0 +1,38 @@
+diff --git a/src/java/org/apache/commons/cli/OptionBuilder.java b/src/java/org/apache/commons/cli/OptionBuilder.java
+index 4d21b8b..11caf03 100644
+--- a/src/java/org/apache/commons/cli/OptionBuilder.java
++++ b/src/java/org/apache/commons/cli/OptionBuilder.java
+@@ -345,8 +345,10 @@ public final class OptionBuilder
+      */
+     public static Option create(String opt) throws IllegalArgumentException
+     {
++        try
++        {
+             // create the option
+-        Option option = new Option(opt, description);
++            Option option = new Option(opt, description);
+ 
+             // set the option properties
+             option.setLongOpt(longopt);
+@@ -356,10 +358,14 @@ public final class OptionBuilder
+             option.setType(type);
+             option.setValueSeparator(valuesep);
+             option.setArgName(argName);
++
++            // return the Option instance
++            return option;
++        }
++        finally
++        {
+             // reset the OptionBuilder properties
+             OptionBuilder.reset();
+-
+-        // return the Option instance
+-        return option;
++        }
+     }
+ }
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

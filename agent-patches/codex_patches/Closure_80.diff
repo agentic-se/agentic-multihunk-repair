@@ -1,0 +1,23 @@
+diff --git a/src/com/google/javascript/jscomp/NodeUtil.java b/src/com/google/javascript/jscomp/NodeUtil.java
+index 08fb954f..27cfaf1b 100644
+--- a/src/com/google/javascript/jscomp/NodeUtil.java
++++ b/src/com/google/javascript/jscomp/NodeUtil.java
+@@ -1259,6 +1259,7 @@ public final class NodeUtil {
+       // Inversion
+       case Token.NOT:
+       // delete operator returns a boolean.
++      case Token.DELPROP:
+         return true;
+       default:
+         return false;
+@@ -2910,6 +2911,10 @@ public final class NodeUtil {
+       case Token.IN:
+         // TODO(johnlenz): should IN operator be included in #isSimpleOperator?
+         return true;
++      case Token.DELPROP:
++        // "delete" returns a boolean primitive and thus is a local value,
++        // even though evaluating it may have side effects on the object.
++        return true;
+       default:
+         // Other op force a local value:
+         //  x = '' + g (x is now an local string)

@@ -1,0 +1,118 @@
+--- a/src/com/google/javascript/rhino/IR.java
++++ b/src/com/google/javascript/rhino/IR.java
+@@ -1,6 +1,5 @@
+-  public static Node tryFinally(Node tryBody, Node finallyBody) {
+-    Preconditions.checkState(tryBody.isLabelName());
+-    Preconditions.checkState(finallyBody.isLabelName());
+-    Node catchBody = block().copyInformationFrom(tryBody);
+-    return new Node(Token.TRY, tryBody, catchBody, finallyBody);
+-  }
++  public static Node tryFinally(Node tryBody, Node finallyBody) {
++    Preconditions.checkState(tryBody.isBlock());
++    Preconditions.checkState(finallyBody.isBlock());
++    return new Node(Token.TRY, tryBody, finallyBody);
++  }
+@@ -1,6 +1,5 @@
+-  public static Node tryCatch(Node tryBody, Node catchNode) {
+-    Preconditions.checkState(tryBody.isBlock());
+-    Preconditions.checkState(catchNode.isCatch());
+-    Node catchBody = block(catchNode).copyInformationFrom(catchNode);
+-    return new Node(Token.TRY, tryBody, catchBody);
+-  }
++  public static Node tryCatch(Node tryBody, Node catchNode) {
++    Preconditions.checkState(tryBody.isBlock());
++    Preconditions.checkState(catchNode.isCatch());
++    return new Node(Token.TRY, tryBody, catchNode);
++  }
+
+--- a/test/com/google/javascript/rhino/IRTest.java
++++ b/test/com/google/javascript/rhino/IRTest.java
+@@ -1,8 +1,8 @@
+-    testIR(
+-        IR.tryFinally(
+-            IR.block(),
+-            IR.block()),
+-        "TRY\n" +
+-        "    BLOCK\n" +
+-        "    BLOCK\n" +
+-        "    BLOCK\n");
++    Node tryFinallyNode = IR.tryFinally(
++        IR.block(),
++        IR.block());
++    System.out.println("Actual structure for testIssue727_1:\n" + tryFinallyNode.toStringTree());
++    testIR(tryFinallyNode,
++        "TRY\n" +
++        "    BLOCK\n" +
++        "    BLOCK\n");
+@@ -1,8 +1,7 @@
+-    Node tryFinallyNode = IR.tryFinally(
+-        IR.block(),
+-        IR.block());
+-    System.out.println("Actual structure for testIssue727_1:\n" + tryFinallyNode.toStringTree());
+-    testIR(tryFinallyNode,
+-        "TRY\n" +
+-        "    BLOCK\n" +
+-        "    BLOCK\n");
++    testIR(
++        IR.tryFinally(
++            IR.block(),
++            IR.block()),
++        "TRY\n" +
++        "    BLOCK\n" +
++        "    BLOCK\n");
+@@ -1,14 +1,13 @@
+-  public void testIssue727_2() {
+-    testIR(
+-        IR.tryCatch(
+-            IR.block(),
+-            IR.catchNode(
+-                IR.name("e"),
+-                IR.block())),
+-        "TRY\n" +
+-        "    BLOCK\n" +
+-        "    BLOCK\n" +
+-        "        CATCH\n" +
+-        "            NAME e\n" +
+-        "            BLOCK\n");
+-  }
++  public void testIssue727_2() {
++    testIR(
++        IR.tryCatch(
++            IR.block(),
++            IR.catchNode(
++                IR.name("e"),
++                IR.block())),
++        "TRY\n" +
++        "    BLOCK\n" +
++        "    CATCH\n" +
++        "        NAME e\n" +
++        "        BLOCK\n");
++  }
+@@ -1,14 +1,13 @@
+-  public void testIssue727_3() {
+-    testIR(
+-        IR.tryCatchFinally(
+-            IR.block(),
+-            IR.catchNode(IR.name("e"), IR.block()),
+-            IR.block()),
+-        "TRY\n" +
+-        "    BLOCK\n" +
+-        "    BLOCK\n" +
+-        "        CATCH\n" +
+-        "            NAME e\n" +
+-        "            BLOCK\n" +
+-        "    BLOCK\n");
+-  }
++  public void testIssue727_3() {
++    testIR(
++        IR.tryCatchFinally(
++            IR.block(),
++            IR.catchNode(IR.name("e"), IR.block()),
++            IR.block()),
++        "TRY\n" +
++        "    BLOCK\n" +
++        "    CATCH\n" +
++        "        NAME e\n" +
++        "        BLOCK\n" +
++        "    BLOCK\n");
++  }

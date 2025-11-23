@@ -1,0 +1,60 @@
+--- a/src/main/java/org/apache/commons/cli/Option.java
++++ b/src/main/java/org/apache/commons/cli/Option.java
+@@ -1,5 +1,6 @@
+-        // if hasArg is set then the number of arguments is 1
+-        if (hasArg)
+-        {
+-            this.numberOfArgs = 1;
+-        }
++        // if hasArg is set then the number of arguments is 1
++        if (hasArg)
++        {
++            this.numberOfArgs = 1;
++            this.type = String.class;
++        }
+@@ -1,2 +1,4 @@
+- * <p>An Option is not created independantly, but is create through
+- * an instance of {@link Options}.<p>
++ * <p>An Option is not created independantly, but is create through
++ * an instance of {@link Options}.</p>
++ * <p>If an option is specified to have an argument ({@link #hasArg()}),
++ * the type of the argument defaults to {@link String}.</p>
+@@ -1,6 +1,5 @@
+-        // if hasArg is set then the number of arguments is 1
+-        if (hasArg)
+-        {
+-            this.numberOfArgs = 1;
+-            this.type = String.class;
+-        }
++        // if hasArg is set then the number of arguments is 1
++        if (hasArg)
++        {
++            this.numberOfArgs = 1;
++        }
+@@ -1,4 +1,2 @@
+- * <p>An Option is not created independantly, but is create through
+- * an instance of {@link Options}.</p>
+- * <p>If an option is specified to have an argument ({@link #hasArg()}),
+- * the type of the argument defaults to {@link String}.</p>
++ * <p>An Option is not created independantly, but is create through
++ * an instance of {@link Options}.<p>
+
+--- a/src/main/java/org/apache/commons/cli/OptionBuilder.java
++++ b/src/main/java/org/apache/commons/cli/OptionBuilder.java
+@@ -1,5 +1,11 @@
+-        Option option = null;
+-        try
+-        {
+-            // create the option
+-            option = new Option(opt, description);
++        Option option = null;
++        try
++        {
++            // if the type has not been set, default to String for options with args
++            if (type == null && (numberOfArgs == Option.UNLIMITED_VALUES || numberOfArgs >= 1))
++            {
++                type = String.class;
++            }
++
++            // create the option
++            option = new Option(opt, description);

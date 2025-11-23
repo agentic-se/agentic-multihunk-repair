@@ -1,0 +1,82 @@
+diff --git a/src/main/java/org/apache/commons/math/geometry/Vector3D.java b/src/main/java/org/apache/commons/math/geometry/Vector3D.java
+index 3c741e9e2..427dbc929 100644
+--- a/src/main/java/org/apache/commons/math/geometry/Vector3D.java
++++ b/src/main/java/org/apache/commons/math/geometry/Vector3D.java
+@@ -455,23 +455,62 @@ public class Vector3D implements Serializable {
+    * @return the cross product v1 ^ v2 as a new Vector
+    */
+   public static Vector3D crossProduct(final Vector3D v1, final Vector3D v2) {
++      // Robust computation of cross product using compensated differences
++      // of products and exact power-of-two scaling.
++      final double m1 = FastMath.max(FastMath.max(FastMath.abs(v1.x), FastMath.abs(v1.y)), FastMath.abs(v1.z));
++      final double m2 = FastMath.max(FastMath.max(FastMath.abs(v2.x), FastMath.abs(v2.y)), FastMath.abs(v2.z));
+ 
++      if (m1 == 0 || m2 == 0) {
++          return Vector3D.ZERO;
++      }
+ 
+-      // rescale both vectors without losing precision,
+-      // to ensure their norm are the same order of magnitude
+-
+-      // we reduce cancellation errors by preconditioning,
+-      // we replace v1 by v3 = v1 - rho v2 with rho chosen in order to compute
+-      // v3 without loss of precision. See Kahan lecture
+-      // "Computing Cross-Products and Rotations in 2- and 3-Dimensional Euclidean Spaces"
+-      // available at http://www.cs.berkeley.edu/~wkahan/MathH110/Cross.pdf
+-
+-      // compute rho as an 8 bits approximation of v1.v2 / v2.v2
+-
+-
+-      // compute cross product from v3 and v2 instead of v1 and v2
+-      return new Vector3D(v1.y * v2.z - v1.z * v2.y, v1.z * v2.x - v1.x * v2.z, v1.x * v2.y - v1.y * v2.x);
+-
++      // Common power-of-two scaling to keep magnitudes similar and operations exact.
++      final int e = FastMath.max(FastMath.getExponent(m1), FastMath.getExponent(m2));
++      final double s = FastMath.scalb(1.0, e);
++
++      final double ax = v1.x / s;
++      final double ay = v1.y / s;
++      final double az = v1.z / s;
++      final double bx = v2.x / s;
++      final double by = v2.y / s;
++      final double bz = v2.z / s;
++
++      final double cx = robustDiffProd(ay, bz, az, by);
++      final double cy = robustDiffProd(az, bx, ax, bz);
++      final double cz = robustDiffProd(ax, by, ay, bx);
++
++      final double scale = s * s;
++      return new Vector3D(scale * cx, scale * cy, scale * cz);
++
++  }
++
++  // Compute low-order part of a*b given the high-order product p = a*b.
++  private static double twoProductLow(final double a, final double b, final double p) {
++      // Dekker/Veltkamp splitting constant for doubles: 2^27 + 1
++      final double split = 134217729.0;
++      final double aHigh = (split * a);
++      final double aTop  = aHigh - (aHigh - a);
++      final double aLow  = a - aTop;
++      final double bHigh = (split * b);
++      final double bTop  = bHigh - (bHigh - b);
++      final double bLow  = b - bTop;
++      return ((aTop * bTop - p) + aTop * bLow + aLow * bTop) + aLow * bLow;
++  }
++
++  // Compute low-order part of a+b given the high-order sum s = a+b.
++  private static double twoSumLow(final double a, final double b, final double s) {
++      final double bb = s - a;
++      return (a - (s - bb)) + (b - bb);
++  }
++
++  // Robustly compute a*b - c*d with error compensation.
++  private static double robustDiffProd(final double a, final double b, final double c, final double d) {
++      final double p = a * b;
++      final double q = c * d;
++      final double s = p - q;
++      final double e = twoSumLow(p, -q, s);
++      final double err = twoProductLow(a, b, p) - twoProductLow(c, d, q);
++      return s + (e + err);
+   }
+ 
+   /** Compute the distance between two vectors according to the L<sub>1</sub> norm.

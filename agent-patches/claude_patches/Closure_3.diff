@@ -1,0 +1,19 @@
+diff --git a/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java b/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
+index a77221a1..c95bcd99 100644
+--- a/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
++++ b/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
+@@ -386,6 +386,14 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
+         return false;
+       }
+ 
++      // Check if any of the dependencies are catch parameters
++      for (Var dependency : defMetadata.depends) {
++        if (dependency.getParentNode() != null &&
++            dependency.getParentNode().isCatch()) {
++          return false;
++        }
++      }
++
+       // We can skip the side effect check along the paths of two nodes if
+       // they are just next to each other.
+       if (NodeUtil.isStatementBlock(getDefCfgNode().getParent()) &&

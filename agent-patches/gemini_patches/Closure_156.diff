@@ -1,0 +1,335 @@
+--- a/src/com/google/javascript/jscomp/CollapseProperties.java
++++ b/src/com/google/javascript/jscomp/CollapseProperties.java
+@@ -1,2 +1,3 @@
+-    } else if (!n.isSimpleName()) {
+-      // Create a VAR node to declare the name.
++    } else if (!n.isSimpleName()) {
++      System.out.println("Entering else if (!n.isSimpleName()) for: " + n.fullName());
++      // Create a VAR node to declare the name.
+@@ -1,3 +1,2 @@
+-    } else if (!n.isSimpleName()) {
+-      System.out.println("Entering else if (!n.isSimpleName()) for: " + n.fullName());
+-      // Create a VAR node to declare the name.
++    } else if (!n.isSimpleName()) {
++      // Create a VAR node to declare the name.
+@@ -1,3 +1,4 @@
+-    if (n.canCollapse() && canCollapseChildNames) {
+-      updateObjLitOrFunctionDeclaration(n, alias);
+-    }
++    if (n.canCollapse() && canCollapseChildNames) {
++      System.out.println("collapseDeclarationOfNameAndDescendants: Processing name: " + n.fullName() + ", parent: " + (n.parent != null ? n.parent.fullName() : "null") + ", isSimpleName: " + n.isSimpleName());
++      updateObjLitOrFunctionDeclaration(n, alias);
++    }
+@@ -1,4 +1,3 @@
+-    if (n.canCollapse() && canCollapseChildNames) {
+-      System.out.println("collapseDeclarationOfNameAndDescendants: Processing name: " + n.fullName() + ", parent: " + (n.parent != null ? n.parent.fullName() : "null") + ", isSimpleName: " + n.isSimpleName());
+-      updateObjLitOrFunctionDeclaration(n, alias);
+-    }
++    if (n.canCollapse() && canCollapseChildNames) {
++      updateObjLitOrFunctionDeclaration(n, alias);
++    }
+@@ -1,3 +1,4 @@
+-  private void updateObjLitOrFunctionDeclarationAtAssignNode(
+-      Name n, String alias) {
+-    // NOTE: It\'s important that we don\'t add additional nodes
++  private void updateObjLitOrFunctionDeclarationAtAssignNode(
++      Name n, String alias) {
++    System.out.println("updateObjLitOrFunctionDeclarationAtAssignNode: Name: " + n.fullName() + ", isSimpleName: " + n.isSimpleName());
++    // NOTE: It\'s important that we don\'t add additional nodes
+@@ -1,4 +1,3 @@
+-  private void updateObjLitOrFunctionDeclarationAtAssignNode(
+-      Name n, String alias) {
+-    System.out.println("updateObjLitOrFunctionDeclarationAtAssignNode: Name: " + n.fullName() + ", isSimpleName: " + n.isSimpleName());
+-    // NOTE: It\'s important that we don\'t add additional nodes
++  private void updateObjLitOrFunctionDeclarationAtAssignNode(
++      Name n, String alias) {
++    // NOTE: It\'s important that we don\'t add additional nodes
+@@ -1,2 +1,3 @@
+-  private void updateObjLitOrFunctionDeclaration(Name n, String alias) {
+-    if (n.declaration == null) {
++  private void updateObjLitOrFunctionDeclaration(Name n, String alias) {
++    System.out.println("updateObjLitOrFunctionDeclaration: Name: " + n.fullName() + ", isSimpleName: " + n.isSimpleName());
++    if (n.declaration == null) {
+@@ -1,3 +1,2 @@
+-  private void updateObjLitOrFunctionDeclaration(Name n, String alias) {
+-    System.out.println("updateObjLitOrFunctionDeclaration: Name: " + n.fullName() + ", isSimpleName: " + n.isSimpleName());
+-    if (n.declaration == null) {
++  private void updateObjLitOrFunctionDeclaration(Name n, String alias) {
++    if (n.declaration == null) {
+@@ -1,3 +1,4 @@
+-  private void updateObjLitOrFunctionDeclarationAtAssignNode(
+-      Name n, String alias) {
+-    // NOTE: It\'s important that we don\'t add additional nodes
++  private void updateObjLitOrFunctionDeclarationAtAssignNode(
++      Name n, String alias) {
++    System.out.println("updateObjLitOrFunctionDeclarationAtAssignNode: Name: " + n.fullName() + ", n.hashCode(): " + n.hashCode() + ", n.parent: " + (n.parent != null ? n.parent.fullName() : "null") + ", n.parent.hashCode(): " + (n.parent != null ? n.parent.hashCode() : "null"));
++    // NOTE: It\'s important that we don\'t add additional nodes
+@@ -1,4 +1,3 @@
+-  private void updateObjLitOrFunctionDeclarationAtAssignNode(
+-      Name n, String alias) {
+-    System.out.println("updateObjLitOrFunctionDeclarationAtAssignNode: Name: " + n.fullName() + ", n.hashCode(): " + n.hashCode() + ", n.parent: " + (n.parent != null ? n.parent.fullName() : "null") + ", n.parent.hashCode(): " + (n.parent != null ? n.parent.hashCode() : "null"));
+-    // NOTE: It\'s important that we don\'t add additional nodes
++  private void updateObjLitOrFunctionDeclarationAtAssignNode(
++      Name n, String alias) {
++    // NOTE: It\'s important that we don\'t add additional nodes
+@@ -1,2 +1,3 @@
+-    boolean isObjLit = rvalue.getType() == Token.OBJECTLIT;
+-    boolean insertedVarNode = false;
++    boolean isObjLit = rvalue.getType() == Token.OBJECTLIT;
++    System.out.println("updateObjLitOrFunctionDeclarationAtAssignNode: Name: " + n.fullName() + ", rvalue.getType(): " + rvalue.getType() + ", rvalue.toString(): " + rvalue.toString() + ", isObjLit: " + isObjLit);
++    boolean insertedVarNode = false;
+@@ -1,3 +1,2 @@
+-    boolean isObjLit = rvalue.getType() == Token.OBJECTLIT;
+-    System.out.println("updateObjLitOrFunctionDeclarationAtAssignNode: Name: " + n.fullName() + ", rvalue.getType(): " + rvalue.getType() + ", rvalue.toString(): " + rvalue.toString() + ", isObjLit: " + isObjLit);
+-    boolean insertedVarNode = false;
++    boolean isObjLit = rvalue.getType() == Token.OBJECTLIT;
++    boolean insertedVarNode = false;
+@@ -1,2 +1,3 @@
+-    if (isObjLit && n.canEliminate()) {
+-      // Eliminate the object literal altogether.
++    if (isObjLit && n.canEliminate()) {
++      System.out.println("Entering if (isObjLit && n.canEliminate()) for: " + n.fullName());
++      // Eliminate the object literal altogether.
+@@ -1,3 +1,2 @@
+-    if (isObjLit && n.canEliminate()) {
+-      System.out.println("Entering if (isObjLit && n.canEliminate()) for: " + n.fullName());
+-      // Eliminate the object literal altogether.
++    if (isObjLit && n.canEliminate()) {
++      // Eliminate the object literal altogether.
+@@ -1,5 +1,6 @@
+-    boolean isObjLit = rvalue.getType() == Token.OBJECTLIT;
+-    boolean insertedVarNode = false;
+-
+-    if (isObjLit && n.canEliminate()) {
+-      // Eliminate the object literal altogether.
++    boolean isObjLit = rvalue.getType() == Token.OBJECTLIT;
++    boolean insertedVarNode = false;
++
++    System.out.println("updateObjLitOrFunctionDeclarationAtAssignNode: Before first if. Name: " + n.fullName() + ", isObjLit: " + isObjLit + ", n.canEliminate(): " + n.canEliminate());
++    if (isObjLit && n.canEliminate()) {
++      // Eliminate the object literal altogether.
+@@ -1,2 +1,3 @@
+-    } else if (!n.isSimpleName()) {
+-      // Create a VAR node to declare the name.
++    } else if (!n.isSimpleName()) {
++      System.out.println("updateObjLitOrFunctionDeclarationAtAssignNode: Inside else if. Name: " + n.fullName() + ", n.isSimpleName(): " + n.isSimpleName());
++      // Create a VAR node to declare the name.
+@@ -1,2 +1,3 @@
+-    boolean isObjLit = rvalue.getType() == Token.OBJECTLIT;
+-    boolean insertedVarNode = false;
++    boolean isObjLit = rvalue.getType() == Token.OBJECTLIT;
++    boolean insertedVarNode = false;
++    System.out.println("DEBUG: Reached here for " + n.fullName() + ", isObjLit: " + isObjLit + ", n.canEliminate(): " + n.canEliminate() + ", n.isSimpleName(): " + n.isSimpleName());
+@@ -1,3 +1,2 @@
+-    boolean isObjLit = rvalue.getType() == Token.OBJECTLIT;
+-    boolean insertedVarNode = false;
+-    System.out.println("DEBUG: Reached here for " + n.fullName() + ", isObjLit: " + isObjLit + ", n.canEliminate(): " + n.canEliminate() + ", n.isSimpleName(): " + n.isSimpleName());
++    boolean isObjLit = rvalue.getType() == Token.OBJECTLIT;
++    boolean insertedVarNode = false;
+@@ -1,2 +1,3 @@
+-    if (isObjLit && n.canEliminate()) {
+-      // Eliminate the object literal altogether.
++    System.out.println("updateObjLitOrFunctionDeclarationAtAssignNode: Before first if. Name: " + n.fullName() + ", isObjLit: " + isObjLit + ", n.canEliminate(): " + n.canEliminate() + ", n.isSimpleName(): " + n.isSimpleName());
++    if (isObjLit && n.canEliminate()) {
++      // Eliminate the object literal altogether.
+
+--- a/src/com/google/javascript/jscomp/GlobalNamespace.java
++++ b/src/com/google/javascript/jscomp/GlobalNamespace.java
+@@ -1,3 +1,8 @@
+-    boolean isSimpleName() {
+-      return parent == null;
+-    }
++    boolean isSimpleName() {
++      if (parent == null) {
++        System.out.println("isSimpleName: " + name + " is simple (parent is null)");
++      } else {
++        System.out.println("isSimpleName: " + name + " is NOT simple (parent is " + parent.name + ")");
++      }
++      return parent == null;
++    }
+@@ -1,8 +1,3 @@
+-    boolean isSimpleName() {
+-      if (parent == null) {
+-        System.out.println("isSimpleName: " + name + " is simple (parent is null)");
+-      } else {
+-        System.out.println("isSimpleName: " + name + " is NOT simple (parent is " + parent.name + ")");
+-      }
+-      return parent == null;
+-    }
++    boolean isSimpleName() {
++      return parent == null;
++    }
+@@ -1,5 +1,6 @@
+-      Name nameObj = getOrCreateName(name);
+-      nameObj.type = type;
+-
+-      Ref set = new Ref(t, n, Ref.Type.SET_FROM_GLOBAL);
+-      nameObj.addRef(set);
++      Name nameObj = getOrCreateName(name);
++      nameObj.type = type;
++
++      Ref set = new Ref(t, n, Ref.Type.SET_FROM_GLOBAL);
++      nameObj.addRef(set);
++      System.out.println("handleSetFromGlobal: " + name + ", declaration set: " + (nameObj.declaration != null));
+@@ -1,6 +1,5 @@
+-      Name nameObj = getOrCreateName(name);
+-      nameObj.type = type;
+-
+-      Ref set = new Ref(t, n, Ref.Type.SET_FROM_GLOBAL);
+-      nameObj.addRef(set);
+-      System.out.println("handleSetFromGlobal: " + name + ", declaration set: " + (nameObj.declaration != null));
++      Name nameObj = getOrCreateName(name);
++      nameObj.type = type;
++
++      Ref set = new Ref(t, n, Ref.Type.SET_FROM_GLOBAL);
++      nameObj.addRef(set);
+@@ -1,29 +1,31 @@
+-    private boolean isConstructorOrEnumDeclaration(Node n, Node parent) {
+-      JSDocInfo info;
+-      int valueNodeType;
+-      switch (parent.getType()) {
+-        case Token.ASSIGN:
+-          info = parent.getJSDocInfo();
+-          valueNodeType = n.getNext().getType();
+-          break;
+-        case Token.VAR:
+-          info = n.getJSDocInfo();
+-          if (info == null) {
+-            info = parent.getJSDocInfo();
+-          }
+-          Node valueNode = n.getFirstChild();
+-          valueNodeType = valueNode != null ? valueNode.getType() : Token.VOID;
+-          break;
+-        default:
+-          if (NodeUtil.isFunctionDeclaration(parent)) {
+-            info = parent.getJSDocInfo();
+-            valueNodeType = Token.FUNCTION;
+-            break;
+-          }
+-          return false;
+-      }
+-      // Heed the annotations only if they're sensibly used.
+-      return info != null &&
+-             (info.isConstructor() && valueNodeType == Token.FUNCTION ||
+-              info.hasEnumParameterType() && valueNodeType == Token.OBJECTLIT);
+-    }
++    private boolean isConstructorOrEnumDeclaration(Node n, Node parent) {
++      JSDocInfo info;
++      int valueNodeType;
++      switch (parent.getType()) {
++        case Token.ASSIGN:
++          info = parent.getJSDocInfo();
++          valueNodeType = n.getNext().getType();
++          break;
++        case Token.VAR:
++          info = n.getJSDocInfo();
++          if (info == null) {
++            info = parent.getJSDocInfo();
++          }
++          Node valueNode = n.getFirstChild();
++          valueNodeType = valueNode != null ? valueNode.getType() : Token.VOID;
++          break;
++        default:
++          if (NodeUtil.isFunctionDeclaration(parent)) {
++            info = parent.getJSDocInfo();
++            valueNodeType = Token.FUNCTION;
++            break;
++          }
++          System.out.println("isConstructorOrEnumDeclaration: Not an ASSIGN, VAR, or FUNCTION declaration for: " + n.getQualifiedName());
++          return false;
++      }
++      boolean result = info != null &&
++             (info.isConstructor() && valueNodeType == Token.FUNCTION ||
++              info.hasEnumParameterType() && valueNodeType == Token.OBJECTLIT);
++      System.out.println("isConstructorOrEnumDeclaration: For " + n.getQualifiedName() + ", result: " + result + ", info: " + (info != null) + ", isConstructor: " + (info != null && info.isConstructor()) + ", valueNodeType: " + valueNodeType);
++      return result;
++    }
+@@ -1,31 +1,29 @@
+-    private boolean isConstructorOrEnumDeclaration(Node n, Node parent) {
+-      JSDocInfo info;
+-      int valueNodeType;
+-      switch (parent.getType()) {
+-        case Token.ASSIGN:
+-          info = parent.getJSDocInfo();
+-          valueNodeType = n.getNext().getType();
+-          break;
+-        case Token.VAR:
+-          info = n.getJSDocInfo();
+-          if (info == null) {
+-            info = parent.getJSDocInfo();
+-          }
+-          Node valueNode = n.getFirstChild();
+-          valueNodeType = valueNode != null ? valueNode.getType() : Token.VOID;
+-          break;
+-        default:
+-          if (NodeUtil.isFunctionDeclaration(parent)) {
+-            info = parent.getJSDocInfo();
+-            valueNodeType = Token.FUNCTION;
+-            break;
+-          }
+-          System.out.println("isConstructorOrEnumDeclaration: Not an ASSIGN, VAR, or FUNCTION declaration for: " + n.getQualifiedName());
+-          return false;
+-      }
+-      boolean result = info != null &&
+-             (info.isConstructor() && valueNodeType == Token.FUNCTION ||
+-              info.hasEnumParameterType() && valueNodeType == Token.OBJECTLIT);
+-      System.out.println("isConstructorOrEnumDeclaration: For " + n.getQualifiedName() + ", result: " + result + ", info: " + (info != null) + ", isConstructor: " + (info != null && info.isConstructor()) + ", valueNodeType: " + valueNodeType);
+-      return result;
+-    }
++    private boolean isConstructorOrEnumDeclaration(Node n, Node parent) {
++      JSDocInfo info;
++      int valueNodeType;
++      switch (parent.getType()) {
++        case Token.ASSIGN:
++          info = parent.getJSDocInfo();
++          valueNodeType = n.getNext().getType();
++          break;
++        case Token.VAR:
++          info = n.getJSDocInfo();
++          if (info == null) {
++            info = parent.getJSDocInfo();
++          }
++          Node valueNode = n.getFirstChild();
++          valueNodeType = valueNode != null ? valueNode.getType() : Token.VOID;
++          break;
++        default:
++          if (NodeUtil.isFunctionDeclaration(parent)) {
++            info = parent.getJSDocInfo();
++            valueNodeType = Token.FUNCTION;
++            break;
++          }
++          return false;
++      }
++      // Heed the annotations only if they're sensibly used.
++      return info != null &&
++             (info.isConstructor() && valueNodeType == Token.FUNCTION ||
++              info.hasEnumParameterType() && valueNodeType == Token.OBJECTLIT);
++    }
+@@ -1,6 +1,7 @@
+-    Name(String name, Name parent, boolean inExterns) {
+-      this.name = name;
+-      this.parent = parent;
+-      this.type = Type.OTHER;
+-      this.inExterns = inExterns;
+-    }
++    Name(String name, Name parent, boolean inExterns) {
++      this.name = name;
++      this.parent = parent;
++      this.type = Type.OTHER;
++      this.inExterns = inExterns;
++      System.out.println("Name constructor: " + name + ", parent: " + (parent != null ? parent.name : "null"));
++    }
+@@ -1,7 +1,6 @@
+-    Name(String name, Name parent, boolean inExterns) {
+-      this.name = name;
+-      this.parent = parent;
+-      this.type = Type.OTHER;
+-      this.inExterns = inExterns;
+-      System.out.println("Name constructor: " + name + ", parent: " + (parent != null ? parent.name : "null"));
+-    }
++    Name(String name, Name parent, boolean inExterns) {
++      this.name = name;
++      this.parent = parent;
++      this.type = Type.OTHER;
++      this.inExterns = inExterns;
++    }

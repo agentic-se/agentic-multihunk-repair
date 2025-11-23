@@ -1,0 +1,36 @@
+--- a/src/main/java/org/apache/commons/csv/CSVParser.java
++++ b/src/main/java/org/apache/commons/csv/CSVParser.java
+@@ -1,1 +1,11 @@
+-    private final Token reusableToken = new Token();
++    private final Token reusableToken = new Token();
++
++    /**
++     * Denotes whether the parser has a next record already buffered.
++     */
++    private CSVRecord peekedRecord = null;
++
++    /**
++     * True if this parser has already been used to create an iterator.
++     */
++    private boolean iteratorAlreadyUsed = false;
+@@ -1,11 +1,1 @@
+-    private final Token reusableToken = new Token();
+-
+-    /**
+-     * Denotes whether the parser has a next record already buffered.
+-     */
+-    private CSVRecord peekedRecord = null;
+-
+-    /**
+-     * True if this parser has already been used to create an iterator.
+-     */
+-    private boolean iteratorAlreadyUsed = false;
++    private final Token reusableToken = new Token();
+@@ -1,1 +1,6 @@
+-    private final Token reusableToken = new Token();
++    private final Token reusableToken = new Token();
++
++    /**
++     * Denotes whether the parser has a next record already buffered.
++     */
++    private CSVRecord peekedRecord = null;

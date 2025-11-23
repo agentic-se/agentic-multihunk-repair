@@ -1,0 +1,122 @@
+--- a/source/org/jfree/chart/plot/PiePlot.java
++++ b/source/org/jfree/chart/plot/PiePlot.java
+@@ -1,2 +1,6 @@
+-            state.setTotal(DatasetUtilities.calculatePieDatasetTotal(
+-                    plot.getDataset()));
++        double total = 0.0;
++        PieDataset dataset = plot.getDataset();
++        if (dataset != null) {
++            total = DatasetUtilities.calculatePieDatasetTotal(dataset);
++        }
++        state.setTotal(total);
+@@ -1,3 +1,6 @@
+-    public double getMaximumExplodePercent() {
+-        double result = 0.0;
+-        Iterator iterator = this.dataset.getKeys().iterator();
++    public double getMaximumExplodePercent() {
++        if (this.dataset == null) {
++            return 0.0;
++        }
++        double result = 0.0;
++        Iterator iterator = this.dataset.getKeys().iterator();
+
+--- a/source/org/jfree/chart/plot/PiePlot3D.java
++++ b/source/org/jfree/chart/plot/PiePlot3D.java
+@@ -1,11 +1,11 @@
+-        // get the data source - return if null;
+-        PieDataset dataset = getDataset();
+-        if (DatasetUtilities.isEmptyOrNull(getDataset())) {
+-            drawNoDataMessage(g2, plotArea);
+-            g2.setClip(savedClip);
+-            drawOutline(g2, plotArea);
+-            return;
+-        }
+-
+-        // if too any elements
+-        if (dataset.getKeys().size() > plotArea.getWidth()) {
++        // get the data source - return if null;
++        PieDataset dataset = getDataset();
++        if (DatasetUtilities.isEmptyOrNull(dataset)) {
++            drawNoDataMessage(g2, plotArea);
++            g2.setClip(savedClip);
++            drawOutline(g2, plotArea);
++            return;
++        }
++
++        // if too any elements
++        if (dataset.getKeys().size() > plotArea.getWidth()) {
+@@ -1,2 +1,6 @@
+-        // if too any elements
+-        if (dataset.getKeys().size() > plotArea.getWidth()) {
++        // DEBUG: Check dataset and isEmptyOrNull result
++        System.out.println("DEBUG: dataset in PiePlot3D.draw: " + dataset);
++        System.out.println("DEBUG: isEmptyOrNull(dataset): " + DatasetUtilities.isEmptyOrNull(dataset));
++
++        // if too any elements
++        if (dataset.getKeys().size() > plotArea.getWidth()) {
+@@ -1,6 +1,2 @@
+-        // DEBUG: Check dataset and isEmptyOrNull result
+-        System.out.println("DEBUG: dataset in PiePlot3D.draw: " + dataset);
+-        System.out.println("DEBUG: isEmptyOrNull(dataset): " + DatasetUtilities.isEmptyOrNull(dataset));
+-
+-        // if too any elements
+-        if (dataset.getKeys().size() > plotArea.getWidth()) {
++        // if too any elements
++        if (dataset.getKeys().size() > plotArea.getWidth()) {
+
+--- a/tests/org/jfree/chart/plot/junit/PiePlot3DTests.java
++++ b/tests/org/jfree/chart/plot/junit/PiePlot3DTests.java
+@@ -1,17 +1,9 @@
+-    public void testDrawWithNullDataset() {
+-        JFreeChart chart = ChartFactory.createPieChart3D("Test", null, true, 
+-                false, false);
+-        boolean success = false;
+-        try {
+-            BufferedImage image = new BufferedImage(200 , 100, 
+-                    BufferedImage.TYPE_INT_RGB);
+-            Graphics2D g2 = image.createGraphics();
+-            chart.draw(g2, new Rectangle2D.Double(0, 0, 200, 100), null, null);
+-            g2.dispose();
+-            success = true;
+-        }
+-        catch (Exception e) {
+-            success = false;
+-        }
+-        assertTrue(success);
+-    }
++    public void testDrawWithNullDataset() {
++        JFreeChart chart = ChartFactory.createPieChart3D("Test", null, true, 
++                false, false);
++        BufferedImage image = new BufferedImage(200 , 100, 
++                BufferedImage.TYPE_INT_RGB);
++        Graphics2D g2 = image.createGraphics();
++        chart.draw(g2, new Rectangle2D.Double(0, 0, 200, 100), null, null);
++        g2.dispose();
++    }
+@@ -1,9 +1,17 @@
+-    public void testDrawWithNullDataset() {
+-        JFreeChart chart = ChartFactory.createPieChart3D("Test", null, true, 
+-                false, false);
+-        BufferedImage image = new BufferedImage(200 , 100, 
+-                BufferedImage.TYPE_INT_RGB);
+-        Graphics2D g2 = image.createGraphics();
+-        chart.draw(g2, new Rectangle2D.Double(0, 0, 200, 100), null, null);
+-        g2.dispose();
+-    }
++    public void testDrawWithNullDataset() {
++        JFreeChart chart = ChartFactory.createPieChart3D("Test", null, true, 
++                false, false);
++        boolean success = false;
++        try {
++            BufferedImage image = new BufferedImage(200 , 100, 
++                    BufferedImage.TYPE_INT_RGB);
++            Graphics2D g2 = image.createGraphics();
++            chart.draw(g2, new Rectangle2D.Double(0, 0, 200, 100), null, null);
++            g2.dispose();
++            success = true;
++        }
++        catch (Exception e) {
++            success = false;
++        }
++        assertTrue(success);
++    }

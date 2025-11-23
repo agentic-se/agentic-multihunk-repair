@@ -1,0 +1,40 @@
+diff --git a/src/main/java/org/apache/commons/lang3/reflect/TypeUtils.java b/src/main/java/org/apache/commons/lang3/reflect/TypeUtils.java
+index 415cefa3..ed9810ea 100644
+--- a/src/main/java/org/apache/commons/lang3/reflect/TypeUtils.java
++++ b/src/main/java/org/apache/commons/lang3/reflect/TypeUtils.java
+@@ -672,10 +672,22 @@ public class TypeUtils {
+                 : new HashMap<TypeVariable<?>, Type>(subtypeVarAssigns);
+ 
+         // has target class been reached?
+-        if (cls.getTypeParameters().length > 0 || toClass.equals(cls)) {
++        if (toClass.equals(cls)) {
+             return typeVarAssigns;
+         }
+ 
++        // Special handling for classes with type parameters to ensure we correctly traverse inheritance
++        // For a class with type parameters, we should continue processing if we haven't reached the target class yet
++        if (cls.getTypeParameters().length > 0 && !toClass.equals(cls)) {
++            // Look at the inheritance chain to find the correct mappings
++            Type closestParentType = getClosestParentType(cls, toClass);
++            if (closestParentType != null) {
++                // For classes with type parameters, we need to process the inheritance chain properly
++                // by passing along the current type variable assignments and continuing the traversal
++                return getTypeArguments(closestParentType, toClass, typeVarAssigns);
++            }
++        }
++        
+         // walk the inheritance hierarchy until the target class is reached
+         return getTypeArguments(getClosestParentType(cls, toClass), toClass, typeVarAssigns);
+     }
+diff --git a/src/test/java/org/apache/commons/lang3/reflect/TypeUtilsTest.java b/src/test/java/org/apache/commons/lang3/reflect/TypeUtilsTest.java
+index 986360a8..a123b973 100644
+--- a/src/test/java/org/apache/commons/lang3/reflect/TypeUtilsTest.java
++++ b/src/test/java/org/apache/commons/lang3/reflect/TypeUtilsTest.java
+@@ -501,6 +501,7 @@ public class TypeUtilsTest<B> {
+         Assert.assertEquals(String.class, typeVarAssigns.get(AAClass.class.getTypeParameters()[0]));
+         Assert.assertEquals(String.class, typeVarAssigns.get(AAClass.BBClass.class.getTypeParameters()[0]));
+ 
++        // Bug test case - this should pass but currently fails
+         typeVarAssigns = TypeUtils.getTypeArguments(Other.class, This.class);
+         Assert.assertEquals(2, typeVarAssigns.size());
+         Assert.assertEquals(String.class, typeVarAssigns.get(This.class.getTypeParameters()[0]));

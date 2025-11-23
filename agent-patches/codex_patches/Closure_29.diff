@@ -1,0 +1,141 @@
+diff --git a/src/com/google/javascript/jscomp/InlineObjectLiterals.java b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+index 9f5c6072..3ce26c6f 100644
+--- a/src/com/google/javascript/jscomp/InlineObjectLiterals.java
++++ b/src/com/google/javascript/jscomp/InlineObjectLiterals.java
+@@ -154,7 +154,16 @@ class InlineObjectLiterals implements CompilerPass {
+      */
+     private boolean isInlinableObject(List<Reference> refs) {
+       boolean ret = false;
+-      for (Reference ref : refs) {
++      // Collect the set of properties that are explicitly defined on any
++      // object literal assigned to this variable. We'll use this later to
++      // conservatively bail out if we see reads of unknown properties, since
++      // such reads may fall back to Object.prototype and change semantics.
++      Set<String> definedProps = Sets.newLinkedHashSet();
++      Set<String> directlyAssignedProps = Sets.newLinkedHashSet();
++
++      int firstObjLitAssignIdx = -1;
++      for (int idx = 0; idx < refs.size(); idx++) {
++        Reference ref = refs.get(idx);
+         Node name = ref.getNode();
+         Node parent = ref.getParent();
+         Node gramps = ref.getGrandparent();
+@@ -170,14 +179,16 @@ class InlineObjectLiterals implements CompilerPass {
+             return false;
+           }
+ 
+-          // NOTE(nicksantos): This pass's object-splitting algorithm has
+-          // a blind spot. It assumes that if a property isn't defined on an
+-          // object, then the value is undefined. This is not true, because
+-          // Object.prototype can have arbitrary properties on it.
+-          //
+-          // We short-circuit this problem by bailing out if we see a reference
+-          // to a property that isn't defined on the object literal. This
+-          // isn't a perfect algorithm, but it should catch most cases.
++          // If this is a direct assignment to a property (e.g. x.p = ...),
++          // remember that this property exists even if not present on any
++          // object literal, so that later reads of x.p don't cause bailing.
++          if (gramps.isAssign() && gramps.getFirstChild() == parent
++              && gramps.getParent().isExprResult()) {
++            directlyAssignedProps.add(parent.getLastChild().getString());
++          }
++
++          // For other property reads that are not call targets, we'll validate
++          // after we know all keys defined by object literal assignments.
+           continue;
+         }
+ 
+@@ -197,6 +208,12 @@ class InlineObjectLiterals implements CompilerPass {
+           return false;
+         }
+ 
++        // Track the first time we see an object literal assigned directly
++        // to the variable (via a VAR init or simple assignment).
++        if (firstObjLitAssignIdx == -1) {
++          firstObjLitAssignIdx = idx;
++        }
++
+         // Make sure that the value is not self-refential. IOW,
+         // disallow things like x = {b: x.a}.
+         //
+@@ -230,12 +247,65 @@ class InlineObjectLiterals implements CompilerPass {
+           }
+         }
+ 
++        // Record all keys defined in this object literal assignment.
++        for (Node child = val.getFirstChild(); child != null;
++             child = child.getNext()) {
++          definedProps.add(child.getString());
++        }
++
+ 
+         // We have found an acceptable object literal assignment. As
+         // long as there are no other assignments that mess things up,
+         // we can inline.
+         ret = true;
+       }
++
++      // If there is no object literal assignment to the variable, then
++      // we cannot inline.
++      if (firstObjLitAssignIdx == -1) {
++        return false;
++      }
++
++      // If we found at least one object literal assignment, ensure that all
++      // property reads on the variable are for properties that were defined
++      // on some object literal assigned to it. Otherwise, we might incorrectly
++      // replace prototype-based lookups with undefined.
++      if (ret) {
++        for (int idx = 0; idx < refs.size(); idx++) {
++          Reference ref = refs.get(idx);
++          Node name = ref.getNode();
++          Node parent = ref.getParent();
++          Node gramps = ref.getGrandparent();
++          if (parent.isGetProp()) {
++            // Skip method call targets, which we already rejected above.
++            if (gramps.isCall() && gramps.getFirstChild() == parent) {
++              return false;
++            }
++
++            // Do not inline if there is a property reference that appears
++            // before the first object-literal assignment to the variable.
++            if (idx < firstObjLitAssignIdx) {
++              return false;
++            }
++
++            // If this is a direct assignment to a property (LHS), allow it
++            // even if the property was not present on any object literal.
++            if (gramps.isAssign() && gramps.getFirstChild() == parent) {
++              continue;
++            }
++            // Only consider direct reads where the receiver is the variable
++            // itself (e.g., x.y). Nested reads like (x.y).z are handled when
++            // x.y is processed.
++            Preconditions.checkState(parent.getFirstChild() == name);
++            String prop = parent.getChildAtIndex(1).getString();
++            if (!definedProps.contains(prop) &&
++                !directlyAssignedProps.contains(prop)) {
++              return false;
++            }
++          }
++        }
++      }
++
+       return ret;
+     }
+ 
+@@ -392,8 +462,12 @@ class InlineObjectLiterals implements CompilerPass {
+       // ASSIGN, then there's an EXPR_STATEMENT above it, if it's a
+       // VAR then it should be directly replaced.
+       Node vnode;
+-      boolean defined = referenceInfo.isWellDefined() &&
+-          init.getParent().isVar();
++      // Prefer to use the initializing VAR declaration as the anchor point
++      // for introducing the split variables whenever possible, even if the
++      // variable is not "well-defined" per ReferenceCollection. This keeps
++      // the transformed declarations close to their original initialization
++      // site (e.g., inside loops), which preserves expected structure.
++      boolean defined = (init != null) && init.getParent().isVar();
+       if (defined) {
+         vnode = init.getParent();
+         fillInitialValues(init, initvals);

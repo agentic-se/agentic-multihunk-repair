@@ -1,0 +1,31 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+index dd845b83..8c34f9d6 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+@@ -412,7 +412,8 @@ public boolean canReadEntryData(final ArchiveEntry ae) {
+         if (ae instanceof ZipArchiveEntry) {
+             final ZipArchiveEntry ze = (ZipArchiveEntry) ae;
+             return ZipUtil.canHandleEntryData(ze)
+-                && supportsDataDescriptorFor(ze);
++                && supportsDataDescriptorFor(ze)
++                && supportsCompressedSizeFor(ze);
+         }
+         return false;
+     }
+@@ -806,6 +807,12 @@ private boolean supportsDataDescriptorFor(final ZipArchiveEntry entry) {
+      * Whether the compressed size for the entry is either known or
+      * not required by the compression method being used.
+      */
++    private boolean supportsCompressedSizeFor(final ZipArchiveEntry entry) {
++        return entry.getCompressedSize() != ArchiveEntry.SIZE_UNKNOWN
++            || entry.getMethod() == ZipEntry.DEFLATED
++            || entry.getMethod() == ZipEntry.STORED
++            || entry.getMethod() == ZipMethod.ENHANCED_DEFLATED.getCode();
++    }
+ 
+     /**
+      * Caches a stored entry that uses the data descriptor.
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

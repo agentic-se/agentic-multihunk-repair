@@ -1,0 +1,66 @@
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
+@@ -1,19 +1,21 @@
+-        @SuppressWarnings("resource")
+-        @Override
+-        public final Object deserializeKey(String key, DeserializationContext ctxt)
+-            throws IOException
+-        {
+-            if (key == null) { // is this even legal call?
+-                return null;
+-            }
+-            try {
+-                // Ugh... should not have to give parser which may or may not be correct one...
+-                Object result = _delegate.deserialize(ctxt.getParser(), ctxt);
+-                if (result != null) {
+-                    return result;
+-                }
+-                return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation");
+-            } catch (Exception re) {
+-                return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation: %s", re.getMessage());
+-            }
+-        }
++        @Override
++        public final Object deserializeKey(String key, DeserializationContext ctxt)
++            throws IOException
++        {
++            if (key == null) { // is this even legal call?
++                return null;
++            }
++            // 23-Mar-2017, tatu: This is the problematic case: we are given a String,
++            //    but the delegate wants a JsonParser. We have to create a dummy
++            //    one for it. This is not ideal but has to do for now.
++            //    (see [databind#1566] for more)
++            JsonParser p = ctxt.getParser().getCodec().getFactory().createParser(key);
++            // Must move to first token (which should be FIELD_NAME)
++            p.nextToken();
++            Object result = _delegate.deserialize(p, ctxt);
++            p.close();
++            if (result != null) {
++                return result;
++            }
++            return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation");
++        }
+@@ -1,1 +1,1 @@
+-            JsonParser p = ctxt.getParser().getCodec().getFactory().createParser(key);
++            com.fasterxml.jackson.core.JsonParser p = ctxt.getParser().getCodec().getFactory().createParser(key);
+@@ -1,9 +1,10 @@
+-            // 23-Mar-2017, tatu: This is the problematic case: we are given a String,
+-            //    but the delegate wants a JsonParser. We have to create a dummy
+-            //    one for it. This is not ideal but has to do for now.
+-            //    (see [databind#1566] for more)
+-            com.fasterxml.jackson.core.JsonParser p = ctxt.getParser().getCodec().getFactory().createParser(key);
+-            // Must move to first token (which should be FIELD_NAME)
+-            p.nextToken();
+-            Object result = _delegate.deserialize(p, ctxt);
+-            p.close();
++            // 23-Mar-2017, tatu: This is the problematic case: we are given a String,
++            //    but the delegate wants a JsonParser. We have to create a dummy
++            //    one for it. This is not ideal but has to do for now.
++            //    (see [databind#1566] for more)
++            //   Need to ensure that parser has the current token as VALUE_STRING:
++            com.fasterxml.jackson.core.JsonParser p = ctxt.getParser().getCodec().getFactory().createParser(
++                    "\""+key+"\"");
++            p.nextToken(); // to get to VALUE_STRING
++            Object result = _delegate.deserialize(p, ctxt);
++            p.close();

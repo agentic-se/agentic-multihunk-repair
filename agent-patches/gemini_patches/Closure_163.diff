@@ -1,0 +1,82 @@
+--- a/src/com/google/javascript/jscomp/AnalyzePrototypeProperties.java
++++ b/src/com/google/javascript/jscomp/AnalyzePrototypeProperties.java
+@@ -1,10 +1,13 @@
+-          } else if (var.getScope() != t.getScope()){
+-            for (int i = symbolStack.size() - 1; i >= 0; i--) {
+-              NameContext context = symbolStack.get(i);
+-              if (context.scope == var.getScope()) {
+-                break;
+-              }
+-
+-              context.name.readClosureVariables = true;
+-            }
+-          }
++          } else if (var.getScope() != t.getScope()){
++            // If it is not a global, it might be accessing a local of the outer
++            // scope. If that's the case the functions between the variable's
++            // declaring scope and the variable reference scope cannot be moved.
++            // Find the NameContext for the current function and mark it.
++            for (int i = symbolStack.size() - 1; i >= 0; i--) {
++              NameContext context = symbolStack.get(i);
++              if (context.scope == t.getScope()) {
++                context.name.readClosureVariables = true;
++                break;
++              }
++            }
++          }
+
+--- a/test/com/google/javascript/jscomp/CrossModuleMethodMotionTest.java
++++ b/test/com/google/javascript/jscomp/CrossModuleMethodMotionTest.java
+@@ -1,18 +1,34 @@
+-  public void testIssue600b() {
+-    testSame(
+-        createModuleChain(
+-            "var jQuery1 = (function() {\n" +
+-            "  var jQuery2 = function() {};\n" +
+-            "  jQuery2.prototype = {\n" +
+-            "    size: function() {\n" +
+-            "      return 1;\n" +
+-            "    }\n" +
+-            "  };\n" +
+-            "  return jQuery2;\n" +
+-            "})();\n",
+-
+-            "(function() {" +
+-            "  var div = jQuery1('div');" +
+-            "  div.size();" +
+-            "})();"));
+-  }
++  public void testIssue600b() {
++    test(
++        createModuleChain(
++            "var jQuery1 = (function() {\n" +
++            "  var jQuery2 = function() {};\n" +
++            "  jQuery2.prototype = {\n" +
++            "    size: function() {\n" +
++            "      return 1;\n" +
++            "    }\n" +
++            "  };\n" +
++            "  return jQuery2;\n" +
++            "})();\n",
++
++            "(function() {" +
++            "  var div = jQuery1('div');" +
++            "  div.size();" +
++            "})();"),
++        new String[] {
++            STUB_DECLARATIONS +
++            "var jQuery1 = (function() {\n" +
++            "  var jQuery2 = function() {};\n" +
++            "  jQuery2.prototype = {\n" +
++            "    size: JSCompiler_stubMethod(0)\n" +
++            "  };\n" +
++            "  return jQuery2;\n" +
++            "})();\n",
++
++            "jQuery2.prototype.size = JSCompiler_unstubMethod(0, function() { return 1; });" +
++            "(function() {" +
++            "  var div = jQuery1('div');" +
++            "  div.size();" +
++            "})();"
++        });
++  }

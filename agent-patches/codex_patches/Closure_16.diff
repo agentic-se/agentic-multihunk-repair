@@ -1,0 +1,57 @@
+diff --git a/src/com/google/javascript/jscomp/ScopedAliases.java b/src/com/google/javascript/jscomp/ScopedAliases.java
+index 26fb2307..f4a65f77 100644
+--- a/src/com/google/javascript/jscomp/ScopedAliases.java
++++ b/src/com/google/javascript/jscomp/ScopedAliases.java
+@@ -456,16 +456,10 @@ class ScopedAliases implements HotSwapCompilerPass {
+ 
+     private void fixTypeNode(Node typeNode) {
+       if (typeNode.isString()) {
+-        String name = typeNode.getString();
+-        int endIndex = name.indexOf('.');
+-        if (endIndex == -1) {
+-          endIndex = name.length();
+-        }
+-        String baseName = name.substring(0, endIndex);
+-        Var aliasVar = aliases.get(baseName);
+-        if (aliasVar != null) {
+-          Node aliasedNode = aliasVar.getInitialValue();
+-          aliasUsages.add(new AliasedTypeNode(typeNode, aliasedNode.getQualifiedName() + name.substring(endIndex)));
++        String originalName = typeNode.getString();
++        String resolvedName = resolveAliasedTypeName(originalName);
++        if (!originalName.equals(resolvedName)) {
++          aliasUsages.add(new AliasedTypeNode(typeNode, resolvedName));
+         }
+       }
+ 
+@@ -474,5 +468,31 @@ class ScopedAliases implements HotSwapCompilerPass {
+         fixTypeNode(child);
+       }
+     }
++
++    /**
++     * Recursively resolve aliases in a qualified type name found in JSDoc.
++     * For example, if we have aliases: b -> a.b and c -> b.c, then
++     * resolveAliasedTypeName("c.MyType") becomes "a.b.c.MyType".
++     */
++    private String resolveAliasedTypeName(String name) {
++      String current = name;
++      // Limit the number of resolutions to avoid pathological cycles.
++      int maxIterations = Math.max(1, aliases.size());
++      for (int i = 0; i < maxIterations; i++) {
++        int endIndex = current.indexOf('.');
++        if (endIndex == -1) {
++          endIndex = current.length();
++        }
++        String baseName = current.substring(0, endIndex);
++        Var aliasVar = aliases.get(baseName);
++        if (aliasVar == null) {
++          break;
++        }
++        Node aliasedNode = aliasVar.getInitialValue();
++        String aliasedQName = aliasedNode.getQualifiedName();
++        current = aliasedQName + current.substring(endIndex);
++      }
++      return current;
++    }
+   }
+ }

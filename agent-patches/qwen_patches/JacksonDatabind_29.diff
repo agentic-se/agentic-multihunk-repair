@@ -1,0 +1,19 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
+index 93f3013f6..25662c11c 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
+@@ -229,7 +229,13 @@ public class ExternalTypeHandler
+         TokenBuffer merged = new TokenBuffer(p);
+         merged.writeStartArray();
+         merged.writeString(typeId);
+-        merged.copyCurrentStructure(p2);
++        
++        // Handle null values specially - they don't have a structure to copy
++        if (t == JsonToken.VALUE_NULL) {
++            merged.writeNull();
++        } else {
++            merged.copyCurrentStructure(p2);
++        }
+         merged.writeEndArray();
+ 
+         // needs to point to START_OBJECT (or whatever first token is)

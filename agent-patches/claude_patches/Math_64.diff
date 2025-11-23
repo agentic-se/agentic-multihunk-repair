@@ -1,0 +1,80 @@
+diff --git a/src/main/java/org/apache/commons/math/optimization/general/LevenbergMarquardtOptimizer.java b/src/main/java/org/apache/commons/math/optimization/general/LevenbergMarquardtOptimizer.java
+index 50914932e..7377eba9d 100644
+--- a/src/main/java/org/apache/commons/math/optimization/general/LevenbergMarquardtOptimizer.java
++++ b/src/main/java/org/apache/commons/math/optimization/general/LevenbergMarquardtOptimizer.java
+@@ -255,6 +255,7 @@ public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
+         double[] diag    = new double[cols];
+         double[] oldX    = new double[cols];
+         double[] oldRes  = new double[rows];
++        double[] oldObj  = new double[rows];
+         double[] work1   = new double[cols];
+         double[] work2   = new double[cols];
+         double[] work3   = new double[cols];
+@@ -321,6 +322,8 @@ public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
+             }
+             if (maxCosine <= orthoTolerance) {
+                 // convergence has been reached
++                updateResidualsAndCost();
++                current = new VectorialPointValuePair(point, objective);
+                 return current;
+             }
+ 
+@@ -341,6 +344,9 @@ public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
+                 double[] tmpVec = residuals;
+                 residuals = oldRes;
+                 oldRes    = tmpVec;
++                tmpVec = objective;
++                objective = oldObj;
++                oldObj    = tmpVec;
+ 
+                 // determine the Levenberg-Marquardt parameter
+                 determineLMParameter(oldRes, delta, diag, work1, work2, work3);
+@@ -362,7 +368,6 @@ public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
+ 
+                 // evaluate the function at x + p and calculate its norm
+                 updateResidualsAndCost();
+-                current = new VectorialPointValuePair(point, objective);
+ 
+                 // compute the scaled actual reduction
+                 double actRed = -1.0;
+@@ -418,9 +423,15 @@ public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
+                         xNorm    += xK * xK;
+                     }
+                     xNorm = Math.sqrt(xNorm);
++                    current = new VectorialPointValuePair(point, objective);
+ 
+                     // tests for convergence.
+                     // we use the vectorial convergence checker
++                    if (checker != null) {
++                        if (checker.converged(getIterations(), previous, current)) {
++                            return current;
++                        }
++                    }
+                 } else {
+                     // failed iteration, reset the previous values
+                     cost = previousCost;
+@@ -431,6 +442,9 @@ public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
+                     tmpVec    = residuals;
+                     residuals = oldRes;
+                     oldRes    = tmpVec;
++                    tmpVec    = objective;
++                    objective = oldObj;
++                    oldObj    = tmpVec;
+                 }
+                 if (checker==null) {
+                 	if (((Math.abs(actRed) <= costRelativeTolerance) &&
+@@ -439,10 +453,6 @@ public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
+                        (delta <= parRelativeTolerance * xNorm)) {
+                        return current;
+                    }
+-                } else {
+-                    if (checker.converged(getIterations(), previous, current)) {
+-                        return current;
+-                    }
+                 }
+                 // tests for termination and stringent tolerances
+                 // (2.2204e-16 is the machine epsilon for IEEE754)
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

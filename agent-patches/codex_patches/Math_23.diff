@@ -1,0 +1,42 @@
+diff --git a/src/main/java/org/apache/commons/math3/optimization/univariate/BrentOptimizer.java b/src/main/java/org/apache/commons/math3/optimization/univariate/BrentOptimizer.java
+index 5136a1401..212e9647d 100644
+--- a/src/main/java/org/apache/commons/math3/optimization/univariate/BrentOptimizer.java
++++ b/src/main/java/org/apache/commons/math3/optimization/univariate/BrentOptimizer.java
+@@ -147,7 +147,8 @@ public class BrentOptimizer extends BaseAbstractUnivariateOptimizer {
+         UnivariatePointValuePair previous = null;
+         UnivariatePointValuePair current
+             = new UnivariatePointValuePair(x, isMinim ? fx : -fx);
+-        // Best point encountered so far (which is the initial guess).
++        // Best point encountered so far (initialize with the initial guess).
++        UnivariatePointValuePair bestSoFar = current;
+ 
+         int iter = 0;
+         while (true) {
+@@ -231,10 +232,13 @@ public class BrentOptimizer extends BaseAbstractUnivariateOptimizer {
+                 // User-defined convergence checker.
+                 previous = current;
+                 current = new UnivariatePointValuePair(u, isMinim ? fu : -fu);
++                // Track best point seen so far (in original objective scale).
++                bestSoFar = best(bestSoFar, current, isMinim);
+ 
+                 if (checker != null) {
+                     if (checker.converged(iter, previous, current)) {
+-                        return best(current, previous, isMinim);
++                        // Ensure the best encountered point is returned.
++                        return bestSoFar;
+                     }
+                 }
+ 
+@@ -271,10 +275,8 @@ public class BrentOptimizer extends BaseAbstractUnivariateOptimizer {
+                     }
+                 }
+             } else { // Default termination (Brent's criterion).
+-                return
+-                            best(current,
+-                                 previous,
+-                            isMinim);
++                // Ensure the best encountered point is returned.
++                return bestSoFar;
+             }
+             ++iter;
+         }

@@ -1,0 +1,28 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/introspect/BasicBeanDescription.java b/src/main/java/com/fasterxml/jackson/databind/introspect/BasicBeanDescription.java
+index 27a115fc3..128603efe 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/introspect/BasicBeanDescription.java
++++ b/src/main/java/com/fasterxml/jackson/databind/introspect/BasicBeanDescription.java
+@@ -521,7 +521,10 @@ public class BasicBeanDescription extends BeanDescription
+     {
+         // So, of all single-arg static methods:
+         for (AnnotatedMethod am : _classInfo.getStaticMethods()) {
+-            // 24-Oct-2016, tatu: Better ensure it only takes 1 arg, no matter what
++            // 24-Oct-2016, tatu: Ensure it only takes exactly 1 arg
++            if (am.getParameterCount() != 1) {
++                continue;
++            }
+             if (isFactoryMethod(am)) {
+                 // And must take one of expected arg types (or supertype)
+                 Class<?> actualArgType = am.getRawParameterType(0);
+@@ -553,9 +556,9 @@ public class BasicBeanDescription extends BeanDescription
+             return true;
+         }
+         final String name = am.getName();
+-        // 24-Oct-2016, tatu: As per [databind#1429] must ensure takes exactly one arg
+         if ("valueOf".equals(name)) {
+-                return true;
++            // 24-Oct-2016, tatu: As per [databind#1429] must ensure takes exactly one arg
++            return (am.getParameterCount() == 1);
+         }
+         // [databind#208] Also accept "fromString()", if takes String or CharSequence
+         if ("fromString".equals(name)) {

@@ -1,0 +1,42 @@
+--- a/src/com/google/javascript/jscomp/CodeConsumer.java
++++ b/src/com/google/javascript/jscomp/CodeConsumer.java
+@@ -1,18 +1,21 @@
+-    if ((long) x == x) {
+-      long value = (long) x;
+-      long mantissa = value;
+-      int exp = 0;
+-      if (Math.abs(x) >= 100) {
+-        while (mantissa / 10 * Math.pow(10, exp + 1) == value) {
+-          mantissa /= 10;
+-          exp++;
+-        }
+-      }
+-      if (exp > 2) {
+-        add(Long.toString(mantissa) + "E" + Integer.toString(exp));
+-      } else {
+-        add(Long.toString(value));
+-      }
+-    } else {
+-      add(String.valueOf(x));
+-    }
++    // Handle negative zero as a special case.
++    if (x == 0.0 && 1/x < 0) {
++      add("-0.0");
++    } else if ((long) x == x) {
++      long value = (long) x;
++      long mantissa = value;
++      int exp = 0;
++      if (Math.abs(x) >= 100) {
++        while (mantissa / 10 * Math.pow(10, exp + 1) == value) {
++          mantissa /= 10;
++          exp++;
++        }
++      }
++      if (exp > 2) {
++        add(Long.toString(mantissa) + "E" + Integer.toString(exp));
++      } else {
++        add(Long.toString(value));
++      }
++    } else {
++      add(String.valueOf(x));
++    }

@@ -1,0 +1,99 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index e9e8486f..496c1928 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -687,6 +687,25 @@ final class TypedScopeCreator implements ScopeCreator {
+         String qualifiedName = NodeUtil.getBestLValueName(keyNode);
+         if (qualifiedName != null) {
+           boolean inferred = keyType == null;
++          // If assigning an object literal to a function/interface prototype,
++          // treat the property types as inferred even when a function literal
++          // provides type information. This matches expectations that prototype
++          // properties added via object literals are not treated as declared.
++          if (!inferred) {
++            Node owner = NodeUtil.getBestLValue(objLit);
++            if (owner != null && owner.isGetProp()) {
++              Node prop = owner.getLastChild();
++              if (prop.isString() && "prototype".equals(prop.getString())) {
++                // Only force inference when there is no function-type
++                // declaration on the key. Keys with explicit function
++                // annotations should be treated as declared.
++                if (!(info != null &&
++                      FunctionTypeBuilder.isFunctionTypeDeclaration(info))) {
++                  inferred = true;
++                }
++              }
++            }
++          }
+           defineSlot(keyNode, objLit, qualifiedName, keyType, inferred);
+         } else if (keyType != null) {
+           setDeferredType(keyNode, keyType);
+@@ -723,6 +742,27 @@ final class TypedScopeCreator implements ScopeCreator {
+                 ownerTypeKeys =
+                     ownerType.getTemplateTypeMap().getTemplateKeys();
+               }
++            } else if (ownerNode != null && ownerNode.isGetProp()) {
++              // Fallback: if the owner is a prototype that hasn't been
++              // declared yet (e.g. when the constructor is declared later),
++              // try to resolve via the constructor name.
++              Node root = ownerNode.getFirstChild();
++              if (root != null && root.isQualifiedName()) {
++                Var ctorVar = scope.getVar(root.getQualifiedName());
++                if (ctorVar != null && ctorVar.getType() != null) {
++                  FunctionType ctorFn = ctorVar.getType().toMaybeFunctionType();
++                  if (ctorFn != null && ctorFn.hasInstanceType()) {
++                    ObjectType protoObj = ctorFn.getPrototype();
++                    if (protoObj != null) {
++                      ownerType = getPrototypeOwnerType(protoObj);
++                      if (ownerType != null) {
++                        ownerTypeKeys =
++                            ownerType.getTemplateTypeMap().getTemplateKeys();
++                      }
++                    }
++                  }
++                }
++              }
+             }
+           }
+ 
+@@ -841,8 +881,19 @@ final class TypedScopeCreator implements ScopeCreator {
+       if (info != null) {
+         return true;
+       }
+-      if (lValue != null &&
+-          NodeUtil.isObjectLitKey(lValue)) {
++      if (lValue != null && NodeUtil.isObjectLitKey(lValue)) {
++        // Normally avoid treating object literal keys as declared function
++        // types. However, if the object literal is being assigned directly to
++        // a function prototype (e.g. Foo.prototype = {m: function(){}}), we do
++        // want to use the function literal type so that prototype methods are
++        // recognized even when defined via object literals (including in IIFEs).
++        Node owner = NodeUtil.getBestLValue(lValue.getParent());
++        if (owner != null && owner.isGetProp()) {
++          Node prop = owner.getLastChild();
++          if (prop.isString() && "prototype".equals(prop.getString())) {
++            return true;
++          }
++        }
+         return false;
+       }
+       return scope.isGlobal() || !type.isReturnTypeInferred();
+@@ -925,6 +976,18 @@ final class TypedScopeCreator implements ScopeCreator {
+             ownerVar = scope.getVar(ownerName);
+             if (ownerVar != null) {
+               ownerType = ObjectType.cast(ownerVar.getType());
++            } else if (ownerNode != null && ownerNode.isGetProp()) {
++              // Fallback for prototype owners that may be undeclared yet.
++              Node root = ownerNode.getFirstChild();
++              if (root != null && root.isQualifiedName()) {
++                Var ctorVar = scope.getVar(root.getQualifiedName());
++                if (ctorVar != null && ctorVar.getType() != null) {
++                  FunctionType ctorFn = ctorVar.getType().toMaybeFunctionType();
++                  if (ctorFn != null) {
++                    ownerType = ctorFn.getPrototype();
++                  }
++                }
++              }
+             }
+             if (name != null) {
+               propName = name.substring(ownerName.length() + 1);

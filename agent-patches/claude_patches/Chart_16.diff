@@ -1,0 +1,142 @@
+diff --git a/source/org/jfree/data/category/DefaultIntervalCategoryDataset.java b/source/org/jfree/data/category/DefaultIntervalCategoryDataset.java
+index 2efdfcb..e28849b 100644
+--- a/source/org/jfree/data/category/DefaultIntervalCategoryDataset.java
++++ b/source/org/jfree/data/category/DefaultIntervalCategoryDataset.java
+@@ -233,16 +233,18 @@ public class DefaultIntervalCategoryDataset extends AbstractSeriesDataset
+      * @param seriesKey  the series key.
+      *
+      * @return The series index.
+-     * 
++     *
+      * @see #getRowIndex(Comparable)
+      * @see #getSeriesKey(int)
+      */
+     public int getSeriesIndex(Comparable seriesKey) {
+         int result = -1;
+-        for (int i = 0; i < this.seriesKeys.length; i++) {
+-            if (seriesKey.equals(this.seriesKeys[i])) {
+-                result = i;
+-                break;
++        if (this.seriesKeys != null) {
++            for (int i = 0; i < this.seriesKeys.length; i++) {
++                if (seriesKey.equals(this.seriesKeys[i])) {
++                    result = i;
++                    break;
++                }
+             }
+         }
+         return result;
+@@ -325,9 +327,9 @@ public class DefaultIntervalCategoryDataset extends AbstractSeriesDataset
+     /**
+      * Sets the categories for the dataset.
+      *
+-     * @param categoryKeys  an array of objects representing the categories in 
++     * @param categoryKeys  an array of objects representing the categories in
+      *                      the dataset.
+-     *                      
++     *
+      * @see #getRowKeys()
+      * @see #setSeriesKeys(Comparable[])
+      */
+@@ -335,9 +337,11 @@ public class DefaultIntervalCategoryDataset extends AbstractSeriesDataset
+         if (categoryKeys == null) {
+             throw new IllegalArgumentException("Null 'categoryKeys' argument.");
+         }
+-        if (categoryKeys.length != this.startData[0].length) {
+-            throw new IllegalArgumentException(
+-                    "The number of categories does not match the data.");
++        if (this.startData != null && this.startData.length > 0) {
++            if (categoryKeys.length != this.startData[0].length) {
++                throw new IllegalArgumentException(
++                        "The number of categories does not match the data.");
++            }
+         }
+         for (int i = 0; i < categoryKeys.length; i++) {
+             if (categoryKeys[i] == null) {
+@@ -566,15 +570,17 @@ public class DefaultIntervalCategoryDataset extends AbstractSeriesDataset
+      * @param category  the category (<code>null</code> not permitted).
+      *
+      * @return The index.
+-     * 
++     *
+      * @see #getColumnIndex(Comparable)
+      */
+     public int getCategoryIndex(Comparable category) {
+         int result = -1;
+-        for (int i = 0; i < this.categoryKeys.length; i++) {
+-            if (category.equals(this.categoryKeys[i])) {
+-                result = i;
+-                break;
++        if (this.categoryKeys != null) {
++            for (int i = 0; i < this.categoryKeys.length; i++) {
++                if (category.equals(this.categoryKeys[i])) {
++                    result = i;
++                    break;
++                }
+             }
+         }
+         return result;
+@@ -678,15 +684,18 @@ public class DefaultIntervalCategoryDataset extends AbstractSeriesDataset
+     }
+ 
+     /**
+-     * Returns the number of categories in the dataset.  This method is part of 
++     * Returns the number of categories in the dataset.  This method is part of
+      * the {@link CategoryDataset} interface.
+      *
+      * @return The number of categories in the dataset.
+-     * 
++     *
+      * @see #getCategoryCount()
+      * @see #getRowCount()
+      */
+     public int getColumnCount() {
++        if (this.categoryKeys == null) {
++            return 0;
++        }
+         return this.categoryKeys.length;
+     }
+ 
+@@ -694,11 +703,14 @@ public class DefaultIntervalCategoryDataset extends AbstractSeriesDataset
+      * Returns the number of series in the dataset (possibly zero).
+      *
+      * @return The number of series in the dataset.
+-     * 
++     *
+      * @see #getSeriesCount()
+      * @see #getColumnCount()
+      */
+     public int getRowCount() {
++        if (this.seriesKeys == null) {
++            return 0;
++        }
+         return this.seriesKeys.length;
+     }
+     
+@@ -736,17 +748,21 @@ public class DefaultIntervalCategoryDataset extends AbstractSeriesDataset
+ 
+     /**
+      * Returns a clone of this dataset.
+-     * 
++     *
+      * @return A clone.
+-     * 
++     *
+      * @throws CloneNotSupportedException if there is a problem cloning the
+      *         dataset.
+      */
+     public Object clone() throws CloneNotSupportedException {
+-        DefaultIntervalCategoryDataset clone 
++        DefaultIntervalCategoryDataset clone
+                 = (DefaultIntervalCategoryDataset) super.clone();
+-        clone.categoryKeys = (Comparable[]) this.categoryKeys.clone();
+-        clone.seriesKeys = (Comparable[]) this.seriesKeys.clone();
++        if (this.categoryKeys != null) {
++            clone.categoryKeys = (Comparable[]) this.categoryKeys.clone();
++        }
++        if (this.seriesKeys != null) {
++            clone.seriesKeys = (Comparable[]) this.seriesKeys.clone();
++        }
+         clone.startData = clone(this.startData);
+         clone.endData = clone(this.endData);
+         return clone;

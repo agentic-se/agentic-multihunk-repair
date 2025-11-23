@@ -1,0 +1,46 @@
+diff --git a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+index e2ded558e..6ffc53f84 100644
+--- a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
++++ b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+@@ -68,7 +68,7 @@ public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+ 
+         // record deep stub answer
+         return recordDeepStubAnswer(
+-                newDeepStubMock(returnTypeGenericMetadata),
++                newDeepStubMock(returnTypeGenericMetadata, (CreationSettings) handler.getMockSettings()),
+                 container
+         );
+     }
+@@ -81,23 +81,26 @@ public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+      * {@link ReturnsDeepStubs} answer in which we will store the returned type generic metadata.
+      *
+      * @param returnTypeGenericMetadata The metadata to use to create the new mock.
+-     * @param parentMock The parent of the current deep stub mock.
++     * @param parentMockSettings The settings of the parent mock.
+      * @return The mock
+      */
+-    private Object newDeepStubMock(GenericMetadataSupport returnTypeGenericMetadata) {
++    private Object newDeepStubMock(GenericMetadataSupport returnTypeGenericMetadata, CreationSettings parentMockSettings) {
+         return mockitoCore().mock(
+                 returnTypeGenericMetadata.rawType(),
+-                withSettingsUsing(returnTypeGenericMetadata)
++                withSettingsUsing(returnTypeGenericMetadata, parentMockSettings)
+         );
+     }
+ 
+-    private MockSettings withSettingsUsing(GenericMetadataSupport returnTypeGenericMetadata) {
++    private MockSettings withSettingsUsing(GenericMetadataSupport returnTypeGenericMetadata, CreationSettings parentMockSettings) {
+         MockSettings mockSettings = returnTypeGenericMetadata.hasRawExtraInterfaces() ?
+                 withSettings().extraInterfaces(returnTypeGenericMetadata.rawExtraInterfaces())
+                 : withSettings();
+ 
+-        return mockSettings.serializable()
+-                .defaultAnswer(returnsDeepStubsAnswerUsing(returnTypeGenericMetadata));
++        if (parentMockSettings.isSerializable()) {
++            mockSettings = mockSettings.serializable(parentMockSettings.getSerializableMode());
++        }
++
++        return mockSettings.defaultAnswer(returnsDeepStubsAnswerUsing(returnTypeGenericMetadata));
+     }
+ 
+ 

@@ -1,0 +1,29 @@
+--- a/src/main/java/com/fasterxml/jackson/core/json/UTF8JsonGenerator.java
++++ b/src/main/java/com/fasterxml/jackson/core/json/UTF8JsonGenerator.java
+@@ -1,9 +1,17 @@
+-        while (len > 0) {
+-            int len2 = Math.min(buf.length, len);
+-            text.getChars(offset, offset+len2, buf, 0);
+-            writeRaw(buf, 0, len2);
+-            // If this is NOT the last segment and if the last character looks like
+-            // split surrogate second half, drop it
+-            offset += len2;
+-            len -= len2;
+-        }
++        while (len > 0) {
++            int segmentLen = Math.min(buf.length, len);
++            // [core#307]: Don't split surrogate pairs
++            if (segmentLen > 0 && Character.isHighSurrogate(text.charAt(offset + segmentLen - 1))) {
++                // If this is the first surrogate, and we have more characters, and the next char is a low surrogate
++                if (offset + segmentLen < text.length() && Character.isLowSurrogate(text.charAt(offset + segmentLen))) {
++                    --segmentLen;
++                }
++            }
++            if (segmentLen <= 0) { // Should not happen with valid text, but just in case
++                break;
++            }
++            text.getChars(offset, offset + segmentLen, buf, 0);
++            writeRaw(buf, 0, segmentLen);
++            offset += segmentLen;
++            len -= segmentLen;
++        }

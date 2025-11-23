@@ -1,0 +1,35 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/DeserializationContext.java b/src/main/java/com/fasterxml/jackson/databind/DeserializationContext.java
+index 0609c1e68..5143b576e 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/DeserializationContext.java
++++ b/src/main/java/com/fasterxml/jackson/databind/DeserializationContext.java
+@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+ import com.fasterxml.jackson.databind.exc.InvalidTypeIdException;
+ import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
+ import com.fasterxml.jackson.databind.introspect.Annotated;
++import com.fasterxml.jackson.databind.introspect.AnnotatedMember;
+ import com.fasterxml.jackson.databind.introspect.BeanPropertyDefinition;
+ import com.fasterxml.jackson.databind.jsontype.TypeDeserializer;
+ import com.fasterxml.jackson.databind.jsontype.TypeIdResolver;
+@@ -496,8 +497,20 @@ public abstract class DeserializationContext
+      */
+     public final KeyDeserializer findKeyDeserializer(JavaType keyType,
+             BeanProperty prop) throws JsonMappingException {
+-        KeyDeserializer kd = _cache.findKeyDeserializer(this,
+-                _factory, keyType);
++        KeyDeserializer kd = null;
++        // First: if property has explicit key deserializer annotation, honor it
++        if (prop != null) {
++            AnnotatedMember member = prop.getMember();
++            if (member != null) {
++                Object kdDef = getAnnotationIntrospector().findKeyDeserializer(member);
++                if (kdDef != null) {
++                    kd = keyDeserializerInstance(member, kdDef);
++                }
++            }
++        }
++        if (kd == null) {
++            kd = _cache.findKeyDeserializer(this, _factory, keyType);
++        }
+         // Second: contextualize?
+         if (kd instanceof ContextualKeyDeserializer) {
+             kd = ((ContextualKeyDeserializer) kd).createContextual(this, prop);

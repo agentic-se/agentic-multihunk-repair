@@ -1,0 +1,163 @@
+diff --git a/src/main/java/org/jsoup/select/Evaluator.java b/src/main/java/org/jsoup/select/Evaluator.java
+index 87b1d48..e2c7336 100644
+--- a/src/main/java/org/jsoup/select/Evaluator.java
++++ b/src/main/java/org/jsoup/select/Evaluator.java
+@@ -7,6 +7,7 @@ import org.jsoup.nodes.DocumentType;
+ import org.jsoup.nodes.Element;
+ import org.jsoup.nodes.Node;
+ import org.jsoup.nodes.XmlDeclaration;
++import org.jsoup.nodes.PseudoTextElement;
+ 
+ import java.util.List;
+ import java.util.regex.Matcher;
+@@ -33,6 +34,21 @@ public abstract class Evaluator {
+      */
+     public abstract boolean matches(Element root, Element element);
+ 
++    /**
++     * Evaluator for pseudo text elements created by :matchText.
++     */
++    public static final class MatchText extends Evaluator {
++        @Override
++        public boolean matches(Element root, Element element) {
++            return (element instanceof PseudoTextElement);
++        }
++
++        @Override
++        public String toString() {
++            return ":matchText";
++        }
++    }
++
+     /**
+      * Evaluator for tag name
+      */
+diff --git a/src/main/java/org/jsoup/select/QueryParser.java b/src/main/java/org/jsoup/select/QueryParser.java
+index e00f46e..3bc0c02 100644
+--- a/src/main/java/org/jsoup/select/QueryParser.java
++++ b/src/main/java/org/jsoup/select/QueryParser.java
+@@ -174,6 +174,8 @@ public class QueryParser {
+             matches(false);
+         else if (tq.matches(":matchesOwn("))
+             matches(true);
++        else if (tq.matchChomp(":matchText"))
++            matchText();
+         else if (tq.matches(":not("))
+             not();
+ 		else if (tq.matchChomp(":nth-child("))
+@@ -205,6 +207,19 @@ public class QueryParser {
+ 
+     }
+ 
++    // pseudo selector :matchText
++    private void matchText() {
++        // If there is a prior evaluator (e.g., a tag or attribute), convert context to be children of that evaluator
++        // by requiring the matched element to be a PseudoTextElement whose parent matches the prior evaluator.
++        Evaluator textEval = new Evaluator.MatchText();
++        if (evals.isEmpty()) {
++            evals.add(textEval);
++        } else {
++            Evaluator last = evals.remove(evals.size() - 1);
++            evals.add(new CombiningEvaluator.And(textEval, new StructuralEvaluator.Parent(last)));
++        }
++    }
++
+     private void byId() {
+         String id = tq.consumeCssIdentifier();
+         Validate.notEmpty(id);
+diff --git a/src/main/java/org/jsoup/select/Selector.java b/src/main/java/org/jsoup/select/Selector.java
+index 8b7aa47..f9866ce 100644
+--- a/src/main/java/org/jsoup/select/Selector.java
++++ b/src/main/java/org/jsoup/select/Selector.java
+@@ -2,6 +2,11 @@ package org.jsoup.select;
+ 
+ import org.jsoup.helper.Validate;
+ import org.jsoup.nodes.Element;
++import org.jsoup.nodes.Node;
++import org.jsoup.nodes.TextNode;
++import org.jsoup.nodes.PseudoTextElement;
++import org.jsoup.select.NodeTraversor;
++import org.jsoup.select.NodeVisitor;
+ 
+ import java.util.ArrayList;
+ import java.util.Collection;
+@@ -101,6 +106,9 @@ public class Selector {
+     public static Elements select(Evaluator evaluator, Element root) {
+         Validate.notNull(evaluator);
+         Validate.notNull(root);
++        if (containsMatchText(evaluator)) {
++            enableMatchText(root);
++        }
+         return Collector.collect(evaluator, root);
+     }
+ 
+@@ -156,7 +164,11 @@ public class Selector {
+      */
+     public static Element selectFirst(String cssQuery, Element root) {
+         Validate.notEmpty(cssQuery);
+-        return Collector.findFirst(QueryParser.parse(cssQuery), root);
++        Evaluator evaluator = QueryParser.parse(cssQuery);
++        if (containsMatchText(evaluator)) {
++            enableMatchText(root);
++        }
++        return Collector.findFirst(evaluator, root);
+     }
+ 
+     public static class SelectorParseException extends IllegalStateException {
+@@ -164,4 +176,52 @@ public class Selector {
+             super(String.format(msg, params));
+         }
+     }
++
++    // Detect if the evaluator tree includes a :matchText clause
++    private static boolean containsMatchText(Evaluator eval) {
++        if (eval instanceof Evaluator.MatchText) return true;
++        if (eval instanceof CombiningEvaluator.And) {
++            CombiningEvaluator.And and = (CombiningEvaluator.And) eval;
++            for (Evaluator e : and.evaluators) {
++                if (containsMatchText(e)) return true;
++            }
++        } else if (eval instanceof CombiningEvaluator.Or) {
++            CombiningEvaluator.Or or = (CombiningEvaluator.Or) eval;
++            for (Evaluator e : or.evaluators) {
++                if (containsMatchText(e)) return true;
++            }
++        } else if (eval instanceof StructuralEvaluator) {
++            StructuralEvaluator se = (StructuralEvaluator) eval;
++            if (se.evaluator != null && containsMatchText(se.evaluator)) return true;
++        }
++        return false;
++    }
++
++    // Replace non-blank text nodes with PseudoTextElements so they can be selected as elements
++    private static void enableMatchText(Element root) {
++        NodeTraversor.traverse(new NodeVisitor() {
++            @Override
++            public void head(Node node, int depth) {
++                if (node instanceof Element) {
++                    Element el = (Element) node;
++                    // Iterate by index as children may be replaced
++                    for (int i = 0; i < el.childNodeSize(); i++) {
++                        Node child = el.childNode(i);
++                        if (child instanceof TextNode) {
++                            TextNode tn = (TextNode) child;
++                            if (!tn.isBlank()) {
++                                PseudoTextElement pseudo = new PseudoTextElement(el.baseUri(), tn.getWholeText());
++                                tn.replaceWith(pseudo);
++                            }
++                        }
++                    }
++                }
++            }
++
++            @Override
++            public void tail(Node node, int depth) {
++                // no-op
++            }
++        }, root);
++    }
+ }
+
+
+# Untracked source files (not included in patch):
++ src/main/java/org/jsoup/nodes/PseudoTextElement.java

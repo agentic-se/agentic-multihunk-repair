@@ -1,0 +1,179 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/ar/ArArchiveInputStream.java b/src/main/java/org/apache/commons/compress/archivers/ar/ArArchiveInputStream.java
+index acfe3279..d27378af 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/ar/ArArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/ar/ArArchiveInputStream.java
+@@ -35,14 +35,15 @@ public class ArArchiveInputStream extends ArchiveInputStream {
+     private final InputStream input;
+     private long offset = 0;
+     private boolean closed;
++
+     /*
+-     * If getNextEnxtry has been called, the entry metadata is stored in
++     * If getNextEntry has been called, the entry metadata is stored in
+      * currentEntry.
+      */
+-    /*
+-     * The offset where the current entry started. -1 if no entry has been
+-     * called
+-     */
++    private ArArchiveEntry currentEntry = null;
++
++    /* How many bytes have been read from the current entry */
++    private long currentEntryBytesRead = 0;
+ 
+     public ArArchiveInputStream( final InputStream pInput ) {
+         input = pInput;
+@@ -62,8 +63,8 @@ public class ArArchiveInputStream extends ArchiveInputStream {
+ 
+         if (offset == 0) {
+             final byte[] expected = ArArchiveEntry.HEADER.getBytes();
+-            final byte[] realized = new byte[expected.length]; 
+-            final int read = read(realized);
++            final byte[] realized = new byte[expected.length];
++            final int read = input.read(realized);
+             if (read != expected.length) {
+                 throw new IOException("failed to read header");
+             }
+@@ -72,17 +73,32 @@ public class ArArchiveInputStream extends ArchiveInputStream {
+                     throw new IOException("invalid header " + new String(realized));
+                 }
+             }
++            offset += read;
+         }
+ 
+-                // hit eof
+-
+-        if (input.available() == 0) {
+-            return null;
++        if (currentEntry != null) {
++            // Skip remaining bytes in the current entry if not fully read
++            long skipped = 0;
++            long toSkip = currentEntry.getLength() - currentEntryBytesRead;
++            while (skipped < toSkip) {
++                long s = input.skip(toSkip - skipped);
++                if (s < 0) {
++                    break;
++                }
++                skipped += s;
++                offset += s;
++            }
++            currentEntry = null;
++            currentEntryBytesRead = 0;
+         }
+ 
+         if (offset % 2 != 0) {
+-            read();
++            if (input.read() < 0) {
++                return null;
++            }
++            offset++;
+         }
++
+         final byte[] name = new byte[16];
+         final byte[] lastmodified = new byte[12];
+         final byte[] userid = new byte[6];
+@@ -90,17 +106,29 @@ public class ArArchiveInputStream extends ArchiveInputStream {
+         final byte[] filemode = new byte[8];
+         final byte[] length = new byte[10];
+ 
+-        read(name);
+-        read(lastmodified);
+-        read(userid);
+-        read(groupid);
+-        read(filemode);
+-        read(length);
++        int readNow = input.read(name);
++        if (readNow < 0) {
++            return null;
++        } else if (readNow != name.length) {
++            throw new IOException("truncated ar archive");
++        }
++        offset += readNow;
++
++        readNow = input.read(lastmodified);
++        offset += readNow;
++        readNow = input.read(userid);
++        offset += readNow;
++        readNow = input.read(groupid);
++        offset += readNow;
++        readNow = input.read(filemode);
++        offset += readNow;
++        readNow = input.read(length);
++        offset += readNow;
+ 
+         {
+             final byte[] expected = ArArchiveEntry.TRAILER.getBytes();
+-            final byte[] realized = new byte[expected.length]; 
+-            final int read = read(realized);
++            final byte[] realized = new byte[expected.length];
++            final int read = input.read(realized);
+             if (read != expected.length) {
+                 throw new IOException("failed to read entry header");
+             }
+@@ -109,11 +137,14 @@ public class ArArchiveInputStream extends ArchiveInputStream {
+                     throw new IOException("invalid entry header. not read the content?");
+                 }
+             }
++            offset += read;
+         }
+ 
+-        return new ArArchiveEntry(new String(name).trim(),
++        currentEntry = new ArArchiveEntry(new String(name).trim(),
+                                           Long.parseLong(new String(length)
+                                                          .trim()));
++        currentEntryBytesRead = 0;
++        return currentEntry;
+     }
+ 
+ 
+@@ -129,8 +160,18 @@ public class ArArchiveInputStream extends ArchiveInputStream {
+     }
+ 
+     public int read() throws IOException {
++        if (currentEntry != null) {
++            if (currentEntryBytesRead >= currentEntry.getLength()) {
++                return -1;
++            }
++        }
+         final int ret = input.read();
+-        offset += (ret > 0 ? 1 : 0);
++        if (ret >= 0) {
++            offset++;
++            if (currentEntry != null) {
++                currentEntryBytesRead++;
++            }
++        }
+         return ret;
+     }
+ 
+@@ -139,9 +180,25 @@ public class ArArchiveInputStream extends ArchiveInputStream {
+     }
+ 
+     public int read(byte[] b, final int off, final int len) throws IOException {
++        if (currentEntry != null) {
++            if (currentEntryBytesRead >= currentEntry.getLength()) {
++                return -1;
++            }
++        }
+         int toRead = len;
++        if (currentEntry != null) {
++            long entryBytesRemaining = currentEntry.getLength() - currentEntryBytesRead;
++            if (toRead > entryBytesRemaining) {
++                toRead = (int) entryBytesRemaining;
++            }
++        }
+         final int ret = this.input.read(b, off, toRead);
+-        offset += (ret > 0 ? ret : 0);
++        if (ret > 0) {
++            offset += ret;
++            if (currentEntry != null) {
++                currentEntryBytesRead += ret;
++            }
++        }
+         return ret;
+     }
+ 
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

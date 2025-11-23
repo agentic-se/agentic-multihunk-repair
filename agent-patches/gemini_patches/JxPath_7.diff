@@ -1,0 +1,92 @@
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperation.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperation.java
+@@ -1,3 +1,8 @@
+-public abstract class CoreOperation extends Operation {
+-        
+-    public CoreOperation(Expression args[]) {
++public abstract class CoreOperation extends Operation {
++
++    public static final int GT = 1;
++    public static final int GE = 2;
++    public static final int LT = 3;
++    public static final int LE = 4;
++
++    public CoreOperation(Expression args[]) {
+
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationGreaterThan.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationGreaterThan.java
+@@ -1,5 +1,3 @@
+-    public Object computeValue(org.apache.commons.jxpath.ri.EvalContext context) {
+-        double l = org.apache.commons.jxpath.ri.InfoSetUtil.doubleValue(args[0].computeValue(context));
+-        double r = org.apache.commons.jxpath.ri.InfoSetUtil.doubleValue(args[1].computeValue(context));
+-        return l > r ? Boolean.TRUE : Boolean.FALSE;
+-    }
++    public Object computeValue(org.apache.commons.jxpath.ri.EvalContext context) {
++        return relationalCompare(context, args[0], args[1], CoreOperation.GT) ? Boolean.TRUE : Boolean.FALSE;
++    }
+
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationGreaterThanOrEqual.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationGreaterThanOrEqual.java
+@@ -1,5 +1,3 @@
+-    public Object computeValue(org.apache.commons.jxpath.ri.EvalContext context) {
+-        double l = org.apache.commons.jxpath.ri.InfoSetUtil.doubleValue(args[0].computeValue(context));
+-        double r = org.apache.commons.jxpath.ri.InfoSetUtil.doubleValue(args[1].computeValue(context));
+-        return l >= r ? Boolean.TRUE : Boolean.FALSE;
+-    }
++    public Object computeValue(org.apache.commons.jxpath.ri.EvalContext context) {
++        return relationalCompare(context, args[0], args[1], CoreOperation.GE) ? Boolean.TRUE : Boolean.FALSE;
++    }
+
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationLessThan.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationLessThan.java
+@@ -1,5 +1,3 @@
+-    public Object computeValue(org.apache.commons.jxpath.ri.EvalContext context) {
+-        double l = org.apache.commons.jxpath.ri.InfoSetUtil.doubleValue(args[0].computeValue(context));
+-        double r = org.apache.commons.jxpath.ri.InfoSetUtil.doubleValue(args[1].computeValue(context));
+-        return l < r ? Boolean.TRUE : Boolean.FALSE;
+-    }
++    public Object computeValue(org.apache.commons.jxpath.ri.EvalContext context) {
++        return relationalCompare(context, args[0], args[1], CoreOperation.LT) ? Boolean.TRUE : Boolean.FALSE;
++    }
+
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationLessThanOrEqual.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationLessThanOrEqual.java
+@@ -1,5 +1,3 @@
+-    public Object computeValue(org.apache.commons.jxpath.ri.EvalContext context) {
+-        double l = org.apache.commons.jxpath.ri.InfoSetUtil.doubleValue(args[0].computeValue(context));
+-        double r = org.apache.commons.jxpath.ri.InfoSetUtil.doubleValue(args[1].computeValue(context));
+-        return l <= r ? Boolean.TRUE : Boolean.FALSE;
+-    }
++    public Object computeValue(org.apache.commons.jxpath.ri.EvalContext context) {
++        return relationalCompare(context, args[0], args[1], CoreOperation.LE) ? Boolean.TRUE : Boolean.FALSE;
++    }
+
+--- a/src/test/org/apache/commons/jxpath/ri/compiler/CoreOperationTest.java
++++ b/src/test/org/apache/commons/jxpath/ri/compiler/CoreOperationTest.java
+@@ -1,3 +1,15 @@
+-        assertXPathValue(context, "$array < 0", Boolean.FALSE, Boolean.class);
+-    }
+-}
++        assertXPathValue(context, "$array < 0", Boolean.FALSE, Boolean.class);
++    }
++
++    public void testNodeSetAndNumberComparisonWithEmptyNodeSet() throws Exception {
++        JXPathContext pathContext = JXPathContext
++                .newContext(DocumentBuilderFactory.newInstance()
++                        .newDocumentBuilder().parse(
++                                new InputSource(new StringReader(
++                                        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n"
++                                                + "<doc/>"))));
++        Boolean result = (Boolean) pathContext.getValue("2.0 > child1",
++                Boolean.class);
++        assertFalse(result.booleanValue());
++    }
++}
+@@ -1,2 +1,5 @@
+-import org.apache.commons.jxpath.JXPathTestCase;
+-import org.apache.commons.jxpath.Variables;
++import org.apache.commons.jxpath.JXPathTestCase;
++import org.apache.commons.jxpath.Variables;
++import javax.xml.parsers.DocumentBuilderFactory;
++import org.xml.sax.InputSource;
++import java.io.StringReader;

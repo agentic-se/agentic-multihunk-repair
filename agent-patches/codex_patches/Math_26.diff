@@ -1,0 +1,51 @@
+diff --git a/src/main/java/org/apache/commons/math3/fraction/Fraction.java b/src/main/java/org/apache/commons/math3/fraction/Fraction.java
+index f81ff0a94..a3b613233 100644
+--- a/src/main/java/org/apache/commons/math3/fraction/Fraction.java
++++ b/src/main/java/org/apache/commons/math3/fraction/Fraction.java
+@@ -178,7 +178,7 @@ public class Fraction
+         long overflow = Integer.MAX_VALUE;
+         double r0 = value;
+         long a0 = (long)FastMath.floor(r0);
+-        if (a0 > overflow) {
++        if (a0 > overflow || a0 < -overflow) {
+             throw new FractionConversionException(value, a0, 1l);
+         }
+ 
+@@ -203,13 +203,32 @@ public class Fraction
+         do {
+             ++n;
+             double r1 = 1.0 / (r0 - a0);
+-            long a1 = (long)FastMath.floor(r1);
+-            p2 = (a1 * p1) + p0;
+-            q2 = (a1 * q1) + q0;
+-            if ((p2 > overflow) || (q2 > overflow)) {
+-                throw new FractionConversionException(value, p2, q2);
++            long a1 = (long) FastMath.floor(r1);
++
++            // Use BigInteger to safely detect overflow beyond int range
++            final BigInteger bigA1 = BigInteger.valueOf(a1);
++            final BigInteger bigP1 = BigInteger.valueOf(p1);
++            final BigInteger bigP0 = BigInteger.valueOf(p0);
++            final BigInteger bigQ1 = BigInteger.valueOf(q1);
++            final BigInteger bigQ0 = BigInteger.valueOf(q0);
++
++            final BigInteger bigP2 = bigA1.multiply(bigP1).add(bigP0);
++            final BigInteger bigQ2 = bigA1.multiply(bigQ1).add(bigQ0);
++
++            // denominators must be positive; numerators can be negative
++            // Throw if result cannot fit in an int (both positive and negative bounds)
++            final BigInteger max = BigInteger.valueOf(overflow);
++            if (bigQ2.compareTo(max) > 0 || bigQ2.signum() < 0 ||
++                bigP2.abs().compareTo(max) > 0) {
++                // We cannot represent this convergent within int range
++                throw new FractionConversionException(value,
++                                                      bigP2.signum() >= 0 ? Long.MAX_VALUE : Long.MIN_VALUE,
++                                                      bigQ2.signum() >= 0 ? Long.MAX_VALUE : Long.MIN_VALUE);
+             }
+ 
++            p2 = bigP2.longValue();
++            q2 = bigQ2.longValue();
++
+             double convergent = (double)p2 / (double)q2;
+             if (n < maxIterations && FastMath.abs(convergent - value) > epsilon && q2 < maxDenominator) {
+                 p0 = p1;

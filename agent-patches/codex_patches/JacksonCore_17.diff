@@ -1,0 +1,34 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/json/UTF8JsonGenerator.java b/src/main/java/com/fasterxml/jackson/core/json/UTF8JsonGenerator.java
+index 4f4394c8..00ebe184 100644
+--- a/src/main/java/com/fasterxml/jackson/core/json/UTF8JsonGenerator.java
++++ b/src/main/java/com/fasterxml/jackson/core/json/UTF8JsonGenerator.java
+@@ -532,12 +532,23 @@ public class UTF8JsonGenerator
+ 
+         while (len > 0) {
+             int len2 = Math.min(buf.length, len);
+-            text.getChars(offset, offset+len2, buf, 0);
+-            writeRaw(buf, 0, len2);
+-            // If this is NOT the last segment and if the last character looks like
+-            // split surrogate second half, drop it
+-            offset += len2;
+-            len -= len2;
++            // Ensure we do not split a surrogate pair across segments:
++            // if the last char of this segment is the first half of a surrogate
++            // pair and there is at least one more char to process, back off by one
++            // so the pair stays within the next segment.
++            if (len2 < len) { // there will be more input after this chunk
++                char last = text.charAt(offset + len2 - 1);
++                if (Character.isHighSurrogate(last)) {
++                    // back off by one to keep the pair intact
++                    len2 -= 1;
++                }
++            }
++            if (len2 > 0) {
++                text.getChars(offset, offset+len2, buf, 0);
++                writeRaw(buf, 0, len2);
++                offset += len2;
++                len -= len2;
++            }
+         }
+     }
+ 

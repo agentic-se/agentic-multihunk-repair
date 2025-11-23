@@ -1,0 +1,40 @@
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
+@@ -1,15 +1,22 @@
+-            case STD_LOCALE:
+-                {
+-                    int ix = value.indexOf('_');
+-                    if (ix < 0) { // single argument
+-                        return new Locale(value);
+-                    }
+-                    String first = value.substring(0, ix);
+-                    value = value.substring(ix+1);
+-                    ix = value.indexOf('_');
+-                    if (ix < 0) { // two pieces
+-                        return new Locale(first, value);
+-                    }
+-                    String second = value.substring(0, ix);
+-                    return new Locale(first, second, value.substring(ix+1));
+-                }
++            case STD_LOCALE:
++                {
++                    // As per [databind#56], need to allow both underscore and hyphen
++                    // for separators. RFC-5646 says hyphen, but many systems use underscore.
++                    // Let's use a simple heuristic: if we see a hyphen, assume it's RFC-5646
++                    // and convert all hyphens to underscores.
++                    if (value.indexOf('-') >= 0) {
++                        value = value.replace('-', '_');
++                    }
++                    int ix = value.indexOf('_');
++                    if (ix < 0) { // single argument
++                        return new Locale(value);
++                    }
++                    String first = value.substring(0, ix);
++                    value = value.substring(ix+1);
++                    ix = value.indexOf('_');
++                    if (ix < 0) { // two pieces
++                        return new Locale(first, value);
++                    }
++                    String second = value.substring(0, ix);
++                    return new Locale(first, second, value.substring(ix+1));
++                }

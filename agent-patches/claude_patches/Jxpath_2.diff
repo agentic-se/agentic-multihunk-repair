@@ -1,0 +1,36 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java b/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java
+index 5f7dcd0..4585f09 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java
+@@ -16,6 +16,7 @@
+  */
+ package org.apache.commons.jxpath.ri.compiler;
+ 
++import org.apache.commons.jxpath.NodeSet;
+ import org.apache.commons.jxpath.Pointer;
+ import org.apache.commons.jxpath.ri.EvalContext;
+ import org.apache.commons.jxpath.ri.model.NodePointer;
+@@ -74,6 +75,9 @@ public abstract class Expression {
+         if (result instanceof EvalContext) {
+             return new ValueIterator((EvalContext) result);
+         }
++        if (result instanceof NodeSet) {
++            return new ValueIterator(((NodeSet) result).getPointers().iterator());
++        }
+         return ValueUtils.iterate(result);
+     }
+ 
+@@ -85,6 +89,9 @@ public abstract class Expression {
+         if (result instanceof EvalContext) {
+             return (EvalContext) result;
+         }
++        if (result instanceof NodeSet) {
++            return ((NodeSet) result).getPointers().iterator();
++        }
+         return new PointerIterator(ValueUtils.iterate(result),
+                 new QName(null, "value"),
+                 context.getRootContext().getCurrentNodePointer().getLocale());
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

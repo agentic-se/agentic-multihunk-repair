@@ -1,0 +1,17 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BasicDeserializerFactory.java b/src/main/java/com/fasterxml/jackson/databind/deser/BasicDeserializerFactory.java
+index 2019d1e05..bff8aee74 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BasicDeserializerFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BasicDeserializerFactory.java
+@@ -1771,6 +1771,12 @@ nonAnnotatedParamIndex, ctor);
+         throws JsonMappingException
+     {
+         Class<?> rawType = type.getRawClass();
++        // Special-case for `java.lang.Void` (and primitive `void`): always deserialize as null.
++        // This avoids attempting reflective instantiation of `Void` which is not constructible
++        // and would otherwise cause warnings or failures under newer JDKs.
++        if (rawType == Void.class || rawType == Void.TYPE) {
++            return com.fasterxml.jackson.databind.deser.std.NullifyingDeserializer.instance;
++        }
+         // Object ("untyped"), String equivalents:
+         if (rawType == CLASS_OBJECT) {
+             // 11-Feb-2015, tatu: As per [databind#700] need to be careful wrt non-default Map, List.

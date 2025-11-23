@@ -1,0 +1,41 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/introspect/JacksonAnnotationIntrospector.java b/src/main/java/com/fasterxml/jackson/databind/introspect/JacksonAnnotationIntrospector.java
+index 624c08d5c..4fafd6524 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/introspect/JacksonAnnotationIntrospector.java
++++ b/src/main/java/com/fasterxml/jackson/databind/introspect/JacksonAnnotationIntrospector.java
+@@ -2,6 +2,7 @@ package com.fasterxml.jackson.databind.introspect;
+ 
+ import java.lang.annotation.Annotation;
+ import java.util.*;
++import java.lang.reflect.Field;
+ 
+ import com.fasterxml.jackson.annotation.*;
+ import com.fasterxml.jackson.core.Version;
+@@ -67,6 +68,28 @@ public class JacksonAnnotationIntrospector
+             // We know that values are actually static fields with matching name so:
+             // no such field, or access; neither which we can do much about
+ 
++    @Override
++    public String findEnumValue(Enum<?> value) {
++        // Allow explicit naming via @JsonProperty on enum constants
++        // If annotation missing or empty, fall back to default (name())
++        try {
++            Class<?> enumClass = value.getDeclaringClass();
++            Field f = enumClass.getField(value.name());
++            JsonProperty prop = f.getAnnotation(JsonProperty.class);
++            if (prop != null) {
++                String n = prop.value();
++                if (n != null && !n.isEmpty()) {
++                    return n;
++                }
++            }
++        } catch (SecurityException e) {
++            // ignore and fallback
++        } catch (NoSuchFieldException e) {
++            // ignore and fallback
++        }
++        return value.name();
++    }
++
+     /*
+     /**********************************************************
+     /* General class annotations

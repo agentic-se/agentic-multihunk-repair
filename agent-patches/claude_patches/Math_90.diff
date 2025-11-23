@@ -1,0 +1,47 @@
+diff --git a/src/java/org/apache/commons/math/stat/Frequency.java b/src/java/org/apache/commons/math/stat/Frequency.java
+index 75914d795..3262fbe76 100644
+--- a/src/java/org/apache/commons/math/stat/Frequency.java
++++ b/src/java/org/apache/commons/math/stat/Frequency.java
+@@ -107,17 +107,27 @@ public class Frequency implements Serializable {
+      */
+     @Deprecated
+     public void addValue(Object v) {
+-    
++        if (v instanceof Integer) {
++            addValue(((Integer) v).intValue());
++            return;
++        }
++        if (!(v instanceof Comparable<?>)) {
++            throw new ClassCastException("Value not comparable.");
++        }
++        addValue((Comparable<?>) v);
++    }
++
+     /**
+      * Adds 1 to the frequency count for v.
+      * <p>
+      * If other objects have already been added to this Frequency, v must
+      * be comparable to those that have already been added.
+      * </p>
+-     * 
++     *
+      * @param v the value to add.
+      * @throws IllegalArgumentException if <code>v</code> is not comparable with previous entries
+      */
++    public void addValue(Comparable<?> v) {
+         Object obj = v;
+         if (v instanceof Integer) {
+            obj = Long.valueOf(((Integer) v).longValue());
+@@ -129,7 +139,7 @@ public class Frequency implements Serializable {
+             } else {
+                 freqTable.put(obj, Long.valueOf(count.longValue() + 1));
+             }
+-        } catch (ClassCastException ex) {   
++        } catch (ClassCastException ex) {
+             //TreeMap will throw ClassCastException if v is not comparable
+             throw new IllegalArgumentException("Value not comparable to existing values.");
+         }
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

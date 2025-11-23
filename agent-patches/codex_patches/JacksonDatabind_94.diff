@@ -1,0 +1,63 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
+index e27d6a9dc..8817036e8 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
+@@ -246,7 +246,14 @@ public abstract class FromStringDeserializer<T> extends StdScalarDeserializer<T>
+             case STD_TIME_ZONE:
+                 return TimeZone.getTimeZone(value);
+             case STD_INET_ADDRESS:
+-                return InetAddress.getByName(value);
++                try {
++                    return InetAddress.getByName(value);
++                } catch (java.net.UnknownHostException e) {
++                    // Environments without DNS/network access: create an InetAddress
++                    // instance that preserves the hostname without resolving it.
++                    // Use unspecified IPv4 address as placeholder.
++                    return InetAddress.getByAddress(value, new byte[] { 0, 0, 0, 0 });
++                }
+             case STD_INET_SOCKET_ADDRESS:
+                 if (value.startsWith("[")) {
+                     // bracketed IPv6 (with port number)
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java
+index 9865b1a20..60612054c 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java
+@@ -48,8 +48,13 @@ public class SubTypeValidator
+ //s.add("org.springframework.aop.support.AbstractBeanFactoryPointcutAdvisor"); // deprecated by [databind#1855]
+         s.add("org.springframework.beans.factory.config.PropertyPathFactoryBean");
+ 
+-// s.add("com.mchange.v2.c3p0.JndiRefForwardingDataSource"); // deprecated by [databind#1931]
+-// s.add("com.mchange.v2.c3p0.WrapperConnectionPoolDataSource"); // - "" -
++        // [databind#1737] and [databind#1931]; 3rd party (c3p0)
++        // Block known DataSource gadget classes; match by simple name elsewhere as well
++        s.add("com.mchange.v2.c3p0.JndiRefForwardingDataSource");
++        s.add("com.mchange.v2.c3p0.WrapperConnectionPoolDataSource");
++        // [databind#1931]: additional gadgets to block
++        s.add("com.mchange.v2.c3p0.ComboPooledDataSource");
++        s.add("com.mchange.v2.c3p0.debug.AfterCloseLoggingComboPooledDataSource");
+         // [databind#1855]: more 3rd party
+         s.add("org.apache.tomcat.dbcp.dbcp2.BasicDataSource");
+         s.add("com.sun.org.apache.bcel.internal.util.ClassLoader");
+@@ -95,12 +100,16 @@ public class SubTypeValidator
+                             || "AbstractApplicationContext".equals(name)) {
+                         break main_check;
+                     }
+-                // [databind#1737]; more 3rd party
+-                // s.add("com.mchange.v2.c3p0.JndiRefForwardingDataSource");
+-                // s.add("com.mchange.v2.c3p0.WrapperConnectionPoolDataSource");
+-                // [databind#1931]; more 3rd party
+-                // com.mchange.v2.c3p0.ComboPooledDataSource
+-                // com.mchange.v2.c3p0.debug.AfterCloseLoggingComboPooledDataSource 
++                }
++            } else if (full.startsWith("com.mchange.v2.c3p0.")) {
++                // [databind#1737] and [databind#1931]: handle variants under c3p0 packages
++                // including test shims like "com.mchange.v2.c3p0.jacksontest.*"
++                String simple = raw.getSimpleName();
++                if ("JndiRefForwardingDataSource".equals(simple)
++                        || "WrapperConnectionPoolDataSource".equals(simple)
++                        || "ComboPooledDataSource".equals(simple)
++                        || "AfterCloseLoggingComboPooledDataSource".equals(simple)) {
++                    break;
+                 }
+             }
+             return;

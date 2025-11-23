@@ -1,0 +1,261 @@
+--- a/src/com/google/javascript/jscomp/InlineVariables.java
++++ b/src/com/google/javascript/jscomp/InlineVariables.java
+@@ -1,8 +1,17 @@
+-              Reference aliasInit;
+-              aliasInit = candidate.refInfo.getInitializingReference();
+-              Node value = aliasInit.getAssignedValue();
+-              Preconditions.checkNotNull(value);
+-              inlineWellDefinedVariable(candidate.alias,
+-                  value,
+-                  candidate.refInfo.references);
+-              staleVars.add(candidate.alias);
++              Reference aliasInit;
++              aliasInit = candidate.refInfo.getInitializingReference();
++              Node value = aliasInit.getAssignedValue();
++
++              // Check if the aliased variable itself is immutable and well-defined.
++              // This prevents inlining aliases of variables that are re-assigned
++              // within a loop, like in testNoInlineAliasesInLoop.
++              Var aliasedVar = t.getScope().getVar(value.getString());
++              ReferenceCollection aliasedVarRefInfo = referenceMap.get(aliasedVar);
++              if (aliasedVarRefInfo == null || !isImmutableAndWellDefinedVariable(aliasedVar, aliasedVarRefInfo)) {
++                continue;
++              }
++              Preconditions.checkNotNull(value);
++              inlineWellDefinedVariable(candidate.alias,
++                  value,
++                  candidate.refInfo.references);
++              staleVars.add(candidate.alias);
+@@ -1,11 +1,12 @@
+-        } else {
+-          inlineNonConstants(v, referenceInfo);
+-        }
+-      }
+-    }
+-
+-    private void inlineNonConstants(
+-        Var v, ReferenceCollection referenceInfo) {
+-      int refCount = referenceInfo.references.size();
+-      Reference declaration = referenceInfo.references.get(0);
+-      Reference init = referenceInfo.getInitializingReference();
++        } else {
++          inlineNonConstants(t, referenceMap, v, referenceInfo);
++        }
++      }
++    }
++
++    private void inlineNonConstants(NodeTraversal t,
++        Map<Var, ReferenceCollection> referenceMap,
++        Var v, ReferenceCollection referenceInfo) {
++      int refCount = referenceInfo.references.size();
++      Reference declaration = referenceInfo.references.get(0);
++      Reference init = referenceInfo.getInitializingReference();
+@@ -1,12 +1,11 @@
+-        } else {
+-          inlineNonConstants(t, referenceMap, v, referenceInfo);
+-        }
+-      }
+-    }
+-
+-    private void inlineNonConstants(NodeTraversal t,
+-        Map<Var, ReferenceCollection> referenceMap,
+-        Var v, ReferenceCollection referenceInfo) {
+-      int refCount = referenceInfo.references.size();
+-      Reference declaration = referenceInfo.references.get(0);
+-      Reference init = referenceInfo.getInitializingReference();
++        } else {
++          inlineNonConstants(v, referenceInfo);
++        }
++      }
++    }
++
++    private void inlineNonConstants(
++        Var v, ReferenceCollection referenceInfo) {
++      int refCount = referenceInfo.references.size();
++      Reference declaration = referenceInfo.references.get(0);
++      Reference init = referenceInfo.getInitializingReference();
+@@ -1,17 +1,8 @@
+-              Reference aliasInit;
+-              aliasInit = candidate.refInfo.getInitializingReference();
+-              Node value = aliasInit.getAssignedValue();
+-
+-              // Check if the aliased variable itself is immutable and well-defined.
+-              // This prevents inlining aliases of variables that are re-assigned
+-              // within a loop, like in testNoInlineAliasesInLoop.
+-              Var aliasedVar = t.getScope().getVar(value.getString());
+-              ReferenceCollection aliasedVarRefInfo = referenceMap.get(aliasedVar);
+-              if (aliasedVarRefInfo == null || !isImmutableAndWellDefinedVariable(aliasedVar, aliasedVarRefInfo)) {
+-                continue;
+-              }
+-              Preconditions.checkNotNull(value);
+-              inlineWellDefinedVariable(candidate.alias,
+-                  value,
+-                  candidate.refInfo.references);
+-              staleVars.add(candidate.alias);
++              Reference aliasInit;
++              aliasInit = candidate.refInfo.getInitializingReference();
++              Node value = aliasInit.getAssignedValue();
++              Preconditions.checkNotNull(value);
++              inlineWellDefinedVariable(candidate.alias,
++                  value,
++                  candidate.refInfo.references);
++              staleVars.add(candidate.alias);
+@@ -1,11 +1,12 @@
+-        } else {
+-          inlineNonConstants(v, referenceInfo);
+-        }
+-      }
+-    }
+-
+-    private void void inlineNonConstants(
+-        Var v, ReferenceCollection referenceInfo) {
+-      int refCount = referenceInfo.references.size();
+-      Reference declaration = referenceInfo.references.get(0);
+-      Reference init = referenceInfo.getInitializingReference();
++        } else {
++          inlineNonConstants(t, referenceMap, v, referenceInfo);
++        }
++      }
++    }
++
++    private void inlineNonConstants(NodeTraversal t,
++        Map<Var, ReferenceCollection> referenceMap,
++        Var v, ReferenceCollection referenceInfo) {
++      int refCount = referenceInfo.references.size();
++      Reference declaration = referenceInfo.references.get(0);
++      Reference init = referenceInfo.getInitializingReference();
+@@ -1,8 +1,26 @@
+-              Reference aliasInit;
+-              aliasInit = candidate.refInfo.getInitializingReference();
+-              Node value = aliasInit.getAssignedValue();
+-              Preconditions.checkNotNull(value);
+-              inlineWellDefinedVariable(candidate.alias,
+-                  value,
+-                  candidate.refInfo.references);
+-              staleVars.add(candidate.alias);
++              Reference aliasInit;
++              aliasInit = candidate.refInfo.getInitializingReference();
++              Node value = aliasInit.getAssignedValue();
++
++              // If the aliased variable's value is a side-effecting call
++              // and it's declared within a loop, do not inline the alias.
++              // This addresses the testNoInlineAliasesInLoop scenario.
++              Var aliasedVar = t.getScope().getVar(value.getString());
++              ReferenceCollection aliasedVarRefInfo = referenceMap.get(aliasedVar);
++              if (aliasedVarRefInfo != null) {
++                Reference aliasedVarInit = aliasedVarRefInfo.getInitializingReference();
++                if (aliasedVarInit != null) {
++                  Node aliasedVarValue = aliasedVarInit.getAssignedValue();
++                  if (aliasedVarValue != null && NodeUtil.mayHaveSideEffects(aliasedVarValue)) {
++                    if (NodeUtil.isWithinLoop(aliasedVarInit.getNameNode())) {
++                      continue;
++                    }
++                  }
++                }
++              }
++
++              Preconditions.checkNotNull(value);
++              inlineWellDefinedVariable(candidate.alias,
++                  value,
++                  candidate.refInfo.references);
++              staleVars.add(candidate.alias);
+@@ -1,22 +1,16 @@
+-        } else if (mode == Mode.CONSTANTS_ONLY) {
+-          // If we're in constants-only mode, don't run more aggressive
+-          // inlining heuristics. See InlineConstantsTest.
+-          continue;
+-        } else {
+-          inlineNonConstants(v, referenceInfo);
+-        }
+-      }
+-    }
+-
+-    } else {
+-          inlineNonConstants(t, referenceMap, v, referenceInfo);
+-        }
+-      }
+-    }
+-
+-    private void inlineNonConstants(NodeTraversal t,
+-        Map<Var, ReferenceCollection> referenceMap,
+-        Var v, ReferenceCollection referenceInfo) {
+-      int refCount = referenceInfo.references.size();
+-      Reference declaration = referenceInfo.references.get(0);
+-      Reference init = referenceInfo.getInitializingReference();
++        } else if (mode == Mode.CONSTANTS_ONLY) {
++          // If we're in constants-only mode, don't run more aggressive
++          // inlining heuristics. See InlineConstantsTest.
++          continue;
++        } else {
++          inlineNonConstants(t, referenceMap, v, referenceInfo);
++        }
++      }
++    }
++
++    private void inlineNonConstants(NodeTraversal t,
++        Map<Var, ReferenceCollection> referenceMap,
++        Var v, ReferenceCollection referenceInfo) {
++      int refCount = referenceInfo.references.get(0);
++      Reference declaration = referenceInfo.references.get(0);
++      Reference init = referenceInfo.getInitializingReference();
+@@ -1,1 +1,1 @@
+-      int refCount = referenceInfo.references.get(0);
++      int refCount = referenceInfo.references.size();
+@@ -1,15 +1,31 @@
+-              Preconditions.checkNotNull(value);
+-              inlineWellDefinedVariable(candidate.alias,
+-                  value,
+-                  candidate.refInfo.references);
+-              staleVars.add(candidate.alias);
+-            }
+-          }
+-        }
+-      }
+-    }
+-
+-    /**
+-     * If there are any variable references in the given node tree, blacklist
+-     * them to prevent the pass from trying to inline the variable.
+-     */
++              Preconditions.checkNotNull(value);
++              inlineWellDefinedVariable(candidate.alias,
++                  value,
++                  candidate.refInfo.references);
++              staleVars.add(candidate.alias);
++            }
++          }
++        }
++      }
++    }
++
++    /**
++     * Checks if a node is within a loop.
++     */
++    private boolean isWithinLoop(Node node) {
++      for (Node current = node; current != null; current = current.getParent()) {
++        switch (current.getType()) {
++          case Token.FOR:
++          case Token.WHILE:
++          case Token.DO:
++          case Token.FOR_IN:
++            return true;
++        }
++      }
++      return false;
++    }
++
++    /**
++     * If there are any variable references in the given node tree, blacklist
++     * them to prevent the pass from trying to inline the variable.
++     */
+@@ -1,1 +1,1 @@
+-                    if (NodeUtil.isWithinLoop(aliasedVarInit.getNameNode())) {
++                    if (isWithinLoop(aliasedVarInit.getNameNode())) {
+@@ -1,4 +1,3 @@
+-          case Token.FOR:
+-          case Token.WHILE:
+-          case Token.DO:
+-          case Token.FOR_IN:
++          case Token.FOR:
++          case Token.WHILE:
++          case Token.DO:

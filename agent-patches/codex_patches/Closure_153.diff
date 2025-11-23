@@ -1,0 +1,37 @@
+diff --git a/src/com/google/javascript/jscomp/Normalize.java b/src/com/google/javascript/jscomp/Normalize.java
+index 4c99858e..fd23127e 100644
+--- a/src/com/google/javascript/jscomp/Normalize.java
++++ b/src/com/google/javascript/jscomp/Normalize.java
+@@ -640,6 +640,32 @@ class Normalize implements CompilerPass {
+       Preconditions.checkState(n.getType() == Token.NAME);
+       Var v = s.getVar(name);
+ 
++      // Allow duplicate declarations when one is from externs and the
++      // other is from source. In that case, preserve the source declaration
++      // (including any initializer) instead of rewriting it into an
++      // assignment or removing it.
++      if (v != null) {
++        boolean originalIsExtern = v.isExtern();
++        CompilerInput newInput =
++            compiler.getInput(NodeUtil.getSourceName(nodeWithLineNumber));
++        boolean newIsExtern = (newInput == null) || newInput.isExtern();
++        // Do not apply the extern-vs-source exception for the special
++        // "arguments" name; that should always be converted to an
++        // assignment when redeclared.
++        if ((originalIsExtern ^ newIsExtern) && !"arguments".equals(name)) {
++          // One declaration is extern and the other is not; prefer the
++          // non-extern declaration in the scope so that subsequent
++          // duplicates are compared against it.
++          if (!newIsExtern) {
++            // Update scope to point at the new (source) declaration.
++            s.undeclare(v);
++            s.declare(name, n, n.getJSType(), newInput);
++          }
++          // Do not rewrite the AST for this case.
++          return;
++        }
++      }
++
+         // We allow variables to be duplicate declared if one
+         // declaration appears in source and the other in externs.
+         // This deals with issues where a browser built-in is declared

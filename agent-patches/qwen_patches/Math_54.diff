@@ -1,0 +1,26 @@
+diff --git a/src/main/java/org/apache/commons/math/dfp/Dfp.java b/src/main/java/org/apache/commons/math/dfp/Dfp.java
+index 73f1ea3e8..cf298b724 100644
+--- a/src/main/java/org/apache/commons/math/dfp/Dfp.java
++++ b/src/main/java/org/apache/commons/math/dfp/Dfp.java
+@@ -2314,6 +2314,21 @@ public class Dfp implements FieldElement<Dfp> {
+             return Double.NaN;
+         }
+ 
++        // Handle the special case of zero, which should return signed zero
++        // Check if it's a true zero (all mantissa digits are zero)
++        boolean isZero = true;
++        for (int i = 0; i < mant.length; i++) {
++            if (mant[i] != 0) {
++                isZero = false;
++                break;
++            }
++        }
++        
++        if (isZero && nans == FINITE) {
++            // This is a zero value, return the appropriate signed zero
++            return sign > 0 ? 0.0 : -0.0;
++        }
++
+         Dfp y = this;
+         boolean negate = false;
+         if (lessThan(getZero())) {

@@ -1,0 +1,16 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/std/AtomicReferenceSerializer.java b/src/main/java/com/fasterxml/jackson/databind/ser/std/AtomicReferenceSerializer.java
+index 7726bb0e9..df87b27e3 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/AtomicReferenceSerializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/AtomicReferenceSerializer.java
+@@ -56,7 +56,10 @@ public class AtomicReferenceSerializer
+ 
+     @Override
+     protected boolean _isValueEmpty(AtomicReference<?> value) {
+-        return value.get() == null;
++        // For NON_ABSENT, we need to consider the value to be empty if it's null
++        // This ensures that AtomicReference objects containing null are properly
++        // excluded when using JsonInclude.Include.NON_ABSENT
++        return (value == null) || (value.get() == null);
+     }
+ 
+     @Override

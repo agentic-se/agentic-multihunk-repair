@@ -1,0 +1,19 @@
+diff --git a/src/java/org/apache/commons/math/util/MathUtils.java b/src/java/org/apache/commons/math/util/MathUtils.java
+index 7d8aa4d50..3212052b7 100644
+--- a/src/java/org/apache/commons/math/util/MathUtils.java
++++ b/src/java/org/apache/commons/math/util/MathUtils.java
+@@ -374,6 +374,14 @@ public final class MathUtils {
+         if (n < 0) {
+             throw new IllegalArgumentException("must have n >= 0 for n!");
+         }
++        // For values that fit exactly in a long (n <= 20), return the
++        // precomputed exact value as a double to avoid rounding errors
++        // introduced by exp/log computations.
++        if (n < factorials.length) {
++            return (double) factorials[n];
++        }
++        // For larger n, fall back to the logarithmic computation which is
++        // suitable for double values up to n = 170.
+         return Math.floor(Math.exp(factorialLog(n)) + 0.5);
+     }
+ 

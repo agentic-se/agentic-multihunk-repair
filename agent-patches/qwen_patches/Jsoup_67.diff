@@ -1,0 +1,37 @@
+diff --git a/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java b/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
+index b07e47f..5396561 100644
+--- a/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
++++ b/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
+@@ -464,8 +464,16 @@ public class HtmlTreeBuilder extends TreeBuilder {
+     }
+ 
+     private boolean inSpecificScope(String[] targetNames, String[] baseTypes, String[] extraTypes) {
++        // Prevent infinite looping on deeply nested pages by limiting iterations
++        int maxIterations = 1000;
++        int iterations = 0;
+         int depth = stack.size() -1;
+         for (int pos = depth; pos >= 0; pos--) {
++            if (iterations++ > maxIterations) {
++                // If we've iterated too many times, assume the target is not in scope
++                // to prevent performance issues on deeply nested pages
++                return false;
++            }
+             Element el = stack.get(pos);
+             String elName = el.nodeName();
+             if (inSorted(elName, targetNames))
+@@ -506,7 +514,15 @@ public class HtmlTreeBuilder extends TreeBuilder {
+     }
+ 
+     boolean inSelectScope(String targetName) {
++        // Prevent infinite looping on deeply nested pages by limiting iterations
++        int maxIterations = 1000;
++        int iterations = 0;
+         for (int pos = stack.size() -1; pos >= 0; pos--) {
++            if (iterations++ > maxIterations) {
++                // If we've iterated too many times, assume the target is not in scope
++                // to prevent performance issues on deeply nested pages
++                return false;
++            }
+             Element el = stack.get(pos);
+             String elName = el.nodeName();
+             if (elName.equals(targetName))

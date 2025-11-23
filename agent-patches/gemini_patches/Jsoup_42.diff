@@ -1,0 +1,34 @@
+--- a/src/main/java/org/jsoup/nodes/FormElement.java
++++ b/src/main/java/org/jsoup/nodes/FormElement.java
+@@ -1,9 +1,22 @@
+-            } else if ("checkbox".equalsIgnoreCase(type) || "radio".equalsIgnoreCase(type)) {
+-                // only add checkbox or radio if they have the checked attribute
+-                if (el.hasAttr("checked")) {
+-                    final String val = el.val();
+-                    data.add(HttpConnection.KeyVal.create(name, val));
+-                }
+-            } else {
+-                data.add(HttpConnection.KeyVal.create(name, el.val()));
+-            }
++            } else if ("input".equals(el.tagName())) {
++                // Not disabled? Ignore disabled inputs.
++                if(!el.hasAttr("disabled")) {
++                    // Deal with checkbox and radio (not checked should not be added to avoid sending to server)
++                    if("checkbox".equals(type) || "radio".equals(type)) {
++                        // Checked, but no value? Default should be "on".
++                        if(el.hasAttr("checked") && !el.hasAttr("value")) {
++                            data.add(HttpConnection.KeyVal.create(name, "on"));
++                        }
++                        // Checked? Add it's value
++                        else if(el.hasAttr("checked")) {
++                            data.add(HttpConnection.KeyVal.create(name, el.val()));
++                        }
++                    }
++                    // Buttons should be ignored.
++                    else if(!"button".equals(type)){
++                        data.add(HttpConnection.KeyVal.create(name, el.val()));
++                    }
++                }
++            } else { // This else handles other form elements like textarea, select, etc.
++                data.add(HttpConnection.KeyVal.create(name, el.val()));
++            }

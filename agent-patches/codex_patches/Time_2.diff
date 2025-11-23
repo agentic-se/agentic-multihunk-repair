@@ -1,0 +1,67 @@
+diff --git a/src/main/java/org/joda/time/Partial.java b/src/main/java/org/joda/time/Partial.java
+index b9ec964f..3fba1371 100644
+--- a/src/main/java/org/joda/time/Partial.java
++++ b/src/main/java/org/joda/time/Partial.java
+@@ -219,18 +219,27 @@ public final class Partial
+                     throw new IllegalArgumentException("Types array must be in order largest-smallest: " +
+                             types[i - 1].getName() + " < " + loopType.getName());
+                 } else if (compare == 0) {
+-                    if (types[i - 1].getRangeDurationType() == null) {
+-                        if (loopType.getRangeDurationType() == null) {
++                    // When unit durations compare equal, fall back to range durations.
++                    // Handle null range durations gracefully (some fields, such as year or era,
++                    // have a null range). If both ranges are null, accept the provided order.
++                    DurationFieldType prevRangeType = types[i - 1].getRangeDurationType();
++                    DurationFieldType loopRangeType = loopType.getRangeDurationType();
++                    if (prevRangeType == null && loopRangeType == null) {
++                        // If the exact same field type appears twice, that's a duplicate.
++                        if (types[i - 1] == loopType) {
+                             throw new IllegalArgumentException("Types array must not contain duplicate: " +
+                                             types[i - 1].getName() + " and " + loopType.getName());
+                         }
++                        // Different field types with no range: accept provided order.
++                    } else if (prevRangeType == null) {
++                        // Previous has no range, loop has a range -> order is valid, continue.
++                    } else if (loopRangeType == null) {
++                        // Loop has no range but previous does -> not largest-smallest order.
++                        throw new IllegalArgumentException("Types array must be in order largest-smallest: " +
++                                types[i - 1].getName() + " < " + loopType.getName());
+                     } else {
+-                        if (loopType.getRangeDurationType() == null) {
+-                            throw new IllegalArgumentException("Types array must be in order largest-smallest: " +
+-                                    types[i - 1].getName() + " < " + loopType.getName());
+-                        }
+-                        DurationField lastRangeField = types[i - 1].getRangeDurationType().getField(iChronology);
+-                        DurationField loopRangeField = loopType.getRangeDurationType().getField(iChronology);
++                        DurationField lastRangeField = prevRangeType.getField(iChronology);
++                        DurationField loopRangeField = loopRangeType.getField(iChronology);
+                         if (lastRangeField.compareTo(loopRangeField) < 0) {
+                             throw new IllegalArgumentException("Types array must be in order largest-smallest: " +
+                                     types[i - 1].getName() + " < " + loopType.getName());
+@@ -446,10 +455,23 @@ public final class Partial
+                         if (compare > 0) {
+                             break;
+                         } else if (compare == 0) {
+-                            DurationField rangeField = fieldType.getRangeDurationType().getField(iChronology);
+-                            DurationField loopRangeField = loopType.getRangeDurationType().getField(iChronology);
+-                            if (rangeField.compareTo(loopRangeField) > 0) {
++                            // Equal unit duration: compare by range duration, handling nulls.
++                            DurationFieldType rangeType = fieldType.getRangeDurationType();
++                            DurationFieldType loopRangeType = loopType.getRangeDurationType();
++                            if (rangeType == null && loopRangeType == null) {
++                                // No way to order strictly; insert before current to keep stability.
++                                break;
++                            } else if (rangeType == null) {
++                                // New has no range; existing has range -> keep scanning (new comes after).
++                            } else if (loopRangeType == null) {
++                                // New has range; existing has none -> insert before current.
+                                 break;
++                            } else {
++                                DurationField rangeField = rangeType.getField(iChronology);
++                                DurationField loopRangeField = loopRangeType.getField(iChronology);
++                                if (rangeField.compareTo(loopRangeField) > 0) {
++                                    break;
++                                }
+                             }
+                         }
+                     }

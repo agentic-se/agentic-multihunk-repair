@@ -1,0 +1,27 @@
+diff --git a/src/main/java/org/apache/commons/math/distribution/PoissonDistributionImpl.java b/src/main/java/org/apache/commons/math/distribution/PoissonDistributionImpl.java
+index 148daad0d..88826373a 100644
+--- a/src/main/java/org/apache/commons/math/distribution/PoissonDistributionImpl.java
++++ b/src/main/java/org/apache/commons/math/distribution/PoissonDistributionImpl.java
+@@ -20,6 +20,7 @@ import java.io.Serializable;
+ 
+ import org.apache.commons.math.MathException;
+ import org.apache.commons.math.MathRuntimeException;
++import org.apache.commons.math.exception.NotStrictlyPositiveException;
+ import org.apache.commons.math.exception.util.LocalizedFormats;
+ import org.apache.commons.math.special.Gamma;
+ import org.apache.commons.math.util.MathUtils;
+@@ -49,12 +50,12 @@ public class PoissonDistributionImpl extends AbstractIntegerDistribution
+     private static final long serialVersionUID = -3349935121172596109L;
+ 
+     /** Distribution used to compute normal approximation. */
+-    private NormalDistribution normal;
++    private final NormalDistribution normal;
+ 
+     /**
+      * Holds the Poisson mean for the distribution.
+      */
+-    private double mean;
++    private final double mean;
+ 
+     /**
+      * Maximum number of iterations for cumulative probability.

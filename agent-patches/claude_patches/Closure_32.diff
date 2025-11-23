@@ -1,0 +1,82 @@
+diff --git a/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java b/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java
+index f6a64007..40835602 100644
+--- a/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java
++++ b/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java
+@@ -1361,6 +1361,20 @@ public final class JsDocInfoParser {
+         case STAR:
+           if (ignoreStar) {
+             // Mark the position after the star as the new start of the line.
++            // When preserving whitespace, we need to get the remaining content
++            // of the line including leading whitespace, before any tokens are
++            // parsed from it.
++            if (option == WhitespaceOption.PRESERVE) {
++              String remainingLine = stream.getRemainingJSDocLine();
++              builder.append(remainingLine);
++              // Advance the token stream to the next line.
++              do {
++                token = next();
++              } while (token != JsDocToken.EOL &&
++                       token != JsDocToken.EOF &&
++                       token != JsDocToken.EOC);
++              continue;
++            }
+           } else {
+             // The star is part of the comment.
+             if (builder.length() > 0) {
+@@ -1379,7 +1393,42 @@ public final class JsDocInfoParser {
+           }
+ 
+           ignoreStar = true;
+-          token = next();
++
++          // In PRESERVE mode, manually read and process the next line to preserve
++          // all whitespace, including whitespace before stars.
++          if (option == WhitespaceOption.PRESERVE) {
++            // Get the whole next line including all whitespace
++            String nextLine = stream.getRemainingJSDocLine();
++
++            // Process the line to find a star (if any)
++            int starPos = -1;
++            for (int i = 0; i < nextLine.length(); i++) {
++              char c = nextLine.charAt(i);
++              if (c == '*') {
++                starPos = i;
++                break;
++              } else if (c != ' ' && c != '\t' && c != '\f' && c != 0xB && c != 0xA0) {
++                // Non-whitespace, non-star character - this line doesn't start with a star
++                break;
++              }
++            }
++
++            if (starPos >= 0) {
++              // Line has a star. Append everything after the star.
++              // The whitespace before the star is intentionally skipped (per JSDoc convention).
++              String afterStar = nextLine.substring(starPos + 1);
++              builder.append(afterStar);
++            } else {
++              // Line doesn't have a star. Append the whole line with whitespace.
++              ignoreStar = false;
++              builder.append(nextLine);
++            }
++
++            // Move to the next token (should be EOL, EOF, or EOC)
++            token = next();
++          } else {
++            token = next();
++          }
+           continue;
+ 
+         default:
+@@ -1412,7 +1461,11 @@ public final class JsDocInfoParser {
+           }
+ 
+           if (builder.length() > 0) {
+-            builder.append(' ');
++            // When preserving whitespace, use the token as-is
++            // without forcing a space separator.
++            if (option != WhitespaceOption.PRESERVE) {
++              builder.append(' ');
++            }
+           }
+           builder.append(toString(token));
+ 

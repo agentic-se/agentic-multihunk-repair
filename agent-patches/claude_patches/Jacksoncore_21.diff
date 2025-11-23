@@ -1,0 +1,24 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/filter/FilteringParserDelegate.java b/src/main/java/com/fasterxml/jackson/core/filter/FilteringParserDelegate.java
+index e6558fd0..cdf3b98a 100644
+--- a/src/main/java/com/fasterxml/jackson/core/filter/FilteringParserDelegate.java
++++ b/src/main/java/com/fasterxml/jackson/core/filter/FilteringParserDelegate.java
+@@ -236,12 +236,13 @@ public class FilteringParserDelegate extends JsonParserDelegate
+         if (!_allowMultipleMatches && (_currToken != null) && (_exposedContext == null)) {
+             //if not scalar and ended successfully, and !includePath, then return null
+                 if (_currToken.isStructEnd()) {
+-                    if (_headContext.isStartHandled()) {
++                    // [core#330]: Don't return null yet if we still have path to close
++                    if (_headContext.isStartHandled() && !_includePath) {
+                         return (_currToken = null);
+                     }
+                 } else if (_currToken.isScalarValue()) {
+                     //else if scalar, and scalar not present in obj/array and !includePath and INCLUDE_ALL matched once
+-                    // then return null 
++                    // then return null
+                     if (!_headContext.isStartHandled() && (_itemFilter == TokenFilter.INCLUDE_ALL)) {
+                         return (_currToken = null);
+                     }
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

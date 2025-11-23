@@ -1,0 +1,78 @@
+diff --git a/src/org/mockito/exceptions/Reporter.java b/src/org/mockito/exceptions/Reporter.java
+index 5e46a2bba..8647f43b7 100644
+--- a/src/org/mockito/exceptions/Reporter.java
++++ b/src/org/mockito/exceptions/Reporter.java
+@@ -445,6 +445,22 @@ public class Reporter {
+                 ));
+     }
+ 
++    // Overload that allows including invocation arguments information for SmartNulls
++    public void smartNullPointerException(Location location, String invocationArgs) {
++        if (invocationArgs == null || invocationArgs.length() == 0) {
++            smartNullPointerException(location);
++            return;
++        }
++        throw new SmartNullPointerException(join(
++                "You have a NullPointerException here:",
++                new Location(),
++                "Because this method was *not* stubbed correctly:",
++                location,
++                "Arguments: " + invocationArgs,
++                ""
++        ));
++    }
++
+     public void noArgumentValueWasCaptured() {
+         throw new MockitoException(join(
+                 "No argument value was captured!",
+@@ -550,4 +566,4 @@ public class Reporter {
+             "   //and... don't forget about some @Mocks for injection :)",
+                 ""), details);
+     }
+-}
+\ No newline at end of file
++}
+diff --git a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsSmartNulls.java b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsSmartNulls.java
+index 4942d7cc7..4c61ee5de 100644
+--- a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsSmartNulls.java
++++ b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsSmartNulls.java
+@@ -48,20 +48,25 @@ public class ReturnsSmartNulls implements Answer<Object>, Serializable {
+             this.invocation = invocation;
+         }
+ 
+-        public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
+-            if (new ObjectMethodsGuru().isToString(method)) {
+-                return "SmartNull returned by unstubbed " + formatMethodCall()  + " method on mock";
+-            }
+-
+-            new Reporter().smartNullPointerException(location);
+-            return null;
+-        }
+-
+-		private String formatMethodCall() {
+-			String args = Arrays.toString(invocation.getArguments());
+-			return invocation.getMethod().getName() + "(" + args.substring(1, args.length() - 1) +	")";
+-		}
+-    }
++        public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
++            if (new ObjectMethodsGuru().isToString(method)) {
++                return "SmartNull returned by unstubbed " + formatMethodCall()  + " method on mock";
++            }
++
++            new Reporter().smartNullPointerException(location, formatArguments());
++            return null;
++        }
++
++		private String formatMethodCall() {
++			String args = Arrays.toString(invocation.getArguments());
++			return invocation.getMethod().getName() + "(" + args.substring(1, args.length() - 1) +	")";
++		}
++
++        private String formatArguments() {
++            String args = Arrays.toString(invocation.getArguments());
++            return args.substring(1, args.length() - 1);
++        }
++    }
+ 
+     private final Answer<Object> delegate = new ReturnsMoreEmptyValues();
+ 

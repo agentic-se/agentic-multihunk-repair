@@ -1,0 +1,46 @@
+diff --git a/src/com/google/javascript/jscomp/CodeGenerator.java b/src/com/google/javascript/jscomp/CodeGenerator.java
+index f28378cc..60bffe12 100644
+--- a/src/com/google/javascript/jscomp/CodeGenerator.java
++++ b/src/com/google/javascript/jscomp/CodeGenerator.java
+@@ -113,6 +113,10 @@ class CodeGenerator {
+         addExpr(first, p, context);
+         cc.addOp(opstr, true);
+         addExpr(last, p, rhsContext);
++      } else if (first.getType() == type &&
++          !NodeUtil.isAssignmentOp(n)) {
++        // Unroll left-recursive structures to avoid stack overflow for deeply nested operators
++        unrollBinaryOperator(n, type, opstr, context, rhsContext, p, p);
+       } else if (NodeUtil.isAssignmentOp(n) && NodeUtil.isAssignmentOp(last)) {
+         // Assignments are the only right-associative binary operators
+         addExpr(first, p, context);
+@@ -743,6 +747,17 @@ class CodeGenerator {
+       Context rhsContext, int leftPrecedence, int rightPrecedence) {
+     Node firstNonOperator = n.getFirstChild();
+     while (firstNonOperator.getType() == op) {
++      // Check if the right child of this operator has any nesting that would
++      // prevent safe unrolling (e.g., parenthesized expressions or different operators)
++      Node rightChild = firstNonOperator.getFirstChild().getNext();
++      if (rightChild != null && rightChild.getType() == op) {
++        // Right child is same operator - can't flatten if in left-recursive mode
++        // Fall back to regular recursive handling
++        addExpr(firstNonOperator, leftPrecedence, context);
++        cc.addOp(opStr, true);
++        addExpr(n.getFirstChild().getNext(), rightPrecedence, rhsContext);
++        return;
++      }
+       firstNonOperator = firstNonOperator.getFirstChild();
+     }
+ 
+@@ -751,7 +766,11 @@ class CodeGenerator {
+     Node current = firstNonOperator;
+     do {
+       current = current.getParent();
+-      cc.listSeparator();
++      if (op == Token.COMMA) {
++        cc.listSeparator();
++      } else {
++        cc.addOp(opStr, true);
++      }
+       addExpr(current.getFirstChild().getNext(), rightPrecedence, rhsContext);
+     } while (current != n);
+   }

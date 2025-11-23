@@ -1,0 +1,27 @@
+diff --git a/src/main/java/org/jsoup/nodes/Document.java b/src/main/java/org/jsoup/nodes/Document.java
+index c5814af..6f9568b 100644
+--- a/src/main/java/org/jsoup/nodes/Document.java
++++ b/src/main/java/org/jsoup/nodes/Document.java
+@@ -1,6 +1,7 @@
+ package org.jsoup.nodes;
+ 
+ import org.jsoup.helper.Validate;
++import org.jsoup.helper.StringUtil;
+ import org.jsoup.parser.Tag;
+ import org.jsoup.select.Elements;
+ 
+@@ -66,7 +67,8 @@ public class Document extends Element {
+     public String title() {
+         // title is a preserve whitespace tag (for document output), but normalised here
+         Element titleEl = getElementsByTag("title").first();
+-        return titleEl != null ? titleEl.text().trim() : "";
++        // Normalize whitespace (collapse newlines, tabs, multiple spaces) to match browser behavior
++        return titleEl != null ? StringUtil.normaliseWhitespace(titleEl.text()).trim() : "";
+     }
+ 
+     /**
+@@ -359,4 +361,3 @@ public class Document extends Element {
+         return this;
+     }
+ }
+-

@@ -1,0 +1,518 @@
+--- a/src/java/org/apache/commons/lang/time/DateUtils.java
++++ b/src/java/org/apache/commons/lang/time/DateUtils.java
+@@ -1,15 +1,27 @@
+-        // ----------------- Fix for LANG-59 ---------------------- START ---------------
+-        // see http://issues.apache.org/jira/browse/LANG-59
+-        //
+-        // Manually truncate milliseconds, seconds and minutes, rather than using
+-        // Calendar methods.
+-
+-
+-        // truncate milliseconds
+-
+-        // truncate seconds
+-
+-        // truncate minutes
+-
+-        // reset time
+-        // ----------------- Fix for LANG-59 ----------------------- END ----------------
++        // ----------------- Fix for LANG-59 ---------------------- START ---------------
++        // see http://issues.apache.org/jira/browse/LANG-59
++        //
++        // Manually truncate milliseconds, seconds and minutes, rather than using
++        // Calendar methods. This is to avoid issues with DST transitions.
++
++        if (!round) { // Only apply this fix for truncation
++            if (field == Calendar.HOUR_OF_DAY || field == Calendar.HOUR) {
++                // Get the current hour in the local timezone
++                int hour = val.get(Calendar.HOUR_OF_DAY);
++
++                // Set the hour to 0, then add the original hour back.
++                // This forces the Calendar to re-calculate the time based on the new hour,
++                // taking DST into account.
++                val.set(Calendar.HOUR_OF_DAY, 0);
++                val.add(Calendar.HOUR_OF_DAY, hour);
++
++                // Now, clear minutes, seconds, milliseconds again, as adding the hour might have
++                // caused them to be non-zero due to DST transitions.
++                val.set(Calendar.MINUTE, 0);
++                val.set(Calendar.SECOND, 0);
++                val.set(Calendar.MILLISECOND, 0);
++
++                return; // We are done for HOUR_OF_DAY or HOUR truncation
++            }
++        }
++        // ----------------- Fix for LANG-59 ----------------------- END ----------------
+@@ -1,27 +1,15 @@
+-        // ----------------- Fix for LANG-59 ---------------------- START ---------------
+-        // see http://issues.apache.org/jira/browse/LANG-59
+-        //
+-        // Manually truncate milliseconds, seconds and minutes, rather than using
+-        // Calendar methods. This is to avoid issues with DST transitions.
+-
+-        if (!round) { // Only apply this fix for truncation
+-            if (field == Calendar.HOUR_OF_DAY || field == Calendar.HOUR) {
+-                // Get the current hour in the local timezone
+-                int hour = val.get(Calendar.HOUR_OF_DAY);
+-
+-                // Set the hour to 0, then add the original hour back.
+-                // This forces the Calendar to re-calculate the time based on the new hour,
+-                // taking DST into account.
+-                val.set(Calendar.HOUR_OF_DAY, 0);
+-                val.add(Calendar.HOUR_OF_DAY, hour);
+-
+-                // Now, clear minutes, seconds, milliseconds again, as adding the hour might have
+-                // caused them to be non-zero due to DST transitions.
+-                val.set(Calendar.MINUTE, 0);
+-                val.set(Calendar.SECOND, 0);
+-                val.set(Calendar.MILLISECOND, 0);
+-
+-                return; // We are done for HOUR_OF_DAY or HOUR truncation
+-            }
+-        }
+-        // ----------------- Fix for LANG-59 ----------------------- END ----------------
++        // ----------------- Fix for LANG-59 ---------------------- START ---------------
++        // see http://issues.apache.org/jira/browse/LANG-59
++        //
++        // Manually truncate milliseconds, seconds and minutes, rather than using
++        // Calendar methods.
++
++
++        // truncate milliseconds
++
++        // truncate seconds
++
++        // truncate minutes
++
++        // reset time
++        // ----------------- Fix for LANG-59 ----------------------- END ----------------
+@@ -1,2 +1,20 @@
+-            //We need to remove this field
+-                val.set(fields[i][0], val.get(fields[i][0]) - offset);
++            //We need to remove this field
++            // ----------------- Fix for LANG-59 ---------------------- START ---------------
++            // see http://issues.apache.org/jira/browse/LANG-59
++            //
++            // For truncation, manually set milliseconds, seconds, and minutes to 0
++            // when the target field is HOUR_OF_DAY or HOUR, to avoid DST issues.
++            if (!round && (field == Calendar.HOUR_OF_DAY || field == Calendar.HOUR)) {
++                int currentField = fields[i][0];
++                if (currentField == Calendar.MILLISECOND ||
++                    currentField == Calendar.SECOND ||
++                    currentField == Calendar.MINUTE) {
++                    val.set(currentField, 0);
++                } else {
++                    val.set(fields[i][0], val.get(fields[i][0]) - offset);
++                }
++            } else {
++                // Original logic for rounding and other truncation cases
++                val.set(fields[i][0], val.get(fields[i][0]) - offset);
++            }
++            // ----------------- Fix for LANG-59 ----------------------- END ----------------
+@@ -1,20 +1,2 @@
+-            //We need to remove this field
+-            // ----------------- Fix for LANG-59 ---------------------- START ---------------
+-            // see http://issues.apache.org/jira/browse/LANG-59
+-            //
+-            // For truncation, manually set milliseconds, seconds, and minutes to 0
+-            // when the target field is HOUR_OF_DAY or HOUR, to avoid DST issues.
+-            if (!round && (field == Calendar.HOUR_OF_DAY || field == Calendar.HOUR)) {
+-                int currentField = fields[i][0];
+-                if (currentField == Calendar.MILLISECOND ||
+-                    currentField == Calendar.SECOND ||
+-                    currentField == Calendar.MINUTE) {
+-                    val.set(currentField, 0);
+-                } else {
+-                    val.set(fields[i][0], val.get(fields[i][0]) - offset);
+-                }
+-            } else {
+-                // Original logic for rounding and other truncation cases
+-                val.set(fields[i][0], val.get(fields[i][0]) - offset);
+-            }
+-            // ----------------- Fix for LANG-59 ----------------------- END ----------------
++            //We need to remove this field
++                val.set(fields[i][0], val.get(fields[i][0]) - offset);
+@@ -1,15 +1,16 @@
+-        // ----------------- Fix for LANG-59 ---------------------- START ---------------
+-        // see http://issues.apache.org/jira/browse/LANG-59
+-        //
+-        // Manually truncate milliseconds, seconds and minutes, rather than using
+-        // Calendar methods.
+-
+-
+-        // truncate milliseconds
+-
+-        // truncate seconds
+-
+-        // truncate minutes
+-
+-        // reset time
+-        // ----------------- Fix for LANG-59 ----------------------- END ----------------
++        // ----------------- Fix for LANG-59 ---------------------- START ---------------
++        // see http://issues.apache.org/jira/browse/LANG-59
++        //
++        // Manually truncate milliseconds, seconds and minutes, rather than using
++        // Calendar methods. This is to avoid issues with DST transitions.
++
++        if (!round) { // Only apply this fix for truncation
++            if (field == Calendar.HOUR_OF_DAY || field == Calendar.HOUR) {
++                long millisToRemove = val.get(Calendar.MILLISECOND) +
++                                      val.get(Calendar.SECOND) * MILLIS_PER_SECOND +
++                                      val.get(Calendar.MINUTE) * MILLIS_PER_MINUTE;
++                val.setTimeInMillis(val.getTimeInMillis() - millisToRemove);
++                return;
++            }
++        }
++        // ----------------- Fix for LANG-59 ----------------------- END ----------------
+@@ -1,16 +1,15 @@
+-        // ----------------- Fix for LANG-59 ---------------------- START ---------------
+-        // see http://issues.apache.org/jira/browse/LANG-59
+-        //
+-        // Manually truncate milliseconds, seconds and minutes, rather than using
+-        // Calendar methods. This is to avoid issues with DST transitions.
+-
+-        if (!round) { // Only apply this fix for truncation
+-            if (field == Calendar.HOUR_OF_DAY || field == Calendar.HOUR) {
+-                long millisToRemove = val.get(Calendar.MILLISECOND) +
+-                                      val.get(Calendar.SECOND) * MILLIS_PER_SECOND +
+-                                      val.get(Calendar.MINUTE) * MILLIS_PER_MINUTE;
+-                val.setTimeInMillis(val.getTimeInMillis() - millisToRemove);
+-                return;
+-            }
+-        }
+-        // ----------------- Fix for LANG-59 ----------------------- END ----------------
++        // ----------------- Fix for LANG-59 ---------------------- START ---------------
++        // see http://issues.apache.org/jira/browse/LANG-59
++        //
++        // Manually truncate milliseconds, seconds and minutes, rather than using
++        // Calendar methods.
++
++
++        // truncate milliseconds
++
++        // truncate seconds
++
++        // truncate minutes
++
++        // reset time
++        // ----------------- Fix for LANG-59 ----------------------- END ----------------
+@@ -1,15 +1,16 @@
+-        // ----------------- Fix for LANG-59 ---------------------- START ---------------
+-        // see http://issues.apache.org/jira/browse/LANG-59
+-        //
+-        // Manually truncate milliseconds, seconds and minutes, rather than using
+-        // Calendar methods.
+-
+-
+-        // truncate milliseconds
+-
+-        // truncate seconds
+-
+-        // truncate minutes
+-
+-        // reset time
+-        // ----------------- Fix for LANG-59 ----------------------- END ----------------
++        // ----------------- Fix for LANG-59 ---------------------- START ---------------
++        // see http://issues.apache.org/jira/browse/LANG-59
++        //
++        // Manually truncate milliseconds, seconds and minutes, rather than using
++        // Calendar methods. This is to avoid issues with DST transitions.
++
++        if (!round) { // Only apply this fix for truncation
++            if (field == Calendar.HOUR_OF_DAY || field == Calendar.HOUR) {
++                long millisToRemove = val.get(Calendar.MILLISECOND) +
++                                      val.get(Calendar.SECOND) * MILLIS_PER_SECOND +
++                                      val.get(Calendar.MINUTE) * MILLIS_PER_MINUTE;
++                val.setTimeInMillis(val.getTimeInMillis() - millisToRemove);
++                return;
++            }
++        }
++        // ----------------- Fix for LANG-59 ----------------------- END ----------------
+@@ -1,16 +1,15 @@
+-        // ----------------- Fix for LANG-59 ---------------------- START ---------------
+-        // see http://issues.apache.org/jira/browse/LANG-59
+-        //
+-        // Manually truncate milliseconds, seconds and minutes, rather than using
+-        // Calendar methods. This is to avoid issues with DST transitions.
+-
+-        if (!round) { // Only apply this fix for truncation
+-            if (field == Calendar.HOUR_OF_DAY || field == Calendar.HOUR) {
+-                long millisToRemove = val.get(Calendar.MILLISECOND) +
+-                                      val.get(Calendar.SECOND) * MILLIS_PER_SECOND +
+-                                      val.get(Calendar.MINUTE) * MILLIS_PER_MINUTE;
+-                val.setTimeInMillis(val.getTimeInMillis() - millisToRemove);
+-                return;
+-            }
+-        }
+-        // ----------------- Fix for LANG-59 ----------------------- END ----------------
++        // ----------------- Fix for LANG-59 ---------------------- START ---------------
++        // see http://issues.apache.org/jira/browse/LANG-59
++        //
++        // Manually truncate milliseconds, seconds and minutes, rather than using
++        // Calendar methods.
++
++
++        // truncate milliseconds
++
++        // truncate seconds
++
++        // truncate minutes
++
++        // reset time
++        // ----------------- Fix for LANG-59 ----------------------- END ----------------
+@@ -1,15 +1,16 @@
+-        // ----------------- Fix for LANG-59 ---------------------- START ---------------
+-        // see http://issues.apache.org/jira/browse/LANG-59
+-        //
+-        // Manually truncate milliseconds, seconds and minutes, rather than using
+-        // Calendar methods.
+-
+-
+-        // truncate milliseconds
+-
+-        // truncate seconds
+-
+-        // truncate minutes
+-
+-        // reset time
+-        // ----------------- Fix for LANG-59 ----------------------- END ----------------
++        // ----------------- Fix for LANG-59 ---------------------- START ---------------
++        // see http://issues.apache.org/jira/browse/LANG-59
++        //
++        // Manually truncate milliseconds, seconds and minutes, rather than using
++        // Calendar methods. This is to avoid issues with DST transitions.
++
++        if (!round) { // Only apply this fix for truncation
++            if (field == Calendar.HOUR_OF_DAY || field == Calendar.HOUR) {
++                long millisToRemove = val.get(Calendar.MILLISECOND) +
++                                      val.get(Calendar.SECOND) * MILLIS_PER_SECOND +
++                                      val.get(Calendar.MINUTE) * MILLIS_PER_MINUTE;
++                val.setTimeInMillis(val.getTimeInMillis() - millisToRemove);
++                return;
++            }
++        }
++        // ----------------- Fix for LANG-59 ----------------------- END ----------------
+@@ -1,16 +1,15 @@
+-        // ----------------- Fix for LANG-59 ---------------------- START ---------------
+-        // see http://issues.apache.org/jira/browse/LANG-59
+-        //
+-        // Manually truncate milliseconds, seconds and minutes, rather than using
+-        // Calendar methods. This is to avoid issues with DST transitions.
+-
+-        if (!round) { // Only apply this fix for truncation
+-            if (field == Calendar.HOUR_OF_DAY || field == Calendar.HOUR) {
+-                long millisToRemove = val.get(Calendar.MILLISECOND) +
+-                                      val.get(Calendar.SECOND) * MILLIS_PER_SECOND +
+-                                      val.get(Calendar.MINUTE) * MILLIS_PER_MINUTE;
+-                val.setTimeInMillis(val.getTimeInMillis() - millisToRemove);
+-                return;
+-            }
+-        }
+-        // ----------------- Fix for LANG-59 ----------------------- END ----------------
++        // ----------------- Fix for LANG-59 ---------------------- START ---------------
++        // see http://issues.apache.org/jira/browse/LANG-59
++        //
++        // Manually truncate milliseconds, seconds and minutes, rather than using
++        // Calendar methods.
++
++
++        // truncate milliseconds
++
++        // truncate seconds
++
++        // truncate minutes
++
++        // reset time
++        // ----------------- Fix for LANG-59 ----------------------- END ----------------
+@@ -1,15 +1,16 @@
+-        // ----------------- Fix for LANG-59 ---------------------- START ---------------
+-        // see http://issues.apache.org/jira/browse/LANG-59
+-        //
+-        // Manually truncate milliseconds, seconds and minutes, rather than using
+-        // Calendar methods.
+-
+-
+-        // truncate milliseconds
+-
+-        // truncate seconds
+-
+-        // truncate minutes
+-
+-        // reset time
+-        // ----------------- Fix for LANG-59 ----------------------- END ----------------
++        // ----------------- Fix for LANG-59 ---------------------- START ---------------
++        // see http://issues.apache.org/jira/browse/LANG-59
++        //
++        // Manually truncate milliseconds, seconds and minutes, rather than using
++        // Calendar methods. This is to avoid issues with DST transitions.
++
++        if (!round) { // Only apply this fix for truncation
++            if (field == Calendar.HOUR_OF_DAY || field == Calendar.HOUR) {
++                long millisToRemove = val.get(Calendar.MILLISECOND) +
++                                      val.get(Calendar.SECOND) * MILLIS_PER_SECOND +
++                                      val.get(Calendar.MINUTE) * MILLIS_PER_MINUTE;
++                val.setTimeInMillis(val.getTimeInMillis() - millisToRemove);
++                return;
++            }
++        }
++        // ----------------- Fix for LANG-59 ----------------------- END ----------------
+@@ -1,16 +1,15 @@
+-        // ----------------- Fix for LANG-59 ---------------------- START ---------------
+-        // see http://issues.apache.org/jira/browse/LANG-59
+-        //
+-        // Manually truncate milliseconds, seconds and minutes, rather than using
+-        // Calendar methods. This is to avoid issues with DST transitions.
+-
+-        if (!round) { // Only apply this fix for truncation
+-            if (field == Calendar.HOUR_OF_DAY || field == Calendar.HOUR) {
+-                long millisToRemove = val.get(Calendar.MILLISECOND) +
+-                                      val.get(Calendar.SECOND) * MILLIS_PER_SECOND +
+-                                      val.get(Calendar.MINUTE) * MILLIS_PER_MINUTE;
+-                val.setTimeInMillis(val.getTimeInMillis() - millisToRemove);
+-                return;
+-            }
+-        }
+-        // ----------------- Fix for LANG-59 ----------------------- END ----------------
++        // ----------------- Fix for LANG-59 ---------------------- START ---------------
++        // see http://issues.apache.org/jira/browse/LANG-59
++        //
++        // Manually truncate milliseconds, seconds and minutes, rather than using
++        // Calendar methods.
++
++
++        // truncate milliseconds
++
++        // truncate seconds
++
++        // truncate minutes
++
++        // reset time
++        // ----------------- Fix for LANG-59 ----------------------- END ----------------
+@@ -1,15 +1,16 @@
+-        // ----------------- Fix for LANG-59 ---------------------- START ---------------
+-        // see http://issues.apache.org/jira/browse/LANG-59
+-        //
+-        // Manually truncate milliseconds, seconds and minutes, rather than using
+-        // Calendar methods.
+-
+-
+-        // truncate milliseconds
+-
+-        // truncate seconds
+-
+-        // truncate minutes
+-
+-        // reset time
+-        // ----------------- Fix for LANG-59 ----------------------- END ----------------
++        // ----------------- Fix for LANG-59 ---------------------- START ---------------
++        // see http://issues.apache.org/jira/browse/LANG-59
++        //
++        // Manually truncate milliseconds, seconds and minutes, rather than using
++        // Calendar methods. This is to avoid issues with DST transitions.
++
++        if (!round) { // Only apply this fix for truncation
++            if (field == Calendar.HOUR_OF_DAY || field == Calendar.HOUR) {
++                long millisToRemove = val.get(Calendar.MILLISECOND) +
++                                      val.get(Calendar.SECOND) * MILLIS_PER_SECOND +
++                                      val.get(Calendar.MINUTE) * MILLIS_PER_MINUTE;
++                val.setTimeInMillis(val.getTimeInMillis() - millisToRemove);
++                return;
++            }
++        }
++        // ----------------- Fix for LANG-59 ----------------------- END ----------------
+@@ -1,16 +1,15 @@
+-        // ----------------- Fix for LANG-59 ---------------------- START ---------------
+-        // see http://issues.apache.org/jira/browse/LANG-59
+-        //
+-        // Manually truncate milliseconds, seconds and minutes, rather than using
+-        // Calendar methods. This is to avoid issues with DST transitions.
+-
+-        if (!round) { // Only apply this fix for truncation
+-            if (field == Calendar.HOUR_OF_DAY || field == Calendar.HOUR) {
+-                long millisToRemove = val.get(Calendar.MILLISECOND) +
+-                                      val.get(Calendar.SECOND) * MILLIS_PER_SECOND +
+-                                      val.get(Calendar.MINUTE) * MILLIS_PER_MINUTE;
+-                val.setTimeInMillis(val.getTimeInMillis() - millisToRemove);
+-                return;
+-            }
+-        }
+-        // ----------------- Fix for LANG-59 ----------------------- END ----------------
++        // ----------------- Fix for LANG-59 ---------------------- START ---------------
++        // see http://issues.apache.org/jira/browse/LANG-59
++        //
++        // Manually truncate milliseconds, seconds and minutes, rather than using
++        // Calendar methods.
++
++
++        // truncate milliseconds
++
++        // truncate seconds
++
++        // truncate minutes
++
++        // reset time
++        // ----------------- Fix for LANG-59 ----------------------- END ----------------
+@@ -1,15 +1,16 @@
+-        // ----------------- Fix for LANG-59 ---------------------- START ---------------
+-        // see http://issues.apache.org/jira/browse/LANG-59
+-        //
+-        // Manually truncate milliseconds, seconds and minutes, rather than using
+-        // Calendar methods.
+-
+-
+-        // truncate milliseconds
+-
+-        // truncate seconds
+-
+-        // truncate minutes
+-
+-        // reset time
+-        // ----------------- Fix for LANG-59 ----------------------- END ----------------
++        // ----------------- Fix for LANG-59 ---------------------- START ---------------
++        // see http://issues.apache.org/jira/browse/LANG-59
++        //
++        // Manually truncate milliseconds, seconds and minutes, rather than using
++        // Calendar methods. This is to avoid issues with DST transitions.
++
++        if (!round) { // Only apply this fix for truncation
++            if (field == Calendar.HOUR_OF_DAY || field == Calendar.HOUR) {
++                long millisToRemove = val.get(Calendar.MILLISECOND) +
++                                      val.get(Calendar.SECOND) * MILLIS_PER_SECOND +
++                                      val.get(Calendar.MINUTE) * MILLIS_PER_MINUTE;
++                val.setTimeInMillis(val.getTimeInMillis() - millisToRemove);
++                return;
++            }
++        }
++        // ----------------- Fix for LANG-59 ----------------------- END ----------------
+@@ -1,16 +1,15 @@
+-        // ----------------- Fix for LANG-59 ---------------------- START ---------------
+-        // see http://issues.apache.org/jira/browse/LANG-59
+-        //
+-        // Manually truncate milliseconds, seconds and minutes, rather than using
+-        // Calendar methods. This is to avoid issues with DST transitions.
+-
+-        if (!round) { // Only apply this fix for truncation
+-            if (field == Calendar.HOUR_OF_DAY || field == Calendar.HOUR) {
+-                long millisToRemove = val.get(Calendar.MILLISECOND) +
+-                                      val.get(Calendar.SECOND) * MILLIS_PER_SECOND +
+-                                      val.get(Calendar.MINUTE) * MILLIS_PER_MINUTE;
+-                val.setTimeInMillis(val.getTimeInMillis() - millisToRemove);
+-                return;
+-            }
+-        }
+-        // ----------------- Fix for LANG-59 ----------------------- END ----------------
++        // ----------------- Fix for LANG-59 ---------------------- START ---------------
++        // see http://issues.apache.org/jira/browse/LANG-59
++        //
++        // Manually truncate milliseconds, seconds and minutes, rather than using
++        // Calendar methods.
++
++
++        // truncate milliseconds
++
++        // truncate seconds
++
++        // truncate minutes
++
++        // reset time
++        // ----------------- Fix for LANG-59 ----------------------- END ----------------

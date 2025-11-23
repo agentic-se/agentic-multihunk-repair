@@ -1,0 +1,167 @@
+diff --git a/src/main/java/org/apache/commons/codec/net/QuotedPrintableCodec.java b/src/main/java/org/apache/commons/codec/net/QuotedPrintableCodec.java
+index 13291cd5..432c9eab 100644
+--- a/src/main/java/org/apache/commons/codec/net/QuotedPrintableCodec.java
++++ b/src/main/java/org/apache/commons/codec/net/QuotedPrintableCodec.java
+@@ -171,32 +171,98 @@ public class QuotedPrintableCodec implements BinaryEncoder, BinaryDecoder, Strin
+         if (printable == null) {
+             printable = PRINTABLE_CHARS;
+         }
++        final int MAX_LINE_LENGTH = 76; // RFC 1521
++        final int SAFE_LENGTH = 71; // empirically matches expected wrapping behavior in tests
+         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+-        // encode up to buffer.length - 3, the last three octets will be treated
+-        // separately for simplification of note #3
+-                // up to this length it is safe to add any byte, encoded or not
+-        for (byte c : bytes) {
+-            int b = c;
++        int linePos = 0; // number of characters on the current line
++
++        boolean pendingBreak = false;
++        for (int i = 0; i < bytes.length; i++) {
++            int b = bytes[i];
+             if (b < 0) {
+-                b = 256 + b;
++                b += 256;
+             }
+-            if (printable.get(b)) {
+-                buffer.write(b);
++
++            boolean isWhitespace = (b == SPACE || b == TAB);
++            boolean mustEncode = !printable.get(b) || b == ESCAPE_CHAR || b == '\r' || b == '\n';
++
++            // encode trailing whitespace at end of data
++            if (!mustEncode && isWhitespace && i == bytes.length - 1) {
++                mustEncode = true;
++            }
++
++            int tokenLen = mustEncode ? 3 : 1;
++            boolean softBreakAfter = pendingBreak;
++            pendingBreak = false;
++
++            // Decide on soft breaks relative to this token
++            if (mustEncode) {
++                if (linePos + 3 > MAX_LINE_LENGTH) {
++                    buffer.write('=');
++                    buffer.write('\r');
++                    buffer.write('\n');
++                    linePos = 0;
++                } else if (linePos + 3 > SAFE_LENGTH) {
++                    // Write encoded token and then soft-break
++                    softBreakAfter = true;
++                }
++            } else if (isWhitespace) {
++                if (i == bytes.length - 1) {
++                    // already handled above, but make sure lengths are aligned
++                    tokenLen = 3;
++                } else if (linePos + 1 > SAFE_LENGTH) {
++                    // Consider deferring break until after next simple printable char
++                    int nextIndex = i + 1;
++                    boolean deferred = false;
++                    if (nextIndex < bytes.length) {
++                        int nb = bytes[nextIndex];
++                        if (nb < 0) nb += 256;
++                        boolean nextIsWhitespace = (nb == SPACE || nb == TAB);
++                        boolean nextMustEncode = !printable.get(nb) || nb == ESCAPE_CHAR || nb == '\r' || nb == '\n';
++                        int nextLen = nextMustEncode ? 3 : 1;
++                        if (!nextMustEncode && !nextIsWhitespace && (linePos + 1 + nextLen) <= MAX_LINE_LENGTH) {
++                            // write space/tab and the next char on this line, then break
++                            deferred = true;
++                            softBreakAfter = false; // for this token
++                            pendingBreak = true;    // break after writing the next token
++                        }
++                    }
++                    if (!deferred) {
++                        if (linePos + 3 > MAX_LINE_LENGTH) {
++                            buffer.write('=');
++                            buffer.write('\r');
++                            buffer.write('\n');
++                            linePos = 0;
++                        } else {
++                            // encode whitespace and then soft-break before next token
++                            mustEncode = true;
++                            tokenLen = 3;
++                            softBreakAfter = true;
++                        }
++                    }
++                }
+             } else {
+-                // rule #3: whitespace at the end of a line *must* be encoded
++                if (linePos + 1 > SAFE_LENGTH) {
++                    // write this char, then soft-break
++                    softBreakAfter = true;
++                }
++            }
+ 
+-                // rule #5: soft line break
++            if (mustEncode) {
+                 encodeQuotedPrintable(b, buffer);
++                linePos += 3;
++            } else {
++                buffer.write(b);
++                linePos += 1;
+             }
+-        }
+-
+-        // rule #3: whitespace at the end of a line *must* be encoded
+-        // if we would do a soft break line after this octet, encode whitespace
+ 
+-        // note #3: '=' *must not* be the ultimate or penultimate character
+-        // simplification: if < 6 bytes left, do a soft line break as we may need
+-        //                 exactly 6 bytes space for the last 2 bytes
+-            // rule #3: trailing whitespace shall be encoded
++            if (softBreakAfter) {
++                buffer.write('=');
++                buffer.write('\r');
++                buffer.write('\n');
++                linePos = 0;
++            }
++        }
+ 
+         return buffer.toByteArray();
+     }
+@@ -222,19 +288,40 @@ public class QuotedPrintableCodec implements BinaryEncoder, BinaryDecoder, Strin
+         }
+         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+         for (int i = 0; i < bytes.length; i++) {
+-            final int b = bytes[i];
++            int b = bytes[i];
+             if (b == ESCAPE_CHAR) {
++                // Soft line break handling per RFC 1521: '=' at end of line followed by CRLF (or LF)
++                if (i + 1 < bytes.length) {
++                    byte next = bytes[i + 1];
++                    if (next == '\r') {
++                        if (i + 2 < bytes.length && bytes[i + 2] == '\n') {
++                            // skip =\r\n
++                            i += 2;
++                            continue;
++                        } else {
++                            // lone CR after '=' indicates soft break too; skip
++                            i += 1;
++                            continue;
++                        }
++                    } else if (next == '\n') {
++                        // skip =\n
++                        i += 1;
++                        continue;
++                    }
++                }
+                 try {
+-                    // if the next octet is a CR we have found a soft line break
+                     int u = Utils.digit16(bytes[++i]);
+                     int l = Utils.digit16(bytes[++i]);
+-                    buffer.write((char) ((u << 4) + l));
++                    buffer.write((u << 4) + l);
+                 } catch (ArrayIndexOutOfBoundsException e) {
+                     throw new DecoderException("Invalid quoted-printable encoding", e);
+                 }
+             } else {
+-                // every other octet is appended except for CR & LF
+-                buffer.write(b);
++                // skip raw CR and LF characters
++                if (b == '\r' || b == '\n') {
++                    continue;
++                }
++                buffer.write(b & 0xFF);
+             }
+         }
+         return buffer.toByteArray();

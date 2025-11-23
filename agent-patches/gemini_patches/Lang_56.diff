@@ -1,0 +1,21 @@
+--- a/src/java/org/apache/commons/lang/time/FastDateFormat.java
++++ b/src/java/org/apache/commons/lang/time/FastDateFormat.java
+@@ -1,1 +1,1 @@
+-    private Rule[] mRules;
++    private transient Rule[] mRules;
+@@ -1,2 +1,13 @@
+-    // Serializing
+-    //-----------------------------------------------------------------------
++    // Serializing
++    //-----------------------------------------------------------------------
++    /**
++     * <p>Read the object stream.
++     *
++     * @param in  the stream to read from
++     * @throws IOException if an IO error occurs
++     * @throws ClassNotFoundException if the class cannot be found
++     */
++    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
++        in.defaultReadObject();
++        init();
++    }

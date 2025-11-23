@@ -1,0 +1,427 @@
+--- a/src/com/google/javascript/jscomp/Normalize.java
++++ b/src/com/google/javascript/jscomp/Normalize.java
+@@ -1,8 +1,9 @@
+-        case Token.DO:
+-          return;
+-        default:
+-          Node block = new Node(Token.BLOCK);
+-          n.replaceChild(last, block);
+-          block.addChildToFront(last);
+-          reportCodeChange("LABEL normalization");
+-          return;
++        case Token.DO:
++        case Token.VAR: // Added to allow VAR statements directly under labels
++          return;
++        default:
++          Node block = new Node(Token.BLOCK);
++          n.replaceChild(last, block);
++          block.addChildToFront(last);
++          reportCodeChange("LABEL normalization");
++          return;
+@@ -1,8 +1,9 @@
+-        case Token.DO:
+-          return;
+-        default:
+-          Node block = new Node(Token.BLOCK);
+-          n.replaceChild(last, block);
+-          block.addChildToFront(last);
+-          reportCodeChange("LABEL normalization");
+-          return;
++        case Token.DO:
++        case Token.FUNCTION: // Added to allow FUNCTION statements directly under labels
++          return;
++        default:
++          Node block = new Node(Token.BLOCK);
++          n.replaceChild(last, block);
++          block.addChildToFront(last);
++          reportCodeChange("LABEL normalization");
++          return;
+@@ -1,8 +1,9 @@
+-        case Token.DO:
+-          return;
+-        default:
+-          Node block = new Node(Token.BLOCK);
+-          n.replaceChild(last, block);
+-          block.addChildToFront(last);
+-          reportCodeChange("LABEL normalization");
+-          return;
++        case Token.DO:
++        case Token.FUNCTION: // Added to allow FUNCTION statements directly under labels
++          return;
++        default:
++          Node block = new Node(Token.BLOCK);
++          n.replaceChild(last, block);
++          block.addChildToFront(last);
++          reportCodeChange("LABEL normalization");
++          return;
+@@ -1,12 +1,33 @@
+-      switch (n.getType()) {
+-        case Token.WHILE:
+-          if (CONVERT_WHILE_TO_FOR) {
+-            Node expr = n.getFirstChild();
+-            n.setType(Token.FOR);
+-            n.addChildBefore(new Node(Token.EMPTY), expr);
+-            n.addChildAfter(new Node(Token.EMPTY), expr);
+-            reportCodeChange("WHILE node");
+-          }
+-          break;
+-
+-      }
++      switch (n.getType()) {
++        case Token.WHILE:
++          if (CONVERT_WHILE_TO_FOR) {
++            Node expr = n.getFirstChild();
++            n.setType(Token.FOR);
++            n.addChildBefore(new Node(Token.EMPTY), expr);
++            n.addChildAfter(new Node(Token.EMPTY), expr);
++            reportCodeChange("WHILE node");
++          }
++          break;
++
++        case Token.FUNCTION:
++          // Normalize named function declarations
++          //   function f() {}
++          // to
++          //   var f = function () {};
++          //
++          // This is not done for anonymous functions or function expressions.
++          if (!NodeUtil.isFunctionAnonymous(n)) {
++            Node name = n.getFirstChild();
++            Preconditions.checkState(name.getType() == Token.NAME);
++            Preconditions.checkState(!name.getString().isEmpty());
++
++            Node var = new Node(Token.VAR, name.cloneTree());
++            Node newFunction = n.cloneTree();
++            newFunction.getFirstChild().setString(""); // Clear the name
++            var.getFirstChild().addChildToFront(newFunction);
++
++            parent.replaceChild(n, var);
++            reportCodeChange("function declaration to var statement");
++          }
++          break;
++      }
+@@ -1,12 +1,48 @@
+-      switch (n.getType()) {
+-        case Token.WHILE:
+-          if (CONVERT_WHILE_TO_FOR) {
+-            Node expr = n.getFirstChild();
+-            n.setType(Token.FOR);
+-            n.addChildBefore(new Node(Token.EMPTY), expr);
+-            n.addChildAfter(new Node(Token.EMPTY), expr);
+-            reportCodeChange("WHILE node");
+-          }
+-          break;
+-
+-      }
++      switch (n.getType()) {
++        case Token.WHILE:
++          if (CONVERT_WHILE_TO_FOR) {
++            Node expr = n.getFirstChild();
++            n.setType(Token.FOR);
++            n.addChildBefore(new Node(Token.EMPTY), expr);
++            n.addChildAfter(new Node(Token.EMPTY), expr);
++            reportCodeChange("WHILE node");
++          }
++          break;
++
++        case Token.FUNCTION:
++          // Normalize named function declarations
++          //   function f() {}
++          // to
++          //   var f = function () {};
++          //
++          // This is not done for anonymous functions or function expressions.
++          if (!NodeUtil.isFunctionAnonymous(n)) {
++            Node name = n.getFirstChild();
++            Preconditions.checkState(name.getType() == Token.NAME);
++            Preconditions.checkState(!name.getString().isEmpty());
++
++            // Create a VAR node
++            Node var = new Node(Token.VAR);
++            var.setLineno(n.getLineno());
++            var.setCharno(n.getCharno());
++
++            // Create a NAME node for the variable
++            Node varName = new Node(Token.NAME, name.getString());
++            varName.setLineno(name.getLineno());
++            varName.setCharno(name.getCharno());
++
++            // Make the original function anonymous
++            name.setString("");
++
++            // Attach the anonymous function to the variable name
++            varName.addChildToFront(n);
++
++            // Attach the variable name to the VAR node
++            var.addChildToFront(varName);
++
++            // Replace the original FUNCTION node with the new VAR node
++            parent.replaceChild(n, var);
++            reportCodeChange("function declaration to var statement");
++          }
++          break;
++      }
+@@ -1,4 +1,5 @@
+-            // Create a NAME node for the variable
+-            Node varName = new Node(Token.NAME, name.getString());
+-            varName.setLineno(name.getLineno());
+-            varName.setCharno(name.getCharno());
++            // Create a NAME node for the variable
++            Node varName = new Node(Token.NAME);
++            varName.setString(name.getString());
++            varName.setLineno(name.getLineno());
++            varName.setCharno(name.getCharno());
+@@ -1,4 +1,5 @@
+-            // Create a NAME node for the variable, using the function's name
+-            Node varName = new Node(Token.NAME, name.getString());
+-            varName.setLineno(name.getLineno());
+-            varName.setCharno(name.getCharno());
++            // Create a NAME node for the variable, using the function's name
++            Node varName = new Node(Token.NAME);
++            varName.setString(name.getString());
++            varName.setLineno(name.getLineno());
++            varName.setCharno(name.getCharno());
+@@ -1,6 +1,8 @@
+-            // Create a new anonymous FUNCTION node with the same parameters and body as the original function.
+-            Node newFunction = new Node(Token.FUNCTION);
+-            newFunction.setLineno(n.getLineno());
+-            newFunction.setCharno(n.getCharno());
+-            // Move children from original function to new anonymous function
+-            newFunction.addChildrenForTree(n.removeChildren());
++            // Create a new anonymous FUNCTION node with the same parameters and body as the original function.
++            Node newFunction = new Node(Token.FUNCTION);
++            newFunction.setLineno(n.getLineno());
++            newFunction.setCharno(n.getCharno());
++            // Move children from original function to new anonymous function
++            while (n.hasChildren()) {
++              newFunction.addChildToBack(n.getFirstChild());
++            }
+@@ -1,5 +1,4 @@
+-            // Create a NAME node for the variable
+-            Node varName = new Node(Token.NAME);
+-            varName.setString(functionName);
+-            varName.setLineno(name.getLineno());
+-            varName.setCharno(name.getCharno());
++            // Create a NAME node for the variable by cloning the original function's name node
++            Node varName = name.cloneNode(); // Clone the original name node
++            varName.setLineno(name.getLineno());
++            varName.setCharno(name.getCharno());
+@@ -1,12 +1,51 @@
+-      switch (n.getType()) {
+-        case Token.WHILE:
+-          if (CONVERT_WHILE_TO_FOR) {
+-            Node expr = n.getFirstChild();
+-            n.setType(Token.FOR);
+-            n.addChildBefore(new Node(Token.EMPTY), expr);
+-            n.addChildAfter(new Node(Token.EMPTY), expr);
+-            reportCodeChange("WHILE node");
+-          }
+-          break;
+-
+-      }
++      switch (n.getType()) {
++        case Token.WHILE:
++          if (CONVERT_WHILE_TO_FOR) {
++            Node expr = n.getFirstChild();
++            n.setType(Token.FOR);
++            n.addChildBefore(new Node(Token.EMPTY), expr);
++            n.addChildAfter(new Node(Token.EMPTY), expr);
++            reportCodeChange("WHILE node");
++          }
++          break;
++
++        case Token.FUNCTION:
++          // Normalize named function declarations
++          //   function f() {}
++          // to
++          //   var f = function () {};
++          //
++          // This is not done for anonymous functions or function expressions.
++          if (!NodeUtil.isFunctionAnonymous(n)) {
++            Node name = n.getFirstChild();
++            Preconditions.checkState(name.getType() == Token.NAME);
++            Preconditions.checkState(!name.getString().isEmpty());
++
++            // Get the function name
++            String functionName = name.getString();
++
++            // Create a VAR node
++            Node var = new Node(Token.VAR);
++            var.setLineno(n.getLineno());
++            var.setCharno(n.getCharno());
++
++            // Create a NAME node for the variable
++            Node varName = new Node(Token.NAME, functionName);
++            varName.setLineno(name.getLineno());
++            varName.setCharno(name.getCharno());
++
++            // Make the original function anonymous by clearing its name
++            name.setString("");
++
++            // Attach the original function node (now anonymous) to the variable name
++            varName.addChildToFront(n);
++
++            // Attach the variable name to the VAR node
++            var.addChildToFront(varName);
++
++            // Replace the original FUNCTION node with the new VAR node
++            parent.replaceChild(n, var);
++            reportCodeChange("function declaration to var statement");
++          }
++          break;
++      }
+@@ -1,4 +1,5 @@
+-            // Create a NAME node for the variable
+-            Node varName = new Node(Token.NAME, functionName);
+-            varName.setLineno(name.getLineno());
+-            varName.setCharno(name.getCharno());
++            // Create a NAME node for the variable
++            Node varName = new Node(Token.NAME);
++            varName.setString(functionName);
++            varName.setLineno(name.getLineno());
++            varName.setCharno(name.getCharno());
+@@ -1,4 +1,5 @@
+-            // Create a NAME node for the variable
+-            Node varName = new Node(Token.NAME, functionName);
+-            varName.setLineno(name.getLineno());
+-            varName.setCharno(name.getCharno());
++            // Create a NAME node for the variable
++            Node varName = new Node(Token.NAME);
++            varName.setString(functionName);
++            varName.setLineno(name.getLineno());
++            varName.setCharno(name.getCharno());
+@@ -1,12 +1,52 @@
+-      switch (n.getType()) {
+-        case Token.WHILE:
+-          if (CONVERT_WHILE_TO_FOR) {
+-            Node expr = n.getFirstChild();
+-            n.setType(Token.FOR);
+-            n.addChildBefore(new Node(Token.EMPTY), expr);
+-            n.addChildAfter(new Node(Token.EMPTY), expr);
+-            reportCodeChange("WHILE node");
+-          }
+-          break;
+-
+-      }
++        case Token.FUNCTION:
++          // Normalize named function declarations
++          //   function f() {}
++          // to
++          //   var f = function () {};
++          //
++          // This is not done for anonymous functions or function expressions.
++          if (!NodeUtil.isFunctionAnonymous(n)) {
++            Node name = n.getFirstChild();
++            Preconditions.checkState(name.getType() == Token.NAME);
++            Preconditions.checkState(!name.getString().isEmpty());
++
++            // Get the function name
++            String functionName = name.getString();
++
++            // Create a VAR node
++            Node var = new Node(Token.VAR);
++            var.setLineno(n.getLineno());
++            var.setCharno(n.getCharno());
++
++            // Create a NAME node for the variable
++            Node varName = new Node(Token.NAME);
++            varName.setString(functionName);
++            varName.setLineno(name.getLineno());
++            varName.setCharno(name.getCharno());
++
++            // Create a new anonymous FUNCTION node
++            Node newFunction = new Node(Token.FUNCTION);
++            newFunction.setLineno(n.getLineno());
++            newFunction.setCharno(n.getCharno());
++
++            // Detach children from the original function node and add to new anonymous function
++            // The original function has children: NAME, LP, BLOCK
++            // Detach NAME first, then LP, then BLOCK
++            name.detachFromParent(); // Detach name (now n has LP, BLOCK)
++            Node lpNode = n.getFirstChild().detachFromParent(); // LP is now first child
++            Node blockNode = n.getFirstChild().detachFromParent(); // BLOCK is now first child (after LP is detached)
++
++            newFunction.addChildToBack(lpNode);
++            newFunction.addChildToBack(blockNode);
++
++            // Attach the new anonymous function to the variable name
++            varName.addChildToFront(newFunction);
++
++            // Attach the variable name to the VAR node
++            var.addChildToFront(varName);
++
++            // Replace the original FUNCTION node with the new VAR node
++            parent.replaceChild(n, var);
++            reportCodeChange("function declaration to var statement");
++          }
++          break;
+@@ -1,6 +1,63 @@
+-            reportCodeChange("WHILE node");
+-          }
+-          break;
+-
+-      }
+-    }
++            reportCodeChange("WHILE node");
++          }
++          break;
++
++        case Token.FUNCTION:
++          // Normalize named function declarations
++          //   function f() {}
++          // to
++          //   var f = function () {};
++          //
++          // This is not done for anonymous functions or function expressions.
++          if (!NodeUtil.isFunctionAnonymous(n)) {
++            Node name = n.getFirstChild();
++            Preconditions.checkState(name.getType() == Token.NAME);
++            Preconditions.checkState(!name.getString().isEmpty());
++
++            // Get the function name
++            String functionName = name.getString();
++
++            // Create a VAR node
++            Node var = new Node(Token.VAR);
++            var.setLineno(n.getLineno());
++            var.setCharno(n.getCharno());
++
++            // Create a NAME node for the variable
++            Node varName = new Node(Token.NAME);
++            varName.setString(functionName);
++            varName.setLineno(name.getLineno());
++            varName.setCharno(name.getCharno());
++
++            // Create a new anonymous FUNCTION node
++            Node newFunction = new Node(Token.FUNCTION);
++            newFunction.setLineno(n.getLineno());
++            newFunction.setCharno(n.getCharno());
++
++            // Add an empty NAME node for the anonymous function
++            Node emptyName = new Node(Token.NAME);
++            emptyName.setLineno(name.getLineno());
++            emptyName.setCharno(name.getCharno());
++            newFunction.addChildToBack(emptyName);
++
++            // Detach LP and BLOCK from original function
++            name.detachFromParent(); // Detach original name
++            Node lpNode = n.getFirstChild().detachFromParent(); // LP is now first child
++            Node blockNode = n.getFirstChild().detachFromParent(); // BLOCK is now first child (after LP is detached)
++
++            newFunction.addChildToBack(lpNode);
++            newFunction.addChildToBack(blockNode);
++
++            // Attach the new anonymous function to the variable name
++            varName.addChildToFront(newFunction);
++
++            // Attach the variable name to the VAR node
++            var.addChildToFront(varName);
++
++            // Replace the original FUNCTION node with the new VAR node
++            parent.replaceChild(n, var);
++            reportCodeChange("function declaration to var statement");
++          }
++          break;
++
++      }
++    }

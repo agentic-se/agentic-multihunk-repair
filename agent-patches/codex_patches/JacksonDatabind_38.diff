@@ -1,0 +1,96 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/CollectionType.java b/src/main/java/com/fasterxml/jackson/databind/type/CollectionType.java
+index 39c103822..5082d94dc 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/CollectionType.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/CollectionType.java
+@@ -47,7 +47,14 @@ public final class CollectionType
+     public static CollectionType construct(Class<?> rawType, JavaType elemT) {
+         // First: may need to fabricate TypeBindings (needed for refining into
+         // concrete collection types, as per [databind#1102])
+-        return new CollectionType(rawType, null,
++        java.lang.reflect.TypeVariable<?>[] vars = rawType.getTypeParameters();
++        TypeBindings bindings;
++        if ((vars == null) || (vars.length != 1)) {
++            bindings = TypeBindings.emptyBindings();
++        } else {
++            bindings = TypeBindings.create(rawType, elemT);
++        }
++        return new CollectionType(rawType, bindings,
+                 // !!! TODO: Wrong, does have supertypes, but:
+                 _bogusSuperClass(rawType), null, elemT,
+                 null, null, false);
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/MapType.java b/src/main/java/com/fasterxml/jackson/databind/type/MapType.java
+index a11767f44..e6157cf16 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/MapType.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/MapType.java
+@@ -44,8 +44,15 @@ public final class MapType extends MapLikeType
+     {
+         // First: may need to fabricate TypeBindings (needed for refining into
+         // concrete collection types, as per [databind#1102])
++        java.lang.reflect.TypeVariable<?>[] vars = rawType.getTypeParameters();
++        TypeBindings bindings;
++        if ((vars == null) || (vars.length != 2)) {
++            bindings = TypeBindings.emptyBindings();
++        } else {
++            bindings = TypeBindings.create(rawType, keyT, valueT);
++        }
+         // !!! TODO: Wrong, does have supertypes
+-        return new MapType(rawType, null, _bogusSuperClass(rawType), null,
++        return new MapType(rawType, bindings, _bogusSuperClass(rawType), null,
+                 keyT, valueT, null, null, false);
+     }
+ 
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java b/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java
+index ceb0117a7..a6c9fba2e 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/SimpleType.java
+@@ -114,7 +114,8 @@ public class SimpleType // note: until 2.6 was final
+             throw new IllegalArgumentException("Can not construct SimpleType for an array (class: "+cls.getName()+")");
+         }
+         return new SimpleType(cls, TypeBindings.emptyBindings(),
+-                _bogusSuperClass(cls), null, null, null, false);
++                _buildSuperClassChain(cls), _buildSuperInterfaces(cls),
++                null, null, false);
+     }
+ 
+     @Override
+@@ -248,6 +249,40 @@ public class SimpleType // note: until 2.6 was final
+      * 
+      * @since 2.7 -- remove when not needed (2.8?)
+      */
++    protected static JavaType _buildSuperClassChain(Class<?> raw) {
++        Class<?> parent = raw.getSuperclass();
++        if (parent == null) {
++            return null;
++        }
++        // For java.lang.Object just use "unknown" placeholder
++        if (parent == Object.class) {
++            return TypeFactory.unknownType();
++        }
++        JavaType parentSuper = _buildSuperClassChain(parent);
++        JavaType[] parentInts = _buildSuperInterfacesArray(parent.getInterfaces());
++        return new SimpleType(parent, TypeBindings.emptyBindings(), parentSuper, parentInts,
++                null, null, false);
++    }
++
++    protected static JavaType[] _buildSuperInterfaces(Class<?> raw) {
++        Class<?>[] intfs = raw.getInterfaces();
++        return _buildSuperInterfacesArray(intfs);
++    }
++
++    private static JavaType[] _buildSuperInterfacesArray(Class<?>[] intfs) {
++        if (intfs == null || intfs.length == 0) {
++            return null;
++        }
++        JavaType[] result = new JavaType[intfs.length];
++        for (int i = 0; i < intfs.length; ++i) {
++            Class<?> iface = intfs[i];
++            JavaType superOfIface = _buildSuperClassChain(iface);
++            JavaType[] superIntfs = _buildSuperInterfacesArray(iface.getInterfaces());
++            result[i] = new SimpleType(iface, TypeBindings.emptyBindings(), superOfIface, superIntfs,
++                    null, null, false);
++        }
++        return result;
++    }
+ 
+     /*
+     /**********************************************************

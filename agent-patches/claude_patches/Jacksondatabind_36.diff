@@ -1,0 +1,35 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/util/StdDateFormat.java b/src/main/java/com/fasterxml/jackson/databind/util/StdDateFormat.java
+index c788c62cb..0b4dcf2cd 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/util/StdDateFormat.java
++++ b/src/main/java/com/fasterxml/jackson/databind/util/StdDateFormat.java
+@@ -249,6 +249,16 @@ public class StdDateFormat
+      */
+             // and since leniency settings may have been used:
+ 
++    @Override // since 2.7
++    public void setLenient(boolean enabled) {
++        Boolean newValue = Boolean.valueOf(enabled);
++        if (newValue != _lenient) {
++            _lenient = newValue;
++            // need to clear cached instances since leniency affects their behavior
++            _clearFormats();
++        }
++    }
++
+     @Override // since 2.7
+     public boolean isLenient() {
+         if (_lenient == null) {
+@@ -554,6 +564,9 @@ public class StdDateFormat
+                 df.setTimeZone(tz);
+             }
+         }
++        if (lenient != null) {
++            df.setLenient(lenient.booleanValue());
++        }
+         return df;
+     }
+ 
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

@@ -1,0 +1,19 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/base/ParserBase.java b/src/main/java/com/fasterxml/jackson/core/base/ParserBase.java
+index ea40476c..dee43606 100644
+--- a/src/main/java/com/fasterxml/jackson/core/base/ParserBase.java
++++ b/src/main/java/com/fasterxml/jackson/core/base/ParserBase.java
+@@ -955,6 +955,10 @@ public abstract class ParserBase
+              * to avoid rounding errors that non-decimal floating operations
+              * would incur
+              */
++            // [Issue#98]: Can not represent NaN or Infinity as BigDecimal
++            if (Double.isNaN(_numberDouble) || Double.isInfinite(_numberDouble)) {
++                throw new NumberFormatException("Non-standard token '"+getText()+"' can not be represented as BigDecimal");
++            }
+             _numberBigDecimal = NumberInput.parseBigDecimal(getText());
+         } else if ((_numTypesValid & NR_BIGINT) != 0) {
+             _numberBigDecimal = new BigDecimal(_numberBigInt);
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

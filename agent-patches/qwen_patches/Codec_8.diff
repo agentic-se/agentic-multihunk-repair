@@ -1,0 +1,22 @@
+diff --git a/src/java/org/apache/commons/codec/binary/Base64.java b/src/java/org/apache/commons/codec/binary/Base64.java
+index 76f14f50..6aebb12f 100644
+--- a/src/java/org/apache/commons/codec/binary/Base64.java
++++ b/src/java/org/apache/commons/codec/binary/Base64.java
+@@ -566,7 +566,9 @@ public class Base64 implements BinaryEncoder, BinaryDecoder {
+         // EOF (-1) and first time '=' character is encountered in stream.
+         // This approach makes the '=' padding characters completely optional.
+         if (eof && modulus != 0) {
+-            if (buffer == null || buffer.length - pos < decodeSize) {
++            // Ensure we have enough space for the remaining data based on modulus
++            int neededSpace = (modulus == 2) ? 1 : 2; // Need 1 byte for case 2, 2 bytes for case 3
++            if (buffer == null || buffer.length - pos < neededSpace) {
+                 resizeBuffer();
+             }
+             
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store
++ src/java/org/apache/commons/codec/binary/Base64.java.backup
++ src/java/org/apache/commons/codec/binary/Base64.java.bak
++ src/java/org/apache/commons/codec/binary/Base64.java.fixed

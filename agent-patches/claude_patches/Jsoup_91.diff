@@ -1,0 +1,57 @@
+diff --git a/src/main/java/org/jsoup/UncheckedIOException.java b/src/main/java/org/jsoup/UncheckedIOException.java
+index 4cab9f4..e7a9cc3 100644
+--- a/src/main/java/org/jsoup/UncheckedIOException.java
++++ b/src/main/java/org/jsoup/UncheckedIOException.java
+@@ -7,6 +7,9 @@ public class UncheckedIOException extends RuntimeException {
+         super(cause);
+     }
+ 
++    public UncheckedIOException(String message) {
++        super(new IOException(message));
++    }
+ 
+     public IOException ioException() {
+         return (IOException) getCause();
+diff --git a/src/main/java/org/jsoup/parser/CharacterReader.java b/src/main/java/org/jsoup/parser/CharacterReader.java
+index 187f9e9..a1edcb9 100644
+--- a/src/main/java/org/jsoup/parser/CharacterReader.java
++++ b/src/main/java/org/jsoup/parser/CharacterReader.java
+@@ -17,6 +17,7 @@ public final class CharacterReader {
+     private static final int maxStringCacheLen = 12;
+     static final int maxBufferLen = 1024 * 32; // visible for testing
+     private static final int readAheadLimit = (int) (maxBufferLen * 0.75);
++    private static final int numNullsConsideredBinary = 10; // conservative
+ 
+     private final char[] charBuf;
+     private final Reader reader;
+@@ -34,6 +35,9 @@ public final class CharacterReader {
+         charBuf = new char[sz > maxBufferLen ? maxBufferLen : sz];
+         bufferUp();
+ 
++        if (isBinary()) {
++            throw new UncheckedIOException("Input is binary and unsupported");
++        }
+     }
+ 
+     public CharacterReader(Reader input) {
+@@ -454,8 +458,16 @@ public final class CharacterReader {
+      *  Heuristic to determine if the current buffer looks like binary content. Reader will already hopefully be
+      *  decoded correctly, so a bunch of NULLs indicates a binary file
+      */
++    boolean isBinary() {
++        int nullsSeen = 0;
+ 
++        for (int i = bufPos; i < bufLength; i++) {
++            if (charBuf[i] == '\0')
++                nullsSeen++;
++        }
+ 
++        return nullsSeen >= numNullsConsideredBinary;
++    }
+ 
+     @Override
+     public String toString() {
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

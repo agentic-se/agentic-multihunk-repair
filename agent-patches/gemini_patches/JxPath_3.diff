@@ -1,0 +1,596 @@
+--- a/src/java/org/apache/commons/jxpath/ri/model/beans/NullElementPointer.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/beans/NullElementPointer.java
+@@ -1,3 +1,7 @@
+-    public NodePointer createPath(JXPathContext context) {
+-        return parent.createChild(context, null, index);
+-    }
++    public NodePointer createPath(JXPathContext context) {
++        NodePointer newPointer = parent.createChild(context, null, index);
++        if (newPointer.getNode() == null) {
++            throw new JXPathAbstractFactoryException("Factory could not create a non-null object for path: " + asPath());
++        }
++        return newPointer;
++    }
+@@ -1,3 +1,7 @@
+-    public NodePointer createPath(JXPathContext context, Object value) {
+-        return parent.createChild(context, null, index, value);
+-    }
++    public NodePointer createPath(JXPathContext context, Object value) {
++        NodePointer newPointer = parent.createChild(context, null, index, value);
++        if (newPointer.getNode() == null) {
++            throw new JXPathAbstractFactoryException("Factory could not create a non-null object for path: " + asPath());
++        }
++        return newPointer;
++    }
+@@ -1,1 +1,2 @@
+-import org.apache.commons.jxpath.JXPathContext;
++import org.apache.commons.jxpath.JXPathAbstractFactoryException;
++import org.apache.commons.jxpath.JXPathContext;
+@@ -1,2 +1,1 @@
+-import org.apache.commons.jxpath.JXPathAbstractFactoryException;
+-import org.apache.commons.jxpath.JXPathContext;
++import org.apache.commons.jxpath.JXPathContext;
+@@ -1,7 +1,3 @@
+-    public NodePointer createPath(JXPathContext context) {
+-        NodePointer newPointer = parent.createChild(context, null, index);
+-        if (newPointer.getNode() == null) {
+-            throw new JXPathAbstractFactoryException("Factory could not create a non-null object for path: " + asPath());
+-        }
+-        return newPointer;
+-    }
++    public NodePointer createPath(JXPathContext context) {
++        return parent.createChild(context, null, index);
++    }
+@@ -1,7 +1,3 @@
+-    public NodePointer createPath(JXPathContext context, Object value) {
+-        NodePointer newPointer = parent.createChild(context, null, index, value);
+-        if (newPointer.getNode() == null) {
+-            throw new JXPathAbstractFactoryException("Factory could not create a non-null object for path: " + asPath());
+-        }
+-        return newPointer;
+-    }
++    public NodePointer createPath(JXPathContext context, Object value) {
++        return parent.createChild(context, null, index, value);
++    }
+@@ -1,1 +1,3 @@
+-import org.apache.commons.jxpath.JXPathContext;
++import org.apache.commons.jxpath.AbstractFactory;
++import org.apache.commons.jxpath.JXPathAbstractFactoryException;
++import org.apache.commons.jxpath.JXPathContext;
+@@ -1,3 +1,8 @@
+-    public NodePointer createPath(JXPathContext context) {
+-        return parent.createChild(context, null, index);
+-    }
++    public NodePointer createPath(JXPathContext context) {
++        AbstractFactory factory = getAbstractFactory(context);
++        boolean success = factory.createObject(context, this, getImmediateParentPointer().getNode(), null, index);
++        if (!success) {
++            throw new JXPathAbstractFactoryException("Factory could not create an object for path: " + asPath());
++        }
++        return NodePointer.newNodePointer(null, getNode(), getLocale());
++    }
+@@ -1,3 +1,10 @@
+-    public NodePointer createPath(JXPathContext context, Object value) {
+-        return parent.createChild(context, null, index, value);
+-    }
++    public NodePointer createPath(JXPathContext context, Object value) {
++        AbstractFactory factory = getAbstractFactory(context);
++        boolean success = factory.createObject(context, this, getImmediateParentPointer().getNode(), null, index);
++        if (!success) {
++            throw new JXPathAbstractFactoryException("Factory could not create an object for path: " + asPath());
++        }
++        NodePointer newPointer = NodePointer.newNodePointer(null, getNode(), getLocale());
++        newPointer.setValue(value);
++        return newPointer;
++    }
+@@ -1,1 +1,1 @@
+-        AbstractFactory factory = getAbstractFactory(context);
++        AbstractFactory factory = context.getFactory();
+@@ -1,10 +1,3 @@
+-    public NodePointer createPath(JXPathContext context, Object value) {
+-        AbstractFactory factory = context.getFactory();
+-        boolean success = factory.createObject(context, this, getImmediateParentPointer().getNode(), null, index);
+-        if (!success) {
+-            throw new JXPathAbstractFactoryException("Factory could not create an object for path: " + asPath());
+-        }
+-        NodePointer newPointer = NodePointer.newNodePointer(null, getNode(), getLocale());
+-        newPointer.setValue(value);
+-        return newPointer;
+-    }
++    public NodePointer createPath(JXPathContext context, Object value) {
++        return parent.createChild(context, null, index, value);
++    }
+@@ -1,8 +1,3 @@
+-    public NodePointer createPath(JXPathContext context) {
+-        AbstractFactory factory = context.getFactory();
+-        boolean success = factory.createObject(context, this, getImmediateParentPointer().getNode(), null, index);
+-        if (!success) {
+-            throw new JXPathAbstractFactoryException("Factory could not create an object for path: " + asPath());
+-        }
+-        return NodePointer.newNodePointer(null, getNode(), getLocale());
+-    }
++    public NodePointer createPath(JXPathContext context) {
++        return parent.createChild(context, null, index);
++    }
+@@ -1,3 +1,1 @@
+-import org.apache.commons.jxpath.AbstractFactory;
+-import org.apache.commons.jxpath.JXPathAbstractFactoryException;
+-import org.apache.commons.jxpath.JXPathContext;
++import org.apache.commons.jxpath.JXPathContext;
+@@ -1,3 +1,4 @@
+-import org.apache.commons.jxpath.JXPathContext;
+-import org.apache.commons.jxpath.ri.QName;
+-import org.apache.commons.jxpath.ri.model.NodePointer;
++import org.apache.commons.jxpath.JXPathContext;
++import org.apache.commons.jxpath.ri.QName;
++import org.apache.commons.jxpath.ri.model.NodePointer;
++import org.apache.commons.jxpath.util.ValueUtils;
+@@ -1,3 +1,7 @@
+-    public NodePointer createPath(JXPathContext context) {
+-        return parent.createChild(context, null, index);
+-    }
++    public NodePointer createPath(JXPathContext context) {
++        Object collection = parent.getBaseValue();
++        if (collection != null && ValueUtils.isCollection(collection) && index < ValueUtils.getLength(collection)) {
++            return NodePointer.newNodePointer(null, ValueUtils.getValue(collection, index), getLocale());
++        }
++        return parent.createChild(context, null, index);
++    }
+@@ -1,3 +1,9 @@
+-    public NodePointer createPath(JXPathContext context, Object value) {
+-        return parent.createChild(context, null, index, value);
+-    }
++    public NodePointer createPath(JXPathContext context, Object value) {
++        Object collection = parent.getBaseValue();
++        if (collection != null && ValueUtils.isCollection(collection) && index < ValueUtils.getLength(collection)) {
++            NodePointer newPointer = NodePointer.newNodePointer(null, ValueUtils.getValue(collection, index), getLocale());
++            newPointer.setValue(value);
++            return newPointer;
++        }
++        return parent.createChild(context, null, index, value);
++    }
+
+--- a/src/java/org/apache/commons/jxpath/ri/model/beans/NullPointer.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/beans/NullPointer.java
+@@ -1,9 +1,13 @@
+-    public NodePointer createPath(JXPathContext context, Object value) {
+-        if (parent != null) {
+-            return parent.createPath(context, value).getValuePointer();
+-        }
+-        else {
+-            throw new UnsupportedOperationException(
+-                "Cannot create the root object: " + asPath());
+-        }
+-    }
++    public NodePointer createPath(JXPathContext context, Object value) {
++        if (parent != null) {
++            NodePointer newPointer = parent.createPath(context, value).getValuePointer();
++            if (newPointer.getNode() == null) {
++                throw new JXPathAbstractFactoryException("Factory could not create a non-null object for path: " + asPath());
++            }
++            return newPointer;
++        }
++        else {
++            throw new UnsupportedOperationException(
++                "Cannot create the root object: " + asPath());
++        }
++    }
+@@ -1,9 +1,13 @@
+-    public NodePointer createPath(JXPathContext context) {
+-        if (parent != null) {
+-            return parent.createPath(context).getValuePointer();
+-        }
+-        else {
+-            throw new UnsupportedOperationException(
+-                "Cannot create the root object: " + asPath());
+-        }
+-    }
++    public NodePointer createPath(JXPathContext context) {
++        if (parent != null) {
++            NodePointer newPointer = parent.createPath(context).getValuePointer();
++            if (newPointer.getNode() == null) {
++                throw new JXPathAbstractFactoryException("Factory could not create a non-null object for path: " + asPath());
++            }
++            return newPointer;
++        }
++        else {
++            throw new UnsupportedOperationException(
++                "Cannot create the root object: " + asPath());
++        }
++    }
+@@ -1,1 +1,2 @@
+-import org.apache.commons.jxpath.JXPathContext;
++import org.apache.commons.jxpath.JXPathAbstractFactoryException;
++import org.apache.commons.jxpath.JXPathContext;
+@@ -1,2 +1,1 @@
+-import org.apache.commons.jxpath.JXPathAbstractFactoryException;
+-import org.apache.commons.jxpath.JXPathContext;
++import org.apache.commons.jxpath.JXPathContext;
+@@ -1,13 +1,9 @@
+-    public NodePointer createPath(JXPathContext context, Object value) {
+-        if (parent != null) {
+-            NodePointer newPointer = parent.createPath(context, value).getValuePointer();
+-            if (newPointer.getNode() == null) {
+-                throw new JXPathAbstractFactoryException("Factory could not create a non-null object for path: " + asPath());
+-            }
+-            return newPointer;
+-        }
+-        else {
+-            throw new UnsupportedOperationException(
+-                "Cannot create the root object: " + asPath());
+-        }
+-    }
++    public NodePointer createPath(JXPathContext context, Object value) {
++        if (parent != null) {
++            return parent.createPath(context, value).getValuePointer();
++        }
++        else {
++            throw new UnsupportedOperationException(
++                "Cannot create the root object: " + asPath());
++        }
++    }
+@@ -1,13 +1,9 @@
+-    public NodePointer createPath(JXPathContext context) {
+-        if (parent != null) {
+-            NodePointer newPointer = parent.createPath(context).getValuePointer();
+-            if (newPointer.getNode() == null) {
+-                throw new JXPathAbstractFactoryException("Factory could not create a non-null object for path: " + asPath());
+-            }
+-            return newPointer;
+-        }
+-        else {
+-            throw new UnsupportedOperationException(
+-                "Cannot create the root object: " + asPath());
+-        }
+-    }
++    public NodePointer createPath(JXPathContext context) {
++        if (parent != null) {
++            return parent.createPath(context).getValuePointer();
++        }
++        else {
++            throw new UnsupportedOperationException(
++                "Cannot create the root object: " + asPath());
++        }
++    }
+@@ -1,1 +1,3 @@
+-import org.apache.commons.jxpath.JXPathContext;
++import org.apache.commons.jxpath.AbstractFactory;
++import org.apache.commons.jxpath.JXPathAbstractFactoryException;
++import org.apache.commons.jxpath.JXPathContext;
+@@ -1,9 +1,14 @@
+-    public NodePointer createPath(JXPathContext context) {
+-        if (parent != null) {
+-            return parent.createPath(context).getValuePointer();
+-        }
+-        else {
+-            throw new UnsupportedOperationException(
+-                "Cannot create the root object: " + asPath());
+-        }
+-    }
++    public NodePointer createPath(JXPathContext context) {
++        if (parent != null) {
++            AbstractFactory factory = getAbstractFactory(context);
++            boolean success = factory.createObject(context, this, getImmediateParentPointer().getNode(), name.getName(), index);
++            if (!success) {
++                throw new JXPathAbstractFactoryException("Factory could not create an object for path: " + asPath());
++            }
++            return NodePointer.newNodePointer(name, getNode(), getLocale());
++        }
++        else {
++            throw new UnsupportedOperationException(
++                "Cannot create the root object: " + asPath());
++        }
++    }
+@@ -1,9 +1,16 @@
+-    public NodePointer createPath(JXPathContext context, Object value) {
+-        if (parent != null) {
+-            return parent.createPath(context, value).getValuePointer();
+-        }
+-        else {
+-            throw new UnsupportedOperationException(
+-                "Cannot create the root object: " + asPath());
+-        }
+-    }
++    public NodePointer createPath(JXPathContext context, Object value) {
++        if (parent != null) {
++            AbstractFactory factory = getAbstractFactory(context);
++            boolean success = factory.createObject(context, this, getImmediateParentPointer().getNode(), name.getName(), index);
++            if (!success) {
++                throw new JXPathAbstractFactoryException("Factory could not create an object for path: " + asPath());
++            }
++            NodePointer newPointer = NodePointer.newNodePointer(name, getNode(), getLocale());
++            newPointer.setValue(value);
++            return newPointer;
++        }
++        else {
++            throw new UnsupportedOperationException(
++                "Cannot create the root object: " + asPath());
++        }
++    }
+@@ -1,1 +1,1 @@
+-            AbstractFactory factory = getAbstractFactory(context);
++            AbstractFactory factory = context.getFactory();
+@@ -1,16 +1,9 @@
+-    public NodePointer createPath(JXPathContext context, Object value) {
+-        if (parent != null) {
+-            AbstractFactory factory = context.getFactory();
+-            boolean success = factory.createObject(context, this, getImmediateParentPointer().getNode(), name.getName(), index);
+-            if (!success) {
+-                throw new JXPathAbstractFactoryException("Factory could not create an object for path: " + asPath());
+-            }
+-            NodePointer newPointer = NodePointer.newNodePointer(name, getNode(), getLocale());
+-            newPointer.setValue(value);
+-            return newPointer;
+-        }
+-        else {
+-            throw new UnsupportedOperationException(
+-                "Cannot create the root object: " + asPath());
+-        }
+-    }
++    public NodePointer createPath(JXPathContext context, Object value) {
++        if (parent != null) {
++            return parent.createPath(context, value).getValuePointer();
++        }
++        else {
++            throw new UnsupportedOperationException(
++                "Cannot create the root object: " + asPath());
++        }
++    }
+@@ -1,14 +1,9 @@
+-    public NodePointer createPath(JXPathContext context) {
+-        if (parent != null) {
+-            AbstractFactory factory = context.getFactory();
+-            boolean success = factory.createObject(context, this, getImmediateParentPointer().getNode(), name.getName(), index);
+-            if (!success) {
+-                throw new JXPathAbstractFactoryException("Factory could not create an object for path: " + asPath());
+-            }
+-            return NodePointer.newNodePointer(name, getNode(), getLocale());
+-        }
+-        else {
+-            throw new UnsupportedOperationException(
+-                "Cannot create the root object: " + asPath());
+-        }
+-    }
++    public NodePointer createPath(JXPathContext context) {
++        if (parent != null) {
++            return parent.createPath(context).getValuePointer();
++        }
++        else {
++            throw new UnsupportedOperationException(
++                "Cannot create the root object: " + asPath());
++        }
++    }
+@@ -1,3 +1,1 @@
+-import org.apache.commons.jxpath.AbstractFactory;
+-import org.apache.commons.jxpath.JXPathAbstractFactoryException;
+-import org.apache.commons.jxpath.JXPathContext;
++import org.apache.commons.jxpath.JXPathContext;
+
+--- a/src/java/org/apache/commons/jxpath/ri/model/dynamic/DynamicPropertyPointer.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/dynamic/DynamicPropertyPointer.java
+@@ -1,4 +1,19 @@
+-            if (index >= getLength()) {
+-                collection = ValueUtils.expandCollection(collection, index + 1);
+-                handler.setProperty(getBean(), getPropertyName(), collection);
+-            }
++            if (index >= getLength()) {
++                // Instead of ValueUtils.expandCollection, use the factory
++                AbstractFactory factory = getAbstractFactory(context);
++                int oldLength = getLength();
++                for (int i = oldLength; i <= index; i++) {
++                    boolean success =
++                        factory.createObject(
++                            context,
++                            this, // The pointer itself
++                            getBean(),
++                            getPropertyName(),
++                            i); // Pass the current index
++                    if (!success) {
++                        throw new JXPathAbstractFactoryException(
++                            "Factory could not create an object for path: " + asPath());
++                    }
++                }
++                collection = getBaseValue(); // Refresh the collection after factory calls
++            }
+@@ -1,4 +1,9 @@
+-                    if (!success) {
+-                        throw new JXPathAbstractFactoryException(
+-                            "Factory could not create an object for path: " + asPath());
+-                    }
++                    if (!success) {
++                        throw new JXPathAbstractFactoryException(
++                            "Factory could not create an object for path: " + asPath());
++                    }
++                    // NEW CHECK: If factory returned true but created a null value, throw an exception.
++                    if (ValueUtils.getValue(getBaseValue(), i) == null) {
++                        throw new JXPathAbstractFactoryException(
++                            "Factory could not create a non-null object for path: " + asPath() + " at index " + i);
++                    }
+@@ -1,9 +1,4 @@
+-                    if (!success) {
+-                        throw new JXPathAbstractFactoryException(
+-                            "Factory could not create an object for path: " + asPath());
+-                    }
+-                    // NEW CHECK: If factory returned true but created a null value, throw an exception.
+-                    if (ValueUtils.getValue(getBaseValue(), i) == null) {
+-                        throw new JXPathAbstractFactoryException(
+-                            "Factory could not create a non-null object for path: " + asPath() + " at index " + i);
+-                    }
++                    if (!success) {
++                        throw new JXPathAbstractFactoryException(
++                            "Factory could not create an object for path: " + asPath());
++                    }
+@@ -1,14 +1,20 @@
+-                for (int i = oldLength; i <= index; i++) {
+-                    boolean success =
+-                        factory.createObject(
+-                            context,
+-                            this, // The pointer itself
+-                            getBean(),
+-                            getPropertyName(),
+-                            i); // Pass the current index
+-                    if (!success) {
+-                        throw new JXPathAbstractFactoryException(
+-                            "Factory could not create an object for path: " + asPath());
+-                    }
+-                }
+-                collection = getBaseValue(); // Refresh the collection after factory calls
++                for (int i = oldLength; i <= index; i++) {
++                    boolean success =
++                        factory.createObject(
++                            context,
++                            this, // The pointer itself
++                            getBean(),
++                            getPropertyName(),
++                            i); // Pass the current index
++                    if (!success) {
++                        throw new JXPathAbstractFactoryException(
++                            "Factory could not create an object for path: " + asPath());
++                    }
++                }
++                // After the loop, check if the collection has been expanded as expected.
++                // If not, it means the factory returned true but failed to create non-null objects.
++                if (getLength() < index + 1) {
++                    throw new JXPathAbstractFactoryException(
++                        "Factory could not create a non-null object for path: " + asPath() + " to reach index " + index);
++                }
++                collection = getBaseValue(); // Refresh the collection after factory calls
+@@ -1,4 +1,4 @@
+-                if (getLength() < index + 1) {
+-                    throw new JXPathAbstractFactoryException(
+-                        "Factory could not create a non-null object for path: " + asPath() + " to reach index " + index);
+-                }
++                if (getLength() < index + 1) {
++                    throw new RuntimeException(
++                        "DEBUG: Factory created null for path: " + asPath() + " to reach index " + index);
++                }
+@@ -1,4 +1,4 @@
+-                if (getLength() < index + 1) {
+-                    throw new RuntimeException(
+-                        "DEBUG: Factory created null for path: " + asPath() + " to reach index " + index);
+-                }
++                if (getLength() < index + 1) {
++                    throw new JXPathAbstractFactoryException(
++                        "Factory could not create a non-null object for path: " + asPath() + " to reach index " + index);
++                }
+@@ -1,24 +1,4 @@
+-            if (index >= getLength()) {
+-                // Instead of ValueUtils.expandCollection, use the factory
+-                AbstractFactory factory = getAbstractFactory(context);
+-                int oldLength = getLength();
+-                for (int i = oldLength; i <= index; i++) {
+-                    boolean success =
+-                        factory.createObject(
+-                            context,
+-                            this, // The pointer itself
+-                            getBean(),
+-                            getPropertyName(),
+-                            i); // Pass the current index
+-                    if (!success) {
+-                        throw new JXPathAbstractFactoryException(
+-                            "Factory could not create an object for path: " + asPath());
+-                    }
+-                }
+-                // After the loop, check if the collection has been expanded as expected.
+-                // If not, it means the factory returned true but failed to create non-null objects.
+-                if (getLength() < index + 1) {
+-                    throw new JXPathAbstractFactoryException(
+-                        "Factory could not create a non-null object for path: " + asPath() + " to reach index " + index);
+-                }
+-                collection = getBaseValue(); // Refresh the collection after factory calls
++            if (index >= getLength()) {
++                collection = ValueUtils.expandCollection(collection, index + 1);
++                handler.setProperty(getBean(), getPropertyName(), collection);
++            }
+@@ -1,6 +1,5 @@
+-            if (index >= getLength()) {
+-                collection = ValueUtils.expandCollection(collection, index + 1);
+-                handler.setProperty(getBean(), getPropertyName(), collection);
+-            }
+-            }
+-        }
++            if (index >= getLength()) {
++                collection = ValueUtils.expandCollection(collection, index + 1);
++                handler.setProperty(getBean(), getPropertyName(), collection);
++            }
++        }
+
+--- a/src/test/org/apache/commons/jxpath/ri/model/beans/BadlyImplementedFactoryTest.java
++++ b/src/test/org/apache/commons/jxpath/ri/model/beans/BadlyImplementedFactoryTest.java
+@@ -1,1 +1,1 @@
+-                ((Map) parent).put(name, null);
++                ((Map) parent).put(name, new HashMap());
+@@ -1,1 +1,1 @@
+-                ((Map) parent).put(name, new HashMap());
++                ((Map) parent).put(name, null);
+@@ -1,1 +1,1 @@
+-                ((Map) parent).put(name, null);
++                ((Map) parent).put(name, new HashMap());
+@@ -1,1 +1,1 @@
+-                ((Map) parent).put(name, new HashMap());
++                ((Map) parent).put(name, null);
+@@ -1,1 +1,1 @@
+-                ((Map) parent).put(name, null);
++                ((Map) parent).put(name, new HashMap());
+@@ -1,1 +1,1 @@
+-                ((Map) parent).put(name, new HashMap());
++                ((Map) parent).put(name, null);
+@@ -1,1 +1,1 @@
+-                ((Map) parent).put(name, null);
++                ((Map) parent).put(name, new HashMap());
+@@ -1,1 +1,1 @@
+-                ((Map) parent).put(name, new HashMap());
++                ((Map) parent).put(name, null);
+@@ -1,1 +1,1 @@
+-                ((Map) parent).put(name, null);
++                ((Map) parent).put(name, new HashMap());
+@@ -1,1 +1,1 @@
+-                ((Map) parent).put(name, new HashMap());
++                ((Map) parent).put(name, null);
+@@ -1,1 +1,1 @@
+-                ((Map) parent).put(name, null);
++                ((Map) parent).put(name, new HashMap());
+@@ -1,1 +1,1 @@
+-                ((Map) parent).put(name, new HashMap());
++                ((Map) parent).put(name, null);
+@@ -1,1 +1,1 @@
+-                ((Map) parent).put(name, null);
++                ((Map) parent).put(name, new HashMap());
+@@ -1,1 +1,1 @@
+-                ((Map) parent).put(name, new HashMap());
++                ((Map) parent).put(name, null);
+@@ -1,1 +1,1 @@
+-                ((Map) parent).put(name, null);
++                ((Map) parent).put(name, new HashMap());
+@@ -1,1 +1,1 @@
+-                ((Map) parent).put(name, new HashMap());
++                ((Map) parent).put(name, null);
+@@ -1,1 +1,1 @@
+-                ((Map) parent).put(name, null);
++                ((Map) parent).put(name, new HashMap());
+@@ -1,1 +1,1 @@
+-                ((Map) parent).put(name, new HashMap());
++                ((Map) parent).put(name, null);
+@@ -1,1 +1,1 @@
+-                ((Map) parent).put(name, null);
++                ((Map) parent).put(name, new HashMap());
+@@ -1,1 +1,1 @@
+-                ((Map) parent).put(name, new HashMap());
++                ((Map) parent).put(name, null);
+
+--- a/src/test/org/apache/commons/jxpath/ri/model/dynamic/TestDynamicPropertyFactory.java
++++ b/src/test/org/apache/commons/jxpath/ri/model/dynamic/TestDynamicPropertyFactory.java
+@@ -1,3 +1,3 @@
+-            for (int i = 0; i <= index; i++) {
+-                v.add(null);
+-            }
++            for (int i = 0; i <= index; i++) {
++                v.add(new HashMap());
++            }
+@@ -1,3 +1,3 @@
+-            for (int i = 0; i <= index; i++) {
+-                v.add(new HashMap());
+-            }
++            for (int i = 0; i <= index; i++) {
++                v.add(null);
++            }

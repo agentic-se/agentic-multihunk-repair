@@ -1,0 +1,44 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java b/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
+index a30cd5a8..01f30c32 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
++++ b/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
+@@ -28,6 +28,7 @@ import org.apache.commons.compress.archivers.ar.ArArchiveOutputStream;
+ import org.apache.commons.compress.archivers.cpio.CpioArchiveInputStream;
+ import org.apache.commons.compress.archivers.cpio.CpioArchiveOutputStream;
+ import org.apache.commons.compress.archivers.dump.DumpArchiveInputStream;
++import org.apache.commons.compress.archivers.ArchiveEntry;
+ import org.apache.commons.compress.archivers.jar.JarArchiveInputStream;
+ import org.apache.commons.compress.archivers.jar.JarArchiveOutputStream;
+ import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+@@ -236,15 +237,22 @@ public class ArchiveStreamFactory {
+             if (TarArchiveInputStream.matches(tarheader, signatureLength)) {
+                 return new TarArchiveInputStream(in);
+             }
+-            // COMPRESS-117 - improve auto-recognition
+-            try {
+-                TarArchiveInputStream tais = new TarArchiveInputStream(new ByteArrayInputStream(tarheader));
+-                tais.getNextEntry();
+-                return new TarArchiveInputStream(in);
+-            } catch (Exception e) { // NOPMD
+-                // can generate IllegalArgumentException as well as IOException
+-                // autodetection, simply not a TAR
+-                // ignored
++            // COMPRESS-117/COMPRESS-171 - improve auto-recognition but avoid
++            // classifying short or empty text streams as TARs.
++            // Only try the heuristic if we've read a full tar header and
++            // there is at least one actual entry in the header block.
++            if (signatureLength >= tarheader.length) {
++                try {
++                    TarArchiveInputStream tais = new TarArchiveInputStream(new ByteArrayInputStream(tarheader));
++                    ArchiveEntry ent = tais.getNextEntry();
++                    if (ent != null) {
++                        return new TarArchiveInputStream(in);
++                    }
++                } catch (Exception e) { // NOPMD
++                    // can generate IllegalArgumentException as well as IOException
++                    // autodetection, simply not a TAR
++                    // ignored
++                }
+             }
+         } catch (IOException e) {
+             throw new ArchiveException("Could not use reset and mark operations.", e);

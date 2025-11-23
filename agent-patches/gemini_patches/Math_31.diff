@@ -1,0 +1,186 @@
+--- a/src/main/java/org/apache/commons/math3/distribution/BinomialDistribution.java
++++ b/src/main/java/org/apache/commons/math3/distribution/BinomialDistribution.java
+@@ -1,2 +1,17 @@
+-            ret = 1.0 - Beta.regularizedBeta(probabilityOfSuccess,
+-                    x + 1.0, numberOfTrials - x);
++            // The regularized beta function is 1 - I_x(a, b) where a = x + 1, b = n - x
++            // For the binomial distribution, P(X <= x) = I_{1-p}(n-x, x+1)
++            // Or, P(X <= x) = 1 - I_p(x+1, n-x)
++            // The current implementation uses 1.0 - Beta.regularizedBeta(probabilityOfSuccess, x + 1.0, numberOfTrials - x)
++            // which is equivalent to 1 - I_p(x+1, n-x)
++            // However, for large trials, Beta.regularizedBeta can return values outside [0, 1] due to numerical issues.
++            // We need to clamp the result to [0, 1].
++
++            double betaReg = Beta.regularizedBeta(probabilityOfSuccess, x + 1.0, numberOfTrials - x);
++
++            if (betaReg < 0.0) {
++                betaReg = 0.0;
++            } else if (betaReg > 1.0) {
++                betaReg = 1.0;
++            }
++
++            ret = 1.0 - betaReg;
+@@ -1,17 +1,16 @@
+-            // The regularized beta function is 1 - I_x(a, b) where a = x + 1, b = n - x
+-            // For the binomial distribution, P(X <= x) = I_{1-p}(n-x, x+1)
+-            // Or, P(X <= x) = 1 - I_p(x+1, n-x)
+-            // The current implementation uses 1.0 - Beta.regularizedBeta(probabilityOfSuccess, x + 1.0, numberOfTrials - x)
+-            // which is equivalent to 1 - I_p(x+1, n-x)
+-            // However, for large trials, Beta.regularizedBeta can return values outside [0, 1] due to numerical issues.
+-            // We need to clamp the result to [0, 1].
+-
+-            double betaReg = Beta.regularizedBeta(probabilityOfSuccess, x + 1.0, numberOfTrials - x);
+-
+-            if (betaReg < 0.0) {
+-                betaReg = 0.0;
+-            } else if (betaReg > 1.0) {
+-                betaReg = 1.0;
+-            }
+-
+-            ret = 1.0 - betaReg;
++            double betaReg = Beta.regularizedBeta(probabilityOfSuccess, x + 1.0, numberOfTrials - x);
++
++            // Clamp betaReg to [0, 1] to handle numerical errors from Beta.regularizedBeta
++            if (betaReg < 0.0) {
++                betaReg = 0.0;
++            } else if (betaReg > 1.0) {
++                betaReg = 1.0;
++            }
++
++            ret = 1.0 - betaReg;
++
++            // If the result is infinite, it means the probability is effectively 1.0
++            // (since cumulative probabilities are non-decreasing and bounded by 1.0).
++            if (Double.isInfinite(ret)) {
++                ret = 1.0;
++            }
+@@ -1,16 +1,32 @@
+-            double betaReg = Beta.regularizedBeta(probabilityOfSuccess, x + 1.0, numberOfTrials - x);
+-
+-            // Clamp betaReg to [0, 1] to handle numerical errors from Beta.regularizedBeta
+-            if (betaReg < 0.0) {
+-                betaReg = 0.0;
+-            } else if (betaReg > 1.0) {
+-                betaReg = 1.0;
+-            }
+-
+-            ret = 1.0 - betaReg;
+-
+-            // If the result is infinite, it means the probability is effectively 1.0
+-            // (since cumulative probabilities are non-decreasing and bounded by 1.0).
+-            if (Double.isInfinite(ret)) {
+-                ret = 1.0;
+-            }
++            double betaReg = Beta.regularizedBeta(probabilityOfSuccess, x + 1.0, numberOfTrials - x);
++
++            // Handle potential numerical issues from Beta.regularizedBeta
++            if (Double.isNaN(betaReg)) {
++                // If Beta.regularizedBeta returns NaN, it's an invalid probability.
++                // For cumulative probability, we can try to approximate based on x.
++                // For the purpose of inverseCumulativeProbability, returning 0.0 or 1.0
++                // might help the bisection search.
++                if (x < getNumericalMean()) {
++                    betaReg = 0.0; // Treat as very small probability
++                } else {
++                    betaReg = 1.0; // Treat as very large probability
++                }
++            } else if (Double.isInfinite(betaReg)) {
++                // If Beta.regularizedBeta returns Infinity, it's an invalid probability.
++                // If positive infinity, it means I_p(...) is effectively 1.0.
++                // If negative infinity, it means I_p(...) is effectively 0.0.
++                if (betaReg > 0) { // Positive infinity
++                    betaReg = 1.0;
++                } else { // Negative infinity
++                    betaReg = 0.0;
++                }
++            }
++
++            // Ensure betaReg is within [0, 1] after handling infinities/NaNs
++            if (betaReg < 0.0) {
++                betaReg = 0.0;
++            } else if (betaReg > 1.0) {
++                betaReg = 1.0;
++            }
++
++            ret = 1.0 - betaReg;
+@@ -1,5 +1,6 @@
+-import org.apache.commons.math3.exception.OutOfRangeException;
+-import org.apache.commons.math3.exception.NotPositiveException;
+-import org.apache.commons.math3.exception.util.LocalizedFormats;
+-import org.apache.commons.math3.special.Beta;
+-import org.apache.commons.math3.util.FastMath;
++import org.apache.commons.math3.distribution.NormalDistribution;
++import org.apache.commons.math3.exception.OutOfRangeException;
++import org.apache.commons.math3.exception.NotPositiveException;
++import org.apache.commons.math3.exception.util.LocalizedFormats;
++import org.apache.commons.math3.special.Beta;
++import org.apache.commons.math3.util.FastMath;
+@@ -1,5 +1,6 @@
+-import org.apache.commons.math3.exception.OutOfRangeException;
+-import org.apache.commons.math3.exception.NotPositiveException;
+-import org.apache.commons.math3.exception.util.LocalizedFormats;
+-import org.apache.commons.math3.special.Beta;
+-import org.apache.commons.math3.util.FastMath;
++import org.apache.commons.math3.distribution.NormalDistribution;
++import org.apache.commons.math3.exception.OutOfRangeException;
++import org.apache.commons.math3.exception.NotPositiveException;
++import org.apache.commons.math3.exception.util.LocalizedFormats;
++import org.apache.commons.math3.special.Beta;
++import org.apache.commons.math3.util.FastMath;
+@@ -1,12 +1,44 @@
+-    public double cumulativeProbability(int x) {
+-        double ret;
+-        if (x < 0) {
+-            ret = 0.0;
+-        } else if (x >= numberOfTrials) {
+-            ret = 1.0;
+-        } else {
+-            ret = 1.0 - Beta.regularizedBeta(probabilityOfSuccess,
+-                    x + 1.0, numberOfTrials - x);
+-        }
+-        return ret;
+-    }
++    public double cumulativeProbability(int x) {
++        double ret;
++        if (x < 0) {
++            ret = 0.0;
++        } else if (x >= numberOfTrials) {
++            ret = 1.0;
++        } else {
++            // For large number of trials, use normal approximation
++            if (numberOfTrials > 100000) { // Threshold for normal approximation
++                double mean = getNumericalMean();
++                double standardDeviation = FastMath.sqrt(getNumericalVariance());
++                NormalDistribution normal = new NormalDistribution(mean, standardDeviation);
++                // Apply continuity correction: P(X <= x) approx P(Y <= x + 0.5)
++                ret = normal.cumulativeProbability(x + 0.5);
++            } else {
++                double betaReg = Beta.regularizedBeta(probabilityOfSuccess, x + 1.0, numberOfTrials - x);
++
++                // Handle potential numerical issues from Beta.regularizedBeta
++                if (Double.isNaN(betaReg)) {
++                    if (x < getNumericalMean()) {
++                        betaReg = 0.0;
++                    } else {
++                        betaReg = 1.0;
++                    }
++                } else if (Double.isInfinite(betaReg)) {
++                    if (betaReg > 0) { // Positive infinity
++                        betaReg = 1.0;
++                    } else { // Negative infinity
++                        betaReg = 0.0;
++                    }
++                }
++
++                // Ensure betaReg is within [0, 1] after handling infinities/NaNs
++                if (betaReg < 0.0) {
++                    betaReg = 0.0;
++                } else if (betaReg > 1.0) {
++                    betaReg = 1.0;
++                }
++
++                ret = 1.0 - betaReg;
++            }
++        }
++        return ret;
++    }

@@ -1,0 +1,183 @@
+--- a/src/main/java/org/apache/commons/math/optimization/direct/BOBYQAOptimizer.java
++++ b/src/main/java/org/apache/commons/math/optimization/direct/BOBYQAOptimizer.java
+@@ -1,4 +1,4 @@
+-                final int iptMinus1 = ipt;
+-                final int jptMinus1 = jpt;
+-                interpolationPoints.setEntry(nfm, iptMinus1, interpolationPoints.getEntry(ipt, iptMinus1));
+-                interpolationPoints.setEntry(nfm, jptMinus1, interpolationPoints.getEntry(jpt, jptMinus1));
++                final int iptMinus1 = ipt - 1;
++                final int jptMinus1 = jpt - 1;
++                interpolationPoints.setEntry(nfm - 1, iptMinus1, interpolationPoints.getEntry(ipt - 1, iptMinus1));
++                interpolationPoints.setEntry(nfm - 1, jptMinus1, interpolationPoints.getEntry(jpt - 1, jptMinus1));
+@@ -1,4 +1,3 @@
+-                modelSecondDerivativesValues.setEntry(ih, (fbeg - fAtInterpolationPoints.getEntry(ipt) - fAtInterpolationPoints.getEntry(jpt) + f) / tmp);
+-                throw new PathIsExploredException(); // XXX
+-            }
+-        } while (getEvaluations() < npt);
++                modelSecondDerivativesValues.setEntry(ih, (fbeg - fAtInterpolationPoints.getEntry(ipt) - fAtInterpolationPoints.getEntry(jpt) + f) / tmp);
++            }
++        } while (getEvaluations() < npt);
+@@ -1,4 +1,4 @@
+-                final int iptMinus1 = ipt - 1;
+-                final int jptMinus1 = jpt - 1;
+-                interpolationPoints.setEntry(nfm - 1, iptMinus1, interpolationPoints.getEntry(ipt - 1, iptMinus1));
+-                interpolationPoints.setEntry(nfm - 1, jptMinus1, interpolationPoints.getEntry(jpt - 1, jptMinus1));
++                final int iptMinus1 = ipt;
++                final int jptMinus1 = jpt;
++                interpolationPoints.setEntry(nfm, iptMinus1, interpolationPoints.getEntry(ipt, iptMinus1));
++                interpolationPoints.setEntry(nfm, jptMinus1, interpolationPoints.getEntry(jpt, jptMinus1));
+@@ -1,3 +1,4 @@
+-                modelSecondDerivativesValues.setEntry(ih, (fbeg - fAtInterpolationPoints.getEntry(ipt) - fAtInterpolationPoints.getEntry(jpt) + f) / tmp);
+-            }
+-        } while (getEvaluations() < npt);
++                modelSecondDerivativesValues.setEntry(ih, (fbeg - fAtInterpolationPoints.getEntry(ipt) - fAtInterpolationPoints.getEntry(jpt) + f) / tmp);
++                throw new PathIsExploredException(); // XXX
++            }
++        } while (getEvaluations() < npt);
+@@ -1,1 +1,1 @@
+-throw new PathIsExploredException(); // XXX
++
+@@ -1,4 +1,4 @@
+-                final int iptMinus1 = ipt;
+-                final int jptMinus1 = jpt;
+-                interpolationPoints.setEntry(nfm, iptMinus1, interpolationPoints.getEntry(ipt, iptMinus1));
+-                interpolationPoints.setEntry(nfm, jptMinus1, interpolationPoints.getEntry(jpt, jptMinus1));
++                final int iptMinus1 = ipt - 1;
++                final int jptMinus1 = jpt - 1;
++                interpolationPoints.setEntry(nfm - 1, iptMinus1, interpolationPoints.getEntry(ipt - 1, iptMinus1));
++                interpolationPoints.setEntry(nfm - 1, jptMinus1, interpolationPoints.getEntry(jpt - 1, jptMinus1));
+@@ -1,1 +1,1 @@
+-                    interpolationPoints.setEntry(nfm, nfmm, stepa);
++                    interpolationPoints.setEntry(nfm - 1, nfmm, stepa);
+@@ -1,1 +1,1 @@
+-                    interpolationPoints.setEntry(nfm, nfxm, stepb);
++                    interpolationPoints.setEntry(nfm - 1, nfxm, stepb);
+@@ -1,1 +1,1 @@
+-            fAtInterpolationPoints.setEntry(nfm, f);
++            fAtInterpolationPoints.setEntry(nfm - 1, f);
+@@ -1,1 +1,1 @@
+-            fAtInterpolationPoints.setEntry(nfm - 1, f);
++            fAtInterpolationPoints.setEntry(nfm, f);
+@@ -1,1 +1,1 @@
+-                    interpolationPoints.setEntry(nfm - 1, nfmm, stepa);
++                    interpolationPoints.setEntry(nfm, nfmm, stepa);
+@@ -1,1 +1,1 @@
+-                    interpolationPoints.setEntry(nfm - 1, nfxm, stepb);
++                    interpolationPoints.setEntry(nfm, nfxm, stepb);
+@@ -1,1 +1,1 @@
+-                    interpolationPoints.setEntry(nfm, nfmm, stepa);
++                    interpolationPoints.setEntry(numEval - 1, nfmm, stepa);
+@@ -1,1 +1,1 @@
+-                    interpolationPoints.setEntry(nfm, nfxm, stepb);
++                    interpolationPoints.setEntry(numEval - 1, nfxm, stepb);
+@@ -1,1 +1,1 @@
+-            fAtInterpolationPoints.setEntry(nfm, f);
++            fAtInterpolationPoints.setEntry(numEval - 1, f);
+@@ -1,1 +1,1 @@
+-                interpolationPoints.setEntry(nfm - 1, iptMinus1, interpolationPoints.getEntry(ipt - 1, iptMinus1));
++                interpolationPoints.setEntry(numEval - 1, iptMinus1, interpolationPoints.getEntry(ipt - 1, iptMinus1));
+@@ -1,1 +1,1 @@
+-                interpolationPoints.setEntry(nfm - 1, jptMinus1, interpolationPoints.getEntry(jpt - 1, jptMinus1));
++                interpolationPoints.setEntry(numEval - 1, jptMinus1, interpolationPoints.getEntry(jpt - 1, jptMinus1));
+@@ -1,1 +1,1 @@
+-                interpolationPoints.setEntry(numEval - 1, jptMinus1, interpolationPoints.getEntry(jpt - 1, jptMinus1));
++                interpolationPoints.setEntry(nfm - 1, jptMinus1, interpolationPoints.getEntry(jpt - 1, jptMinus1));
+@@ -1,1 +1,1 @@
+-                interpolationPoints.setEntry(numEval - 1, iptMinus1, interpolationPoints.getEntry(ipt - 1, iptMinus1));
++                interpolationPoints.setEntry(nfm - 1, iptMinus1, interpolationPoints.getEntry(ipt - 1, iptMinus1));
+@@ -1,1 +1,1 @@
+-            fAtInterpolationPoints.setEntry(numEval - 1, f);
++            fAtInterpolationPoints.setEntry(nfm, f);
+@@ -1,1 +1,1 @@
+-                    interpolationPoints.setEntry(numEval - 1, nfxm, stepb);
++                    interpolationPoints.setEntry(nfm, nfxm, stepb);
+@@ -1,1 +1,1 @@
+-                    interpolationPoints.setEntry(numEval - 1, nfmm, stepa);
++                    interpolationPoints.setEntry(nfm, nfmm, stepa);
+@@ -1,1 +1,1 @@
+-                    interpolationPoints.setEntry(nfm, nfmm, stepa);
++                    interpolationPoints.setEntry(numEval - 1, nfmm, stepa);
+@@ -1,1 +1,1 @@
+-                    interpolationPoints.setEntry(nfm, nfxm, stepb);
++                    interpolationPoints.setEntry(numEval - 1, nfxm, stepb);
+@@ -1,1 +1,1 @@
+-            fAtInterpolationPoints.setEntry(nfm, f);
++            fAtInterpolationPoints.setEntry(numEval - 1, f);
+@@ -1,1 +1,1 @@
+-                interpolationPoints.setEntry(nfm - 1, iptMinus1, interpolationPoints.getEntry(ipt - 1, iptMinus1));
++                interpolationPoints.setEntry(numEval - 1, iptMinus1, interpolationPoints.getEntry(ipt - 1, iptMinus1));
+@@ -1,1 +1,1 @@
+-                interpolationPoints.setEntry(nfm - 1, jptMinus1, interpolationPoints.getEntry(jpt - 1, jptMinus1));
++                interpolationPoints.setEntry(numEval - 1, jptMinus1, interpolationPoints.getEntry(jpt - 1, jptMinus1));
+@@ -1,2 +1,1 @@
+-            final double objectiveValue = computeObjectiveValue(currentBest.toArray());
+-            final double f = isMinimize ? objectiveValue : -objectiveValue;
++
+@@ -1,1 +1,3 @@
+-            final int nfm = getEvaluations();
++            final double objectiveValue = computeObjectiveValue(currentBest.toArray());
++            final double f = isMinimize ? objectiveValue : -objectiveValue;
++            final int nfm = getEvaluations();
+@@ -1,1 +1,1 @@
+-            fAtInterpolationPoints.setEntry(nfm, f);
++            fAtInterpolationPoints.setEntry(nfm - 1, f);
+@@ -1,1 +1,1 @@
+-                    interpolationPoints.setEntry(numEval - 1, nfmm, stepa);
++                    interpolationPoints.setEntry(nfm - 1, nfmm, stepa);
+@@ -1,1 +1,1 @@
+-                    interpolationPoints.setEntry(numEval - 1, nfxm, stepb);
++                    interpolationPoints.setEntry(nfm - 1, nfxm, stepb);
+@@ -1,1 +1,1 @@
+-                interpolationPoints.setEntry(numEval - 1, iptMinus1, interpolationPoints.getEntry(ipt - 1, iptMinus1));
++                interpolationPoints.setEntry(nfm - 1, iptMinus1, interpolationPoints.getEntry(ipt - 1, iptMinus1));
+@@ -1,1 +1,1 @@
+-                interpolationPoints.setEntry(numEval - 1, jptMinus1, interpolationPoints.getEntry(jpt - 1, jptMinus1));
++                interpolationPoints.setEntry(nfm - 1, jptMinus1, interpolationPoints.getEntry(jpt - 1, jptMinus1));
+@@ -1,1 +1,1 @@
+-                trustRegionCenterInterpolationPointIndex = nfm;
++                trustRegionCenterInterpolationPointIndex = nfm - 1;
+@@ -1,1 +1,1 @@
+-                trustRegionCenterInterpolationPointIndex = nfm - 1;
++                trustRegionCenterInterpolationPointIndex = nfm;
+@@ -1,1 +1,1 @@
+-                trustRegionCenterInterpolationPointIndex = nfm;
++                trustRegionCenterInterpolationPointIndex = nfm - 1;
+@@ -1,1 +1,1 @@
+-                trustRegionCenterInterpolationPointIndex = nfm - 1;
++                trustRegionCenterInterpolationPointIndex = nfm;
+@@ -1,1 +1,1 @@
+-                trustRegionCenterInterpolationPointIndex = nfm;
++                trustRegionCenterInterpolationPointIndex = nfm - 1;
+@@ -1,1 +1,1 @@
+-                trustRegionCenterInterpolationPointIndex = nfm - 1;
++                trustRegionCenterInterpolationPointIndex = nfm;
+@@ -1,1 +1,1 @@
+-                trustRegionCenterInterpolationPointIndex = nfm;
++                trustRegionCenterInterpolationPointIndex = nfm - 1;
+@@ -1,1 +1,1 @@
+-                trustRegionCenterInterpolationPointIndex = nfm - 1;
++                trustRegionCenterInterpolationPointIndex = nfm;
+@@ -1,1 +1,1 @@
+-                trustRegionCenterInterpolationPointIndex = nfm;
++                trustRegionCenterInterpolationPointIndex = nfm - 1;
+@@ -1,1 +1,1 @@
+-                trustRegionCenterInterpolationPointIndex = nfm - 1;
++                trustRegionCenterInterpolationPointIndex = nfm;
+@@ -1,1 +1,1 @@
+-                trustRegionCenterInterpolationPointIndex = nfm;
++                trustRegionCenterInterpolationPointIndex = nfm - 1;
+@@ -1,1 +1,1 @@
+-                trustRegionCenterInterpolationPointIndex = nfm - 1;
++                trustRegionCenterInterpolationPointIndex = nfm;
+
+--- a/src/test/java/org/apache/commons/math/optimization/direct/BOBYQAOptimizerTest.java
++++ b/src/test/java/org/apache/commons/math/optimization/direct/BOBYQAOptimizerTest.java
+@@ -1,1 +1,1 @@
+-        final int numIterpolationPoints = 2 * dim + 1 + additionalInterpolationPoints;
++        final int numIterpolationPoints = 2 * dim + 2 + additionalInterpolationPoints;
+@@ -1,1 +1,1 @@
+-        final int numIterpolationPoints = 2 * dim + 2 + additionalInterpolationPoints;
++        final int numIterpolationPoints = 2 * dim + 1 + additionalInterpolationPoints;
+@@ -1,1 +1,1 @@
+-        final int numIterpolationPoints = 2 * dim + 1 + additionalInterpolationPoints;
++        final int numIterpolationPoints = 2 * dim + 2 + additionalInterpolationPoints;

@@ -1,0 +1,29 @@
+diff --git a/src/main/java/org/apache/commons/lang3/text/translate/NumericEntityUnescaper.java b/src/main/java/org/apache/commons/lang3/text/translate/NumericEntityUnescaper.java
+index 68891ace..c4a62489 100644
+--- a/src/main/java/org/apache/commons/lang3/text/translate/NumericEntityUnescaper.java
++++ b/src/main/java/org/apache/commons/lang3/text/translate/NumericEntityUnescaper.java
+@@ -50,9 +50,22 @@ public class NumericEntityUnescaper extends CharSequenceTranslator {
+             }
+ 
+             int end = start;
++            // Find the end of the numeric entity (stop at semicolon or non-digit character)
+             // Note that this supports character codes without a ; on the end
+-            while(input.charAt(end) != ';') 
+-            {
++            while(end < seqEnd) {
++                char c = input.charAt(end);
++                if(c == ';') {
++                    break;
++                }
++                // For hex, allow [0-9a-fA-F]
++                // For decimal, allow [0-9]
++                // Stop if we encounter a non-numeric character
++                boolean isValid = isHex ? 
++                    (Character.isDigit(c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) :
++                    Character.isDigit(c);
++                if(!isValid) {
++                    break;
++                }
+                 end++;
+             }
+ 

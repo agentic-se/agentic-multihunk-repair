@@ -1,0 +1,63 @@
+--- a/run_all_tests_trace.sh
++++ b/run_all_tests_trace.sh
+@@ -1,1 +1,1 @@
+-  java -cp "$CP" org.junit.runner.JUnitCore "$cls" >> "$LOGFILE" 2>&1
++  java -cp "$CP" junit.textui.TestRunner "$cls" >> "$LOGFILE" 2>&1
+
+--- a/run_bug_exposing_tests.sh
++++ b/run_bug_exposing_tests.sh
+@@ -1,1 +1,1 @@
+-  java -cp "$CP" org.junit.runner.JUnitCore "$cls" >> "$LOGFILE" 2>&1
++  java -cp "$CP" junit.textui.TestRunner "$cls" >> "$LOGFILE" 2>&1
+
+--- a/src/main/java/org/joda/time/DateTimeZone.java
++++ b/src/main/java/org/joda/time/DateTimeZone.java
+@@ -1,13 +1,22 @@
+-        int offset = 0;
+-        try {
+-            int hoursInMinutes = FieldUtils.safeMultiply(hoursOffset, 60);
+-            if (hoursInMinutes < 0) {
+-                minutesOffset = FieldUtils.safeAdd(hoursInMinutes, -minutesOffset);
+-            } else {
+-                minutesOffset = FieldUtils.safeAdd(hoursInMinutes, minutesOffset);
+-            }
+-            offset = FieldUtils.safeMultiply(minutesOffset, DateTimeConstants.MILLIS_PER_MINUTE);
+-        } catch (ArithmeticException ex) {
+-            throw new IllegalArgumentException("Offset is too large");
+-        }
+-        return forOffsetMillis(offset);
++        long totalMillis = 0;
++        try {
++            long hoursInMinutes = FieldUtils.safeMultiply(hoursOffset, 60);
++            long totalMinutes;
++            if (hoursInMinutes < 0) {
++                totalMinutes = FieldUtils.safeAdd(hoursInMinutes, -minutesOffset);
++            } else {
++                totalMinutes = FieldUtils.safeAdd(hoursInMinutes, minutesOffset);
++            }
++            totalMillis = FieldUtils.safeMultiply(totalMinutes, DateTimeConstants.MILLIS_PER_MINUTE);
++        } catch (ArithmeticException ex) {
++            throw new IllegalArgumentException("Offset is too large");
++        }
++
++        // Max offset is 23:59:59.999, which is 86399999 milliseconds
++        // Min offset is -23:59:59.999, which is -86399999 milliseconds
++        if (totalMillis > (23 * DateTimeConstants.MILLIS_PER_HOUR + 59 * DateTimeConstants.MILLIS_PER_MINUTE + 59 * DateTimeConstants.MILLIS_PER_SECOND + 999) ||
++            totalMillis < -(23 * DateTimeConstants.MILLIS_PER_HOUR + 59 * DateTimeConstants.MILLIS_PER_MINUTE + 59 * DateTimeConstants.MILLIS_PER_SECOND + 999)) {
++            throw new IllegalArgumentException("Offset is too large or too small");
++        }
++
++        return forOffsetMillis((int) totalMillis);
+@@ -1,1 +1,11 @@
+-        return -(int) offsetFormatter().withChronology(chrono).parseMillis(str);
++        long parsedMillis = offsetFormatter().withChronology(chrono).parseMillis(str);
++        int offset = -(int) parsedMillis;
++
++        // Max offset is 23:59:59.999, which is 86399999 milliseconds
++        // Min offset is -23:59:59.999, which is -86399999 milliseconds
++        if (parsedMillis > (23 * DateTimeConstants.MILLIS_PER_HOUR + 59 * DateTimeConstants.MILLIS_PER_MINUTE + 59 * DateTimeConstants.MILLIS_PER_SECOND + 999) ||
++            parsedMillis < -(23 * DateTimeConstants.MILLIS_PER_HOUR + 59 * DateTimeConstants.MILLIS_PER_MINUTE + 59 * DateTimeConstants.MILLIS_PER_SECOND + 999)) {
++            throw new IllegalArgumentException("Offset is too large or too small: " + str);
++        }
++
++        return offset;

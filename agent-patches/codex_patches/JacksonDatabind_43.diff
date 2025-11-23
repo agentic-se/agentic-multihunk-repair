@@ -1,0 +1,38 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ObjectIdValueProperty.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ObjectIdValueProperty.java
+index dc0b05f48..721e6a5e7 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ObjectIdValueProperty.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ObjectIdValueProperty.java
+@@ -4,6 +4,7 @@ import java.io.IOException;
+ import java.lang.annotation.Annotation;
+ 
+ import com.fasterxml.jackson.core.JsonParser;
++import com.fasterxml.jackson.core.JsonTokenId;
+ import com.fasterxml.jackson.databind.*;
+ import com.fasterxml.jackson.databind.deser.*;
+ import com.fasterxml.jackson.databind.introspect.AnnotatedMember;
+@@ -75,6 +76,15 @@ public final class ObjectIdValueProperty
+     public Object deserializeSetAndReturn(JsonParser p,
+     		DeserializationContext ctxt, Object instance) throws IOException
+     {
++        // If we have explicit JSON null for Object Id, do not try to deserialize;
++        // allow nulls as per [databind#742]
++        if (p.hasTokenId(JsonTokenId.ID_NULL)) {
++            SettableBeanProperty idProp = _objectIdReader.idProperty;
++            if (idProp != null) {
++                return idProp.setAndReturn(instance, null);
++            }
++            return instance;
++        }
+         Object id = _valueDeserializer.deserialize(p, ctxt);
+         /* 02-Apr-2015, tatu: Actually, as per [databind#742], let it be;
+          *  missing or null id is needed for some cases, such as cases where id
+@@ -83,7 +93,8 @@ public final class ObjectIdValueProperty
+          */
+         // note: no null checks (unlike usually); deserializer should fail if one found
+         if (id == null) {
+-            return null;
++            // Allow null id; nothing to bind, simply return instance
++            return instance;
+         }
+         ReadableObjectId roid = ctxt.findObjectId(id, _objectIdReader.generator, _objectIdReader.resolver);
+         roid.bindItem(instance);

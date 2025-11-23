@@ -1,0 +1,158 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+index 21bd1288d..fd838de7a 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+@@ -6,6 +6,7 @@ import java.util.*;
+ import com.fasterxml.jackson.core.*;
+ import com.fasterxml.jackson.databind.*;
+ import com.fasterxml.jackson.databind.deser.impl.*;
++import com.fasterxml.jackson.databind.deser.impl.ReadableObjectId.Referring;
+ import com.fasterxml.jackson.databind.util.NameTransformer;
+ import com.fasterxml.jackson.databind.util.TokenBuffer;
+ 
+@@ -426,10 +427,15 @@ public class BeanDeserializer
+             // regular property? needs buffering
+             SettableBeanProperty prop = _beanProperties.find(propName);
+             if (prop != null) {
++                try {
+                     buffer.bufferProperty(prop, _deserializeWithErrorWrapping(p, ctxt, prop));
+-                    // 14-Jun-2016, tatu: As per [databind#1261], looks like we need additional
+-                    //    handling of forward references here. Not exactly sure why existing
+-                    //    facilities did not cover, but this does appear to solve the problem
++                } catch (UnresolvedForwardReference reference) {
++                    // 14-Jun-2016, tatu: As per [databind#1261], we need additional
++                    //    handling of forward references here. This is needed when
++                    //    properties are buffered for property-based creators.
++                    // We buffer the forward reference, which will be resolved when the bean is created
++                    buffer.bufferForwardReference(prop, reference);
++                }
+                 continue;
+             }
+             // Things marked as ignorable should not be passed to any setter
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/PropertyValue.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/PropertyValue.java
+index c23f0439d..c74ac2da6 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/PropertyValue.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/PropertyValue.java
+@@ -6,6 +6,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
+ 
+ import com.fasterxml.jackson.databind.deser.SettableAnyProperty;
+ import com.fasterxml.jackson.databind.deser.SettableBeanProperty;
++import com.fasterxml.jackson.databind.deser.UnresolvedForwardReference;
++import com.fasterxml.jackson.databind.deser.impl.ReadableObjectId.Referring;
+ 
+ /**
+  * Base class for property values that need to be buffered during
+@@ -100,14 +102,14 @@ public abstract class PropertyValue
+         extends PropertyValue
+     {
+         final Object _key;
+-        
++
+         public Map(PropertyValue next, Object value, Object key)
+         {
+             super(next, value);
+             _key = key;
+         }
+ 
+-        @SuppressWarnings("unchecked") 
++        @SuppressWarnings("unchecked")
+         @Override
+         public void assign(Object bean)
+             throws IOException, JsonProcessingException
+@@ -115,4 +117,60 @@ public abstract class PropertyValue
+             ((java.util.Map<Object,Object>) bean).put(_key, value);
+         }
+     }
++
++    /**
++     * Property value used when there is an unresolved forward reference.
++     * The actual assignment will be done when the forward reference is resolved.
++     *
++     * @since 2.8
++     */
++    final static class Forward
++        extends PropertyValue
++    {
++        private final SettableBeanProperty _property;
++        private final UnresolvedForwardReference _reference;
++
++        public Forward(PropertyValue next, UnresolvedForwardReference reference, SettableBeanProperty prop)
++        {
++            super(next, null);
++            _reference = reference;
++            _property = prop;
++        }
++
++        @Override
++        public void assign(Object bean)
++            throws IOException, JsonProcessingException
++        {
++            // Create a Referring object that will set the property when the forward reference is resolved
++            Referring referring = new PropertyReferring(this, _reference, _property.getType().getRawClass(), bean);
++            _reference.getRoid().appendReferring(referring);
++        }
++    }
++
++    /**
++     * Helper class for handling forward references in buffered properties.
++     *
++     * @since 2.8
++     */
++    private static class PropertyReferring extends Referring {
++        private final Forward _parent;
++        private final Object _pojo;
++
++        public PropertyReferring(Forward parent, UnresolvedForwardReference ref, Class<?> type, Object ob)
++        {
++            super(ref, type);
++            _parent = parent;
++            _pojo = ob;
++        }
++
++        @Override
++        public void handleResolvedForwardReference(Object id, Object value) throws IOException
++        {
++            if (!hasId(id)) {
++                throw new IllegalArgumentException("Trying to resolve a forward reference with id [" + id
++                        + "] that wasn't previously seen as unresolved.");
++            }
++            _parent._property.set(_pojo, value);
++        }
++    }
+ }
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/PropertyValueBuffer.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/PropertyValueBuffer.java
+index 42d33cadb..0c141cfc2 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/PropertyValueBuffer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/PropertyValueBuffer.java
+@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
+ import com.fasterxml.jackson.databind.JsonMappingException;
+ import com.fasterxml.jackson.databind.deser.SettableAnyProperty;
+ import com.fasterxml.jackson.databind.deser.SettableBeanProperty;
++import com.fasterxml.jackson.databind.deser.UnresolvedForwardReference;
+ 
+ /**
+  * Simple container used for temporarily buffering a set of
+@@ -282,7 +283,7 @@ public class PropertyValueBuffer
+     public void bufferProperty(SettableBeanProperty prop, Object value) {
+         _buffered = new PropertyValue.Regular(_buffered, value, prop);
+     }
+-    
++
+     public void bufferAnyProperty(SettableAnyProperty prop, String propName, Object value) {
+         _buffered = new PropertyValue.Any(_buffered, value, prop, propName);
+     }
+@@ -290,4 +291,14 @@ public class PropertyValueBuffer
+     public void bufferMapProperty(Object key, Object value) {
+         _buffered = new PropertyValue.Map(_buffered, value, key);
+     }
++
++    /**
++     * Method called to buffer a property with an unresolved forward reference.
++     * The forward reference will be resolved when the actual object is bound.
++     *
++     * @since 2.8
++     */
++    public void bufferForwardReference(SettableBeanProperty prop, UnresolvedForwardReference reference) {
++        _buffered = new PropertyValue.Forward(_buffered, reference, prop);
++    }
+ }

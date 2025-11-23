@@ -1,0 +1,48 @@
+diff --git a/src/main/java/org/apache/commons/cli/Option.java b/src/main/java/org/apache/commons/cli/Option.java
+index 11a3685..66c7ef9 100644
+--- a/src/main/java/org/apache/commons/cli/Option.java
++++ b/src/main/java/org/apache/commons/cli/Option.java
+@@ -69,7 +69,7 @@ public class Option implements Cloneable, Serializable
+     private int numberOfArgs = UNINITIALIZED;
+ 
+     /** the type of this Option */
+-    private Class type;
++    private Class type = String.class;
+ 
+     /** the list of argument values **/
+     private List values = new ArrayList();
+diff --git a/src/main/java/org/apache/commons/cli/OptionBuilder.java b/src/main/java/org/apache/commons/cli/OptionBuilder.java
+index f9eb13a..43ac141 100644
+--- a/src/main/java/org/apache/commons/cli/OptionBuilder.java
++++ b/src/main/java/org/apache/commons/cli/OptionBuilder.java
+@@ -361,7 +361,11 @@ public final class OptionBuilder
+             option.setRequired(required);
+             option.setOptionalArg(optionalArg);
+             option.setArgs(numberOfArgs);
+-            option.setType(type);
++            // Only set type if explicitly specified
++            if (type != null)
++            {
++                option.setType(type);
++            }
+             option.setValueSeparator(valuesep);
+             option.setArgName(argName);
+         }
+diff --git a/src/main/java/org/apache/commons/cli/TypeHandler.java b/src/main/java/org/apache/commons/cli/TypeHandler.java
+index f78229b..d9c86d6 100644
+--- a/src/main/java/org/apache/commons/cli/TypeHandler.java
++++ b/src/main/java/org/apache/commons/cli/TypeHandler.java
+@@ -97,7 +97,8 @@ public class TypeHandler
+         }
+         else
+         {
+-            return null;
++            // Default to String for unknown types
++            return str;
+         }
+     }
+ 
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

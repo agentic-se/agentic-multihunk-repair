@@ -1,0 +1,43 @@
+diff --git a/src/org/mockito/internal/invocation/InvocationMatcher.java b/src/org/mockito/internal/invocation/InvocationMatcher.java
+index a3a7c08df..e19658563 100644
+--- a/src/org/mockito/internal/invocation/InvocationMatcher.java
++++ b/src/org/mockito/internal/invocation/InvocationMatcher.java
+@@ -118,16 +118,35 @@ public class InvocationMatcher implements DescribedInvocation, CapturesArgumensF
+     public void captureArgumentsFrom(Invocation invocation) {
+         if (invocation.getMethod().isVarArgs()) {
+             int indexOfVararg = invocation.getRawArguments().length - 1;
++            // Capture non-vararg arguments
+             for (int position = 0; position < indexOfVararg; position++) {
+                 Matcher m = matchers.get(position);
+                 if (m instanceof CapturesArguments) {
+                     ((CapturesArguments) m).captureFrom(invocation.getArgumentAt(position, Object.class));
+                 }
+             }
+-            for (int position = indexOfVararg; position < matchers.size(); position++) {
+-                Matcher m = matchers.get(position);
++            // Capture vararg arguments
++            Object rawVarargArray = invocation.getRawArguments()[indexOfVararg];
++            int varargLength = rawVarargArray == null ? 0 : Array.getLength(rawVarargArray);
++
++            // If there's only one matcher for all varargs, it should capture all elements
++            if (matchers.size() == indexOfVararg + 1 && indexOfVararg < matchers.size()) {
++                Matcher m = matchers.get(indexOfVararg);
+                 if (m instanceof CapturesArguments) {
+-                    ((CapturesArguments) m).captureFrom(invocation.getRawArguments()[position - indexOfVararg]);
++                    for (int i = 0; i < varargLength; i++) {
++                        ((CapturesArguments) m).captureFrom(Array.get(rawVarargArray, i));
++                    }
++                }
++            } else {
++                // Multiple matchers for varargs - each captures one element
++                for (int position = indexOfVararg; position < matchers.size(); position++) {
++                    Matcher m = matchers.get(position);
++                    if (m instanceof CapturesArguments) {
++                        int varargIndex = position - indexOfVararg;
++                        if (varargIndex < varargLength) {
++                            ((CapturesArguments) m).captureFrom(Array.get(rawVarargArray, varargIndex));
++                        }
++                    }
+                 }
+             }
+         } else {

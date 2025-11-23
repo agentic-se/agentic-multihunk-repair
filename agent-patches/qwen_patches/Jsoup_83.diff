@@ -1,0 +1,23 @@
+diff --git a/src/main/java/org/jsoup/parser/TokeniserState.java b/src/main/java/org/jsoup/parser/TokeniserState.java
+index 4980f15..d150ece 100644
+--- a/src/main/java/org/jsoup/parser/TokeniserState.java
++++ b/src/main/java/org/jsoup/parser/TokeniserState.java
+@@ -158,11 +158,17 @@ enum TokeniserState {
+                 case '/':
+                     t.transition(SelfClosingStartTag);
+                     break;
+-                    // intended fall through to next >
+                 case '>':
+                     t.emitTagPending();
+                     t.transition(Data);
+                     break;
++                case '<':
++                    // Handle malformed tags with missing '>' - treat as end of current tag, start new tag
++                    t.emitTagPending();
++                    t.transition(TagOpen);
++                    // Push the '<' back for reprocessing
++                    r.unconsume();
++                    break;
+                 case nullChar: // replacement
+                     t.tagPending.appendTagName(replacementStr);
+                     break;

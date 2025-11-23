@@ -1,0 +1,60 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index 34880d8..7b8c090 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -90,6 +90,32 @@ public final class DataUtil {
+         Document doc = null;
+ 
+         // look for BOM - overrides any other header or input
++        // Check for BOM in raw bytes before decoding
++        if (charsetName == null && byteData.remaining() >= 2) {
++            byteData.mark();
++            byte byte0 = byteData.get();
++            byte byte1 = byteData.get();
++            byte byte2 = byteData.remaining() >= 1 ? byteData.get() : (byte)0;
++            byte byte3 = byteData.remaining() >= 1 ? byteData.get() : (byte)0;
++            byteData.reset();
++
++            // Check for UTF-32 BOMs (4 bytes)
++            if (byte0 == (byte)0x00 && byte1 == (byte)0x00 && byte2 == (byte)0xFE && byte3 == (byte)0xFF) {
++                charsetName = "UTF-32BE";
++            } else if (byte0 == (byte)0xFF && byte1 == (byte)0xFE && byte2 == (byte)0x00 && byte3 == (byte)0x00) {
++                charsetName = "UTF-32LE";
++            }
++            // Check for UTF-16 BOMs (2 bytes)
++            else if (byte0 == (byte)0xFE && byte1 == (byte)0xFF) {
++                charsetName = "UTF-16BE";
++            } else if (byte0 == (byte)0xFF && byte1 == (byte)0xFE) {
++                charsetName = "UTF-16LE";
++            }
++            // Check for UTF-8 BOM (3 bytes)
++            else if (byte0 == (byte)0xEF && byte1 == (byte)0xBB && byte2 == (byte)0xBF) {
++                charsetName = "UTF-8";
++            }
++        }
+ 
+         if (charsetName == null) { // determine from meta. safe parse as UTF-8
+             // look for <meta http-equiv="Content-Type" content="text/html;charset=gb2312"> or HTML5 <meta charset="gb2312">
+@@ -119,16 +145,13 @@ public final class DataUtil {
+                     doc = null;
+                 }
+             }
+-        } else { // specified by content type header (or by user on file load)
++        } else { // specified by content type header (or by user on file load) or BOM detected
+             Validate.notEmpty(charsetName, "Must set charset arg to character set of file to parse. Set to null to attempt to detect from HTML");
+             docData = Charset.forName(charsetName).decode(byteData).toString();
+         }
++        // Strip BOM if present (it's preserved during decoding)
+         if (docData.length() > 0 && docData.charAt(0) == UNICODE_BOM) {
+-            byteData.rewind();
+-            docData = Charset.forName(defaultCharset).decode(byteData).toString();
+             docData = docData.substring(1);
+-            charsetName = defaultCharset;
+-            doc = null;
+         }
+         if (doc == null) {
+             doc = parser.parseInput(docData, baseUri);
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

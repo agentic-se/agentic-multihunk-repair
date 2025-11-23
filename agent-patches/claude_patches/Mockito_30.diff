@@ -1,0 +1,35 @@
+diff --git a/src/org/mockito/exceptions/Reporter.java b/src/org/mockito/exceptions/Reporter.java
+index 5e46a2bba..ac405ad6f 100644
+--- a/src/org/mockito/exceptions/Reporter.java
++++ b/src/org/mockito/exceptions/Reporter.java
+@@ -435,6 +435,17 @@ public class Reporter {
+                 ));
+     }
+ 
++    public void smartNullPointerException(String unstubbedMethodName, Location location) {
++        throw new SmartNullPointerException(join(
++                "You have a NullPointerException here:",
++                new Location(),
++                "Because this method was *not* stubbed correctly:",
++                unstubbedMethodName,
++                location,
++                ""
++                ));
++    }
++
+     public void smartNullPointerException(Location location) {
+         throw new SmartNullPointerException(join(
+                 "You have a NullPointerException here:",
+diff --git a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsSmartNulls.java b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsSmartNulls.java
+index 4942d7cc7..13409ad3d 100644
+--- a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsSmartNulls.java
++++ b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsSmartNulls.java
+@@ -53,7 +53,7 @@ public class ReturnsSmartNulls implements Answer<Object>, Serializable {
+                 return "SmartNull returned by unstubbed " + formatMethodCall()  + " method on mock";
+             }
+ 
+-            new Reporter().smartNullPointerException(location);
++            new Reporter().smartNullPointerException(formatMethodCall(), location);
+             return null;
+         }
+ 

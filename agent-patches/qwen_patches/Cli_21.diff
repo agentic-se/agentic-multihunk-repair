@@ -1,0 +1,64 @@
+diff --git a/src/java/org/apache/commons/cli2/commandline/WriteableCommandLineImpl.java b/src/java/org/apache/commons/cli2/commandline/WriteableCommandLineImpl.java
+index 88d3286..03fb0a6 100644
+--- a/src/java/org/apache/commons/cli2/commandline/WriteableCommandLineImpl.java
++++ b/src/java/org/apache/commons/cli2/commandline/WriteableCommandLineImpl.java
+@@ -1,4 +1,4 @@
+-/*
++/*\
+  * Licensed to the Apache Software Foundation (ASF) under one or more
+  * contributor license agreements.  See the NOTICE file distributed with
+  * this work for additional information regarding copyright ownership.
+@@ -231,18 +231,34 @@ public class WriteableCommandLineImpl
+      */
+     public boolean looksLikeOption(final String trigger)
+     {
+-            // this is a reentrant call
++        // this is a reentrant call
+ 
+-            for (final Iterator i = prefixes.iterator(); i.hasNext();)
+-            {
+-                final String prefix = (String) i.next();
++        for (final Iterator i = prefixes.iterator(); i.hasNext();)
++        {
++            final String prefix = (String) i.next();
+ 
+-                if (trigger.startsWith(prefix))
+-                {
+-                        return true;
++            if (trigger.startsWith(prefix))
++            {
++                // Check if this is a negative number, which should not be treated as an option
++                if (prefix.equals("-")) {
++                    // A negative number starts with "-". Check if the rest is numeric.
++                    // Skip the prefix "-"
++                    String numberPart = trigger.substring(1);
++                    if (numberPart.length() > 0) {
++                        try {
++                            // Check if it's a valid number
++                            Double.parseDouble(numberPart);
++                            // If we can parse it, it's a negative number, not an option
++                            return false;
++                        } catch (NumberFormatException e) {
++                            // Not a number, so it might be an option
++                        }
++                    }
+                 }
++                return true;
+             }
+-            return false;
++        }
++        return false;
+     }
+ 
+     public String toString() {
+@@ -295,4 +311,4 @@ public class WriteableCommandLineImpl
+     public List getNormalised() {
+         return Collections.unmodifiableList(normalised);
+     }
+-}
++}
+\ No newline at end of file
+
+
+# Untracked source files (not included in patch):
++ src/java/org/apache/commons/cli2/commandline/WriteableCommandLineImpl.java.backup

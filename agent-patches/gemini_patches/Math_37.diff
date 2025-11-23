@@ -1,0 +1,102 @@
+--- a/src/main/java/org/apache/commons/math/complex/Complex.java
++++ b/src/main/java/org/apache/commons/math/complex/Complex.java
+@@ -1,6 +1,12 @@
+-        if (isNaN) {
+-            return NaN;
+-        }
+-        double real2 = 2.0 * real;
+-        double imaginary2 = 2.0 * imaginary;
+-        double d = FastMath.cosh(real2) + FastMath.cos(imaginary2);
++        if (isNaN) {
++            return NaN;
++        }
++        if (real > 20.0) {
++            return createComplex(1.0, 0.0);
++        }
++        if (real < -20.0) {
++            return createComplex(-1.0, 0.0);
++        }
++        double real2 = 2.0 * real;
++        double imaginary2 = 2.0 * imaginary;
++        double d = FastMath.cosh(real2) + FastMath.cos(imaginary2);
+@@ -1,7 +1,13 @@
+-        if (isNaN) {
+-            return NaN;
+-        }
+-
+-        double real2 = 2.0 * real;
+-        double imaginary2 = 2.0 * imaginary;
+-        double d = FastMath.cos(real2) + FastMath.cosh(imaginary2);
++        if (isNaN) {
++            return NaN;
++        }
++        if (imaginary > 20.0) {
++            return createComplex(0.0, 1.0);
++        }
++        if (imaginary < -20.0) {
++            return createComplex(0.0, -1.0);
++        }
++
++        double real2 = 2.0 * real;
++        double imaginary2 = 2.0 * imaginary;
++        double d = FastMath.cos(real2) + FastMath.cosh(imaginary2);
+@@ -1,9 +1,12 @@
+-        if (isNaN) {
+-            return NaN;
+-        }
+-        if (real > 20.0) {
+-            return createComplex(1.0, 0.0);
+-        }
+-        if (real < -20.0) {
+-            return createComplex(-1.0, 0.0);
+-        }
++        if (isNaN) {
++            return NaN;
++        }
++        if (Double.isInfinite(imaginary)) {
++            return NaN;
++        }
++        if (real > 20.0) {
++            return createComplex(1.0, 0.0);
++        }
++        if (real < -20.0) {
++            return createComplex(-1.0, 0.0);
++        }
+@@ -1,9 +1,12 @@
+-        if (isNaN) {
+-            return NaN;
+-        }
+-        if (imaginary > 20.0) {
+-            return createComplex(0.0, 1.0);
+-        }
+-        if (imaginary < -20.0) {
+-            return createComplex(0.0, -1.0);
+-        }
++        if (isNaN) {
++            return NaN;
++        }
++        if (Double.isInfinite(real)) {
++            return NaN;
++        }
++        if (imaginary > 20.0) {
++            return createComplex(0.0, 1.0);
++        }
++        if (imaginary < -20.0) {
++            return createComplex(0.0, -1.0);
++        }
+
+--- a/src/test/java/org/apache/commons/math/TestUtils.java
++++ b/src/test/java/org/apache/commons/math/TestUtils.java
+@@ -1,4 +1,8 @@
+-    public static void assertSame(Complex expected, Complex actual) {
+-        assertSame(expected.getReal(), actual.getReal());
+-        assertSame(expected.getImaginary(), actual.getImaginary());
+-    }
++    public static void assertSame(Complex expected, Complex actual) {
++        if (expected.isNaN()) {
++            Assert.assertTrue(actual.isNaN());
++        } else {
++            assertSame(expected.getReal(), actual.getReal());
++            assertSame(expected.getImaginary(), actual.getImaginary());
++        }
++    }

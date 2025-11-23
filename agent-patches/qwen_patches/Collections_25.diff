@@ -1,0 +1,43 @@
+diff --git a/src/.DS_Store b/src/.DS_Store
+index 78c6280d6e81c49ae4f9688dee0f959a4f43730e..f364e2057d161b92839273e8052249434f035b03 100644
+GIT binary patch
+delta 38
+uc-m_*XffDujFrjl;p7vnQH%+jmDz+DnKa8MTd+qlKA2covYDOZFFybSat#Xr
+
+delta 38
+uc-m_*XffDujFri?fAR^|D8_=#%51`nOzICOTd+qlUYJ-|vYDOZFFybQ01Y4j
+
+diff --git a/src/main/java/org/apache/commons/collections4/iterators/CollatingIterator.java b/src/main/java/org/apache/commons/collections4/iterators/CollatingIterator.java
+index 1c6cb9fe..698cd2c4 100644
+--- a/src/main/java/org/apache/commons/collections4/iterators/CollatingIterator.java
++++ b/src/main/java/org/apache/commons/collections4/iterators/CollatingIterator.java
+@@ -363,11 +363,24 @@ public class CollatingIterator<E> implements Iterator<E> {
+                 } else {
+                     final E curObject = values.get(i);
+                     if (comparator == null) {
+-                        throw new NullPointerException("You must invoke setComparator() to set a comparator first.");
+-                    }
+-                    if (comparator.compare(curObject, leastObject) < 0) {
+-                        leastObject = curObject;
+-                        leastIndex = i;
++                        // Use natural ordering if no comparator is set
++                        if (!(curObject instanceof Comparable)) {
++                            throw new NullPointerException("No comparator specified and elements are not comparable");
++                        }
++                        if (!(leastObject instanceof Comparable)) {
++                            throw new NullPointerException("No comparator specified and elements are not comparable");
++                        }
++                        @SuppressWarnings("unchecked")
++                        final int compareResult = ((Comparable<E>) curObject).compareTo(leastObject);
++                        if (compareResult < 0) {
++                            leastObject = curObject;
++                            leastIndex = i;
++                        }
++                    } else {
++                        if (comparator.compare(curObject, leastObject) < 0) {
++                            leastObject = curObject;
++                            leastIndex = i;
++                        }
+                     }
+                 }
+             }

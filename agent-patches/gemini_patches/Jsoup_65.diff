@@ -1,0 +1,397 @@
+--- a/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
++++ b/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
+@@ -1,6 +1,7 @@
+-    private boolean fosterInserts; // if next inserts should be fostered
+-    private boolean fragmentParsing; // if parsing a fragment of html
+-
+-    HtmlTreeBuilder() {}
+-
+-    ParseSettings defaultSettings() {
++    private boolean fosterInserts; // if next inserts should be fostered
++    private boolean fragmentParsing; // if parsing a fragment of html
++    private boolean templateMode; // if parsing inside a template tag
++
++    HtmlTreeBuilder() {}
++
++    ParseSettings defaultSettings() {
+@@ -1,6 +1,7 @@
+-        framesetOk = true;
+-        fosterInserts = false;
+-        fragmentParsing = false;
+-    }
+-
+-    List<Node> parseFragment(String inputFragment, Element context, String baseUri, ParseErrorList errors, ParseSettings settings) {
++        framesetOk = true;
++        fosterInserts = false;
++        fragmentParsing = false;
++        templateMode = false;
++    }
++
++    List<Node> parseFragment(String inputFragment, Element context, String baseUri, ParseErrorList errors, ParseSettings settings) {
+@@ -1,15 +1,19 @@
+-    private void insertNode(Node node) {
+-        // if the stack hasn't been set up yet, elements (doctype, comments) go into the doc
+-        if (stack.size() == 0)
+-            doc.appendChild(node);
+-        else if (isFosterInserts())
+-            insertInFosterParent(node);
+-        else
+-            currentElement().appendChild(node);
+-
+-        // connect form controls to their form element
+-        if (node instanceof Element && ((Element) node).tag().isFormListed()) {
+-            if (formElement != null)
+-                formElement.addElement((Element) node);
+-        }
+-    }
++    private void insertNode(Node node) {
++        if (templateMode) {
++            currentElement().appendChild(node);
++        } else {
++            // if the stack hasn't been set up yet, elements (doctype, comments) go into the doc
++            if (stack.size() == 0)
++                doc.appendChild(node);
++            else if (isFosterInserts())
++                insertInFosterParent(node);
++            else
++                currentElement().appendChild(node);
++        }
++
++        // connect form controls to their form element
++        if (node instanceof Element && ((Element) node).tag().isFormListed()) {
++            if (formElement != null)
++                formElement.addElement((Element) node);
++        }
++    }
+@@ -1,24 +1,28 @@
+-    void insertInFosterParent(Node in) {
+-        Element fosterParent;
+-        Element lastTable = getFromStack("table");
+-        boolean isLastTableParent = false;
+-        if (lastTable != null) {
+-            if (lastTable.parent() != null) {
+-                fosterParent = lastTable.parent();
+-                isLastTableParent = true;
+-            } else
+-                fosterParent = aboveOnStack(lastTable);
+-        } else { // no table == frag
+-            fosterParent = stack.get(0);
+-        }
+-
+-        if (isLastTableParent) {
+-            Validate.notNull(lastTable); // last table cannot be null by this point.
+-            lastTable.before(in);
+-        }
+-        else
+-            fosterParent.appendChild(in);
+-    }
+-
+-    @Override
+-    public String toString() {
++    void insertInFosterParent(Node in) {
++        Element fosterParent;
++        Element lastTable = getFromStack("table");
++        boolean isLastTableParent = false;
++        if (lastTable != null) {
++            if (lastTable.parent() != null) {
++                fosterParent = lastTable.parent();
++                isLastTableParent = true;
++            } else
++                fosterParent = aboveOnStack(lastTable);
++        } else { // no table == frag
++            fosterParent = stack.get(0);
++        }
++
++        if (isLastTableParent) {
++            Validate.notNull(lastTable); // last table cannot be null by this point.
++            lastTable.before(in);
++        }
++        else
++            fosterParent.appendChild(in);
++    }
++
++    public void setTemplateMode(boolean templateMode) {
++        this.templateMode = templateMode;
++    }
++
++    @Override
++    public String toString() {
+@@ -1,1 +1,1 @@
+-            "title", "tr", "ul", "wbr", "xmp"};
++            "title", "tr", "ul", "wbr", "xmp", "template"};
+
+--- a/src/main/java/org/jsoup/parser/HtmlTreeBuilderState.java
++++ b/src/main/java/org/jsoup/parser/HtmlTreeBuilderState.java
+@@ -1,16 +1,18 @@
+-                } else if (name.equals("input")) {
+-                    if (!startTag.attributes.get("type").equalsIgnoreCase("hidden")) {
+-                        return anythingElse(t, tb);
+-                    } else {
+-                        tb.insertEmpty(startTag);
+-                    }
+-                } else if (name.equals("form")) {
+-                    tb.error(this);
+-                    if (tb.getFormElement() != null)
+-                        return false;
+-                    else {
+-                        tb.insertForm(startTag, false);
+-                    }
+-                } else {
+-                    return anythingElse(t, tb);
+-                }
++                } else if (name.equals("input")) {
++                    if (!startTag.attributes.get("type").equalsIgnoreCase("hidden")) {
++                        return anythingElse(t, tb);
++                    } else {
++                        tb.insertEmpty(startTag);
++                    }
++                } else if (name.equals("form")) {
++                    tb.error(this);
++                    if (tb.getFormElement() != null)
++                        return false;
++                    else {
++                        tb.insertForm(startTag, false);
++                    }
++                } else if (name.equals("template")) {
++                    tb.insert(startTag);
++                } else {
++                    return anythingElse(t, tb);
++                }
+@@ -1,18 +1,16 @@
+-                } else if (name.equals("input")) {
+-                    if (!startTag.attributes.get("type").equalsIgnoreCase("hidden")) {
+-                        return anythingElse(t, tb);
+-                    } else {
+-                        tb.insertEmpty(startTag);
+-                    }
+-                } else if (name.equals("form")) {
+-                    tb.error(this);
+-                    if (tb.getFormElement() != null)
+-                        return false;
+-                    else {
+-                        tb.insertForm(startTag, false);
+-                    }
+-                } else if (name.equals("template")) {
+-                    tb.insert(startTag);
+-                } else {
+-                    return anythingElse(t, tb);
+-                }
++                } else if (name.equals("input")) {
++                    if (!startTag.attributes.get("type").equalsIgnoreCase("hidden")) {
++                        return anythingElse(t, tb);
++                    } else {
++                        tb.insertEmpty(startTag);
++                    }
++                } else if (name.equals("form")) {
++                    tb.error(this);
++                    if (tb.getFormElement() != null)
++                        return false;
++                    else {
++                        tb.insertForm(startTag, false);
++                    }
++                } else {
++                    return anythingElse(t, tb);
++                }
+@@ -1,16 +1,20 @@
+-                } else if (name.equals("input")) {
+-                    if (!startTag.attributes.get("type").equalsIgnoreCase("hidden")) {
+-                        return anythingElse(t, tb);
+-                    } else {
+-                        tb.insertEmpty(startTag);
+-                    }
+-                } else if (name.equals("form")) {
+-                    tb.error(this);
+-                    if (tb.getFormElement() != null)
+-                        return false;
+-                    else {
+-                        tb.insertForm(startTag, false);
+-                    }
+-                } else {
+-                    return anythingElse(t, tb);
+-                }
++                } else if (name.equals("input")) {
++                    if (!startTag.attributes.get("type").equalsIgnoreCase("hidden")) {
++                        return anythingElse(t, tb);
++                    } else {
++                        tb.insertEmpty(startTag);
++                    }
++                } else if (name.equals("form")) {
++                    tb.error(this);
++                    if (tb.getFormElement() != null)
++                        return false;
++                    else {
++                        tb.insertForm(startTag, false);
++                    }
++                } else if (name.equals("template")) {
++                    tb.insert(startTag);
++                    tb.markInsertionMode();
++                    tb.transition(InHead);
++                } else {
++                    return anythingElse(t, tb);
++                }
+@@ -1,10 +1,14 @@
+-                if (StringUtil.in(name, "th", "td")) {
+-                    tb.clearStackToTableRowContext();
+-                    tb.insert(startTag);
+-                    tb.transition(InCell);
+-                    tb.insertMarkerToFormattingElements();
+-                } else if (StringUtil.in(name, "caption", "col", "colgroup", "tbody", "tfoot", "thead", "tr")) {
+-                    return handleMissingTr(t, tb);
+-                } else {
+-                    return anythingElse(t, tb);
+-                }
++                if (StringUtil.in(name, "th", "td")) {
++                    tb.clearStackToTableRowContext();
++                    tb.insert(startTag);
++                    tb.transition(InCell);
++                    tb.insertMarkerToFormattingElements();
++                } else if (name.equals("template")) {
++                    tb.insert(startTag);
++                    tb.markInsertionMode();
++                    tb.transition(InHead);
++                } else if (StringUtil.in(name, "caption", "col", "colgroup", "tbody", "tfoot", "thead", "tr")) {
++                    return handleMissingTr(t, tb);
++                } else {
++                    return anythingElse(t, tb);
++                }
+@@ -1,14 +1,10 @@
+-                } else if (name.equals("form")) {
+-                    tb.error(this);
+-                    if (tb.getFormElement() != null)
+-                        return false;
+-                    else {
+-                        tb.insertForm(startTag, false);
+-                    }
+-                } else if (name.equals("template")) {
+-                    tb.insert(startTag);
+-                    tb.markInsertionMode();
+-                    tb.transition(InHead);
+-                } else {
+-                    return anythingElse(t, tb);
+-                }
++                } else if (name.equals("form")) {
++                    tb.error(this);
++                    if (tb.getFormElement() != null)
++                        return false;
++                    else {
++                        tb.insertForm(startTag, false);
++                    }
++                } else {
++                    return anythingElse(t, tb);
++                }
+@@ -1,6 +1,3 @@
+-                    } else if (name.equals("template")) {
+-                        tb.pop();
+-                        tb.transition(tb.originalState());
+-                    } else if (StringUtil.in(name, "body", "html", "br")) {
+-                        return anythingElse(t, tb);
+-                    }
++                    } else if (StringUtil.in(name, "body", "html", "br")) {
++                        return anythingElse(t, tb);
++                    }
+@@ -1,7 +1,5 @@
+-                } else if (name.equals("template")) {
+-                    tb.insert(startTag);
+-                    tb.markInsertionMode();
+-                    tb.transition(InHead);
+-                } else if (StringUtil.in(name, "caption", "col", "colgroup", "tbody", "tfoot", "thead", "tr")) {
+-                    return handleMissingTr(t, tb);
+-                }
++                } else if (name.equals("template")) {
++                    tb.insert(startTag);
++                } else if (StringUtil.in(name, "caption", "col", "colgroup", "tbody", "tfoot", "thead", "tr")) {
++                    return handleMissingTr(t, tb);
++                }
+@@ -1,6 +1,40 @@
+-            }
+-            return true;
+-        }
+-    },
+-    InTable {
+-        boolean process(Token t, HtmlTreeBuilder tb) {
++            }
++            return true;
++        }
++    },
++    InTemplate {
++        boolean process(Token t, HtmlTreeBuilder tb) {
++            switch (t.type) {
++                case StartTag:
++                    tb.insert(t.asStartTag());
++                    break;
++                case EndTag:
++                    Token.EndTag endTag = t.asEndTag();
++                    String name = endTag.normalName();
++                    if (name.equals("template")) {
++                        tb.pop();
++                        tb.templateMode = false; // set templateMode to false
++                        tb.transition(tb.originalState());
++                    } else {
++                        // ignore other end tags in template mode
++                    }
++                    break;
++                case Character:
++                    tb.insert(t.asCharacter());
++                    break;
++                case Comment:
++                    tb.insert(t.asComment());
++                    break;
++                case Doctype:
++                    tb.error(this);
++                    break;
++                case EOF:
++                    // todo: error if stack contains something not dd, dt, li, p, tbody, td, tfoot, th, thead, tr, body, html
++                    // stop parsing
++                    break;
++            }
++            return true;
++        }
++    },
++    InTable {
++        boolean process(Token t, HtmlTreeBuilder tb) {
+@@ -1,5 +1,8 @@
+-                } else if (name.equals("template")) {
+-                    tb.insert(startTag);
+-                } else if (StringUtil.in(name, "caption", "col", "colgroup", "tbody", "tfoot", "thead", "tr")) {
+-                    return handleMissingTr(t, tb);
+-                }
++                } else if (name.equals("template")) {
++                    tb.insert(startTag);
++                    tb.markInsertionMode();
++                    tb.templateMode = true;
++                    tb.transition(InTemplate);
++                } else if (StringUtil.in(name, "caption", "col", "colgroup", "tbody", "tfoot", "thead", "tr")) {
++                    return handleMissingTr(t, tb);
++                }
+@@ -1,1 +1,1 @@
+-                        tb.templateMode = false; // set templateMode to false
++                        tb.setTemplateMode(false); // set templateMode to false
+@@ -1,1 +1,1 @@
+-                    tb.templateMode = true;
++                    tb.setTemplateMode(true);
+@@ -1,11 +1,14 @@
+-        private boolean anythingElse(Token t, HtmlTreeBuilder tb) {
+-            return tb.process(t, InTable);
+-        }
+-
+-        private boolean handleMissingTr(Token t, TreeBuilder tb) {
+-            boolean processed = tb.processEndTag("tr");
+-            if (processed)
+-                return tb.process(t);
+-            else
+-                return false;
+-        }
++        private boolean anythingElse(Token t, HtmlTreeBuilder tb) {
++            if (t.isStartTag() && t.asStartTag().normalName().equals("template")) {
++                return false;
++            }
++            return tb.process(t, InTable);
++        }
++
++        private boolean handleMissingTr(Token t, TreeBuilder tb) {
++            boolean processed = tb.processEndTag("tr");
++            if (processed)
++                return tb.process(t);
++            else
++                return false;
++        }

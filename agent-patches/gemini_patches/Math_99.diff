@@ -1,0 +1,24 @@
+--- a/src/java/org/apache/commons/math/util/MathUtils.java
++++ b/src/java/org/apache/commons/math/util/MathUtils.java
+@@ -1,3 +1,8 @@
+-        if ((u == 0) || (v == 0)) {
+-            return (Math.abs(u) + Math.abs(v));
+-        }
++        if ((u == 0) || (v == 0)) {
++            if (u == Integer.MIN_VALUE || v == Integer.MIN_VALUE) {
++                throw MathRuntimeException.createArithmeticException(
++                        "overflow: gcd({0}, {1}) is 2^31",
++                        new Object[] { p, q });
++            }
++            return (Math.abs(u) + Math.abs(v));
++        }
+@@ -1,2 +1,7 @@
+-        int lcm = Math.abs(mulAndCheck(a / gcd(a, b), b));
+-        return lcm;
++        int result = mulAndCheck(a / gcd(a, b), b);
++        if (result == Integer.MIN_VALUE) {
++            throw MathRuntimeException.createArithmeticException(
++                    "overflow: lcm({0}, {1}) is 2^31",
++                    new Object[] { a, b });
++        }
++        return Math.abs(result);

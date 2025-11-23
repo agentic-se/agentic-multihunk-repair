@@ -1,0 +1,296 @@
+--- a/src/com/google/javascript/rhino/jstype/ArrowType.java
++++ b/src/com/google/javascript/rhino/jstype/ArrowType.java
+@@ -1,3 +1,12 @@
+-    // "that" can't be a supertype, because it's missing a required arguement.
+-
+-    return true;
++    // "that" can't be a supertype, because it's missing a required arguement.
++    // If 'that' has fewer parameters than 'this', then 'this' can only be a
++    // subtype of 'that' if the remaining parameters in 'this' are optional
++    // or var_args.
++    while (thisParam != null) {
++      if (!thisParam.isOptionalArg() && !thisParam.isVarArgs()) {
++        return false;
++      }
++      thisParam = thisParam.getNext();
++    }
++
++    return true;
+
+--- a/src/com/google/javascript/rhino/jstype/FunctionType.java
++++ b/src/com/google/javascript/rhino/jstype/FunctionType.java
+@@ -1,8 +1,23 @@
+-    Node newParamsNode = null;
+-    if (call.hasEqualParameters(other.call)) {
+-      newParamsNode = call.parameters;
+-    } else {
+-      // If the parameters are not equal, don't try to merge them.
+-      // Someday, we should try to merge the individual params.
+-      return null;
+-    }
++    Node newParamsNode = new Node(Token.PARAM_LIST);
++    int maxParams = Math.max(call.parameters.getChildCount(),
++                             other.call.parameters.getChildCount());
++    int minParams = Math.min(call.parameters.getChildCount(),
++                             other.call.parameters.getChildCount());
++
++    for (int i = 0; i < maxParams; i++) {
++      Node thisParam = call.parameters.getChildAtIndex(i);
++      Node otherParam = other.call.parameters.getChildAtIndex(i);
++
++      JSType newParamType;
++      if (thisParam == null) {
++        newParamType = leastSuper ? registry.getNativeType(JSTypeNative.UNKNOWN_TYPE) : otherParam.getJSType();
++      } else if (otherParam == null) {
++        newParamType = leastSuper ? registry.getNativeType(JSTypeNative.UNKNOWN_TYPE) : thisParam.getJSType();
++      } else {
++        newParamType = leastSuper ?
++            thisParam.getJSType().getLeastSupertype(otherParam.getJSType()) :
++            thisParam.getJSType().getGreatestSubtype(otherParam.getJSType());
++      }
++      newParamsNode.addChildToBack(Node.newString(Token.NAME, "").setJSType(newParamType));
++    }
++
+@@ -1,23 +1,8 @@
+-    Node newParamsNode = new Node(Token.PARAM_LIST);
+-    int maxParams = Math.max(call.parameters.getChildCount(),
+-                             other.call.parameters.getChildCount());
+-    int minParams = Math.min(call.parameters.getChildCount(),
+-                             other.call.parameters.getChildCount());
+-
+-    for (int i = 0; i < maxParams; i++) {
+-      Node thisParam = call.parameters.getChildAtIndex(i);
+-      Node otherParam = other.call.parameters.getChildAtIndex(i);
+-
+-      JSType newParamType;
+-      if (thisParam == null) {
+-        newParamType = leastSuper ? registry.getNativeType(JSTypeNative.UNKNOWN_TYPE) : otherParam.getJSType();
+-      } else if (otherParam == null) {
+-        newParamType = leastSuper ? registry.getNativeType(JSTypeNative.UNKNOWN_TYPE) : thisParam.getJSType();
+-      } else {
+-        newParamType = leastSuper ?
+-            thisParam.getJSType().getLeastSupertype(otherParam.getJSType()) :
+-            thisParam.getJSType().getGreatestSubtype(otherParam.getJSType());
+-      }
+-      newParamsNode.addChildToBack(Node.newString(Token.NAME, "").setJSType(newParamType));
+-    }
+-
++    Node newParamsNode = null;
++    if (call.hasEqualParameters(other.call)) {
++      newParamsNode = call.parameters;
++    } else {
++      // If the parameters are not equal, don't try to merge them.
++      // Someday, we should try to merge the individual params.
++      return null;
++    }
+@@ -1,8 +1,40 @@
+-    Node newParamsNode = null;
+-    if (call.hasEqualParameters(other.call)) {
+-      newParamsNode = call.parameters;
+-    } else {
+-      // If the parameters are not equal, don't try to merge them.
+-      // Someday, we should try to merge the individual params.
+-      return null;
+-    }
++    Node newParamsNode = new Node(Token.PARAM_LIST);
++    int maxParams = Math.max(call.parameters.getChildCount(),
++                             other.call.parameters.getChildCount());
++    int minParams = Math.min(call.parameters.getChildCount(),
++                             other.call.parameters.getChildCount());
++
++    for (int i = 0; i < maxParams; i++) {
++      Node thisParam = call.parameters.getChildAtIndex(i);
++      Node otherParam = other.call.parameters.getChildAtIndex(i);
++
++      JSType newParamType;
++      boolean newParamIsOptional = false;
++      boolean newParamIsVarArgs = false;
++
++      if (thisParam == null) {
++        newParamType = leastSuper ? registry.getNativeType(JSTypeNative.UNKNOWN_TYPE) : otherParam.getJSType();
++        newParamIsOptional = otherParam.isOptionalArg();
++        newParamIsVarArgs = otherParam.isVarArgs();
++      } else if (otherParam == null) {
++        newParamType = leastSuper ? registry.getNativeType(JSTypeNative.UNKNOWN_TYPE) : thisParam.getJSType();
++        newParamIsOptional = thisParam.isOptionalArg();
++        newParamIsVarArgs = thisParam.isVarArgs();
++      } else {
++        newParamType = leastSuper ?
++            thisParam.getJSType().getLeastSupertype(otherParam.getJSType()) :
++            thisParam.getJSType().getGreatestSubtype(otherParam.getJSType());
++        newParamIsOptional = leastSuper ?
++            (thisParam.isOptionalArg() || otherParam.isOptionalArg()) :
++            (thisParam.isOptionalArg() && otherParam.isOptionalArg());
++        newParamIsVarArgs = leastSuper ?
++            (thisParam.isVarArgs() || otherParam.isVarArgs()) :
++            (thisParam.isVarArgs() && otherParam.isVarArgs());
++      }
++
++      Node newParam = Node.newString(Token.NAME, "").setJSType(newParamType);
++      newParam.setOptionalArg(newParamIsOptional);
++      newParam.setVarArgs(newParamIsVarArgs);
++      newParamsNode.addChildToBack(newParam);
++    }
++
+@@ -1,1 +1,2 @@
+-      Node newParam = Node.newString(Token.NAME, "").setJSType(newParamType);
++      Node newParam = Node.newString(Token.NAME, "");
++      newParam.setJSType(newParamType);
+@@ -1,41 +1,8 @@
+-    Node newParamsNode = new Node(Token.PARAM_LIST);
+-    int maxParams = Math.max(call.parameters.getChildCount(),
+-                             other.call.parameters.getChildCount());
+-    int minParams = Math.min(call.parameters.getChildCount(),
+-                             other.call.parameters.getChildCount());
+-
+-    for (int i = 0; i < maxParams; i++) {
+-      Node thisParam = call.parameters.getChildAtIndex(i);
+-      Node otherParam = other.call.parameters.getChildAtIndex(i);
+-
+-      JSType newParamType;
+-      boolean newParamIsOptional = false;
+-      boolean newParamIsVarArgs = false;
+-
+-      if (thisParam == null) {
+-        newParamType = leastSuper ? registry.getNativeType(JSTypeNative.UNKNOWN_TYPE) : otherParam.getJSType();
+-        newParamIsOptional = otherParam.isOptionalArg();
+-        newParamIsVarArgs = otherParam.isVarArgs();
+-      } else if (otherParam == null) {
+-        newParamType = leastSuper ? registry.getNativeType(JSTypeNative.UNKNOWN_TYPE) : thisParam.getJSType();
+-        newParamIsOptional = thisParam.isOptionalArg();
+-        newParamIsVarArgs = thisParam.isVarArgs();
+-      } else {
+-        newParamType = leastSuper ?
+-            thisParam.getJSType().getLeastSupertype(otherParam.getJSType()) :
+-            thisParam.getJSType().getGreatestSubtype(otherParam.getJSType());
+-        newParamIsOptional = leastSuper ?
+-            (thisParam.isOptionalArg() || otherParam.isOptionalArg()) :
+-            (thisParam.isOptionalArg() && otherParam.isOptionalArg());
+-        newParamIsVarArgs = leastSuper ?
+-            (thisParam.isVarArgs() || otherParam.isVarArgs()) :
+-            (thisParam.isVarArgs() && otherParam.isVarArgs());
+-      }
+-
+-      Node newParam = Node.newString(Token.NAME, "");
+-      newParam.setJSType(newParamType);
+-      newParam.setOptionalArg(newParamIsOptional);
+-      newParam.setVarArgs(newParamIsVarArgs);
+-      newParamsNode.addChildToBack(newParam);
+-    }
+-
++    Node newParamsNode = null;
++    if (call.hasEqualParameters(other.call)) {
++      newParamsNode = call.parameters;
++    } else {
++      // If the parameters are not equal, don't try to merge them.
++      // Someday, we should try to merge the individual params.
++      return null;
++    }
+@@ -1,8 +1,45 @@
+-    Node newParamsNode = null;
+-    if (call.hasEqualParameters(other.call)) {
+-      newParamsNode = call.parameters;
+-    } else {
+-      // If the parameters are not equal, don't try to merge them.
+-      // Someday, we should try to merge the individual params.
+-      return null;
+-    }
++    Node newParamsNode = new Node(Token.PARAM_LIST);
++    int thisParamsCount = call.parameters.getChildCount();
++    int otherParamsCount = other.call.parameters.getChildCount();
++
++    int resultParamsCount = leastSuper ?
++        Math.max(thisParamsCount, otherParamsCount) :
++        Math.min(thisParamsCount, otherParamsCount);
++
++    for (int i = 0; i < resultParamsCount; i++) {
++      Node thisParam = call.parameters.getChildAtIndex(i);
++      Node otherParam = other.call.parameters.getChildAtIndex(i);
++
++      JSType newParamType;
++      boolean newParamIsOptional = false;
++      boolean newParamIsVarArgs = false;
++
++      if (thisParam == null) {
++        // This should only happen for leastSuper when otherParamsCount > thisParamsCount
++        newParamType = leastSuper ? otherParam.getJSType() : registry.getNativeType(JSTypeNative.NO_TYPE);
++        newParamIsOptional = otherParam.isOptionalArg();
++        newParamIsVarArgs = otherParam.isVarArgs();
++      } else if (otherParam == null) {
++        // This should only happen for leastSuper when thisParamsCount > otherParamsCount
++        newParamType = leastSuper ? thisParam.getJSType() : registry.getNativeType(JSTypeNative.NO_TYPE);
++        newParamIsOptional = thisParam.isOptionalArg();
++        newParamIsVarArgs = thisParam.isVarArgs();
++      } else {
++        newParamType = leastSuper ?
++            thisParam.getJSType().getLeastSupertype(otherParam.getJSType()) :
++            thisParam.getJSType().getGreatestSubtype(otherParam.getJSType());
++        newParamIsOptional = leastSuper ?
++            (thisParam.isOptionalArg() || otherParam.isOptionalArg()) :
++            (thisParam.isOptionalArg() && otherParam.isOptionalArg());
++        newParamIsVarArgs = leastSuper ?
++            (thisParam.isVarArgs() || otherParam.isVarArgs()) :
++            (thisParam.isVarArgs() && otherParam.isVarArgs());
++      }
++
++      Node newParam = Node.newString(Token.NAME, "");
++      newParam.setJSType(newParamType);
++      newParam.setOptionalArg(newParamIsOptional);
++      newParam.setVarArgs(newParamIsVarArgs);
++      newParamsNode.addChildToBack(newParam);
++    }
++
+@@ -1,45 +1,8 @@
+-    Node newParamsNode = new Node(Token.PARAM_LIST);
+-    int thisParamsCount = call.parameters.getChildCount();
+-    int otherParamsCount = other.call.parameters.getChildCount();
+-
+-    int resultParamsCount = leastSuper ?
+-        Math.max(thisParamsCount, otherParamsCount) :
+-        Math.min(thisParamsCount, otherParamsCount);
+-
+-    for (int i = 0; i < resultParamsCount; i++) {
+-      Node thisParam = call.parameters.getChildAtIndex(i);
+-      Node otherParam = other.call.parameters.getChildAtIndex(i);
+-
+-      JSType newParamType;
+-      boolean newParamIsOptional = false;
+-      boolean newParamIsVarArgs = false;
+-
+-      if (thisParam == null) {
+-        // This should only happen for leastSuper when otherParamsCount > thisParamsCount
+-        newParamType = leastSuper ? otherParam.getJSType() : registry.getNativeType(JSTypeNative.NO_TYPE);
+-        newParamIsOptional = otherParam.isOptionalArg();
+-        newParamIsVarArgs = otherParam.isVarArgs();
+-      } else if (otherParam == null) {
+-        // This should only happen for leastSuper when thisParamsCount > otherParamsCount
+-        newParamType = leastSuper ? thisParam.getJSType() : registry.getNativeType(JSTypeNative.NO_TYPE);
+-        newParamIsOptional = thisParam.isOptionalArg();
+-        newParamIsVarArgs = thisParam.isVarArgs();
+-      } else {
+-        newParamType = leastSuper ?
+-            thisParam.getJSType().getLeastSupertype(otherParam.getJSType()) :
+-            thisParam.getJSType().getGreatestSubtype(otherParam.getJSType());
+-        newParamIsOptional = leastSuper ?
+-            (thisParam.isOptionalArg() || otherParam.isOptionalArg()) :
+-            (thisParam.isOptionalArg() && otherParam.isOptionalArg());
+-        newParamIsVarArgs = leastSuper ?
+-            (thisParam.isVarArgs() || otherParam.isVarArgs()) :
+-            (thisParam.isVarArgs() && otherParam.isVarArgs());
+-      }
+-
+-      Node newParam = Node.newString(Token.NAME, "");
+-      newParam.setJSType(newParamType);
+-      newParam.setOptionalArg(newParamIsOptional);
+-      newParam.setVarArgs(newParamIsVarArgs);
+-      newParamsNode.addChildToBack(newParam);
+-    }
+-
++    Node newParamsNode = null;
++    if (call.hasEqualParameters(other.call)) {
++      newParamsNode = call.parameters;
++    } else {
++      // If the parameters are not equal, don't try to merge them.
++      // Someday, we should try to merge the individual params.
++      return null;
++    }

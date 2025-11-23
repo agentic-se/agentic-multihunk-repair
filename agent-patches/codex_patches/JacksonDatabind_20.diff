@@ -1,0 +1,32 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/introspect/BasicClassIntrospector.java b/src/main/java/com/fasterxml/jackson/databind/introspect/BasicClassIntrospector.java
+index d908a09ed..3b09c7944 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/introspect/BasicClassIntrospector.java
++++ b/src/main/java/com/fasterxml/jackson/databind/introspect/BasicClassIntrospector.java
+@@ -107,8 +107,25 @@ public class BasicClassIntrospector
+             // structured types as well
+             desc = _findStdJdkCollectionDesc(cfg, type, r);
+             if (desc == null) {
+-                desc = BasicBeanDescription.forDeserialization(collectProperties(cfg,
+-                        		type, r, false, "set"));
++                /*
++                 * Avoid full POJO property introspection for tree model types
++                 * (JsonNode and subtypes). These types are handled by dedicated
++                 * tree deserializers and do not require, nor should they trigger,
++                 * bean-style method/property analysis. Performing full
++                 * introspection here may lead to false conflicts (for example,
++                 * overloaded mutators like ObjectNode#setAll), especially when
++                 * a PropertyNamingStrategy is configured.
++                 */
++                Class<?> raw = type.getRawClass();
++                if (com.fasterxml.jackson.databind.JsonNode.class.isAssignableFrom(raw)) {
++                    boolean useAnnotations = cfg.isAnnotationProcessingEnabled();
++                    AnnotatedClass ac = AnnotatedClass.construct(raw,
++                            (useAnnotations ? cfg.getAnnotationIntrospector() : null), r);
++                    desc = BasicBeanDescription.forOtherUse(cfg, type, ac);
++                } else {
++                    desc = BasicBeanDescription.forDeserialization(collectProperties(cfg,
++                                type, r, false, "set"));
++                }
+             }
+             // Also: this is a superset of "forClassAnnotations", so may optimize by optional add:
+             _cachedFCA.putIfAbsent(type, desc);

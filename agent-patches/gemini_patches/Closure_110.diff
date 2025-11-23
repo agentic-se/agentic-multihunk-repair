@@ -1,0 +1,500 @@
+--- a/src/com/google/javascript/jscomp/ScopedAliases.java
++++ b/src/com/google/javascript/jscomp/ScopedAliases.java
+@@ -1,4 +1,37 @@
+-        } else {
+-          // Do not other kinds of local symbols, like catch params.
+-          report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
+-        }
++        } else if (parent.isFunction()) { // This handles function declarations
++          Node functionNode = parent; // The FUNCTION node
++          Node grandparent = functionNode.getParent(); // The BLOCK of goog.scope
++
++          String name = n.getString(); // The function name
++          int nameCount = scopedAliasNames.count(name);
++          scopedAliasNames.add(name);
++          String globalName =
++              "$jscomp.scope." + name + (nameCount == 0 ? "" : ("$" + nameCount));
++
++          compiler.ensureLibraryInjected("base");
++
++          // Create the new VAR node: var $jscomp.scope.name = function() {};
++          Node newVarName = NodeUtil.newQualifiedNameNode(
++              compiler.getCodingConvention(), globalName, n, name);
++
++          // Create a new VAR node with the global name and the original function node as its value.
++          Node newVar = IR.var(newVarName, functionNode);
++
++          // Transfer JSDoc info from the original function node to the new VAR node's name.
++          JSDocInfo jsDocInfo = functionNode.getJSDocInfo();
++          if (jsDocInfo != null) {
++            newVarName.setJSDocInfo(jsDocInfo);
++          }
++
++          NodeUtil.setDebugInformation(newVarName, n, name);
++
++          // Replace the original functionNode with the newVar in the grandparent.
++          grandparent.replaceChild(newVar, functionNode);
++
++          compiler.reportCodeChange();
++
++          recordAlias(v); // Record the alias
++        } else {
++          // Do not other kinds of local symbols, like catch params.
++          report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
++        }
+@@ -1,4 +1,34 @@
+-        } else {
+-          // Do not other kinds of local symbols, like catch params.
+-          report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
+-        }
++        } else if (parent.isFunction()) { // This handles function declarations
++          Node functionNode = parent; // The FUNCTION node
++          Node grandparent = functionNode.getParent(); // The BLOCK of goog.scope
++
++          String name = n.getString(); // The function name
++          int nameCount = scopedAliasNames.count(name);
++          scopedAliasNames.add(name);
++          String globalName =
++              "$jscomp.scope." + name + (nameCount == 0 ? "" : ("$" + nameCount));
++
++          compiler.ensureLibraryInjected("base");
++
++          // Create a new VAR declaration: var $jscomp.scope.name = function() {};
++          // The functionNode itself is the value.
++          Node newDecl = NodeUtil.newQualifiedNameNodeDeclaration(
++              compiler.getCodingConvention(),
++              globalName,
++              functionNode.cloneTree(), // Clone the function node to use as value
++              functionNode.getJSDocInfo()) // Transfer JSDoc from the function node
++              .useSourceInfoIfMissingFromForTree(n);
++
++          NodeUtil.setDebugInformation(
++              newDecl.getFirstChild().getFirstChild(), n, name);
++
++          // Replace the original functionNode with the newDecl in the grandparent.
++          grandparent.replaceChild(newDecl, functionNode);
++
++          compiler.reportCodeChange();
++
++          recordAlias(v); // Record the alias
++        } else {
++          // Do not other kinds of local symbols, like catch params.
++          report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
++        }
+@@ -1,4 +1,40 @@
+-        } else {
+-          // Do not other kinds of local symbols, like catch params.
+-          report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
+-        }
++        } else if (parent.isFunction()) { // This handles function declarations
++          Node functionNode = parent; // The FUNCTION node
++          Node grandparent = functionNode.getParent(); // The BLOCK of goog.scope
++
++          String name = n.getString(); // The function name
++          int nameCount = scopedAliasNames.count(name);
++          scopedAliasNames.add(name);
++          String globalName =
++              "$jscomp.scope." + name + (nameCount == 0 ? "" : ("$" + nameCount));
++
++          compiler.ensureLibraryInjected("base");
++
++          // Create a NAME node for the global alias: $jscomp.scope.name
++          Node globalNameNode = NodeUtil.newQualifiedNameNode(
++              compiler.getCodingConvention(), globalName, n, name);
++
++          // Create an ASSIGN node: $jscomp.scope.name = function() {};
++          Node assignNode = IR.assign(globalNameNode, functionNode.cloneTree());
++
++          // Wrap the ASSIGN node in an EXPR_RESULT node.
++          Node exprResultNode = IR.exprResult(assignNode);
++
++          // Transfer JSDoc info from the original function node to the EXPR_RESULT node.
++          JSDocInfo jsDocInfo = functionNode.getJSDocInfo();
++          if (jsDocInfo != null) {
++            exprResultNode.setJSDocInfo(jsDocInfo);
++          }
++
++          NodeUtil.setDebugInformation(exprResultNode, n, name);
++
++          // Replace the original functionNode with the new exprResultNode in the grandparent.
++          grandparent.replaceChild(exprResultNode, functionNode);
++
++          compiler.reportCodeChange();
++
++          recordAlias(v); // Record the alias
++        } else {
++          // Do not other kinds of local symbols, like catch params.
++          report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
++        }
+@@ -1,3 +1,7 @@
+-      String qualifiedName =
+-        aliasVar.getInitialValue().getQualifiedName();
+-      transformation.addAlias(name, qualifiedName);
++      String qualifiedName;
++      if (aliasVar.getNode().getParent().isFunction()) { // Check if the alias is for a function declaration
++          qualifiedName = "$jscomp.scope." + name; // Use the global name as the qualified name
++      } else {
++          qualifiedName = aliasVar.getInitialValue().getQualifiedName();
++      }
++      transformation.addAlias(name, qualifiedName);
+@@ -1,4 +1,40 @@
+-        } else {
+-          // Do not other kinds of local symbols, like catch params.
+-          report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
+-        }
++        } else if (parent.isFunction()) { // This handles function declarations
++          Node functionNode = parent; // The FUNCTION node
++          Node grandparent = functionNode.getParent(); // The BLOCK of goog.scope
++
++          String name = n.getString(); // The function name
++          int nameCount = scopedAliasNames.count(name);
++          scopedAliasNames.add(name);
++          String globalName =
++              "$jscomp.scope." + name + (nameCount == 0 ? "" : ("$" + nameCount));
++
++          compiler.ensureLibraryInjected("base");
++
++          // Create a NAME node for the global alias: $jscomp.scope.name
++          Node globalNameNode = NodeUtil.newQualifiedNameNode(
++              compiler.getCodingConvention(), globalName, n, name);
++
++          // Create an ASSIGN node: $jscomp.scope.name = function() {};
++          Node assignNode = IR.assign(globalNameNode, functionNode.cloneTree());
++
++          // Wrap the ASSIGN node in an EXPR_RESULT node.
++          Node exprResultNode = IR.exprResult(assignNode);
++
++          // Transfer JSDoc info from the original function node to the EXPR_RESULT node.
++          JSDocInfo jsDocInfo = functionNode.getJSDocInfo();
++          if (jsDocInfo != null) {
++            exprResultNode.setJSDocInfo(jsDocInfo);
++          }
++
++          NodeUtil.setDebugInformation(exprResultNode, n, name);
++
++          // Replace the original functionNode with the new exprResultNode in the grandparent.
++          grandparent.replaceChild(exprResultNode, functionNode);
++
++          compiler.reportCodeChange();
++
++          recordAlias(v); // Call recordAlias with the original Var 'v'
++        } else {
++          // Do not other kinds of local symbols, like catch params.
++          report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
++        }
+@@ -1,16 +1,34 @@
+-  private class AliasedTypeNode extends AliasUsage {
+-    AliasedTypeNode(Var aliasVar, Node aliasReference) {
+-      super(aliasVar, aliasReference);
+-    }
+-
+-    @Override
+-    public void applyAlias() {
+-      Node aliasDefinition = aliasVar.getInitialValue();
+-      String aliasName = aliasVar.getName();
+-      String typeName = aliasReference.getString();
+-      String aliasExpanded =
+-          Preconditions.checkNotNull(aliasDefinition.getQualifiedName());
+-      Preconditions.checkState(typeName.startsWith(aliasName));
+-      aliasReference.setString(typeName.replaceFirst(aliasName, aliasExpanded));
+-    }
+-  }
++  private class AliasedTypeNode extends AliasUsage {
++    AliasedTypeNode(Var aliasVar, Node aliasReference) {
++      super(aliasVar, aliasReference);
++    }
++
++    @Override
++    public void applyAlias() {
++      Node aliasDefinition = aliasVar.getInitialValue();
++      String aliasName = aliasVar.getName();
++      String typeName = aliasReference.getString();
++      String aliasExpanded =
++          Preconditions.checkNotNull(aliasDefinition.getQualifiedName());
++      Preconditions.checkState(typeName.startsWith(aliasName));
++      aliasReference.setString(typeName.replaceFirst(aliasName, aliasExpanded));
++    }
++  }
++
++
++  private class AliasedFunctionNode extends AliasUsage {
++    private final String globalName;
++
++    AliasedFunctionNode(Var aliasVar, Node aliasReference, String globalName) {
++      super(aliasVar, aliasReference);
++      this.globalName = globalName;
++    }
++
++    @Override
++    public void applyAlias() {
++      Node globalNameNode = NodeUtil.newQualifiedNameNode(
++          compiler.getCodingConvention(), globalName, aliasReference, aliasReference.getString());
++      aliasReference.getParent().replaceChild(
++          aliasReference, globalNameNode);
++    }
++  }
+@@ -1,4 +1,54 @@
+-        } else {
+-          // Do not other kinds of local symbols, like catch params.
+-          report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
+-        }
++        } else if (parent.isFunction()) { // This handles function declarations
++          Node functionNode = parent; // The FUNCTION node
++          Node grandparent = functionNode.getParent(); // The BLOCK of goog.scope
++
++          String name = n.getString(); // The function name
++          int nameCount = scopedAliasNames.count(name);
++          scopedAliasNames.add(name);
++          String globalName =
++              "$jscomp.scope." + name + (nameCount == 0 ? "" : ("$" + nameCount));
++
++          compiler.ensureLibraryInjected("base");
++
++          // Create a NAME node for the global alias: $jscomp.scope.name
++          Node globalNameNode = NodeUtil.newQualifiedNameNode(
++              compiler.getCodingConvention(), globalName, n, name);
++
++          // Create an ASSIGN node: $jscomp.scope.name = function() {};
++          Node assignNode = IR.assign(globalNameNode.cloneTree(), functionNode.cloneTree());
++
++          // Wrap the ASSIGN node in an EXPR_RESULT node.
++          Node exprResultNode = IR.exprResult(assignNode);
++
++          // Transfer JSDoc info from the original function node to the EXPR_RESULT node.
++          JSDocInfo jsDocInfo = functionNode.getJSDocInfo();
++          if (jsDocInfo != null) {
++            exprResultNode.setJSDocInfo(jsDocInfo);
++          }
++
++          NodeUtil.setDebugInformation(exprResultNode, n, name);
++
++          // Replace the original functionNode with the new exprResultNode in the grandparent.
++          grandparent.replaceChild(exprResultNode, functionNode);
++
++          compiler.reportCodeChange();
++
++          // Record the alias for transformation handler.
++          transformation.addAlias(name, globalName);
++
++          int rootIndex = globalName.indexOf(".");
++          if (rootIndex != -1) {
++            String qNameRoot = globalName.substring(0, rootIndex);
++            if (!aliases.containsKey(qNameRoot)) {
++              forbiddenLocals.add(qNameRoot);
++            }
++          }
++
++          // Add a special AliasUsage for function references.
++          // This is where the alias 'f' is replaced by '$jscomp.scope.f'.
++          // The 'v' here is the Var for 'f'.
++          aliasUsages.add(new AliasedFunctionNode(v, n, globalName)); // Pass globalName
++        } else {
++          // Do not other kinds of local symbols, like catch params.
++          report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
++        }
+@@ -1,16 +1,34 @@
+-  private class AliasedTypeNode extends AliasUsage {
+-    AliasedTypeNode(Var aliasVar, Node aliasReference) {
+-      super(aliasVar, aliasReference);
+-    }
+-
+-    @Override
+-    public void applyAlias() {
+-      Node aliasDefinition = aliasVar.getInitialValue();
+-      String aliasName = aliasVar.getName();
+-      String typeName = aliasReference.getString();
+-      String aliasExpanded =
+-          Preconditions.checkNotNull(aliasDefinition.getQualifiedName());
+-      Preconditions.checkState(typeName.startsWith(aliasName));
+-      aliasReference.setString(typeName.replaceFirst(aliasName, aliasExpanded));
+-    }
+-  }
++  private class AliasedTypeNode extends AliasUsage {
++    AliasedTypeNode(Var aliasVar, Node aliasReference) {
++      super(aliasVar, aliasReference);
++    }
++
++    @Override
++    public void applyAlias() {
++      Node aliasDefinition = aliasVar.getInitialValue();
++      String aliasName = aliasVar.getName();
++      String typeName = aliasReference.getString();
++      String aliasExpanded =
++          Preconditions.checkNotNull(aliasDefinition.getQualifiedName());
++      Preconditions.checkState(typeName.startsWith(aliasName));
++      aliasReference.setString(typeName.replaceFirst(aliasName, aliasExpanded));
++    }
++  }
++
++
++  private class AliasedFunctionNode extends AliasUsage {
++    private final String globalName;
++
++    AliasedFunctionNode(Var aliasVar, Node aliasReference, String globalName) {
++      super(aliasVar, aliasReference);
++      this.globalName = globalName;
++    }
++
++    @Override
++    public void applyAlias() {
++      Node globalNameNode = NodeUtil.newQualifiedNameNode(
++          compiler.getCodingConvention(), globalName, aliasReference, aliasReference.getString());
++      aliasReference.getParent().replaceChild(
++          aliasReference, globalNameNode);
++    }
++  }
+@@ -1,4 +1,50 @@
+-        } else {
+-          // Do not other kinds of local symbols, like catch params.
+-          report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
+-        }
++        } else if (parent.isFunction()) { // This handles function declarations
++          Node functionNode = parent; // The FUNCTION node
++          Node grandparent = functionNode.getParent(); // The BLOCK of goog.scope
++
++          String name = n.getString(); // The function name
++          int nameCount = scopedAliasNames.count(name);
++          scopedAliasNames.add(name);
++          String globalName =
++              "$jscomp.scope." + name + (nameCount == 0 ? "" : ("$" + nameCount));
++
++          compiler.ensureLibraryInjected("base");
++
++          // Create a NAME node for the global alias: $jscomp.scope.name
++          Node globalNameNode = NodeUtil.newQualifiedNameNode(
++              compiler.getCodingConvention(), globalName, n, name);
++
++          // Create an ASSIGN node: $jscomp.scope.name = function() {};
++          Node assignNode = IR.assign(globalNameNode.cloneTree(), functionNode.cloneTree());
++
++          // Wrap the ASSIGN node in an EXPR_RESULT node.
++          Node exprResultNode = IR.exprResult(assignNode);
++
++          // Transfer JSDoc info from the original function node to the EXPR_RESULT node.
++          JSDocInfo jsDocInfo = functionNode.getJSDocInfo();
++          if (jsDocInfo != null) {
++            exprResultNode.setJSDocInfo(jsDocInfo);
++          }
++
++          NodeUtil.setDebugInformation(exprResultNode, n, name);
++
++          // Replace the original functionNode with the new exprResultNode in the grandparent.
++          grandparent.replaceChild(exprResultNode, functionNode);
++
++          compiler.reportCodeChange();
++
++          // Record the alias for transformation handler.
++          transformation.addAlias(name, globalName);
++
++          int rootIndex = globalName.indexOf(".");
++          if (rootIndex != -1) {
++            String qNameRoot = globalName.substring(0, rootIndex);
++            if (!aliases.containsKey(qNameRoot)) {
++              forbiddenLocals.add(qNameRoot);
++            }
++          }
++          // No aliasUsages.add here, it will be handled in Traversal.visit
++        } else {
++          // Do not other kinds of local symbols, like catch params.
++          report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
++        }
+@@ -1,9 +1,16 @@
+-        if (aliasVar != null) {
+-          // Note, to support the transitive case, it's important we don't
+-          // clone aliasedNode here.  For example,
+-          // var g = goog; var d = g.dom; d.createElement('DIV');
+-          // The node in aliasedNode (which is "g") will be replaced in the
+-          // changes pass above with "goog".  If we cloned here, we'd end up
+-          // with <code>g.dom.createElement('DIV')</code>.
+-          aliasUsages.add(new AliasedNode(aliasVar, n));
+-        }
++        if (aliasVar != null) {
++          // If it's a function alias, create AliasedFunctionNode.
++          if (aliasVar.getNode().getParent().isFunction()) { // Check if the aliasVar is for a function
++              String globalName = "$jscomp.scope." + aliasVar.getName(); // Construct global name
++              aliasUsages.add(new AliasedFunctionNode(aliasVar, n, globalName));
++          } else {
++              // Original handling for other aliases.
++              // Note, to support the transitive case, it's important we don't
++              // clone aliasedNode here.  For example,
++              // var g = goog; var d = g.dom; d.createElement('DIV');
++              // The node in aliasedNode (which is "g") will be replaced in the
++              // changes pass above with "goog".  If we cloned here, we'd end up
++              // with <code>g.dom.createElement('DIV')</code>.
++              aliasUsages.add(new AliasedNode(aliasVar, n));
++          }
++        }
+@@ -1,4 +1,32 @@
+-        } else {
+-          // Do not other kinds of local symbols, like catch params.
+-          report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
+-        }
++        } else if (parent.isFunction()) { // This handles function declarations
++          Node functionNode = parent; // The FUNCTION node
++          Node grandparent = functionNode.getParent(); // The BLOCK of goog.scope
++
++          String name = n.getString(); // The function name
++
++          compiler.ensureLibraryInjected("base");
++
++          // Create a VAR node: var f = function() {};
++          Node newVarName = IR.name(name); // Name node for 'f'
++          Node newVar = IR.var(newVarName, functionNode.cloneTree()); // 'var f = function() {};'
++
++          // Transfer JSDoc info from the original function node to the new VAR node's name.
++          JSDocInfo jsDocInfo = functionNode.getJSDocInfo();
++          if (jsDocInfo != null) {
++            newVarName.setJSDocInfo(jsDocInfo);
++          }
++
++          NodeUtil.setDebugInformation(newVarName, n, name);
++
++          // Replace the original functionNode with the newVar in the grandparent.
++          grandparent.replaceChild(newVar, functionNode);
++
++          compiler.reportCodeChange();
++
++          // Now, the existing 'else if (isVar)' block will pick up this new VAR node
++          // and transform it further.
++          // We don't call recordAlias here, as it will be called by the 'else if (isVar)' block.
++        } else {
++          // Do not other kinds of local symbols, like catch params.
++          report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
++        }
+@@ -1,4 +1,32 @@
+-        } else {
+-          // Do not other kinds of local symbols, like catch params.
+-          report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
+-        }
++        } else if (parent.isFunction()) { // This handles function declarations
++          Node functionNode = parent; // The FUNCTION node
++          Node grandparent = functionNode.getParent(); // The BLOCK of goog.scope
++
++          String name = n.getString(); // The function name
++
++          compiler.ensureLibraryInjected("base");
++
++          // Create a VAR node: var f = function() {};
++          Node newVarName = IR.name(name); // Name node for 'f'
++          Node newVar = IR.var(newVarName, functionNode.cloneTree()); // 'var f = function() {};'
++
++          // Transfer JSDoc info from the original function node to the new VAR node's name.
++          JSDocInfo jsDocInfo = functionNode.getJSDocInfo();
++          if (jsDocInfo != null) {
++            newVarName.setJSDocInfo(jsDocInfo);
++          }
++
++          NodeUtil.setDebugInformation(newVarName, n, name);
++
++          // Replace the original functionNode with the newVar in the grandparent.
++          grandparent.replaceChild(newVar, functionNode);
++
++          compiler.reportCodeChange();
++
++          // Now, the existing 'else if (isVar)' block will pick up this new VAR node
++          // and transform it further.
++          // We don't call recordAlias here, as it will be called by the 'else if (isVar)' block.
++        } else {
++          // Do not other kinds of local symbols, like catch params.
++          report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
++        }

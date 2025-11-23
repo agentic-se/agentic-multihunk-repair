@@ -1,0 +1,48 @@
+--- a/src/main/java/org/jsoup/helper/W3CDom.java
++++ b/src/main/java/org/jsoup/helper/W3CDom.java
+@@ -1,3 +1,3 @@
+-        private final Document doc;
+-        private final HashMap<String, String> namespaces = new HashMap<>();
+-        private Element dest;
++        private final Document doc;
++        private final Stack<HashMap<String, String>> namespacesStack = new Stack<>();
++        private Element dest;
+@@ -1,3 +1,4 @@
+-        public W3CBuilder(Document doc) {
+-            this.doc = doc;
+-        }
++        public W3CBuilder(Document doc) {
++            this.doc = doc;
++            namespacesStack.push(new HashMap<String, String>());
++        }
+@@ -1,4 +1,5 @@
+-                String prefix = updateNamespaces(sourceEl);
+-                String namespace = namespaces.get(prefix);
+-
+-                Element el = doc.createElementNS(namespace, sourceEl.tagName());
++                namespacesStack.push(new HashMap<>(namespacesStack.peek())); // inherit from parent
++                String prefix = updateNamespaces(sourceEl);
++                String namespace = namespacesStack.peek().get(prefix);
++
++                Element el = doc.createElementNS(namespace, sourceEl.tagName());
+@@ -1,5 +1,8 @@
+-        public void tail(org.jsoup.nodes.Node source, int depth) {
+-            if (source instanceof org.jsoup.nodes.Element && dest.getParentNode() instanceof Element) {
+-                dest = (Element) dest.getParentNode(); // undescend. cromulent.
+-            }
+-        }
++        public void tail(org.jsoup.nodes.Node source, int depth) {
++            if (source instanceof org.jsoup.nodes.Element) {
++                namespacesStack.pop(); // exit element
++                if (dest.getParentNode() instanceof Element) {
++                    dest = (Element) dest.getParentNode(); // undescend. cromulent.
++                }
++            }
++        }
+@@ -1,1 +1,1 @@
+-                namespaces.put(prefix, attr.getValue());
++                namespacesStack.peek().put(prefix, attr.getValue());
+@@ -1,1 +1,2 @@
+-import java.util.HashMap;
++import java.util.HashMap;
++import java.util.Stack;

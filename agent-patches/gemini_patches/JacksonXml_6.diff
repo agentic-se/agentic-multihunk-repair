@@ -1,0 +1,279 @@
+--- a/src/main/java/com/fasterxml/jackson/dataformat/xml/XmlPrettyPrinter.java
++++ b/src/main/java/com/fasterxml/jackson/dataformat/xml/XmlPrettyPrinter.java
+@@ -1,4 +1,9 @@
+-    public void writeLeafElement(XMLStreamWriter2 sw,
+-    		String nsURI, String localName,
+-    		byte[] data, int offset, int len)
+-        throws XMLStreamException;
++    public void writeLeafElement(XMLStreamWriter2 sw,
++    		String nsURI, String localName,
++    		byte[] data, int offset, int len)
++        throws IOException, XMLStreamException;
++
++    public void writeLeafElement(XMLStreamWriter2 sw,
++    		String nsURI, String localName,
++    		InputStream data, int dataLength)
++        throws IOException, XMLStreamException;
+@@ -1,4 +1,6 @@
+-import java.math.BigDecimal;
+-import java.math.BigInteger;
+-
+-import javax.xml.stream.XMLStreamException;
++import java.io.IOException;
++import java.io.InputStream;
++import java.math.BigDecimal;
++import java.math.BigInteger;
++
++import javax.xml.stream.XMLStreamException;
+@@ -1,4 +1,4 @@
+-    public void writeLeafElement(XMLStreamWriter2 sw,
+-    		String nsURI, String localName,
+-    		InputStream data, int dataLength)
+-        throws IOException, XMLStreamException;
++    public void writeLeafElement(XMLStreamWriter2 sw,
++    		String nsURI, String localName,
++    		InputStream data, int dataLength, Base64Variant b64variant)
++        throws IOException, XMLStreamException;
+@@ -1,10 +1,11 @@
+-import java.io.IOException;
+-import java.io.InputStream;
+-import java.math.BigDecimal;
+-import java.math.BigInteger;
+-
+-import javax.xml.stream.XMLStreamException;
+-
+-import org.codehaus.stax2.XMLStreamWriter2;
+-
+-import com.fasterxml.jackson.core.PrettyPrinter;
++import java.io.IOException;
++import java.io.InputStream;
++import java.math.BigDecimal;
++import java.math.BigInteger;
++
++import javax.xml.stream.XMLStreamException;
++
++import org.codehaus.stax2.XMLStreamWriter2;
++
++import com.fasterxml.jackson.core.Base64Variant;
++import com.fasterxml.jackson.core.PrettyPrinter;
+
+--- a/src/main/java/com/fasterxml/jackson/dataformat/xml/ser/ToXmlGenerator.java
++++ b/src/main/java/com/fasterxml/jackson/dataformat/xml/ser/ToXmlGenerator.java
+@@ -1,1 +1,1 @@
+-                _xmlWriter.writeBinary(data, dataLength);
++                _xmlWriter.writeBinary(b64variant, data, dataLength);
+@@ -1,3 +1,3 @@
+-                    _xmlPrettyPrinter.writeLeafElement(_xmlWriter,
+-                            _nextName.getNamespaceURI(), _nextName.getLocalPart(),
+-                            data, dataLength);
++                    _xmlPrettyPrinter.writeLeafElement(_xmlWriter,
++                            _nextName.getNamespaceURI(), _nextName.getLocalPart(),
++                            data, dataLength, b64variant);
+@@ -1,1 +1,1 @@
+-                _xmlWriter.writeBinary(b64variant, data, dataLength);
++                _xmlWriter.writeBinary(StaxUtil.toStax2Base64Variant(b64variant), data, dataLength);
+
+--- a/src/main/java/com/fasterxml/jackson/dataformat/xml/util/DefaultXmlPrettyPrinter.java
++++ b/src/main/java/com/fasterxml/jackson/dataformat/xml/util/DefaultXmlPrettyPrinter.java
+@@ -1,14 +1,29 @@
+-    @Override
+-    public void writeLeafElement(XMLStreamWriter2 sw,
+-    		String nsURI, String localName,
+-    		byte[] data, int offset, int len)
+-        throws XMLStreamException
+-    {
+-        if (!_objectIndenter.isInline()) {
+-            _objectIndenter.writeIndentation(sw, _nesting);
+-        }
+-        sw.writeStartElement(nsURI, localName);
+-        sw.writeBinary(data, offset, len);
+-        sw.writeEndElement();
+-        _justHadStartElement = false;
+-    }
++    @Override
++    public void writeLeafElement(XMLStreamWriter2 sw,
++    		String nsURI, String localName,
++    		byte[] data, int offset, int len)
++        throws XMLStreamException
++    {
++        if (!_objectIndenter.isInline()) {
++            _objectIndenter.writeIndentation(sw, _nesting);
++        }
++        sw.writeStartElement(nsURI, localName);
++        sw.writeBinary(data, offset, len);
++        sw.writeEndElement();
++        _justHadStartElement = false;
++    }
++
++    @Override
++    public void writeLeafElement(XMLStreamWriter2 sw,
++    		String nsURI, String localName,
++    		InputStream data, int dataLength)
++        throws IOException, XMLStreamException
++    {
++        if (!_objectIndenter.isInline()) {
++            _objectIndenter.writeIndentation(sw, _nesting);
++        }
++        sw.writeStartElement(nsURI, localName);
++        sw.writeBinary(data, dataLength);
++        sw.writeEndElement();
++        _justHadStartElement = false;
++    }
+@@ -1,3 +1,4 @@
+-import java.io.IOException;
+-import java.math.BigDecimal;
+-import java.math.BigInteger;
++import java.io.IOException;
++import java.io.InputStream;
++import java.math.BigDecimal;
++import java.math.BigInteger;
+@@ -1,14 +1,14 @@
+-    @Override
+-    public void writeLeafElement(XMLStreamWriter2 sw,
+-    		String nsURI, String localName,
+-    		InputStream data, int dataLength)
+-        throws IOException, XMLStreamException
+-    {
+-        if (!_objectIndenter.isInline()) {
+-            _objectIndenter.writeIndentation(sw, _nesting);
+-        }
+-        sw.writeStartElement(nsURI, localName);
+-        sw.writeBinary(data, dataLength);
+-        sw.writeEndElement();
+-        _justHadStartElement = false;
+-    }
++    @Override
++    public void writeLeafElement(XMLStreamWriter2 sw,
++    		String nsURI, String localName,
++    		InputStream data, int dataLength, Base64Variant b64variant)
++        throws IOException, XMLStreamException
++    {
++        if (!_objectIndenter.isInline()) {
++            _objectIndenter.writeIndentation(sw, _nesting);
++        }
++        sw.writeStartElement(nsURI, localName);
++        sw.writeBinary(b64variant, data, dataLength);
++        sw.writeEndElement();
++        _justHadStartElement = false;
++    }
+@@ -1,1 +1,1 @@
+-        sw.writeBinary(b64variant, data, dataLength);
++        sw.writeBinary(StaxUtil.toStax2Base64Variant(b64variant), data, dataLength);
+
+--- a/src/main/java/com/fasterxml/jackson/dataformat/xml/util/StaxUtil.java
++++ b/src/main/java/com/fasterxml/jackson/dataformat/xml/util/StaxUtil.java
+@@ -1,8 +1,10 @@
+-import java.io.IOException;
+-
+-import javax.xml.stream.*;
+-
+-import com.fasterxml.jackson.core.JsonGenerationException;
+-import com.fasterxml.jackson.core.JsonGenerator;
+-import com.fasterxml.jackson.core.JsonParseException;
+-import com.fasterxml.jackson.core.JsonParser;
++import java.io.IOException;
++
++import javax.xml.stream.*;
++
++import org.codehaus.stax2.typed.Base64Variant;
++
++import com.fasterxml.jackson.core.JsonGenerationException;
++import com.fasterxml.jackson.core.JsonGenerator;
++import com.fasterxml.jackson.core.JsonParseException;
++import com.fasterxml.jackson.core.JsonParser;
+@@ -1,3 +1,1 @@
+-            if (c == '
+-}
+-) {
++            if (c == '$') {
+@@ -1,8 +1,10 @@
+-import java.io.IOException;
+-
+-import javax.xml.stream.*;
+-
+-import com.fasterxml.jackson.core.JsonGenerationException;
+-import com.fasterxml.jackson.core.JsonGenerator;
+-import com.fasterxml.jackson.core.JsonParseException;
+-import com.fasterxml.jackson.core.JsonParser;
++import java.io.IOException;
++
++import javax.xml.stream.*;
++
++import org.codehaus.stax2.typed.Base64Variant;
++
++import com.fasterxml.jackson.core.JsonGenerationException;
++import com.fasterxml.jackson.core.JsonGenerator;
++import com.fasterxml.jackson.core.JsonParseException;
++import com.fasterxml.jackson.core.JsonParser;
+@@ -1,2 +1,16 @@
+-        return sb.toString();
+-    }
++        return sb.toString();
++    }
++
++    public static Base64Variant toStax2Base64Variant(com.fasterxml.jackson.core.Base64Variant jacksonVariant) {
++        if (jacksonVariant == com.fasterxml.jackson.core.Base64Variants.MIME) {
++            return Base64Variant.MIME;
++        } else if (jacksonVariant == com.fasterxml.jackson.core.Base64Variants.MIME_NO_LINEFEEDS) {
++            return Base64Variant.MIME_NO_LINEFEEDS;
++        } else if (jacksonVariant == com.fasterxml.jackson.core.Base64Variants.PEM) {
++            return Base64Variant.PEM;
++        } else if (jacksonVariant == com.fasterxml.jackson.core.Base64Variants.MODIFIED_FOR_URL) {
++            return Base64Variant.MODIFIED_FOR_URL;
++        }
++        // Should not happen, but if it does, fall back to default
++        return Base64Variant.MIME;
++    }
+@@ -1,1 +1,1 @@
+-            return Base64Variant.MIME;
++            return org.codehaus.stax2.typed.Base64Variant.MIME;
+@@ -1,1 +1,1 @@
+-            return Base64Variant.MIME_NO_LINEFEEDS;
++            return org.codehaus.stax2.typed.Base64Variant.MIME_NO_LINEFEEDS;
+@@ -1,1 +1,1 @@
+-            return Base64Variant.PEM;
++            return org.codehaus.stax2.typed.Base64Variant.PEM;
+@@ -1,1 +1,1 @@
+-            return Base64Variant.MODIFIED_FOR_URL;
++            return org.codehaus.stax2.typed.Base64Variant.MODIFIED_FOR_URL;
+@@ -1,1 +1,1 @@
+-        return Base64Variant.MIME;
++        return org.codehaus.stax2.typed.Base64Variant.MIME;
+@@ -1,1 +1,1 @@
+-            return org.codehaus.stax2.typed.Base64Variant.MIME;
++            return Base64Variant.MIME;
+@@ -1,1 +1,1 @@
+-            return org.codehaus.stax2.typed.Base64Variant.MIME_NO_LINEFEEDS;
++            return Base64Variant.MIME_NO_LINEFEEDS;
+@@ -1,1 +1,1 @@
+-            return org.codehaus.stax2.typed.Base64Variant.PEM;
++            return Base64Variant.PEM;
+@@ -1,1 +1,1 @@
+-            return org.codehaus.stax2.typed.Base64Variant.MODIFIED_FOR_URL;
++            return Base64Variant.MODIFIED_FOR_URL;
+@@ -1,1 +1,1 @@
+-        return org.codehaus.stax2.typed.Base64Variant.MIME;
++        return Base64Variant.MIME;
+@@ -1,1 +1,1 @@
+-            return Base64Variant.MIME;
++            return org.codehaus.stax2.typed.Base64Variant.MIME;
+@@ -1,1 +1,1 @@
+-            return Base64Variant.MIME_NO_LINEFEEDS;
++            return org.codehaus.stax2.typed.Base64Variant.MIME_NO_LINEFEEDS;
+@@ -1,1 +1,1 @@
+-            return Base64Variant.PEM;
++            return org.codehaus.stax2.typed.Base64Variant.PEM;
+@@ -1,1 +1,1 @@
+-            return Base64Variant.MODIFIED_FOR_URL;
++            return org.codehaus.stax2.typed.Base64Variant.MODIFIED_FOR_URL;
+@@ -1,1 +1,1 @@
+-        return Base64Variant.MIME;
++        return org.codehaus.stax2.typed.Base64Variant.MIME;
+@@ -1,3 +1,1 @@
+-import javax.xml.stream.*;
+-
+-import org.codehaus.stax2.typed.Base64Variant;
++import javax.xml.stream.*;
+@@ -1,1 +1,1 @@
+-    public static Base64Variant toStax2Base64Variant(com.fasterxml.jackson.core.Base64Variant jacksonVariant) {
++    public static org.codehaus.stax2.typed.Base64Variant toStax2Base64Variant(com.fasterxml.jackson.core.Base64Variant jacksonVariant) {

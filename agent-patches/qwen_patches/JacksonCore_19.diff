@@ -1,0 +1,100 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/json/ReaderBasedJsonParser.java b/src/main/java/com/fasterxml/jackson/core/json/ReaderBasedJsonParser.java
+index 64c798dc..0280a9d7 100644
+--- a/src/main/java/com/fasterxml/jackson/core/json/ReaderBasedJsonParser.java
++++ b/src/main/java/com/fasterxml/jackson/core/json/ReaderBasedJsonParser.java
+@@ -1415,7 +1415,21 @@ public class ReaderBasedJsonParser // final in 2.3, earlier
+         int fractLen = 0;
+         // And then see if we get other parts
+         if (c == '.') { // yes, fraction
+-            outBuf[outPtr++] = c;
++            // Ensure we have space for the period character
++            if (outPtr >= outBuf.length) {
++                outBuf = _textBuffer.finishCurrentSegment();
++                outPtr = 0;
++            }
++            if (outPtr < outBuf.length) {
++                outBuf[outPtr++] = c;
++            } else {
++                // If no space even after expansion, expand again and try
++                outBuf = _textBuffer.finishCurrentSegment();
++                outPtr = 0;
++                if (outPtr < outBuf.length) {
++                    outBuf[outPtr++] = c;
++                }
++            }
+ 
+             fract_loop:
+             while (true) {
+@@ -1428,11 +1442,21 @@ public class ReaderBasedJsonParser // final in 2.3, earlier
+                     break fract_loop;
+                 }
+                 ++fractLen;
++                // Ensure we have space for the character before writing
+                 if (outPtr >= outBuf.length) {
+                     outBuf = _textBuffer.finishCurrentSegment();
+                     outPtr = 0;
+                 }
+-                outBuf[outPtr++] = c;
++                if (outPtr < outBuf.length) {
++                    outBuf[outPtr++] = c;
++                } else {
++                    // If no space after expansion, expand again
++                    outBuf = _textBuffer.finishCurrentSegment();
++                    outPtr = 0;
++                    if (outPtr < outBuf.length) {
++                        outBuf[outPtr++] = c;
++                    }
++                }
+             }
+             // must be followed by sequence of ints, one minimum
+             if (fractLen == 0) {
+diff --git a/src/main/java/com/fasterxml/jackson/core/json/UTF8StreamJsonParser.java b/src/main/java/com/fasterxml/jackson/core/json/UTF8StreamJsonParser.java
+index 872ffce5..850a8c84 100644
+--- a/src/main/java/com/fasterxml/jackson/core/json/UTF8StreamJsonParser.java
++++ b/src/main/java/com/fasterxml/jackson/core/json/UTF8StreamJsonParser.java
+@@ -1541,7 +1541,21 @@ public class UTF8StreamJsonParser
+ 
+         // And then see if we get other parts
+         if (c == INT_PERIOD) { // yes, fraction
+-            outBuf[outPtr++] = (char) c;
++            // Ensure we have space for the period character
++            if (outPtr >= outBuf.length) {
++                outBuf = _textBuffer.finishCurrentSegment();
++                outPtr = 0;
++            }
++            if (outPtr < outBuf.length) {
++                outBuf[outPtr++] = (char) c;
++            } else {
++                // If no space even after expansion, expand again and try
++                outBuf = _textBuffer.finishCurrentSegment();
++                outPtr = 0;
++                if (outPtr < outBuf.length) {
++                    outBuf[outPtr++] = (char) c;
++                }
++            }
+ 
+             fract_loop:
+             while (true) {
+@@ -1554,11 +1568,21 @@ public class UTF8StreamJsonParser
+                     break fract_loop;
+                 }
+                 ++fractLen;
++                // Ensure we have space for the character before writing
+                 if (outPtr >= outBuf.length) {
+                     outBuf = _textBuffer.finishCurrentSegment();
+                     outPtr = 0;
+                 }
+-                outBuf[outPtr++] = (char) c;
++                if (outPtr < outBuf.length) {
++                    outBuf[outPtr++] = (char) c;
++                } else {
++                    // If no space after expansion, expand again
++                    outBuf = _textBuffer.finishCurrentSegment();
++                    outPtr = 0;
++                    if (outPtr < outBuf.length) {
++                        outBuf[outPtr++] = (char) c;
++                    }
++                }
+             }
+             // must be followed by sequence of ints, one minimum
+             if (fractLen == 0) {

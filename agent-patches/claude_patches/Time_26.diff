@@ -1,0 +1,78 @@
+diff --git a/src/main/java/org/joda/time/DateTimeZone.java b/src/main/java/org/joda/time/DateTimeZone.java
+index 9edb1888..54c3c32a 100644
+--- a/src/main/java/org/joda/time/DateTimeZone.java
++++ b/src/main/java/org/joda/time/DateTimeZone.java
+@@ -941,7 +941,7 @@ public abstract class DateTimeZone implements Serializable {
+      *
+      * @param instantLocal  the local instant to convert to UTC
+      * @param strict  whether the conversion should reject non-existent local times
+-     * @return the UTC instant with the same local time, 
++     * @return the UTC instant with the same local time,
+      * @throws ArithmeticException if the result overflows a long
+      * @throws IllegalArgumentException if the zone has no equivalent local time
+      * @since 1.5
+@@ -991,6 +991,38 @@ public abstract class DateTimeZone implements Serializable {
+         return instantUTC;
+     }
+ 
++    /**
++     * Converts a local instant to a standard UTC instant with the same
++     * local time attempting to use the same offset as the original.
++     * <p>
++     * This conversion is used after performing a calculation
++     * where the calculation was done using a simple local zone.
++     * Whenever possible, the same offset as the original offset will be used.
++     * This is most significant during a daylight savings overlap.
++     *
++     * @param instantLocal  the local instant to convert to UTC
++     * @param strict  whether the conversion should reject non-existent local times
++     * @param originalInstantUTC  the original instant that the calculation is based on
++     * @return the UTC instant with the same local time,
++     * @throws ArithmeticException if the result overflows a long
++     * @throws IllegalArgumentException if the zone has no equivalent local time
++     * @since 2.0
++     */
++    public long convertLocalToUTC(long instantLocal, boolean strict, long originalInstantUTC) {
++        // get the offset at the original instant
++        int offsetOriginal = getOffset(originalInstantUTC);
++        // convert using the original offset
++        long instantUTC = instantLocal - offsetOriginal;
++        // verify that the offset at the calculated instant matches the original offset
++        int offsetResult = getOffset(instantUTC);
++        if (offsetOriginal == offsetResult) {
++            // offset matches, so we can use this result
++            return instantUTC;
++        }
++        // offset doesn't match, so fall back to the normal conversion
++        return convertLocalToUTC(instantLocal, strict);
++    }
++
+     /**
+      * Gets the millisecond instant in another zone keeping the same local time.
+      * <p>
+diff --git a/src/main/java/org/joda/time/chrono/ZonedChronology.java b/src/main/java/org/joda/time/chrono/ZonedChronology.java
+index f165f3dd..56d3c888 100644
+--- a/src/main/java/org/joda/time/chrono/ZonedChronology.java
++++ b/src/main/java/org/joda/time/chrono/ZonedChronology.java
+@@ -464,7 +464,7 @@ public final class ZonedChronology extends AssembledChronology {
+         public long set(long instant, int value) {
+             long localInstant = iZone.convertUTCToLocal(instant);
+             localInstant = iField.set(localInstant, value);
+-            long result = iZone.convertLocalToUTC(localInstant, false);
++            long result = iZone.convertLocalToUTC(localInstant, false, instant);
+             if (get(result) != value) {
+                 throw new IllegalFieldValueException(iField.getType(), new Integer(value),
+                     "Illegal instant due to time zone offset transition: " +
+@@ -478,7 +478,7 @@ public final class ZonedChronology extends AssembledChronology {
+             // cannot verify that new value stuck because set may be lenient
+             long localInstant = iZone.convertUTCToLocal(instant);
+             localInstant = iField.set(localInstant, text, locale);
+-            return iZone.convertLocalToUTC(localInstant, false);
++            return iZone.convertLocalToUTC(localInstant, false, instant);
+         }
+ 
+         public int getDifference(long minuendInstant, long subtrahendInstant) {
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

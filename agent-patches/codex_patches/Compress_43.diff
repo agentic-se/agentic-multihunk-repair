@@ -1,0 +1,25 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveOutputStream.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveOutputStream.java
+index df1f63ce..f9038f21 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveOutputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveOutputStream.java
+@@ -1031,7 +1031,9 @@ private void writeLocalFileHeader(final ZipArchiveEntry ze, final boolean phased
+ 
+         final long localHeaderStart = streamCompressor.getTotalBytesWritten();
+         final byte[] localHeader = createLocalFileHeader(ze, name, encodable, phased, localHeaderStart);
+-        metaData.put(ze, new EntryMetaData(localHeaderStart, usesDataDescriptor(ze.getMethod())));
++        // When writing in phased mode (raw entries with known sizes/CRC),
++        // we must not signal use of a data descriptor in either LFH or CDH.
++        metaData.put(ze, new EntryMetaData(localHeaderStart, !phased && usesDataDescriptor(ze.getMethod())));
+         entry.localDataStart = localHeaderStart + LFH_CRC_OFFSET; // At crc offset
+         writeCounted(localHeader);
+         entry.dataStart = streamCompressor.getTotalBytesWritten();
+@@ -1072,7 +1074,8 @@ private byte[] createLocalFileHeader(final ZipArchiveEntry ze, final ByteBuffer
+ 
+         //store method in local variable to prevent multiple method calls
+         final int zipMethod = ze.getMethod();
+-        final boolean dataDescriptor = usesDataDescriptor(zipMethod);
++        // For phased entries (raw copy with known sizes/CRC), do not use data descriptors
++        final boolean dataDescriptor = !phased && usesDataDescriptor(zipMethod);
+ 
+         putShort(versionNeededToExtract(zipMethod, hasZip64Extra(ze), dataDescriptor), buf, LFH_VERSION_NEEDED_OFFSET);
+ 

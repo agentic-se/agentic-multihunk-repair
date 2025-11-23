@@ -1,0 +1,36 @@
+diff --git a/src/main/java/org/apache/commons/math/complex/Complex.java b/src/main/java/org/apache/commons/math/complex/Complex.java
+index bebfead56..d56fb5304 100644
+--- a/src/main/java/org/apache/commons/math/complex/Complex.java
++++ b/src/main/java/org/apache/commons/math/complex/Complex.java
+@@ -254,7 +254,12 @@ public class Complex implements FieldElement<Complex>, Serializable  {
+         }
+ 
+         if (divisor.getReal() == 0.0 && divisor.getImaginary() == 0.0) {
+-            return NaN;
++            // 0 / 0 = NaN, but non-zero / 0 = INF
++            if (real == 0.0 && imaginary == 0.0) {
++                return NaN;
++            } else {
++                return INF;
++            }
+         }
+ 
+         if (divisor.isInfinite() && !isInfinite()) {
+@@ -290,7 +295,12 @@ public class Complex implements FieldElement<Complex>, Serializable  {
+             return NaN;
+         }
+         if (divisor == 0d) {
+-            return NaN;
++            // 0 / 0 = NaN, but non-zero / 0 = INF
++            if (real == 0.0 && imaginary == 0.0) {
++                return NaN;
++            } else {
++                return INF;
++            }
+         }
+         if (Double.isInfinite(divisor)) {
+             return !isInfinite() ? ZERO : NaN;
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

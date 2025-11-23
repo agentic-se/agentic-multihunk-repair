@@ -1,0 +1,68 @@
+diff --git a/src/com/google/javascript/jscomp/AbstractCommandLineRunner.java b/src/com/google/javascript/jscomp/AbstractCommandLineRunner.java
+index 13cb6268..228aaa94 100644
+--- a/src/com/google/javascript/jscomp/AbstractCommandLineRunner.java
++++ b/src/com/google/javascript/jscomp/AbstractCommandLineRunner.java
+@@ -865,17 +865,17 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
+           } else if (defValue.equals("false")) {
+             options.setDefineToBooleanLiteral(defName, false);
+             continue;
+-          } else if (defValue.length() > 1
+-              && ((defValue.charAt(0) == '\'' &&
+-                  defValue.charAt(defValue.length() - 1) == '\'')
+-            )) {
+-            // If the value starts and ends with a single quote,
+-            // we assume that it's a string.
+-            String maybeStringVal =
+-                defValue.substring(1, defValue.length() - 1);
+-            if (maybeStringVal.indexOf(defValue.charAt(0)) == -1) {
+-              options.setDefineToStringLiteral(defName, maybeStringVal);
+-              continue;
++          } else if (defValue.length() > 1) {
++            char first = defValue.charAt(0);
++            char last = defValue.charAt(defValue.length() - 1);
++            // Support either single-quoted or double-quoted strings, as long
++            // as the interior does not contain the same quote character.
++            if ((first == '\'' && last == '\'') || (first == '"' && last == '"')) {
++              String maybeStringVal = defValue.substring(1, defValue.length() - 1);
++              if (maybeStringVal.indexOf(first) == -1) {
++                options.setDefineToStringLiteral(defName, maybeStringVal);
++                continue;
++              }
+             }
+           } else {
+             try {
+diff --git a/src/com/google/javascript/jscomp/RemoveConstantExpressions.java b/src/com/google/javascript/jscomp/RemoveConstantExpressions.java
+index fee9c287..2288567b 100644
+--- a/src/com/google/javascript/jscomp/RemoveConstantExpressions.java
++++ b/src/com/google/javascript/jscomp/RemoveConstantExpressions.java
+@@ -87,8 +87,28 @@ final class RemoveConstantExpressions implements CompilerPass {
+       }
+ 
+       Node exprBody = node.getFirstChild();
+-      if (!NodeUtil.nodeTypeMayHaveSideEffects(exprBody)
+-      ) {
++      boolean canReplace = false;
++
++      // For simple operators (e.g. +, &&, ,) we can always try to
++      // extract just the side-effecting subexpressions.
++      if (!NodeUtil.nodeTypeMayHaveSideEffects(exprBody)) {
++        canReplace = true;
++      } else {
++        // Special-case calls and constructor calls that are known to be
++        // side-effect free (e.g. Math.sin(0), new Date).
++        switch (exprBody.getType()) {
++          case Token.CALL:
++            canReplace = !NodeUtil.functionCallHasSideEffects(exprBody);
++            break;
++          case Token.NEW:
++            canReplace = !NodeUtil.constructorCallHasSideEffects(exprBody);
++            break;
++          default:
++            break;
++        }
++      }
++
++      if (canReplace) {
+         changeProxy.replaceWith(parent, node, getSideEffectNodes(exprBody));
+       }
+     }

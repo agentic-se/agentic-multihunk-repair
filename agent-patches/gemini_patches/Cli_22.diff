@@ -1,0 +1,51 @@
+--- a/src/java/org/apache/commons/cli/PosixParser.java
++++ b/src/java/org/apache/commons/cli/PosixParser.java
+@@ -1,9 +1,9 @@
+-                if (token.length() == 2 || options.hasOption(token))
+-                {
+-                    processOptionToken(token, stopAtNonOption);
+-                }
+-                // requires bursting
+-                else
+-                {
+-                    burstToken(token, stopAtNonOption);
+-                }
++                if (options.hasOption(token) || token.length() == 2)
++                {
++                    processOptionToken(token, stopAtNonOption);
++                }
++                // requires bursting
++                else
++                {
++                    burstToken(token, stopAtNonOption);
++                }
+@@ -1,9 +1,9 @@
+-                if (options.hasOption(token) || token.length() == 2)
+-                {
+-                    processOptionToken(token, stopAtNonOption);
+-                }
+-                // requires bursting
+-                else
+-                {
+-                    burstToken(token, stopAtNonOption);
+-                }
++                if (token.length() == 2 || options.hasOption(token))
++                {
++                    processOptionToken(token, stopAtNonOption);
++                }
++                // requires bursting
++                else
++                {
++                    burstToken(token, stopAtNonOption);
++                }
+@@ -1,1 +1,3 @@
+-    /** the command line Options */
++    private Option currentOption;
++
++    /** the command line Options */
+@@ -1,2 +1,3 @@
+-        eatTheRest = false;
+-        tokens.clear();
++        eatTheRest = false;
++        tokens.clear();
++        currentOption = null;

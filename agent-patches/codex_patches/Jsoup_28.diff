@@ -1,0 +1,108 @@
+diff --git a/src/main/java/org/jsoup/nodes/Entities.java b/src/main/java/org/jsoup/nodes/Entities.java
+index be73e32..a4931f9 100644
+--- a/src/main/java/org/jsoup/nodes/Entities.java
++++ b/src/main/java/org/jsoup/nodes/Entities.java
+@@ -38,6 +38,8 @@ public class Entities {
+     private static final Map<String, Character> base;
+     private static final Map<Character, String> baseByVal;
+     private static final Map<Character, String> fullByVal;
++    // Matches numeric refs (with optional ';') or named refs (letters+digits, optional ';').
++    // Post-processing determines if a named ref without ';' is acceptable (base only, and not followed by alnum).
+     private static final Pattern unescapePattern = Pattern.compile("&(#(x|X)?([0-9a-fA-F]+)|[a-zA-Z]+\\d*);?");
+     private static final Pattern strictUnescapePattern = Pattern.compile("&(#(x|X)?([0-9a-fA-F]+)|[a-zA-Z]+\\d*);");
+ 
+@@ -115,8 +117,23 @@ public class Entities {
+                 }
+             } else {
+                 String name = m.group(1);
+-                if (full.containsKey(name))
+-                    charval = full.get(name);
++                String match = m.group(0);
++                boolean hasSemi = match.endsWith(";");
++                if (hasSemi) {
++                    // With semicolon, allow any known (full) named entity
++                    if (full.containsKey(name))
++                        charval = full.get(name);
++                } else {
++                    // Without semicolon, allow only base named entities, and only if next char is not alnum
++                    // to avoid spurious matches in strings like "&num_rooms"
++                    if (base.containsKey(name)) {
++                        int nextIndex = m.end();
++                        boolean followedByAlnum = nextIndex < string.length() &&
++                                Character.isLetterOrDigit(string.charAt(nextIndex));
++                        if (!followedByAlnum)
++                            charval = base.get(name);
++                    }
++                }
+             }
+             if (charval != -1 || charval > 0xFFFF) {
+                 String c = Character.toString((char) charval);
+diff --git a/src/main/java/org/jsoup/parser/Tokeniser.java b/src/main/java/org/jsoup/parser/Tokeniser.java
+index 5c40cf7..c891d33 100644
+--- a/src/main/java/org/jsoup/parser/Tokeniser.java
++++ b/src/main/java/org/jsoup/parser/Tokeniser.java
+@@ -131,34 +131,49 @@ class Tokeniser {
+                 return (char) charval;
+             }
+         } else { // named
+-            // get as many letters as possible, and look for matching entities.
++            // get as many letters as possible, then decide based on semicolon and entity set.
+             String nameRef = reader.consumeLetterThenDigitSequence();
+             String origNameRef = new String(nameRef);
+-            boolean looksLegit = reader.matches(';');
+-            // found if a base named entity without a ;, or an extended entity with the ;.
+-            boolean found = false;
+-            while (nameRef.length() > 0 && !found) {
+-                if (Entities.isNamedEntity(nameRef))
+-                    found = true;
+-                else {
+-                    nameRef = nameRef.substring(0, nameRef.length()-1);
+-                    reader.unconsume();
++            boolean hasSemi = reader.matches(';');
++
++            // For named entities:
++            // - If has semicolon, only accept if the ENTIRE nameRef is a known entity (full set).
++            // - If no semicolon, only accept if the ENTIRE nameRef is in the base set, and the next char is not alnum.
++            boolean isKnownFull = Entities.isNamedEntity(nameRef);
++            boolean accept = false;
++            if (hasSemi) {
++                accept = isKnownFull;
++            } else {
++                // no semicolon: relaxed match for base entities only
++                if (isKnownFull) {
++                    // need to ensure it's in base set
++                    Character c = Entities.getCharacterByName(nameRef);
++                    // determine if this character maps to a base entity name by reversing via escape mode map
++                    // (Entities has base map internally; emulate by checking that escaping in base mode returns same name)
++                    String baseName = Entities.EscapeMode.base.getMap().get(c);
++                    accept = baseName != null && baseName.equals(nameRef);
+                 }
++
++                // prevent spurious matches when followed by alnum (e.g., &num_rooms)
++                if (accept && (reader.matchesLetter() || reader.matchesDigit()))
++                    accept = false;
+             }
+ 
+-            if (!found) {
++            if (!accept) {
+                 reader.rewindToMark();
+-                if (looksLegit) // named with semicolon
++                if (hasSemi && origNameRef.length() > 0)
+                     characterReferenceError(String.format("invalid named referenece '%s'", origNameRef));
+                 return null;
+             }
++
+             if (inAttribute && (reader.matchesLetter() || reader.matchesDigit() || reader.matchesAny('=', '-', '_'))) {
+-                // don't want that to match
++                // don't want that to match in attribute contexts when it bleeds into name-like chars
+                 reader.rewindToMark();
+                 return null;
+             }
+-            if (!reader.matchConsume(";"))
+-                characterReferenceError("missing semicolon"); // missing semi
++            if (hasSemi) reader.advance(); // consume ';'
++            else characterReferenceError("missing semicolon"); // report missing semi but still accept per relaxed rules
++
+             return Entities.getCharacterByName(nameRef);
+         }
+     }

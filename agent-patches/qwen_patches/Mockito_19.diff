@@ -1,0 +1,53 @@
+diff --git a/src/org/mockito/internal/configuration/injection/filter/NameBasedCandidateFilter.java b/src/org/mockito/internal/configuration/injection/filter/NameBasedCandidateFilter.java
+index b95f31a36..87665e6d2 100644
+--- a/src/org/mockito/internal/configuration/injection/filter/NameBasedCandidateFilter.java
++++ b/src/org/mockito/internal/configuration/injection/filter/NameBasedCandidateFilter.java
+@@ -1,5 +1,4 @@
+-/*
+- * Copyright (c) 2007 Mockito contributors
++/* Copyright (c) 2007 Mockito contributors
+  * This program is made available under the terms of the MIT License.
+  */
+ package org.mockito.internal.configuration.injection.filter;
+@@ -21,25 +20,27 @@ public class NameBasedCandidateFilter implements MockCandidateFilter {
+ 
+ 	public OngoingInjecter filterCandidate(Collection<Object> mocks,
+ 			Field field, Object fieldInstance) {
+-		List<Object> mockNameMatches = new ArrayList<Object>();
++		// For multiple mocks, we need to be more careful about matching
++		// If we have more than one mock of the same type, and we have exactly one
++		// that matches the field name, we should use that one
+ 		if (mocks.size() > 1) {
++			List<Object> mockNameMatches = new ArrayList<Object>();
+ 			for (Object mock : mocks) {
+ 				if (field.getName().equals(mockUtil.getMockName(mock).toString())) {
+ 					mockNameMatches.add(mock);
+ 				}
+ 			}
+-			return next.filterCandidate(mockNameMatches, field,
+-					fieldInstance);
+-			/*
+-			 * In this case we have to check whether we have conflicting naming
+-			 * fields. E.g. 2 fields of the same type, but we have to make sure
+-			 * we match on the correct name.
+-			 * 
+-			 * Therefore we have to go through all other fields and make sure
+-			 * whenever we find a field that does match its name with the mock
+-			 * name, we should take that field instead.
+-			 */
++			
++			// Only proceed if we have exactly one matching mock by name
++			if (mockNameMatches.size() == 1) {
++				return next.filterCandidate(mockNameMatches, field, fieldInstance);
++			}
++			// If we have zero or more than one matching mocks, we should not inject anything
++			// to avoid ambiguity that leads to incorrect injection
++			return next.filterCandidate(new ArrayList<Object>(), field, fieldInstance);
+ 		}
++		
++		// For single mock or no mocks, pass through normally
+ 		return next.filterCandidate(mocks, field, fieldInstance);
+ 	}
+-}
++}
+\ No newline at end of file

@@ -1,0 +1,22 @@
+diff --git a/src/test/java/org/jsoup/select/QueryParserTest.java b/src/test/java/org/jsoup/select/QueryParserTest.java
+index 0720e47..dde83bc 100644
+--- a/src/test/java/org/jsoup/select/QueryParserTest.java
++++ b/src/test/java/org/jsoup/select/QueryParserTest.java
+@@ -40,11 +40,11 @@ public class QueryParserTest {
+         assertEquals(2, andLeft.evaluators.size());
+     }
+ 
+-    @Test(expected = Selector.SelectorParseException.class) public void exceptionOnUncloseAttribute() {
+-        Evaluator parse = QueryParser.parse("section > a[href=\"]");
++    @Test public void testParsesSingleQuoteInContains() {
++        Evaluator parse = QueryParser.parse("p:contains(One \\\" One)");
+     }
+ 
+-    @Test(expected = Selector.SelectorParseException.class)  public void testParsesSingleQuoteInContains() {
+-        Evaluator parse = QueryParser.parse("p:contains(One \" One)");
++    @Test(expected = Selector.SelectorParseException.class) public void exceptionOnUncloseAttribute() {
++        Evaluator parse = QueryParser.parse("section > a[href=\\\"]");
+     }
+-}
++}
+\ No newline at end of file

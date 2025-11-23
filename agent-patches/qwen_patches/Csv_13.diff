@@ -1,0 +1,19 @@
+diff --git a/src/main/java/org/apache/commons/csv/CSVPrinter.java b/src/main/java/org/apache/commons/csv/CSVPrinter.java
+index ac4234b..c045949 100644
+--- a/src/main/java/org/apache/commons/csv/CSVPrinter.java
++++ b/src/main/java/org/apache/commons/csv/CSVPrinter.java
+@@ -157,6 +157,14 @@ public final class CSVPrinter implements Flushable, Closeable {
+ 
+         final char delim = format.getDelimiter();
+         final char escape = format.getEscapeCharacter().charValue();
++        final String nullString = format.getNullString();
++
++        // Check if the entire value matches the null string - if so, don't escape any characters
++        if (nullString != null && len == nullString.length() && 
++            value.subSequence(offset, offset + len).toString().equals(nullString)) {
++            out.append(value, offset, offset + len);
++            return;
++        }
+ 
+         while (pos < end) {
+             char c = value.charAt(pos);

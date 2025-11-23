@@ -1,0 +1,85 @@
+--- a/src/main/java/org/apache/commons/math/optimization/univariate/BrentOptimizer.java
++++ b/src/main/java/org/apache/commons/math/optimization/univariate/BrentOptimizer.java
+@@ -1,23 +1,23 @@
+-                double p = 0;
+-                double q = 0;
+-                double r = 0;
+-                double u = 0;
+-
+-                if (Math.abs(e) > tol1) { // Fit parabola.
+-                    r = (x - w) * (fx - fv);
+-                    q = (x - v) * (fx - fw);
+-                    p = (x - v) * q - (x - w) * r;
+-                    q = 2 * (q - r);
+-
+-                    if (q > 0) {
+-                        p = -p;
+-                    } else {
+-                        q = -q;
+-                    }
+-
+-                    r = e;
+-                    e = d;
+-
+-                    if (p > q * (a - x)
+-                        && p < q * (b - x)
+-                        && Math.abs(p) < Math.abs(0.5 * q * r)) {
++                double p = 0;
++                double q = 0;
++                double r = 0;
++                double u = 0;
++
++                r = e; // r gets the previous value of e (second to last step)
++                e = d; // e gets the previous value of d (last step)
++
++                if (Math.abs(r) > tol1) { // Fit parabola. (using r as the previous previous step)
++                    r = (x - w) * (fx - fv);
++                    q = (x - v) * (fx - fw);
++                    p = (x - v) * q - (x - w) * r;
++                    q = 2 * (q - r);
++
++                    if (q > 0) {
++                        p = -p;
++                    } else {
++                        q = -q;
++                    }
++
++                    if (p > q * (a - x)
++                        && p < q * (b - x)
++                        && Math.abs(p) < Math.abs(0.5 * q * r)) {
+@@ -1,9 +1,8 @@
+-                    } else {
+-                        // Golden section step.
+-                        if (x < m) {
+-                            e = b - x;
+-                        } else {
+-                            e = a - x;
+-                        }
+-                        d = GOLDEN_SECTION * e;
+-                    }
++                    } else {
++                        // Golden section step.
++                        if (x < m) {
++                            d = GOLDEN_SECTION * (b - x);
++                        } else {
++                            d = GOLDEN_SECTION * (a - x);
++                        }
++                    }
+@@ -1,9 +1,8 @@
+-                } else {
+-                    // Golden section step.
+-                    if (x < m) {
+-                        e = b - x;
+-                    } else {
+-                        e = a - x;
+-                    }
+-                    d = GOLDEN_SECTION * e;
+-                }
++                } else {
++                    // Golden section step.
++                    if (x < m) {
++                        d = GOLDEN_SECTION * (b - x);
++                    } else {
++                        d = GOLDEN_SECTION * (a - x);
++                    }
++                }

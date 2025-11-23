@@ -1,0 +1,52 @@
+diff --git a/src/main/java/org/jsoup/nodes/Document.java b/src/main/java/org/jsoup/nodes/Document.java
+index 2f37b29..29a90ec 100644
+--- a/src/main/java/org/jsoup/nodes/Document.java
++++ b/src/main/java/org/jsoup/nodes/Document.java
+@@ -104,6 +104,47 @@ public class Document extends Element {
+         if (body() == null)
+             htmlEl.appendElement("body");
+ 
++        // Fix structure issues:
++        // 1. Remove any body elements that are not direct children of html
++        // 2. Move p elements from noscript to body
++        for (Element el : htmlEl.getAllElements()) {
++            if (el.tagName().equals("body")) {
++                // Check if this body element is not a direct child of html (which is the correct placement)
++                Element parent = el.parent();
++                if (parent != null && !parent.equals(htmlEl)) {
++                    // Found a body element not directly under html - move it to be under html
++                    parent.removeChild(el);
++                    htmlEl.appendChild(el);
++                }
++            }
++            
++            // Move p elements from noscript to body (including p elements inside a body that's inside noscript)
++            if (el.tagName().equals("noscript")) {
++                // Recursively search for p elements inside noscript or inside nested body elements
++                List<Node> children = new ArrayList<Node>(el.childNodes);
++                for (Node node : children) {
++                    if (node instanceof Element) {
++                        Element childElement = (Element) node;
++                        if (childElement.tagName().equals("p")) {
++                            // Direct p element inside noscript
++                            el.removeChild(childElement);
++                            body().appendChild(childElement);
++                        } else if (childElement.tagName().equals("body")) {
++                            // Body element inside noscript - move its p elements
++                            List<Node> subChildren = new ArrayList<Node>(childElement.childNodes);
++                            for (Node subNode : subChildren) {
++                                if (subNode instanceof Element && ((Element) subNode).tagName().equals("p")) {
++                                    Element pElement = (Element) subNode;
++                                    childElement.removeChild(pElement);
++                                    body().appendChild(pElement);
++                                }
++                            }
++                        }
++                    }
++                }
++            }
++        }
++
+         // pull text nodes out of root, html, and head els, and push into body. non-text nodes are already taken care
+         // of. do in inverse order to maintain text order.
+         normaliseTextNodes(head());

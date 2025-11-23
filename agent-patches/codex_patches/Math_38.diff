@@ -1,0 +1,79 @@
+diff --git a/src/main/java/org/apache/commons/math/optimization/direct/BOBYQAOptimizer.java b/src/main/java/org/apache/commons/math/optimization/direct/BOBYQAOptimizer.java
+index 592a2e894..e2eb200a0 100644
+--- a/src/main/java/org/apache/commons/math/optimization/direct/BOBYQAOptimizer.java
++++ b/src/main/java/org/apache/commons/math/optimization/direct/BOBYQAOptimizer.java
+@@ -454,7 +454,7 @@ public class BOBYQAOptimizer
+                         ih++;
+                     }
+                 }
+-                if (getEvaluations() > npt) {
++                    if (getEvaluations() > npt) {
+                     for (int k = 0; k < npt; k++) {
+                         double temp = ZERO;
+                         for (int j = 0; j < n; j++) {
+@@ -465,7 +465,6 @@ public class BOBYQAOptimizer
+                             gradientAtTrustRegionCenter.setEntry(i, gradientAtTrustRegionCenter.getEntry(i) + temp * interpolationPoints.getEntry(k, i));
+                         }
+                     }
+-                    throw new PathIsExploredException(); // XXX
+                 }
+             }
+ 
+@@ -537,7 +536,6 @@ public class BOBYQAOptimizer
+                         if (bdtest < bdtol) {
+                             state = 650; break;
+                         }
+-                        throw new PathIsExploredException(); // XXX
+                     }
+                 }
+                 state = 680; break;
+@@ -1633,7 +1631,6 @@ public class BOBYQAOptimizer
+                     stepa = initialTrustRegionRadius;
+                     if (upperDifference.getEntry(nfmm) == ZERO) {
+                         stepa = -stepa;
+-                        throw new PathIsExploredException(); // XXX
+                     }
+                     interpolationPoints.setEntry(nfm, nfmm, stepa);
+                 } else if (nfm > n) {
+@@ -1641,11 +1638,9 @@ public class BOBYQAOptimizer
+                     stepb = -initialTrustRegionRadius;
+                     if (lowerDifference.getEntry(nfxm) == ZERO) {
+                         stepb = Math.min(TWO * initialTrustRegionRadius, upperDifference.getEntry(nfxm));
+-                        throw new PathIsExploredException(); // XXX
+                     }
+                     if (upperDifference.getEntry(nfxm) == ZERO) {
+                         stepb = Math.max(-TWO * initialTrustRegionRadius, lowerDifference.getEntry(nfxm));
+-                        throw new PathIsExploredException(); // XXX
+                     }
+                     interpolationPoints.setEntry(nfm, nfxm, stepb);
+                 }
+@@ -1657,10 +1652,10 @@ public class BOBYQAOptimizer
+                     final int tmp2 = jpt;
+                     jpt = ipt - n;
+                     ipt = tmp2;
+-                    throw new PathIsExploredException(); // XXX
+                 }
+-                final int iptMinus1 = ipt;
+-                final int jptMinus1 = jpt;
++                // Fortran-to-Java index conversion (1-based to 0-based).
++                final int iptMinus1 = ipt - 1;
++                final int jptMinus1 = jpt - 1;
+                 interpolationPoints.setEntry(nfm, iptMinus1, interpolationPoints.getEntry(ipt, iptMinus1));
+                 interpolationPoints.setEntry(nfm, jptMinus1, interpolationPoints.getEntry(jpt, jptMinus1));
+             }
+@@ -1707,7 +1702,6 @@ public class BOBYQAOptimizer
+                         bMatrix.setEntry(0, nfmm, -oneOverStepA);
+                         bMatrix.setEntry(nfm, nfmm, oneOverStepA);
+                         bMatrix.setEntry(npt + nfmm, nfmm, -HALF * rhosq);
+-                        throw new PathIsExploredException(); // XXX
+                     }
+                 } else if (numEval >= n + 2) {
+                     final int ih = nfx * (nfx + 1) / 2 - 1;
+@@ -1749,7 +1743,6 @@ public class BOBYQAOptimizer
+                 final int ih = ipt * (ipt - 1) / 2 + jpt - 1;
+                 final double tmp = interpolationPoints.getEntry(nfm, ipt - 1) * interpolationPoints.getEntry(nfm, jpt - 1);
+                 modelSecondDerivativesValues.setEntry(ih, (fbeg - fAtInterpolationPoints.getEntry(ipt) - fAtInterpolationPoints.getEntry(jpt) + f) / tmp);
+-                throw new PathIsExploredException(); // XXX
+             }
+         } while (getEvaluations() < npt);
+     } // prelim

@@ -1,0 +1,44 @@
+diff --git a/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java b/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
+index 1bffec7..1196fd0 100644
+--- a/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
++++ b/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
+@@ -312,7 +312,8 @@ public class HtmlTreeBuilder extends TreeBuilder {
+     Element getFromStack(String elName) {
+         for (int pos = stack.size() -1; pos >= 0; pos--) {
+             Element next = stack.get(pos);
+-            if (next.nodeName().equals(elName)) {
++            String nodeName = next.nodeName();
++            if (nodeName.equals(elName) || nodeName.equalsIgnoreCase(elName)) {
+                 return next;
+             }
+         }
+@@ -334,7 +335,8 @@ public class HtmlTreeBuilder extends TreeBuilder {
+         for (int pos = stack.size() -1; pos >= 0; pos--) {
+             Element next = stack.get(pos);
+             stack.remove(pos);
+-            if (next.nodeName().equals(elName))
++            String nodeName = next.nodeName();
++            if (nodeName.equals(elName) || nodeName.equalsIgnoreCase(elName))
+                 break;
+         }
+     }
+@@ -352,7 +354,8 @@ public class HtmlTreeBuilder extends TreeBuilder {
+     void popStackToBefore(String elName) {
+         for (int pos = stack.size() -1; pos >= 0; pos--) {
+             Element next = stack.get(pos);
+-            if (next.nodeName().equals(elName)) {
++            String nodeName = next.nodeName();
++            if (nodeName.equals(elName) || nodeName.equalsIgnoreCase(elName)) {
+                 break;
+             } else {
+                 stack.remove(pos);
+@@ -686,7 +689,8 @@ public class HtmlTreeBuilder extends TreeBuilder {
+             Element next = formattingElements.get(pos);
+             if (next == null) // scope marker
+                 break;
+-            else if (next.nodeName().equals(nodeName))
++            String n = next.nodeName();
++            if (n.equals(nodeName) || n.equalsIgnoreCase(nodeName))
+                 return next;
+         }
+         return null;

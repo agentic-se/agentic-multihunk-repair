@@ -1,0 +1,17 @@
+diff --git a/src/main/java/org/apache/commons/math3/util/FastMath.java b/src/main/java/org/apache/commons/math3/util/FastMath.java
+index d57132592..6260e5957 100644
+--- a/src/main/java/org/apache/commons/math3/util/FastMath.java
++++ b/src/main/java/org/apache/commons/math3/util/FastMath.java
+@@ -1538,7 +1538,11 @@ public class FastMath {
+         /* Handle special case x<0 */
+         if (x < 0) {
+             // y is an even integer in this case
+-            if (y >= TWO_POWER_52 || y <= -TWO_POWER_52) {
++            // For double precision, integers are guaranteed to be exactly
++            // representable up to 2^53. Only for |y| >= 2^53 can we assert
++            // that the integer y is even, because above this threshold the
++            // least significant bit of the integer is not represented.
++            if (y >= 2 * TWO_POWER_52 || y <= -2 * TWO_POWER_52) {
+                 return pow(-x, y);
+             }
+ 

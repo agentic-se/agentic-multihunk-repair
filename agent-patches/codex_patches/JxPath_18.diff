@@ -1,0 +1,48 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/axes/AttributeContext.java b/src/java/org/apache/commons/jxpath/ri/axes/AttributeContext.java
+index 4198333..6122eea 100644
+--- a/src/java/org/apache/commons/jxpath/ri/axes/AttributeContext.java
++++ b/src/java/org/apache/commons/jxpath/ri/axes/AttributeContext.java
+@@ -17,9 +17,11 @@
+ package org.apache.commons.jxpath.ri.axes;
+ 
+ import org.apache.commons.jxpath.ri.EvalContext;
++import org.apache.commons.jxpath.ri.Compiler;
+ import org.apache.commons.jxpath.ri.QName;
+ import org.apache.commons.jxpath.ri.compiler.NodeNameTest;
+ import org.apache.commons.jxpath.ri.compiler.NodeTest;
++import org.apache.commons.jxpath.ri.compiler.NodeTypeTest;
+ import org.apache.commons.jxpath.ri.model.NodeIterator;
+ import org.apache.commons.jxpath.ri.model.NodePointer;
+ 
+@@ -35,6 +37,7 @@ public class AttributeContext extends EvalContext {
+     private boolean setStarted = false;
+     private NodeIterator iterator;
+     private NodePointer currentNodePointer;
++    private static final QName WILDCARD = new QName(null, "*");
+ 
+     /**
+      * @param parentContext represents the previous step on the path
+@@ -72,10 +75,21 @@ public class AttributeContext extends EvalContext {
+         super.setPosition(getCurrentPosition() + 1);
+         if (!setStarted) {
+             setStarted = true;
+-            if (!(nodeTest instanceof NodeNameTest)) {
++            final QName name;
++            if (nodeTest instanceof NodeTypeTest) {
++                if (((NodeTypeTest) nodeTest).getNodeType() == Compiler.NODE_TYPE_NODE) {
++                    name = WILDCARD;
++                }
++                else {
++                    return false;
++                }
++            }
++            else if (nodeTest instanceof NodeNameTest) {
++                name = ((NodeNameTest) nodeTest).getNodeName();
++            }
++            else {
+                 return false;
+             }
+-            QName name = ((NodeNameTest) nodeTest).getNodeName();
+             iterator =
+                 parentContext.getCurrentNodePointer().attributeIterator(name);
+         }

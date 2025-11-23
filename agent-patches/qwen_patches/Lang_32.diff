@@ -1,0 +1,75 @@
+diff --git a/src/main/java/org/apache/commons/lang3/builder/HashCodeBuilder.java b/src/main/java/org/apache/commons/lang3/builder/HashCodeBuilder.java
+index 4ae351da..9fdbbfce 100644
+--- a/src/main/java/org/apache/commons/lang3/builder/HashCodeBuilder.java
++++ b/src/main/java/org/apache/commons/lang3/builder/HashCodeBuilder.java
+@@ -125,7 +125,7 @@ public class HashCodeBuilder {
+      * to disambiguate the duplicate ids.
+      */
+     
+-    /**
++                /**
+      * <p>
+      * Returns the registry of objects being traversed by the reflection methods in the current thread.
+      * </p>
+@@ -137,6 +137,21 @@ public class HashCodeBuilder {
+         return REGISTRY.get();
+     }
+ 
++    /**
++     * <p>
++     * Clears the registry for the current thread. This method is intended to be used
++     * to prevent memory leaks in container environments where thread reuse occurs.
++     * </p>
++     * 
++     * @since 3.12.0
++     */
++    public static void clearRegistry() {
++        Set<IDKey> registry = REGISTRY.get();
++        if (registry != null) {
++            registry.clear();
++        }
++    }
++
+     /**
+      * <p>
+      * Returns <code>true</code> if the registry contains the given object. Used by the reflection methods to avoid
+@@ -535,7 +550,15 @@ public class HashCodeBuilder {
+      * @since 2.3
+      */
+     static void unregister(Object value) {
+-        getRegistry().remove(new IDKey(value));
++        if (value != null) {
++            Set<IDKey> m = getRegistry();
++            if (m != null) {
++                m.remove(new IDKey(value));
++                if (m.isEmpty()) {
++                    REGISTRY.remove();
++                }
++            }
++        }
+     }
+ 
+     /**
+diff --git a/src/main/java/org/apache/commons/lang3/builder/ToStringStyle.java b/src/main/java/org/apache/commons/lang3/builder/ToStringStyle.java
+index 6df1e6d6..a396de54 100644
+--- a/src/main/java/org/apache/commons/lang3/builder/ToStringStyle.java
++++ b/src/main/java/org/apache/commons/lang3/builder/ToStringStyle.java
+@@ -146,6 +146,18 @@ public abstract class ToStringStyle implements Serializable {
+         return REGISTRY.get();
+     }
+ 
++    /**
++     * <p>
++     * Clears the registry for the current thread. This method is intended to be used
++     * to prevent memory leaks in container environments where thread reuse occurs.
++     * </p>
++     * 
++     * @since 3.12.0
++     */
++    public static void clearRegistry() {
++        REGISTRY.remove();
++    }
++
+     /**
+      * <p>
+      * Returns <code>true</code> if the registry contains the given object.

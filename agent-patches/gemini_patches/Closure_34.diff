@@ -1,0 +1,199 @@
+--- a/src/com/google/javascript/jscomp/CodeGenerator.java
++++ b/src/com/google/javascript/jscomp/CodeGenerator.java
+@@ -1,7 +1,4 @@
+-      // e.g. if the parse tree is a * (b * c),
+-      // we can simply generate a * b * c.
+-      if (last.getType() == type &&
+-          NodeUtil.isAssociative(type)) {
+-        addExpr(first, p, context);
+-        cc.addOp(opstr, true);
+-        addExpr(last, p, rhsContext);
++      // e.g. if the parse tree is a * (b * c),
++      // we can simply generate a * b * c.
++      if (NodeUtil.isAssociative(type)) {
++        unrollBinaryOperator(n, type, opstr, context, rhsContext, p, p);
+@@ -1,2 +1,3 @@
+-      if (NodeUtil.isAssociative(type)) {
+-        unrollBinaryOperator(n, type, opstr, context, rhsContext, p, p);
++      if (NodeUtil.isAssociative(type) ||
++          (type == Token.ADD && NodeUtil.isNumericResult(n))) {
++        unrollBinaryOperator(n, type, opstr, context, rhsContext, p, p);
+@@ -1,3 +1,5 @@
+-      if (NodeUtil.isAssociative(type) ||
+-          (type == Token.ADD && NodeUtil.isNumericResult(n))) {
+-        unrollBinaryOperator(n, type, opstr, context, rhsContext, p, p);
++      if (last.getType() == type &&
++          NodeUtil.isAssociative(type)) {
++        addExpr(first, p, context);
++        cc.addOp(opstr, true);
++        addExpr(last, p, rhsContext);
+@@ -1,7 +1,9 @@
+-      // e.g. if the parse tree is a * (b * c),
+-      // we can simply generate a * b * c.
+-      if (last.getType() == type &&
+-          NodeUtil.isAssociative(type)) {
+-        addExpr(first, p, context);
+-        cc.addOp(opstr, true);
+-        addExpr(last, p, rhsContext);
++      // e.g. if the parse tree is a * (b * c),
++      // we can simply generate a * b * c.
++      if (type == Token.ADD && first.getType() == Token.ADD && NodeUtil.isNumericResult(n)) {
++        unrollBinaryOperator(n, type, opstr, context, rhsContext, p, p);
++      } else if (last.getType() == type &&
++          NodeUtil.isAssociative(type)) {
++        addExpr(first, p, context);
++        cc.addOp(opstr, true);
++        addExpr(last, p, rhsContext);
+@@ -1,9 +1,19 @@
+-      if (type == Token.ADD && first.getType() == Token.ADD && NodeUtil.isNumericResult(n)) {
+-        unrollBinaryOperator(n, type, opstr, context, rhsContext, p, p);
+-      } else if (last.getType() == type &&
+-          NodeUtil.isAssociative(type)) {
+-        addExpr(first, p, context);
+-        cc.addOp(opstr, true);
+-        addExpr(last, p, rhsContext);
+-      return;
+-    }
++      if (type == Token.ADD && first.getType() == Token.ADD && NodeUtil.isNumericResult(n)) {
++        unrollBinaryOperator(n, type, opstr, context, rhsContext, p, p);
++      } else if (last.getType() == type &&
++          NodeUtil.isAssociative(type)) {
++        addExpr(first, p, context);
++        cc.addOp(opstr, true);
++        addExpr(last, p, rhsContext);
++      } else if (NodeUtil.isAssignmentOp(n) && NodeUtil.isAssignmentOp(last)) {
++        // Assignments are the only right-associative binary operators
++        addExpr(first, p, context);
++        cc.addOp(opstr, true);
++        addExpr(last, p, rhsContext);
++      } else {
++        addExpr(first, p, context);
++        cc.addOp(opstr, true);
++        addExpr(last, p + 1, rhsContext);
++      }
++      return;
++    }
+@@ -1,7 +1,7 @@
+-      if (type == Token.ADD && first.getType() == Token.ADD && NodeUtil.isNumericResult(n)) {
+-        unrollBinaryOperator(n, type, opstr, context, rhsContext, p, p);
+-      } else if (last.getType() == type &&
+-          NodeUtil.isAssociative(type)) {
+-        addExpr(first, p, context);
+-        cc.addOp(opstr, true);
+-        addExpr(last, p, rhsContext);
++      if (type == Token.ADD && first.getType() == Token.ADD && last.isNumber()) {
++        unrollBinaryOperator(n, type, opstr, context, rhsContext, p, p);
++      } else if (last.getType() == type &&
++          NodeUtil.isAssociative(type)) {
++        addExpr(first, p, context);
++        cc.addOp(opstr, true);
++        addExpr(last, p, rhsContext);
+@@ -1,7 +1,7 @@
+-      if (type == Token.ADD && first.getType() == Token.ADD && last.isNumber()) {
+-        unrollBinaryOperator(n, type, opstr, context, rhsContext, p, p);
+-      } else if (last.getType() == type &&
+-          NodeUtil.isAssociative(type)) {
+-        addExpr(first, p, context);
+-        cc.addOp(opstr, true);
+-        addExpr(last, p, rhsContext);
++      if (type == Token.ADD && first.getType() == Token.ADD) {
++        unrollBinaryOperator(n, type, opstr, context, rhsContext, p, p);
++      } else if (last.getType() == type &&
++          NodeUtil.isAssociative(type)) {
++        addExpr(first, p, context);
++        cc.addOp(opstr, true);
++        addExpr(last, p, rhsContext);
+@@ -1,19 +1,17 @@
+-      if (type == Token.ADD && first.getType() == Token.ADD) {
+-        unrollBinaryOperator(n, type, opstr, context, rhsContext, p, p);
+-      } else if (last.getType() == type &&
+-          NodeUtil.isAssociative(type)) {
+-        addExpr(first, p, context);
+-        cc.addOp(opstr, true);
+-        addExpr(last, p, rhsContext);
+-      } else if (NodeUtil.isAssignmentOp(n) && NodeUtil.isAssignmentOp(last)) {
+-        // Assignments are the only right-associative binary operators
+-        addExpr(first, p, context);
+-        cc.addOp(opstr, true);
+-        addExpr(last, p, rhsContext);
+-      } else {
+-        addExpr(first, p, context);
+-        cc.addOp(opstr, true);
+-        addExpr(last, p + 1, rhsContext);
+-      }
+-      return;
+-    }
++      if (last.getType() == type &&
++          NodeUtil.isAssociative(type)) {
++        addExpr(first, p, context);
++        cc.addOp(opstr, true);
++        addExpr(last, p, rhsContext);
++      } else if (NodeUtil.isAssignmentOp(n) && NodeUtil.isAssignmentOp(last)) {
++        // Assignments are the only right-associative binary operators
++        addExpr(first, p, context);
++        cc.addOp(opstr, true);
++        addExpr(last, p, rhsContext);
++      } else {
++        addExpr(first, p, context);
++        cc.addOp(opstr, true);
++        addExpr(last, p + 1, rhsContext);
++      }
++      return;
++    }
+@@ -1,4 +1,5 @@
+-  private void unrollBinaryOperator(
+-      Node n, int op, String opStr, Context context,
+-      Context rhsContext, int leftPrecedence, int rightPrecedence) {
+-    Node firstNonOperator = n.getFirstChild();
++  private void unrollBinaryOperator(
++      Node n, int op, String opStr, Context context,
++      Context rhsContext, int leftPrecedence, int rightPrecedence) {
++    System.err.println("unrollBinaryOperator: " + n.toStringTree() + " op: " + op);
++    Node firstNonOperator = n.getFirstChild();
+@@ -1,5 +1,7 @@
+-      if (last.getType() == type &&
+-          NodeUtil.isAssociative(type)) {
+-        addExpr(first, p, context);
+-        cc.addOp(opstr, true);
+-        addExpr(last, p, rhsContext);
++      if (type == Token.ADD && first.getType() == Token.ADD) {
++        unrollBinaryOperator(n, type, opstr, context, rhsContext, p, p);
++      } else if (last.getType() == type &&
++          NodeUtil.isAssociative(type)) {
++        addExpr(first, p, context);
++        cc.addOp(opstr, true);
++        addExpr(last, p, rhsContext);
+@@ -1,2 +1,2 @@
+-    return strEscape(s, quote, doublequote, singlequote, "\\\\"),
+-        outputCharsetEncoder, useSlashV);
++    return strEscape(s, quote, doublequote, singlequote, "\\\\",
++        outputCharsetEncoder, useSlashV);
+@@ -1,1 +1,1 @@
+-    return strEscape(s, '/', "\\\"", "'", "\\\\"), outputCharsetEncoder, false);
++    return strEscape(s, '/', "\\\"", "'", "\\\\", outputCharsetEncoder, false);
+@@ -1,1 +1,1 @@
+-    return strEscape(s, '"',  "\\\"", "'", "\\\\"), null, false);
++    return strEscape(s, '"',  "\\\"", "'", "\\\\", null, false);
+@@ -1,2 +1,2 @@
+-      if (last.getType() == type &&
+-          NodeUtil.isAssociative(type)) {
++      if ((last.getType() == type && NodeUtil.isAssociative(type)) ||
++          (type == Token.ADD && NodeUtil.isNumericResult(n))) {
+@@ -1,2 +1,2 @@
+-      if ((last.getType() == type && NodeUtil.isAssociative(type)) ||
+-          (type == Token.ADD && NodeUtil.isNumericResult(n))) {
++      if ((last.getType() == type && NodeUtil.isAssociative(type)) ||
++          (type == Token.ADD && first.isNumber() && last.isNumber())) {
+@@ -1,5 +1,7 @@
+-      if (last.getType() == type &&
+-          NodeUtil.isAssociative(type)) {
+-        addExpr(first, p, context);
+-        cc.addOp(opstr, true);
+-        addExpr(last, p, rhsContext);
++      if (type == Token.ADD && first.getType() == Token.ADD && last.isNumber()) {
++        unrollBinaryOperator(n, type, opstr, context, rhsContext, p, p);
++      } else if (last.getType() == type &&
++          NodeUtil.isAssociative(type)) {
++        addExpr(first, p, context);
++        cc.addOp(opstr, true);
++        addExpr(last, p, rhsContext);

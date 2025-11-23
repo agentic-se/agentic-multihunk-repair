@@ -1,0 +1,11 @@
+diff --git a/src/test/java/com/fasterxml/jackson/databind/struct/SingleValueAsArrayTest.java b/src/test/java/com/fasterxml/jackson/databind/struct/SingleValueAsArrayTest.java
+index 1903b2ee1..2347c0d90 100644
+--- a/src/test/java/com/fasterxml/jackson/databind/struct/SingleValueAsArrayTest.java
++++ b/src/test/java/com/fasterxml/jackson/databind/struct/SingleValueAsArrayTest.java
+@@ -83,4 +83,4 @@ public class SingleValueAsArrayTest extends BaseMapTest
+         expected.add("test2");
+         assertEquals(expected, a.value);
+     }
+-}
++}
+\ No newline at end of file

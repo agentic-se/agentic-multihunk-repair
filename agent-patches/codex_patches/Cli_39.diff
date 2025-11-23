@@ -1,0 +1,40 @@
+diff --git a/src/main/java/org/apache/commons/cli/TypeHandler.java b/src/main/java/org/apache/commons/cli/TypeHandler.java
+index 93c0b73..4affe4e 100644
+--- a/src/main/java/org/apache/commons/cli/TypeHandler.java
++++ b/src/main/java/org/apache/commons/cli/TypeHandler.java
+@@ -89,7 +89,7 @@ public class TypeHandler
+         }
+         else if (PatternOptionBuilder.EXISTING_FILE_VALUE == clazz)
+         {
+-            return createFile(str);
++            return createFileInputStream(str);
+         }
+         else if (PatternOptionBuilder.FILES_VALUE == clazz)
+         {
+@@ -226,11 +226,25 @@ public class TypeHandler
+ 
+     /**
+      * Returns the opened FileInputStream represented by <code>str</code>.
++     * Tries to open the file for reading and returns the corresponding
++     * FileInputStream. If the file does not exist or cannot be opened,
++     * a ParseException is thrown.
+      *
+      * @param str the file location
+      * @return The file input stream represented by <code>str</code>.
+-     * @throws ParseException if the file is not exist or not readable
++     * @throws ParseException if the file does not exist or is not readable
+      */
++    public static FileInputStream createFileInputStream(final String str) throws ParseException
++    {
++        try
++        {
++            return new FileInputStream(str);
++        }
++        catch (final FileNotFoundException e)
++        {
++            throw new ParseException("Unable to read the file: " + str);
++        }
++    }
+ 
+     /**
+      * Returns the File[] represented by <code>str</code>.

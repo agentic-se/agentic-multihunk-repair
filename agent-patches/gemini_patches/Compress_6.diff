@@ -1,0 +1,39 @@
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveEntry.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveEntry.java
+@@ -1,17 +1,19 @@
+-    public boolean equals(Object obj) {
+-        if (this == obj) {
+-            return true;
+-        }
+-        if (obj == null || getClass() != obj.getClass()) {
+-            return false;
+-        }
+-        ZipArchiveEntry other = (ZipArchiveEntry) obj;
+-        if (name == null) {
+-            if (other.name != null) {
+-                return false;
+-            }
+-        } else if (!name.equals(other.name)) {
+-            return false;
+-        }
+-        return true;
+-    }
++    public boolean equals(Object obj) {
++        if (this == obj) {
++            return true;
++        }
++        if (obj == null || getClass() != obj.getClass()) {
++            return false;
++        }
++        ZipArchiveEntry other = (ZipArchiveEntry) obj;
++        String myName = getName();
++        String otherName = other.getName();
++        if (myName == null) {
++            if (otherName != null) {
++                return false;
++            }
++        } else if (!myName.equals(otherName)) {
++            return false;
++        }
++        return true;
++    }

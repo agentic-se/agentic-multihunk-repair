@@ -1,0 +1,58 @@
+diff --git a/src/.DS_Store b/src/.DS_Store
+index dee68c4c8af33ffcd20d0409bf4b4bf692f0c7de..1146a6472e6b9d9df9bfed80ec99ed3f57ef930a 100644
+GIT binary patch
+delta 38
+uc-m_*Xfc?O%osG8kx_kOw*+(0;k6T&1v8~4Y-VI+W1rZ-wwaydFFyeFehgdy
+
+delta 38
+uc-m_*Xfc?O%oskIkx_kOw*+&zkM6`}!A#i?HZwA^u}^GZ+sw}KmmdJ?9t-sV
+
+diff --git a/src/com/google/javascript/jscomp/ScopedAliases.java b/src/com/google/javascript/jscomp/ScopedAliases.java
+index 7e9c8b89..ec69eaba 100644
+--- a/src/com/google/javascript/jscomp/ScopedAliases.java
++++ b/src/com/google/javascript/jscomp/ScopedAliases.java
+@@ -413,6 +413,44 @@ class ScopedAliases implements HotSwapCompilerPass {
+               NodeUtil.newQualifiedNameNode(
+                   compiler.getCodingConvention(), globalName, n, name));
+ 
++          recordAlias(v);
++        } else if (parent.isFunction() && n.isName() && 
++                   parent.getParent().getType() == Token.EXPR_RESULT) {
++          // Handle top-level function declarations that are direct children of the scope closure
++          // This fixes the case described in the bug: "Allow @private top-level functions in goog.scope"
++          Node value = n.hasChildren() ? 
++              v.getInitialValue().detachFromParent() : 
++              null;
++          
++          String name = n.getString();
++          int nameCount = scopedAliasNames.count(name);
++          scopedAliasNames.add(name);
++          String globalName =
++              "$jscomp.scope." + name + (nameCount == 0 ? "" : ("$" + nameCount));
++
++          compiler.ensureLibraryInjected("base");
++          
++          // Add $jscomp.scope.name = EXPR;
++          // Make sure we copy over all the jsdoc and debug info.
++          if (value != null || v.getJSDocInfo() != null) {
++            Node newDecl = NodeUtil.newQualifiedNameNodeDeclaration(
++                compiler.getCodingConvention(),
++                globalName,
++                value,
++                v.getJSDocInfo())
++                .useSourceInfoIfMissingFromForTree(n);
++            NodeUtil.setDebugInformation(
++                newDecl.getFirstChild().getFirstChild(), n, name);
++
++            Node parentOfVar = parent.getParent();
++            parentOfVar.addChildBefore(newDecl, parent);
++          }
++
++          // Rewrite "function name(...) { ... }" to "var name = $jscomp.scope.name;"
++          Node newNameNode = NodeUtil.newQualifiedNameNode(
++              compiler.getCodingConvention(), globalName, n, name);
++          v.getNameNode().replaceChild(v.getNameNode().getFirstChild(), newNameNode);
++          
+           recordAlias(v);
+         } else {
+           // Do not other kinds of local symbols, like catch params.

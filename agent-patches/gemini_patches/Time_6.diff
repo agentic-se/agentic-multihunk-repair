@@ -1,0 +1,412 @@
+--- a/run_all_tests_trace.sh
++++ b/run_all_tests_trace.sh
+@@ -1,1 +1,1 @@
+-  java -cp "$CP" org.junit.runner.JUnitCore "$cls" >> "$LOGFILE" 2>&1
++  java -cp "$CP" junit.textui.TestRunner "$cls" >> "$LOGFILE" 2>&1
+
+--- a/run_bug_exposing_tests.sh
++++ b/run_bug_exposing_tests.sh
+@@ -1,1 +1,1 @@
+-  java -cp "$CP" org.junit.runner.JUnitCore "$cls" >> "$LOGFILE" 2>&1
++  java -cp "$CP" junit.textui.TestRunner "$cls" >> "$LOGFILE" 2>&1
+
+--- a/src/main/java/org/joda/time/chrono/GJChronology.java
++++ b/src/main/java/org/joda/time/chrono/GJChronology.java
+@@ -1,3 +1,11 @@
+-    long gregorianToJulianByYear(long instant) {
+-        return convertByYear(instant, iGregorianChronology, iJulianChronology);
+-    }
++    long gregorianToJulianByYear(long instant) {
++        int year = iGregorianChronology.year().get(instant);
++        if (year <= 0) { // If year is 0 or negative in Gregorian, adjust for Julian
++            year--; // 0 AD (Gregorian) becomes -1 BC (Julian), -1 AD (Gregorian) becomes -2 BC (Julian)
++        }
++        return iJulianChronology.getDateTimeMillis
++            (year,
++             iGregorianChronology.monthOfYear().get(instant),
++             iGregorianChronology.dayOfMonth().get(instant),
++             iGregorianChronology.millisOfDay().get(instant));
++    }
+@@ -1,3 +1,12 @@
+-    long gregorianToJulianByWeekyear(long instant) {
+-        return convertByWeekyear(instant, iGregorianChronology, iJulianChronology);
+-    }
++    long gregorianToJulianByWeekyear(long instant) {
++        int weekyear = iGregorianChronology.weekyear().get(instant);
++        if (weekyear <= 0) { // If weekyear is 0 or negative in Gregorian, adjust for Julian
++            weekyear--; // 0 AD (Gregorian) becomes -1 BC (Julian), -1 AD (Gregorian) becomes -2 BC (Julian)
++        }
++        long newInstant;
++        newInstant = iJulianChronology.weekyear().set(0, weekyear);
++        newInstant = iJulianChronology.weekOfWeekyear().set(newInstant, iGregorianChronology.weekOfWeekyear().get(instant));
++        newInstant = iJulianChronology.dayOfWeek().set(newInstant, iGregorianChronology.dayOfWeek().get(instant));
++        newInstant = iJulianChronology.millisOfDay().set(newInstant, iGregorianChronology.millisOfDay().get(instant));
++        return newInstant;
++    }
+@@ -1,3 +1,11 @@
+-    long julianToGregorianByYear(long instant) {
+-        return convertByYear(instant, iJulianChronology, iGregorianChronology);
+-    }
++    long julianToGregorianByYear(long instant) {
++        int year = iJulianChronology.year().get(instant);
++        if (year < 0) { // If year is negative in Julian, adjust for Gregorian
++            year++; // -1 BC (Julian) becomes 0 AD (Gregorian), -2 BC (Julian) becomes -1 AD (Gregorian)
++        }
++        return iGregorianChronology.getDateTimeMillis
++            (year,
++             iJulianChronology.monthOfYear().get(instant),
++             iJulianChronology.dayOfMonth().get(instant),
++             iJulianChronology.millisOfDay().get(instant));
++    }
+@@ -1,3 +1,12 @@
+-    long julianToGregorianByWeekyear(long instant) {
+-        return convertByWeekyear(instant, iJulianChronology, iGregorianChronology);
+-    }
++    long julianToGregorianByWeekyear(long instant) {
++        int weekyear = iJulianChronology.weekyear().get(instant);
++        if (weekyear < 0) { // If weekyear is negative in Julian, adjust for Gregorian
++            weekyear++; // -1 BC (Julian) becomes 0 AD (Gregorian), -2 BC (Julian) becomes -1 AD (Gregorian) 
++        }
++        long newInstant;
++        newInstant = iGregorianChronology.weekyear().set(0, weekyear);
++        newInstant = iGregorianChronology.weekOfWeekyear().set(newInstant, iJulianChronology.weekOfWeekyear().get(instant));
++        newInstant = iGregorianChronology.dayOfWeek().set(newInstant, iJulianChronology.dayOfWeek().get(instant));
++        newInstant = iGregorianChronology.millisOfDay().set(newInstant, iJulianChronology.millisOfDay().get(instant));
++        return newInstant;
++    }
+@@ -1,12 +1,3 @@
+-    long julianToGregorianByWeekyear(long instant) {
+-        int weekyear = iJulianChronology.weekyear().get(instant);
+-        if (weekyear < 0) { // If weekyear is negative in Julian, adjust for Gregorian
+-            weekyear++; // -1 BC (Julian) becomes 0 AD (Gregorian), -2 BC (Julian) becomes -1 AD (Gregorian) 
+-        }
+-        long newInstant;
+-        newInstant = iGregorianChronology.weekyear().set(0, weekyear);
+-        newInstant = iGregorianChronology.weekOfWeekyear().set(newInstant, iJulianChronology.weekOfWeekyear().get(instant));
+-        newInstant = iGregorianChronology.dayOfWeek().set(newInstant, iJulianChronology.dayOfWeek().get(instant));
+-        newInstant = iGregorianChronology.millisOfDay().set(newInstant, iJulianChronology.millisOfDay().get(instant));
+-        return newInstant;
+-    }
++    long julianToGregorianByWeekyear(long instant) {
++        return convertByWeekyear(instant, iJulianChronology, iGregorianChronology);
++    }
+@@ -1,11 +1,3 @@
+-    long julianToGregorianByYear(long instant) {
+-        int year = iJulianChronology.year().get(instant);
+-        if (year < 0) { // If year is negative in Julian, adjust for Gregorian
+-            year++; // -1 BC (Julian) becomes 0 AD (Gregorian), -2 BC (Julian) becomes -1 AD (Gregorian)
+-        }
+-        return iGregorianChronology.getDateTimeMillis
+-            (year,
+-             iJulianChronology.monthOfYear().get(instant),
+-             iJulianChronology.dayOfMonth().get(instant),
+-             iJulianChronology.millisOfDay().get(instant));
+-    }
++    long julianToGregorianByYear(long instant) {
++        return convertByYear(instant, iJulianChronology, iGregorianChronology);
++    }
+@@ -1,12 +1,3 @@
+-    long gregorianToJulianByWeekyear(long instant) {
+-        int weekyear = iGregorianChronology.weekyear().get(instant);
+-        if (weekyear <= 0) { // If weekyear is 0 or negative in Gregorian, adjust for Julian
+-            weekyear--; // 0 AD (Gregorian) becomes -1 BC (Julian), -1 AD (Gregorian) becomes -2 BC (Julian)
+-        }
+-        long newInstant;
+-        newInstant = iJulianChronology.weekyear().set(0, weekyear);
+-        newInstant = iJulianChronology.weekOfWeekyear().set(newInstant, iGregorianChronology.weekOfWeekyear().get(instant));
+-        newInstant = iJulianChronology.dayOfWeek().set(newInstant, iGregorianChronology.dayOfWeek().get(instant));
+-        newInstant = iJulianChronology.millisOfDay().set(newInstant, iGregorianChronology.millisOfDay().get(instant));
+-        return newInstant;
+-    }
++    long gregorianToJulianByWeekyear(long instant) {
++        return convertByWeekyear(instant, iGregorianChronology, iJulianChronology);
++    }
+@@ -1,11 +1,3 @@
+-    long gregorianToJulianByYear(long instant) {
+-        int year = iGregorianChronology.year().get(instant);
+-        if (year <= 0) { // If year is 0 or negative in Gregorian, adjust for Julian
+-            year--; // 0 AD (Gregorian) becomes -1 BC (Julian), -1 AD (Gregorian) becomes -2 BC (Julian)
+-        }
+-        return iJulianChronology.getDateTimeMillis
+-            (year,
+-             iGregorianChronology.monthOfYear().get(instant),
+-             iGregorianChronology.dayOfMonth().get(instant),
+-             iGregorianChronology.millisOfDay().get(instant));
+-    }
++    long gregorianToJulianByYear(long instant) {
++        return convertByYear(instant, iGregorianChronology, iJulianChronology);
++    }
+@@ -1,7 +1,24 @@
+-        protected long gregorianToJulian(long instant) {
+-            if (iConvertByWeekyear) {
+-                return gregorianToJulianByWeekyear(instant);
+-            } else {
+-                return gregorianToJulianByYear(instant);
+-            }
+-        }
++        protected long gregorianToJulian(long instant) {
++            if (iConvertByWeekyear) {
++                int weekyear = iGregorianField.getChronology().weekyear().get(instant);
++                if (weekyear <= 0) {
++                    weekyear--;
++                }
++                long newInstant;
++                newInstant = iJulianField.getChronology().weekyear().set(0, weekyear);
++                newInstant = iJulianField.getChronology().weekOfWeekyear().set(newInstant, iGregorianField.getChronology().weekOfWeekyear().get(instant));
++                newInstant = iJulianField.getChronology().dayOfWeek().set(newInstant, iGregorianField.getChronology().dayOfWeek().get(instant));
++                newInstant = iJulianField.getChronology().millisOfDay().set(newInstant, iGregorianField.getChronology().millisOfDay().get(instant));
++                return newInstant;
++            } else {
++                int year = iGregorianField.getChronology().year().get(instant);
++                if (year <= 0) {
++                    year--;
++                }
++                return iJulianField.getChronology().getDateTimeMillis
++                    (year,
++                     iGregorianField.getChronology().monthOfYear().get(instant),
++                     iGregorianField.getChronology().dayOfMonth().get(instant),
++                     iGregorianField.getChronology().millisOfDay().get(instant));
++            }
++        }
+@@ -1,7 +1,24 @@
+-        protected long julianToGregorian(long instant) {
+-            if (iConvertByWeekyear) {
+-                return julianToGregorianByWeekyear(instant);
+-            } else {
+-                return julianToGregorianByYear(instant);
+-            }
+-        }
++        protected long julianToGregorian(long instant) {
++            if (iConvertByWeekyear) {
++                int weekyear = iJulianField.getChronology().weekyear().get(instant);
++                if (weekyear < 0) {
++                    weekyear++;
++                }
++                long newInstant;
++                newInstant = iGregorianField.getChronology().weekyear().set(0, weekyear);
++                newInstant = iGregorianField.getChronology().weekOfWeekyear().set(newInstant, iJulianField.getChronology().weekOfWeekyear().get(instant));
++                newInstant = iGregorianField.getChronology().dayOfWeek().set(newInstant, iJulianField.getChronology().dayOfWeek().get(instant));
++                newInstant = iGregorianField.getChronology().millisOfDay().set(newInstant, iJulianField.getChronology().millisOfDay().get(instant));
++                return newInstant;
++            } else {
++                int year = iJulianField.getChronology().year().get(instant);
++                if (year < 0) {
++                    year++;
++                }
++                return iGregorianField.getChronology().getDateTimeMillis
++                    (year,
++                     iJulianField.getChronology().monthOfYear().get(instant),
++                     iJulianField.getChronology().dayOfMonth().get(instant),
++                     iJulianField.getChronology().millisOfDay().get(instant));
++            }
++        }
+@@ -1,7 +1,17 @@
+-    private static long convertByYear(long instant, Chronology from, Chronology to) {
+-        return to.getDateTimeMillis
+-            (from.year().get(instant),
+-             from.monthOfYear().get(instant),
+-             from.dayOfMonth().get(instant),
+-             from.millisOfDay().get(instant));
+-    }
++    private static long convertByYear(long instant, Chronology from, Chronology to) {
++        int year = from.year().get(instant);
++        if (from == GregorianChronology.getInstanceUTC() && to == JulianChronology.getInstanceUTC()) {
++            if (year <= 0) {
++                year--;
++            }
++        } else if (from == JulianChronology.getInstanceUTC() && to == GregorianChronology.getInstanceUTC()) {
++            if (year < 0) {
++                year++;
++            }
++        }
++        return to.getDateTimeMillis
++            (year,
++             from.monthOfYear().get(instant),
++             from.dayOfMonth().get(instant),
++             from.millisOfDay().get(instant));
++    }
+@@ -1,8 +1,18 @@
+-    private static long convertByWeekyear(final long instant, Chronology from, Chronology to) {
+-        long newInstant;
+-        newInstant = to.weekyear().set(0, from.weekyear().get(instant));
+-        newInstant = to.weekOfWeekyear().set(newInstant, from.weekOfWeekyear().get(instant));
+-        newInstant = to.dayOfWeek().set(newInstant, from.dayOfWeek().get(instant));
+-        newInstant = to.millisOfDay().set(newInstant, from.millisOfDay().get(instant));
+-        return newInstant;
+-    }
++    private static long convertByWeekyear(final long instant, Chronology from, Chronology to) {
++        int weekyear = from.weekyear().get(instant);
++        if (from == GregorianChronology.getInstanceUTC() && to == JulianChronology.getInstanceUTC()) {
++            if (weekyear <= 0) {
++                weekyear--;
++            }
++        } else if (from == JulianChronology.getInstanceUTC() && to == GregorianChronology.getInstanceUTC()) {
++            if (weekyear < 0) {
++                weekyear++;
++            }
++        }
++        long newInstant;
++        newInstant = to.weekyear().set(0, weekyear);
++        newInstant = to.weekOfWeekyear().set(newInstant, from.weekOfWeekyear().get(instant));
++        newInstant = to.dayOfWeek().set(newInstant, from.dayOfWeek().get(instant));
++        newInstant = to.millisOfDay().set(newInstant, from.millisOfDay().get(instant));
++        return newInstant;
++    }
+@@ -1,17 +1,7 @@
+-    private static long convertByYear(long instant, Chronology from, Chronology to) {
+-        int year = from.year().get(instant);
+-        if (from == GregorianChronology.getInstanceUTC() && to == JulianChronology.getInstanceUTC()) {
+-            if (year <= 0) {
+-                year--;
+-            }
+-        } else if (from == JulianChronology.getInstanceUTC() && to == GregorianChronology.getInstanceUTC()) {
+-            if (year < 0) {
+-                year++;
+-            }
+-        }
+-        return to.getDateTimeMillis
+-            (year,
+-             from.monthOfYear().get(instant),
+-             from.dayOfMonth().get(instant),
+-             from.millisOfDay().get(instant));
+-    }
++    private static long convertByYear(long instant, Chronology from, Chronology to) {
++        return to.getDateTimeMillis
++            (from.year().get(instant),
++             from.monthOfYear().get(instant),
++             from.dayOfMonth().get(instant),
++             from.millisOfDay().get(instant));
++    }
+@@ -1,18 +1,8 @@
+-    private static long convertByWeekyear(final long instant, Chronology from, Chronology to) {
+-        int weekyear = from.weekyear().get(instant);
+-        if (from == GregorianChronology.getInstanceUTC() && to == JulianChronology.getInstanceUTC()) {
+-            if (weekyear <= 0) {
+-                weekyear--;
+-            }
+-        } else if (from == JulianChronology.getInstanceUTC() && to == GregorianChronology.getInstanceUTC()) {
+-            if (weekyear < 0) {
+-                weekyear++;
+-            }
+-        }
+-        long newInstant;
+-        newInstant = to.weekyear().set(0, weekyear);
+-        newInstant = to.weekOfWeekyear().set(newInstant, from.weekOfWeekyear().get(instant));
+-        newInstant = to.dayOfWeek().set(newInstant, from.dayOfWeek().get(instant));
+-        newInstant = to.millisOfDay().set(newInstant, from.millisOfDay().get(instant));
+-        return newInstant;
+-    }
++    private static long convertByWeekyear(final long instant, Chronology from, Chronology to) {
++        long newInstant;
++        newInstant = to.weekyear().set(0, from.weekyear().get(instant));
++        newInstant = to.weekOfWeekyear().set(newInstant, from.weekOfWeekyear().get(instant));
++        newInstant = to.dayOfWeek().set(newInstant, from.dayOfWeek().get(instant));
++        newInstant = to.millisOfDay().set(newInstant, from.millisOfDay().get(instant));
++        return newInstant;
++    }
+@@ -1,3 +1,11 @@
+-    long gregorianToJulianByYear(long instant) {
+-        return convertByYear(instant, iGregorianChronology, iJulianChronology);
+-    }
++    long gregorianToJulianByYear(long instant) {
++        int year = iGregorianChronology.year().get(instant);
++        if (year <= 0) {
++            year--;
++        }
++        return iJulianChronology.getDateTimeMillis
++            (year,
++             iGregorianChronology.monthOfYear().get(instant),
++             iGregorianChronology.dayOfMonth().get(instant),
++             iGregorianChronology.millisOfDay().get(instant));
++    }
+@@ -1,3 +1,11 @@
+-    long julianToGregorianByYear(long instant) {
+-        return convertByYear(instant, iJulianChronology, iGregorianChronology);
+-    }
++    long julianToGregorianByYear(long instant) {
++        int year = iJulianChronology.year().get(instant);
++        if (year < 0) {
++            year++;
++        }
++        return iGregorianChronology.getDateTimeMillis
++            (year,
++             iJulianChronology.monthOfYear().get(instant),
++             iJulianChronology.dayOfMonth().get(instant),
++             iJulianChronology.millisOfDay().get(instant));
++    }
+@@ -1,3 +1,12 @@
+-    long gregorianToJulianByWeekyear(long instant) {
+-        return convertByWeekyear(instant, iGregorianChronology, iJulianChronology);
+-    }
++    long gregorianToJulianByWeekyear(long instant) {
++        int weekyear = iGregorianChronology.weekyear().get(instant);
++        if (weekyear <= 0) {
++            weekyear--;
++        }
++        long newInstant;
++        newInstant = iJulianChronology.weekyear().set(0, weekyear);
++        newInstant = iJulianChronology.weekOfWeekyear().set(newInstant, iGregorianChronology.weekOfWeekyear().get(instant));
++        newInstant = iJulianChronology.dayOfWeek().set(newInstant, iGregorianChronology.dayOfWeek().get(instant));
++        newInstant = iJulianChronology.millisOfDay().set(newInstant, iGregorianChronology.millisOfDay().get(instant));
++        return newInstant;
++    }
+@@ -1,3 +1,12 @@
+-    long julianToGregorianByWeekyear(long instant) {
+-        return convertByWeekyear(instant, iJulianChronology, iGregorianChronology);
+-    }
++    long julianToGregorianByWeekyear(long instant) {
++        int weekyear = iJulianChronology.weekyear().get(instant);
++        if (weekyear < 0) {
++            weekyear++;
++        }
++        long newInstant;
++        newInstant = iGregorianChronology.weekyear().set(0, weekyear);
++        newInstant = iGregorianChronology.weekOfWeekyear().set(newInstant, iJulianChronology.weekOfWeekyear().get(instant));
++        newInstant = iGregorianChronology.dayOfWeek().set(newInstant, iJulianChronology.dayOfWeek().get(instant));
++        newInstant = iGregorianChronology.millisOfDay().set(newInstant, iJulianChronology.millisOfDay().get(instant));
++        return newInstant;
++    }
+@@ -1,1 +1,1 @@
+-                if (iJulianField.getType() == DateTimeFieldType.year() || iJulianField.getType() == DateTimeFieldType.weekyear()) {
++                if (iJulianField.getType() == org.joda.time.DateTimeFieldType.year() || iJulianField.getType() == org.joda.time.DateTimeFieldType.weekyear()) {
+@@ -1,7 +1,5 @@
+-                int adjustedValue = value;
+-                if (iJulianField.getType() == org.joda.time.DateTimeFieldType.year() || iJulianField.getType() == org.joda.time.DateTimeFieldType.weekyear()) {
+-                    if (value <= 0) {
+-                        adjustedValue = value - 1;
+-                    }
+-                }
+-                instant = iJulianField.set(instant, adjustedValue);
++                if (iJulianField.getType() == org.joda.time.DateTimeFieldType.year() || iJulianField.getType() == org.joda.time.DateTimeFieldType.weekyear()) {
++                    instant = iJulianField.set(instant, JulianChronology.adjustYearForSet(value));
++                } else {
++                    instant = iJulianField.set(instant, value);
++                }
+@@ -1,5 +1,1 @@
+-                if (iJulianField.getType() == org.joda.time.DateTimeFieldType.year() || iJulianField.getType() == org.joda.time.DateTimeFieldType.weekyear()) {
+-                    instant = iJulianField.set(instant, JulianChronology.adjustYearForSet(value));
+-                } else {
+-                    instant = iJulianField.set(instant, value);
+-                }
++                instant = iJulianField.set(instant, value);
+@@ -1,1 +1,1 @@
+-                instant = iJulianField.set(instant, value);
++                instant = iJulianField.set(instant, JulianChronology.adjustYearForSet(value));
+
+--- a/src/test/java/org/joda/time/chrono/TestGJDate.java
++++ b/src/test/java/org/joda/time/chrono/TestGJDate.java
+@@ -1,9 +1,5 @@
+-    public void test_cutoverPreZero() {
+-        DateTime cutover = new LocalDate(-2, 6, 30, ISOChronology.getInstanceUTC()).toDateTimeAtStartOfDay(DateTimeZone.UTC);
+-        try {
+-            GJChronology.getInstance(DateTimeZone.UTC, cutover);
+-            fail();
+-        } catch (IllegalArgumentException ex) {
+-            // expected
+-        }
+-    }
++    public void test_cutoverPreZero() {
++        DateTime cutover = new LocalDate(-2, 6, 30, ISOChronology.getInstanceUTC()).toDateTimeAtStartOfDay(DateTimeZone.UTC);
++        GJChronology chrono = GJChronology.getInstance(DateTimeZone.UTC, cutover);
++        assertNotNull(chrono);
++    }

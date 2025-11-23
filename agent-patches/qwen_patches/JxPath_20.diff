@@ -1,0 +1,13 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
+index 65ed1ed..06af03e 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
+@@ -122,7 +122,7 @@ public abstract class CoreOperationRelationalExpression extends CoreOperation {
+     private boolean containsMatch(Iterator it, Object value) {
+         while (it.hasNext()) {
+             Object element = it.next();
+-            if (compute(element, value)) {
++            if (compute(value, element)) {
+                 return true;
+             }
+         }

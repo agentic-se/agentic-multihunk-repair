@@ -1,0 +1,42 @@
+diff --git a/src/main/java/org/apache/commons/math3/fraction/BigFraction.java b/src/main/java/org/apache/commons/math3/fraction/BigFraction.java
+index ed4108df8..f133ef84a 100644
+--- a/src/main/java/org/apache/commons/math3/fraction/BigFraction.java
++++ b/src/main/java/org/apache/commons/math3/fraction/BigFraction.java
+@@ -301,8 +301,14 @@ public class BigFraction
+             p2 = (a1 * p1) + p0;
+             q2 = (a1 * q1) + q0;
+             if ((p2 > overflow) || (q2 > overflow)) {
+-                // in maxDenominator mode, if the last fraction was very close to the actual value
+-                // q2 may overflow in the next iteration; in this case return the last one.
++                // in maxDenominator mode (epsilon == 0), if the last fraction was very close to
++                // the actual value, q2 may overflow in the next iteration; in this case return
++                // the last valid convergent instead of throwing.
++                if (epsilon == 0.0) {
++                    numerator   = BigInteger.valueOf(p1);
++                    denominator = BigInteger.valueOf(q1);
++                    return;
++                }
+                 throw new FractionConversionException(value, p2, q2);
+             }
+ 
+diff --git a/src/main/java/org/apache/commons/math3/fraction/Fraction.java b/src/main/java/org/apache/commons/math3/fraction/Fraction.java
+index 8065885ec..a634de073 100644
+--- a/src/main/java/org/apache/commons/math3/fraction/Fraction.java
++++ b/src/main/java/org/apache/commons/math3/fraction/Fraction.java
+@@ -210,8 +210,14 @@ public class Fraction
+             q2 = (a1 * q1) + q0;
+ 
+             if ((FastMath.abs(p2) > overflow) || (FastMath.abs(q2) > overflow)) {
+-                // in maxDenominator mode, if the last fraction was very close to the actual value
+-                // q2 may overflow in the next iteration; in this case return the last one.
++                // in maxDenominator mode (epsilon == 0), if the last fraction was very close to
++                // the actual value, q2 may overflow in the next iteration; in this case return
++                // the last valid convergent instead of throwing.
++                if (epsilon == 0.0) {
++                    this.numerator = (int) p1;
++                    this.denominator = (int) q1;
++                    return;
++                }
+                 throw new FractionConversionException(value, p2, q2);
+             }
+ 

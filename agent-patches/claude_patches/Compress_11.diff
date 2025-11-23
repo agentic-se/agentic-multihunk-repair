@@ -1,0 +1,34 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java b/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
+index a30cd5a8..704f4d70 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
++++ b/src/main/java/org/apache/commons/compress/archivers/ArchiveStreamFactory.java
+@@ -237,14 +237,17 @@ public class ArchiveStreamFactory {
+                 return new TarArchiveInputStream(in);
+             }
+             // COMPRESS-117 - improve auto-recognition
+-            try {
+-                TarArchiveInputStream tais = new TarArchiveInputStream(new ByteArrayInputStream(tarheader));
+-                tais.getNextEntry();
+-                return new TarArchiveInputStream(in);
+-            } catch (Exception e) { // NOPMD
+-                // can generate IllegalArgumentException as well as IOException
+-                // autodetection, simply not a TAR
+-                // ignored
++            // COMPRESS-171 - only try if we have at least one full 512 byte block
++            if (signatureLength >= 512) {
++                try {
++                    TarArchiveInputStream tais = new TarArchiveInputStream(new ByteArrayInputStream(tarheader));
++                    tais.getNextEntry();
++                    return new TarArchiveInputStream(in);
++                } catch (Exception e) { // NOPMD
++                    // can generate IllegalArgumentException as well as IOException
++                    // autodetection, simply not a TAR
++                    // ignored
++                }
+             }
+         } catch (IOException e) {
+             throw new ArchiveException("Could not use reset and mark operations.", e);
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

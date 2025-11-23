@@ -1,0 +1,17 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/AtomicReferenceDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/AtomicReferenceDeserializer.java
+index 9d5c3ded5..b263123f7 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/AtomicReferenceDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/AtomicReferenceDeserializer.java
+@@ -40,7 +40,11 @@ public class AtomicReferenceDeserializer
+ 
+     @Override
+     public AtomicReference<Object> getNullValue(DeserializationContext ctxt) throws JsonMappingException {
+-        return new AtomicReference<Object>();
++        // Ensure correct handling of nested reference types by passing null explicitly
++        // This fixes the issue where AtomicReference<AtomicReference<Integer>> with null
++        // was creating AtomicReference<AtomicReference<>> instead of 
++        // AtomicReference<AtomicReference<Integer>> with null content
++        return new AtomicReference<Object>(null);
+     }
+ 
+     @Override

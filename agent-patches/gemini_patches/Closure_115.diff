@@ -1,0 +1,111 @@
+--- a/src/com/google/javascript/jscomp/FunctionArgumentInjector.java
++++ b/src/com/google/javascript/jscomp/FunctionArgumentInjector.java
+@@ -1,6 +1,21 @@
+-  private static boolean canNameValueChange(Node n, Node parent) {
+-    int type = parent.getType();
+-    return (type == Token.VAR || type == Token.INC || type == Token.DEC ||
+-        (NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n) ||
+-        (NodeUtil.isForIn(parent)));
+-  }
++  private static boolean canNameValueChange(Node n, Node parent) {
++    int type = parent.getType();
++    if (type == Token.VAR || type == Token.INC || type == Token.DEC ||
++        (NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n) ||
++        (NodeUtil.isForIn(parent))) {
++      return true;
++    }
++
++    // Check for modifications to properties or elements of the parameter.
++    if (NodeUtil.isGet(parent) && parent.getFirstChild() == n) {
++      Node grandParent = parent.getParent();
++      if (NodeUtil.isAssignmentOp(grandParent) && grandParent.getFirstChild() == parent) {
++        return true;
++      }
++      if (grandParent.isInc() || grandParent.isDec()) {
++        return true;
++      }
++    }
++
++    return false;
++  }
+@@ -1,21 +1,6 @@
+-  private static boolean canNameValueChange(Node n, Node parent) {
+-    int type = parent.getType();
+-    if (type == Token.VAR || type == Token.INC || type == Token.DEC ||
+-        (NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n) ||
+-        (NodeUtil.isForIn(parent))) {
+-      return true;
+-    }
+-
+-    // Check for modifications to properties or elements of the parameter.
+-    if (NodeUtil.isGet(parent) && parent.getFirstChild() == n) {
+-      Node grandParent = parent.getParent();
+-      if (NodeUtil.isAssignmentOp(grandParent) && grandParent.getFirstChild() == parent) {
+-        return true;
+-      }
+-      if (grandParent.isInc() || grandParent.isDec()) {
+-        return true;
+-      }
+-    }
+-
+-    return false;
+-  }
++  private static boolean canNameValueChange(Node n, Node parent) {
++    int type = parent.getType();
++    return (type == Token.VAR || type == Token.INC || type == Token.DEC ||
++        (NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n) ||
++        (NodeUtil.isForIn(parent)));
++  }
+
+--- a/src/com/google/javascript/jscomp/FunctionInjector.java
++++ b/src/com/google/javascript/jscomp/FunctionInjector.java
+@@ -1,3 +1,3 @@
+-          if (hasSideEffects && NodeUtil.canBeSideEffected(cArg)) {
+-            return CanInlineResult.NO;
+-          }
++          if (hasSideEffects && NodeUtil.mayEffectMutableState(cArg, compiler)) {
++            return CanInlineResult.NO;
++          }
+@@ -1,3 +1,3 @@
+-          if (hasSideEffects && NodeUtil.mayEffectMutableState(cArg, compiler)) {
+-            return CanInlineResult.NO;
+-          }
++          if (hasSideEffects && NodeUtil.canBeSideEffected(cArg)) {
++            return CanInlineResult.NO;
++          }
+@@ -1,3 +1,3 @@
+-          if (hasSideEffects && NodeUtil.canBeSideEffected(cArg)) {
+-            return CanInlineResult.NO;
+-          }
++          if (hasSideEffects && (!cArg.isName() && NodeUtil.canBeSideEffected(cArg))) {
++            return CanInlineResult.NO;
++          }
+
+--- a/src/com/google/javascript/jscomp/InlineFunctions.java
++++ b/src/com/google/javascript/jscomp/InlineFunctions.java
+@@ -1,3 +1,1 @@
+-            if (!assumeMinimumCapture && hasLocalNames(fnNode)) {
+-              fs.setInline(false);
+-            }
++
+@@ -1,9 +1,11 @@
+-          if (NodeUtil.containsFunction(block)) {
+-            fs.setHasInnerFunctions(true);
+-            // If there are inner functions, we can inline into global scope
+-            // if there are no local vars or named functions.
+-            // TODO(johnlenz): this can be improved by looking at the possible
+-            // values for locals.  If there are simple values, or constants
+-            // we could still inline.
+-            
+-          }
++          if (NodeUtil.containsFunction(block)) {
++            fs.setHasInnerFunctions(true);
++            // If there are inner functions, we can inline into global scope
++            // if there are no local vars or named functions.
++            // TODO(johnlenz): this can be improved by looking at the possible
++            // values for locals.  If there are simple values, or constants
++            // we could still inline.
++            if (!assumeMinimumCapture && hasLocalNames(fnNode)) {
++              fs.setInline(false);
++            }
++          }

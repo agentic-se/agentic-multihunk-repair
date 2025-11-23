@@ -1,0 +1,239 @@
+--- a/src/com/google/debugging/sourcemap/SourceMapConsumerV3.java
++++ b/src/com/google/debugging/sourcemap/SourceMapConsumerV3.java
+@@ -1,2 +1,2 @@
+-        .setLineNumber(entry.getSourceLine())
+-        .setColumnPosition(entry.getSourceColumn());
++        .setLineNumber(entry.getSourceLine() + 1)
++        .setColumnPosition(entry.getSourceColumn() + 1);
+@@ -1,2 +1,2 @@
+-        .setLineNumber(entry.getSourceLine() + 1)
+-        .setColumnPosition(entry.getSourceColumn() + 1);
++        .setLineNumber(entry.getSourceLine())
++        .setColumnPosition(entry.getSourceColumn());
+
+--- a/src/com/google/debugging/sourcemap/SourceMapGeneratorV3.java
++++ b/src/com/google/debugging/sourcemap/SourceMapGeneratorV3.java
+@@ -1,1 +1,1 @@
+-        int srcline = m.originalPosition.getLine();
++        int srcline = m.originalPosition.getLine() - 1;
+@@ -1,1 +1,1 @@
+-        int srcColumn = m.originalPosition.getColumn();
++        int srcColumn = m.originalPosition.getColumn() - 1;
+@@ -1,1 +1,1 @@
+-        int srcColumn = m.originalPosition.getColumn() - 1;
++        int srcColumn = m.originalPosition.getColumn();
+@@ -1,1 +1,2 @@
+-    mapping.originalPosition = sourceStartPosition;
++    mapping.originalPosition = new FilePosition(
++        sourceStartPosition.getLine() - 1, sourceStartPosition.getColumn() - 1);
+@@ -1,2 +1,1 @@
+-    mapping.originalPosition = new FilePosition(
+-        sourceStartPosition.getLine() - 1, sourceStartPosition.getColumn() - 1);
++    mapping.originalPosition = sourceStartPosition;
+@@ -1,1 +1,1 @@
+-        int srcColumn = m.originalPosition.getColumn();
++        int srcColumn = m.originalPosition.getColumn() - 1;
+@@ -1,2 +1,2 @@
+-        int srcline = m.originalPosition.getLine() - 1;
+-        int srcColumn = m.originalPosition.getColumn() - 1;
++        int srcline = m.originalPosition.getLine();
++        int srcColumn = m.originalPosition.getColumn();
+@@ -1,1 +1,2 @@
+-    mapping.originalPosition = sourceStartPosition;
++    mapping.originalPosition = new FilePosition(
++        sourceStartPosition.getLine() - 1, sourceStartPosition.getColumn() - 1);
+@@ -1,2 +1,1 @@
+-    mapping.originalPosition = new FilePosition(
+-        sourceStartPosition.getLine() - 1, sourceStartPosition.getColumn() - 1);
++    mapping.originalPosition = sourceStartPosition;
+@@ -1,1 +1,1 @@
+-        int srcline = m.originalPosition.getLine();
++        int srcline = m.originalPosition.getLine() - 1;
+@@ -1,1 +1,1 @@
+-        int srcColumn = m.originalPosition.getColumn();
++        int srcColumn = m.originalPosition.getColumn() - 1;
+@@ -1,1 +1,1 @@
+-        int srcline = m.originalPosition.getLine() - 1;
++        int srcline = m.originalPosition.getLine();
+@@ -1,1 +1,1 @@
+-        int srcColumn = m.originalPosition.getColumn() - 1;
++        int srcColumn = m.originalPosition.getColumn();
+@@ -1,1 +1,1 @@
+-        int srcline = m.originalPosition.getLine();
++        int srcline = m.originalPosition.getLine() - 1;
+@@ -1,1 +1,1 @@
+-        int srcColumn = m.originalPosition.getColumn();
++        int srcColumn = m.originalPosition.getColumn() - 1;
+@@ -1,1 +1,1 @@
+-        int srcline = m.originalPosition.getLine() - 1;
++        int srcline = m.originalPosition.getLine();
+@@ -1,1 +1,1 @@
+-        int srcColumn = m.originalPosition.getColumn() - 1;
++        int srcColumn = m.originalPosition.getColumn();
+@@ -1,1 +1,2 @@
+-    mapping.originalPosition = sourceStartPosition;
++    mapping.originalPosition = new FilePosition(
++        sourceStartPosition.getLine() + 1, sourceStartPosition.getColumn() + 1);
+@@ -1,2 +1,1 @@
+-    mapping.originalPosition = new FilePosition(
+-        sourceStartPosition.getLine() + 1, sourceStartPosition.getColumn() + 1);
++    mapping.originalPosition = sourceStartPosition;
+@@ -1,2 +1,3 @@
+-      addMapping(sourceName, symbolName,
+-          sourceStartPosition, startPosition, endPosition);
++      addMapping(sourceName, symbolName,
++          new FilePosition(sourceStartPosition.getLine() + 1, sourceStartPosition.getColumn() + 1),
++          startPosition, endPosition);
+@@ -1,3 +1,2 @@
+-      addMapping(sourceName, symbolName,
+-          new FilePosition(sourceStartPosition.getLine() + 1, sourceStartPosition.getColumn() + 1),
+-          startPosition, endPosition);
++      addMapping(sourceName, symbolName,
++          sourceStartPosition, startPosition, endPosition);
+@@ -1,1 +1,1 @@
+-        int srcline = m.originalPosition.getLine();
++        int srcline = m.originalPosition.getLine() - 1;
+@@ -1,1 +1,1 @@
+-        int srcColumn = m.originalPosition.getColumn();
++        int srcColumn = m.originalPosition.getColumn() - 1;
+@@ -1,1 +1,1 @@
+-        int srcline = m.originalPosition.getLine() - 1;
++        int srcline = m.originalPosition.getLine();
+@@ -1,1 +1,1 @@
+-        int srcColumn = m.originalPosition.getColumn() - 1;
++        int srcColumn = m.originalPosition.getColumn();
+@@ -1,1 +1,3 @@
+-    mapping.originalPosition = sourceStartPosition;
++    mapping.originalPosition = new FilePosition(
++        sourceStartPosition.getLine() == UNMAPPED ? UNMAPPED : sourceStartPosition.getLine() + 1,
++        sourceStartPosition.getColumn() == UNMAPPED ? UNMAPPED : sourceStartPosition.getColumn() + 1);
+@@ -1,3 +1,1 @@
+-    mapping.originalPosition = new FilePosition(
+-        sourceStartPosition.getLine() == UNMAPPED ? UNMAPPED : sourceStartPosition.getLine() + 1,
+-        sourceStartPosition.getColumn() == UNMAPPED ? UNMAPPED : sourceStartPosition.getColumn() + 1);
++    mapping.originalPosition = sourceStartPosition;
+@@ -1,17 +1,13 @@
+-      if (line != nextLine || col != nextCol) {
+-        if (previousLine == line) { // not the first entry for the line
+-          out.append(',');
+-        }
+-        writeEntry(m, col);
+-        previousLine = line;
+-        previousColumn = col;
+-      }
+-
+-      for (int i = line; i <= nextLine; i++) {
+-        if (i == nextLine) {
+-          break;
+-        }
+-
+-        closeLine(false);
+-        openLine(false);
+-      }
++      if (line != nextLine || col != nextCol) {
++        if (previousLine == line) { // not the first entry for the line
++          out.append(',');
++        }
++        writeEntry(m, col);
++        previousLine = line;
++        previousColumn = col;
++      }
++
++      if (line < nextLine) {
++        closeLine(false);
++        openLine(false);
++      }
+@@ -1,13 +1,17 @@
+-      if (line != nextLine || col != nextCol) {
+-        if (previousLine == line) { // not the first entry for the line
+-          out.append(',');
+-        }
+-        writeEntry(m, col);
+-        previousLine = line;
+-        previousColumn = col;
+-      }
+-
+-      if (line < nextLine) {
+-        closeLine(false);
+-        openLine(false);
+-      }
++      if (line != nextLine || col != nextCol) {
++        if (previousLine == line) { // not the first entry for the line
++          out.append(',');
++        }
++        writeEntry(m, col);
++        previousLine = line;
++        previousColumn = col;
++      }
++
++      for (int i = line; i <= nextLine; i++) {
++        if (i == nextLine) {
++          break;
++        }
++
++        closeLine(false);
++        openLine(false);
++      }
+@@ -1,3 +1,5 @@
+-    LineMapper(Appendable out) {
+-      this.out = out;
+-    }
++    LineMapper(Appendable out) {
++      this.out = out;
++      this.previousSourceLine = 0;
++      this.previousSourceColumn = 0;
++    }
+@@ -1,1 +1,1 @@
+-        int srcline = m.originalPosition.getLine();
++        int srcline = m.originalPosition.getLine() - 1;
+@@ -1,1 +1,1 @@
+-        int srcColumn = m.originalPosition.getColumn();
++        int srcColumn = m.originalPosition.getColumn() - 1;
+@@ -1,5 +1,3 @@
+-    LineMapper(Appendable out) {
+-      this.out = out;
+-      this.previousSourceLine = 0;
+-      this.previousSourceColumn = 0;
+-    }
++    LineMapper(Appendable out) {
++      this.out = out;
++    }
+@@ -1,1 +1,1 @@
+-        int srcline = m.originalPosition.getLine() - 1;
++        int srcline = m.originalPosition.getLine();
+@@ -1,1 +1,1 @@
+-        int srcColumn = m.originalPosition.getColumn() - 1;
++        int srcColumn = m.originalPosition.getColumn();
+@@ -1,1 +1,1 @@
+-        int srcline = m.originalPosition.getLine();
++        int srcline = m.originalPosition.getLine() - 1;
+@@ -1,1 +1,1 @@
+-        int srcColumn = m.originalPosition.getColumn();
++        int srcColumn = m.originalPosition.getColumn() - 1;
+
+--- a/test/com/google/debugging/sourcemap/SourceMapTestCase.java
++++ b/test/com/google/debugging/sourcemap/SourceMapTestCase.java
+@@ -1,2 +1,2 @@
+-      assertEquals(mapping.getLineNumber(),
+-                   inputToken.position.getLine() + 1);
++      assertEquals(mapping.getLineNumber(),
++                   inputToken.position.getLine());
+@@ -1,3 +1,3 @@
+-      if (validateColumns) {
+-        assertEquals(start, mapping.getColumnPosition());
+-      }
++      if (validateColumns) {
++        assertEquals(inputToken.position.getColumn(), mapping.getColumnPosition());
++      }
+@@ -1,2 +1,2 @@
+-      assertEquals(mapping.getLineNumber(),
+-                   inputToken.position.getLine());
++      assertEquals(mapping.getLineNumber(),
++                   inputToken.position.getLine() + 1);
+@@ -1,3 +1,3 @@
+-      if (validateColumns) {
+-        assertEquals(inputToken.position.getColumn(), mapping.getColumnPosition());
+-      }
++      if (validateColumns) {
++        assertEquals(start, mapping.getColumnPosition());
++      }

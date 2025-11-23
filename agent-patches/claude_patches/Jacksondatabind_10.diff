@@ -1,0 +1,107 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/AnyGetterWriter.java b/src/main/java/com/fasterxml/jackson/databind/ser/AnyGetterWriter.java
+index 2cd7bb7b6..4d17276f6 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/AnyGetterWriter.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/AnyGetterWriter.java
+@@ -23,7 +23,12 @@ public class AnyGetterWriter
+ 
+ 
+     protected MapSerializer _mapSerializer;
+-    
++
++    /**
++     * @since 2.5.2
++     */
++    protected JsonSerializer<Object> _serializer;
++
+     @SuppressWarnings("unchecked")
+     public AnyGetterWriter(BeanProperty property,
+             AnnotatedMember accessor, MapSerializer serializer)
+@@ -31,6 +36,20 @@ public class AnyGetterWriter
+         _accessor = accessor;
+         _property = property;
+             _mapSerializer = (MapSerializer) serializer;
++            _serializer = null;
++    }
++
++    /**
++     * @since 2.5.2
++     */
++    public AnyGetterWriter(BeanProperty property,
++            AnnotatedMember accessor, JsonSerializer<?> serializer)
++    {
++        _accessor = accessor;
++        _property = property;
++        _serializer = (JsonSerializer<Object>) serializer;
++        _mapSerializer = (serializer instanceof MapSerializer) ?
++                (MapSerializer) serializer : null;
+     }
+ 
+     public void getAndSerialize(Object bean, JsonGenerator gen, SerializerProvider provider)
+@@ -49,6 +68,10 @@ public class AnyGetterWriter
+             _mapSerializer.serializeFields((Map<?,?>) value, gen, provider);
+             return;
+         }
++        // [databind#705]: use custom serializer if provided
++        if (_serializer != null) {
++            _serializer.serialize(value, gen, provider);
++        }
+     }
+ 
+     /**
+@@ -71,7 +94,10 @@ public class AnyGetterWriter
+             _mapSerializer.serializeFilteredFields((Map<?,?>) value, gen, provider, filter, null);
+             return;
+         }
+-        // ... not sure how custom handler would do it
++        // [databind#705]: use custom serializer if provided
++        if (_serializer != null) {
++            _serializer.serialize(value, gen, provider);
++        }
+     }
+     
+     // Note: NOT part of ResolvableSerializer...
+@@ -79,6 +105,15 @@ public class AnyGetterWriter
+     public void resolve(SerializerProvider provider) throws JsonMappingException
+     {
+         // 05-Sep-2013, tatu: I _think_ this can be considered a primary property...
+-        _mapSerializer = (MapSerializer) provider.handlePrimaryContextualization(_mapSerializer, _property);
++        if (_mapSerializer != null) {
++            _mapSerializer = (MapSerializer) provider.handlePrimaryContextualization(_mapSerializer, _property);
++        }
++        // [databind#705]: also handle custom serializer
++        if (_serializer != null) {
++            if (_serializer instanceof ResolvableSerializer) {
++                ((ResolvableSerializer) _serializer).resolve(provider);
++            }
++            _serializer = (JsonSerializer<Object>) provider.handlePrimaryContextualization(_serializer, _property);
++        }
+     }
+ }
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/BeanSerializerFactory.java b/src/main/java/com/fasterxml/jackson/databind/ser/BeanSerializerFactory.java
+index 25e7e3f93..d0a59fd62 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/BeanSerializerFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/BeanSerializerFactory.java
+@@ -390,10 +390,15 @@ public class BeanSerializerFactory
+             boolean staticTyping = config.isEnabled(MapperFeature.USE_STATIC_TYPING);
+             JavaType valueType = type.getContentType();
+             TypeSerializer typeSer = createTypeSerializer(config, valueType);
+-            // last 2 nulls; don't know key, value serializers (yet)
+-            // 23-Feb-2015, tatu: As per [#705], need to support custom serializers
+-            MapSerializer anySer = MapSerializer.construct(null, type, staticTyping, typeSer, null, null, null);
+-                // TODO: support '@JsonIgnoreProperties' with any setter?
++
++            // [databind#705]: check for custom serializer
++            JsonSerializer<?> anySer = findSerializerFromAnnotation(prov, anyGetter);
++            if (anySer == null) {
++                // if not, use default MapSerializer
++                // last 2 nulls; don't know key, value serializers (yet)
++                anySer = MapSerializer.construct(null, type, staticTyping, typeSer, null, null, null);
++            }
++            // TODO: support '@JsonIgnoreProperties' with any setter?
+             // TODO: can we find full PropertyName?
+             PropertyName name = new PropertyName(anyGetter.getName());
+             BeanProperty.Std anyProp = new BeanProperty.Std(name, valueType, null,
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

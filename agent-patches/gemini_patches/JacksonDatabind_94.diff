@@ -1,0 +1,131 @@
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java
+@@ -1,2 +1,2 @@
+-// s.add("com.mchange.v2.c3p0.JndiRefForwardingDataSource"); // deprecated by [databind#1931]
+-// s.add("com.mchange.v2.c3p0.WrapperConnectionPoolDataSource"); // - "" -
++        s.add("com.mchange.v2.c3p0.JndiRefForwardingDataSource"); // [databind#1931]
++        s.add("com.mchange.v2.c3p0.WrapperConnectionPoolDataSource"); // [databind#1931]
+
+--- a/src/test/java/com/fasterxml/jackson/databind/interop/IllegalTypesCheckTest.java
++++ b/src/test/java/com/fasterxml/jackson/databind/interop/IllegalTypesCheckTest.java
+@@ -1,1 +1,3 @@
+-import com.mchange.v2.c3p0.jacksontest.ComboPooledDataSource;
++import com.mchange.v2.c3p0.jacksontest.ComboPooledDataSource;
++import com.mchange.v2.c3p0.JndiRefForwardingDataSource;
++import com.mchange.v2.c3p0.WrapperConnectionPoolDataSource;
+@@ -1,4 +1,6 @@
+-    public void testC3P0Types() throws Exception
+-    {
+-        _testIllegalType(ComboPooledDataSource.class); // [databind#1931]
+-    }
++    public void testC3P0Types() throws Exception
++    {
++        _testIllegalType(ComboPooledDataSource.class); // [databind#1931]
++        _testIllegalType(JndiRefForwardingDataSource.class);
++        _testIllegalType(WrapperConnectionPoolDataSource.class);
++    }
+@@ -1,3 +1,3 @@
+-import com.mchange.v2.c3p0.jacksontest.ComboPooledDataSource;
+-import com.mchange.v2.c3p0.JndiRefForwardingDataSource;
+-import com.mchange.v2.c3p0.WrapperConnectionPoolDataSource;
++import com.mchange.v2.c3p0.ComboPooledDataSource;
++import com.mchange.v2.c3p0.JndiRefForwardingDataSource;
++import com.mchange.v2.c3p0.WrapperConnectionPoolDataSource;
+@@ -1,3 +1,1 @@
+-import com.mchange.v2.c3p0.ComboPooledDataSource;
+-import com.mchange.v2.c3p0.JndiRefForwardingDataSource;
+-import com.mchange.v2.c3p0.WrapperConnectionPoolDataSource;
++import com.mchange.v2.c3p0.jacksontest.ComboPooledDataSource;
+@@ -1,6 +1,4 @@
+-    public void testC3P0Types() throws Exception
+-    {
+-        _testIllegalType(ComboPooledDataSource.class); // [databind#1931]
+-        _testIllegalType(JndiRefForwardingDataSource.class);
+-        _testIllegalType(WrapperConnectionPoolDataSource.class);
+-    }
++    public void testC3P0Types() throws Exception
++    {
++        _testIllegalType(ComboPooledDataSource.class); // [databind#1931]
++    }
+@@ -1,4 +1,6 @@
+-    public void testC3P0Types() throws Exception
+-    {
+-        _testIllegalType(ComboPooledDataSource.class); // [databind#1931]
+-    }
++    public void testC3P0Types() throws Exception
++    {
++        _testIllegalType("com.mchange.v2.c3p0.ComboPooledDataSource"); // [databind#1931]
++        _testIllegalType("com.mchange.v2.c3p0.JndiRefForwardingDataSource");
++        _testIllegalType("com.mchange.v2.c3p0.WrapperConnectionPoolDataSource");
++    }
+@@ -1,4 +1,4 @@
+-        _verifyException(t, JsonMappingException.class,
+-            "Illegal type",
+-            "to deserialize",
+-            "prevented for security reasons");
++        _verifyException(t, JsonMappingException.class,
++            "Illegal type", "Invalid type id",
++            "to deserialize", "no such class found",
++            "prevented for security reasons");
+@@ -1,4 +1,4 @@
+-        _verifyException(t, JsonMappingException.class,
+-            "Illegal type", "Invalid type id",
+-            "to deserialize", "no such class found",
+-            "prevented for security reasons");
++        _verifyException(t, JsonMappingException.class,
++            "Illegal type",
++            "to deserialize",
++            "prevented for security reasons");
+@@ -1,9 +1,30 @@
+-    protected void _verifySecurityException(Throwable t, String clsName) throws Exception
+-    {
+-        // 17-Aug-2017, tatu: Expected type more granular in 2.9 (over 2.8)
+-        _verifyException(t, JsonMappingException.class,
+-            "Illegal type",
+-            "to deserialize",
+-            "prevented for security reasons");
+-        verifyException(t, clsName);
+-    }
++    protected void _verifySecurityException(Throwable t, String clsName) throws Exception
++    {
++        // 17-Aug-2017, tatu: Expected type more granular in 2.9 (over 2.8)
++        _verifyException(t, JsonMappingException.class,
++            "Illegal type",
++            "to deserialize",
++            "prevented for security reasons");
++        verifyException(t, clsName);
++    }
++
++    protected void _verifyInvalidTypeIdException(Throwable t, String clsName) throws Exception
++    {
++        _verifyException(t, JsonMappingException.class,
++            "Invalid type id",
++            "no such class found");
++        verifyException(t, clsName);
++    }
++
++    private void _testInvalidTypeIdType(String clsName) throws Exception
++    {
++        String json = aposToQuotes(
++                "{'v':['"+clsName+"','/tmp/foobar.txt']}"
++                );
++        try {
++            MAPPER.readValue(json, PolyWrapper.class);
++            fail("Should not pass");
++        } catch (JsonMappingException e) {
++            _verifyInvalidTypeIdException(e, clsName);
++        }
++    }
+@@ -1,6 +1,6 @@
+-    public void testC3P0Types() throws Exception
+-    {
+-        _testIllegalType("com.mchange.v2.c3p0.ComboPooledDataSource"); // [databind#1931]
+-        _testIllegalType("com.mchange.v2.c3p0.JndiRefForwardingDataSource");
+-        _testIllegalType("com.mchange.v2.c3p0.WrapperConnectionPoolDataSource");
+-    }
++    public void testC3P0Types() throws Exception
++    {
++        _testInvalidTypeIdType("com.mchange.v2.c3p0.ComboPooledDataSource"); // [databind#1931]
++        _testInvalidTypeIdType("com.mchange.v2.c3p0.JndiRefForwardingDataSource");
++        _testInvalidTypeIdType("com.mchange.v2.c3p0.WrapperConnectionPoolDataSource");
++    }

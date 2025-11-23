@@ -1,0 +1,15 @@
+diff --git a/src/main/java/org/apache/commons/math/linear/EigenDecompositionImpl.java b/src/main/java/org/apache/commons/math/linear/EigenDecompositionImpl.java
+index 2d0d72f22..a282a1bb4 100644
+--- a/src/main/java/org/apache/commons/math/linear/EigenDecompositionImpl.java
++++ b/src/main/java/org/apache/commons/math/linear/EigenDecompositionImpl.java
+@@ -1540,7 +1540,9 @@ public class EigenDecompositionImpl implements EigenDecomposition {
+                 double a2 = (work[np - 8] / b2) * (1 + work[np - 4] / b1);
+ 
+                 // approximate contribution to norm squared from i < nn-2.
+-                if (end - start > 2) {
++                // Guard against small blocks: indexing below uses nn-15 and nn-13,
++                // which are valid only when (end - start) >= 4 (i.e., > 3).
++                if (end - start > 3) {
+                     b2 = work[nn - 13] / work[nn - 15];
+                     a2 = a2 + b2;
+                     for (int i4 = nn - 17; i4 >= 4 * start + 2 + pingPong; i4 -= 4) {

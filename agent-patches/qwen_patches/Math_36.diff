@@ -1,0 +1,251 @@
+diff --git a/src/main/java/org/apache/commons/math/fraction/BigFraction.java b/src/main/java/org/apache/commons/math/fraction/BigFraction.java
+index 6181ec329..e8f35da8e 100644
+--- a/src/main/java/org/apache/commons/math/fraction/BigFraction.java
++++ b/src/main/java/org/apache/commons/math/fraction/BigFraction.java
+@@ -1,4 +1,4 @@
+-/*
++/* 
+  * Licensed to the Apache Software Foundation (ASF) under one or more
+  * contributor license agreements.  See the NOTICE file distributed with
+  * this work for additional information regarding copyright ownership.
+@@ -671,7 +671,7 @@ public class BigFraction
+         return multiply(fraction.reciprocal());
+     }
+ 
+-    /**
++    /** 
+      * <p>
+      * Gets the fraction as a <tt>double</tt>. This calculates the fraction as
+      * the numerator divided by denominator.
+@@ -682,10 +682,40 @@ public class BigFraction
+      */
+     @Override
+     public double doubleValue() {
+-        double result = numerator.doubleValue() / denominator.doubleValue();
+-            // Numerator and/or denominator must be out of range:
+-            // Calculate how far to shift them to put them in range.
+-        return result;
++        // Handle cases where numerator or denominator are too large for double
++        // to avoid NaN or infinity results
++        try {
++            double result = numerator.doubleValue() / denominator.doubleValue();
++            if (Double.isNaN(result) || Double.isInfinite(result)) {
++                // Fall back to BigDecimal arithmetic for very large numbers
++                BigDecimal num = new BigDecimal(numerator);
++                BigDecimal den = new BigDecimal(denominator);
++                BigDecimal decimalResult = num.divide(den, 50, BigDecimal.ROUND_HALF_UP);
++                // Check if we can represent the result as a double
++                if (decimalResult.compareTo(BigDecimal.valueOf(Double.MAX_VALUE)) > 0) {
++                    return Double.POSITIVE_INFINITY;
++                } else if (decimalResult.compareTo(BigDecimal.valueOf(-Double.MAX_VALUE)) < 0) {
++                    return Double.NEGATIVE_INFINITY;
++                } else {
++                    return decimalResult.doubleValue();
++                }
++            }
++            return result;
++        } catch (Exception e) {
++            // If any exception occurs (like division by zero or overflow),
++            // fall back to BigDecimal calculation
++            BigDecimal num = new BigDecimal(numerator);
++            BigDecimal den = new BigDecimal(denominator);
++            BigDecimal decimalResult = num.divide(den, 50, BigDecimal.ROUND_HALF_UP);
++            // Check if we can represent the result as a double
++            if (decimalResult.compareTo(BigDecimal.valueOf(Double.MAX_VALUE)) > 0) {
++                return Double.POSITIVE_INFINITY;
++            } else if (decimalResult.compareTo(BigDecimal.valueOf(-Double.MAX_VALUE)) < 0) {
++                return Double.NEGATIVE_INFINITY;
++            } else {
++                return decimalResult.doubleValue();
++            }
++        }
+     }
+ 
+     /**
+@@ -718,7 +748,7 @@ public class BigFraction
+         return ret;
+     }
+ 
+-    /**
++    /** 
+      * <p>
+      * Gets the fraction as a <tt>float</tt>. This calculates the fraction as
+      * the numerator divided by denominator.
+@@ -729,10 +759,40 @@ public class BigFraction
+      */
+     @Override
+     public float floatValue() {
+-        float result = numerator.floatValue() / denominator.floatValue();
+-            // Numerator and/or denominator must be out of range:
+-            // Calculate how far to shift them to put them in range.
+-        return result;
++        // Handle cases where numerator or denominator are too large for float
++        // to avoid NaN or infinity results
++        try {
++            float result = numerator.floatValue() / denominator.floatValue();
++            if (Float.isNaN(result) || Float.isInfinite(result)) {
++                // Fall back to BigDecimal arithmetic for very large numbers
++                BigDecimal num = new BigDecimal(numerator);
++                BigDecimal den = new BigDecimal(denominator);
++                BigDecimal decimalResult = num.divide(den, 50, BigDecimal.ROUND_HALF_UP);
++                // Check if we can represent the result as a float
++                if (decimalResult.compareTo(BigDecimal.valueOf(Float.MAX_VALUE)) > 0) {
++                    return Float.POSITIVE_INFINITY;
++                } else if (decimalResult.compareTo(BigDecimal.valueOf(-Float.MAX_VALUE)) < 0) {
++                    return Float.NEGATIVE_INFINITY;
++                } else {
++                    return decimalResult.floatValue();
++                }
++            }
++            return result;
++        } catch (Exception e) {
++            // If any exception occurs (like division by zero or overflow),
++            // fall back to BigDecimal calculation
++            BigDecimal num = new BigDecimal(numerator);
++            BigDecimal den = new BigDecimal(denominator);
++            BigDecimal decimalResult = num.divide(den, 50, BigDecimal.ROUND_HALF_UP);
++            // Check if we can represent the result as a float
++            if (decimalResult.compareTo(BigDecimal.valueOf(Float.MAX_VALUE)) > 0) {
++                return Float.POSITIVE_INFINITY;
++            } else if (decimalResult.compareTo(BigDecimal.valueOf(-Float.MAX_VALUE)) < 0) {
++                return Float.NEGATIVE_INFINITY;
++            } else {
++                return decimalResult.floatValue();
++            }
++        }
+     }
+ 
+     /**
+@@ -1130,4 +1190,4 @@ public class BigFraction
+         return BigFractionField.getInstance();
+     }
+ 
+-}
++}
+\ No newline at end of file
+
+diff --git a/src/main/java/org/apache/commons/math/fraction/BigFraction.java b/src/main/java/org/apache/commons/math/fraction/BigFraction.java
+index 6181ec329..e8f35da8e 100644
+--- a/src/main/java/org/apache/commons/math/fraction/BigFraction.java
++++ b/src/main/java/org/apache/commons/math/fraction/BigFraction.java
+@@ -1,4 +1,4 @@
+-/*
++/* 
+  * Licensed to the Apache Software Foundation (ASF) under one or more
+  * contributor license agreements.  See the NOTICE file distributed with
+  * this work for additional information regarding copyright ownership.
+@@ -671,7 +671,7 @@ public class BigFraction
+         return multiply(fraction.reciprocal());
+     }
+ 
+-    /**
++    /** 
+      * <p>
+      * Gets the fraction as a <tt>double</tt>. This calculates the fraction as
+      * the numerator divided by denominator.
+@@ -682,10 +682,40 @@ public class BigFraction
+      */
+     @Override
+     public double doubleValue() {
+-        double result = numerator.doubleValue() / denominator.doubleValue();
+-            // Numerator and/or denominator must be out of range:
+-            // Calculate how far to shift them to put them in range.
+-        return result;
++        // Handle cases where numerator or denominator are too large for double
++        // to avoid NaN or infinity results
++        try {
++            double result = numerator.doubleValue() / denominator.doubleValue();
++            if (Double.isNaN(result) || Double.isInfinite(result)) {
++                // Fall back to BigDecimal arithmetic for very large numbers
++                BigDecimal num = new BigDecimal(numerator);
++                BigDecimal den = new BigDecimal(denominator);
++                BigDecimal decimalResult = num.divide(den, 50, BigDecimal.ROUND_HALF_UP);
++                // Check if we can represent the result as a double
++                if (decimalResult.compareTo(BigDecimal.valueOf(Double.MAX_VALUE)) > 0) {
++                    return Double.POSITIVE_INFINITY;
++                } else if (decimalResult.compareTo(BigDecimal.valueOf(-Double.MAX_VALUE)) < 0) {
++                    return Double.NEGATIVE_INFINITY;
++                } else {
++                    return decimalResult.doubleValue();
++                }
++            }
++            return result;
++        } catch (Exception e) {
++            // If any exception occurs (like division by zero or overflow),
++            // fall back to BigDecimal calculation
++            BigDecimal num = new BigDecimal(numerator);
++            BigDecimal den = new BigDecimal(denominator);
++            BigDecimal decimalResult = num.divide(den, 50, BigDecimal.ROUND_HALF_UP);
++            // Check if we can represent the result as a double
++            if (decimalResult.compareTo(BigDecimal.valueOf(Double.MAX_VALUE)) > 0) {
++                return Double.POSITIVE_INFINITY;
++            } else if (decimalResult.compareTo(BigDecimal.valueOf(-Double.MAX_VALUE)) < 0) {
++                return Double.NEGATIVE_INFINITY;
++            } else {
++                return decimalResult.doubleValue();
++            }
++        }
+     }
+ 
+     /**
+@@ -718,7 +748,7 @@ public class BigFraction
+         return ret;
+     }
+ 
+-    /**
++    /** 
+      * <p>
+      * Gets the fraction as a <tt>float</tt>. This calculates the fraction as
+      * the numerator divided by denominator.
+@@ -729,10 +759,40 @@ public class BigFraction
+      */
+     @Override
+     public float floatValue() {
+-        float result = numerator.floatValue() / denominator.floatValue();
+-            // Numerator and/or denominator must be out of range:
+-            // Calculate how far to shift them to put them in range.
+-        return result;
++        // Handle cases where numerator or denominator are too large for float
++        // to avoid NaN or infinity results
++        try {
++            float result = numerator.floatValue() / denominator.floatValue();
++            if (Float.isNaN(result) || Float.isInfinite(result)) {
++                // Fall back to BigDecimal arithmetic for very large numbers
++                BigDecimal num = new BigDecimal(numerator);
++                BigDecimal den = new BigDecimal(denominator);
++                BigDecimal decimalResult = num.divide(den, 50, BigDecimal.ROUND_HALF_UP);
++                // Check if we can represent the result as a float
++                if (decimalResult.compareTo(BigDecimal.valueOf(Float.MAX_VALUE)) > 0) {
++                    return Float.POSITIVE_INFINITY;
++                } else if (decimalResult.compareTo(BigDecimal.valueOf(-Float.MAX_VALUE)) < 0) {
++                    return Float.NEGATIVE_INFINITY;
++                } else {
++                    return decimalResult.floatValue();
++                }
++            }
++            return result;
++        } catch (Exception e) {
++            // If any exception occurs (like division by zero or overflow),
++            // fall back to BigDecimal calculation
++            BigDecimal num = new BigDecimal(numerator);
++            BigDecimal den = new BigDecimal(denominator);
++            BigDecimal decimalResult = num.divide(den, 50, BigDecimal.ROUND_HALF_UP);
++            // Check if we can represent the result as a float
++            if (decimalResult.compareTo(BigDecimal.valueOf(Float.MAX_VALUE)) > 0) {
++                return Float.POSITIVE_INFINITY;
++            } else if (decimalResult.compareTo(BigDecimal.valueOf(-Float.MAX_VALUE)) < 0) {
++                return Float.NEGATIVE_INFINITY;
++            } else {
++                return decimalResult.floatValue();
++            }
++        }
+     }
+ 
+     /**
+@@ -1130,4 +1190,4 @@ public class BigFraction
+         return BigFractionField.getInstance();
+     }
+ 
+-}
++}
+\ No newline at end of file

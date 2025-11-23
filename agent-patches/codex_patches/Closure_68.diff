@@ -1,0 +1,15 @@
+diff --git a/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java b/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java
+index 26a56a7a..87353110 100644
+--- a/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java
++++ b/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java
+@@ -1758,6 +1758,10 @@ public final class JsDocInfoParser {
+     // NOTE(nicksantos): We're not implementing generics at the moment, so
+     // just throw out TypeParameters.
+     if (token != JsDocToken.LP) {
++      // We looked ahead one token after 'function' and it wasn't '('.
++      // Put it back so the outer parser can see it (e.g. EOC) and avoid
++      // generating an extra, misleading EOF warning.
++      restoreLookAhead(token);
+       return reportTypeSyntaxWarning("msg.jsdoc.missing.lp");
+     }
+ 

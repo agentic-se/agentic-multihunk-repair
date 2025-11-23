@@ -1,0 +1,21 @@
+diff --git a/src/main/java/org/apache/commons/compress/utils/ArchiveUtils.java b/src/main/java/org/apache/commons/compress/utils/ArchiveUtils.java
+index 0a755ce3..1ebb0536 100644
+--- a/src/main/java/org/apache/commons/compress/utils/ArchiveUtils.java
++++ b/src/main/java/org/apache/commons/compress/utils/ArchiveUtils.java
+@@ -284,7 +284,11 @@ public class ArchiveUtils {
+             }
+             sb.append('?');
+         }
+-        return sb.toString();
++        String result = sb.toString();
++        if (result.length() > 255) {
++            result = result.substring(0, 252) + "...";
++        }
++        return result;
+     }
+ 
+ }
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

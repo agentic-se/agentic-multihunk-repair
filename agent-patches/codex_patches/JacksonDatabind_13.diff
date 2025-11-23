@@ -1,0 +1,74 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ObjectIdValueProperty.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ObjectIdValueProperty.java
+index 921904f4e..52a787d6c 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ObjectIdValueProperty.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ObjectIdValueProperty.java
+@@ -81,15 +81,20 @@ public final class ObjectIdValueProperty
+     public Object deserializeSetAndReturn(JsonParser jp,
+     		DeserializationContext ctxt, Object instance) throws IOException
+     {
+-        // note: no null checks (unlike usually); deserializer should fail if one found
+         Object id = _valueDeserializer.deserialize(jp, ctxt);
+ 
+-        /* 02-Apr-2015, tatu: Actually, as per [databind#742], let it be;
+-         *  missing or null id is needed for some cases, such as cases where id
+-         *  will be generated externally, at a later point, and is not available
+-         *  quite yet. Typical use case is with DB inserts.
++        /* 02-Apr-2015, tatu: As per [databind#742], allow missing or null id.
++         * If id is null, do not register/bind this instance under ObjectId.
++         * Still set the logical id property if one exists (as null).
+          */
+-        
++        if (id == null) {
++            SettableBeanProperty idProp = _objectIdReader.idProperty;
++            if (idProp != null) {
++                return idProp.setAndReturn(instance, null);
++            }
++            return instance;
++        }
++
+         ReadableObjectId roid = ctxt.findObjectId(id, _objectIdReader.generator, _objectIdReader.resolver);
+         roid.bindItem(instance);
+         // also: may need to set a property value as well
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/PropertyValueBuffer.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/PropertyValueBuffer.java
+index 7e06b6068..d0e7988fa 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/PropertyValueBuffer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/PropertyValueBuffer.java
+@@ -111,18 +111,16 @@ public final class PropertyValueBuffer
+     public Object handleIdValue(final DeserializationContext ctxt, Object bean) throws IOException
+     {
+         if (_objectIdReader != null) {
+-            if (_idValue != null) {
+-                ReadableObjectId roid = ctxt.findObjectId(_idValue, _objectIdReader.generator, _objectIdReader.resolver);
+-                roid.bindItem(bean);
+-                // also: may need to set a property value as well
+-                SettableBeanProperty idProp = _objectIdReader.idProperty;
+-                if (idProp != null) {
+-                    return idProp.setAndReturn(bean, _idValue);
+-                }
+-            } else {
+-                // TODO: is this an error case?
+-                throw ctxt.mappingException("No _idValue when handleIdValue called, on instance of "
+-                        +bean.getClass().getName());
++            if (_idValue == null) {
++                // As per [databind#742], allow missing/null Object Ids without failing
++                return bean;
++            }
++            ReadableObjectId roid = ctxt.findObjectId(_idValue, _objectIdReader.generator, _objectIdReader.resolver);
++            roid.bindItem(bean);
++            // also: may need to set a property value as well
++            SettableBeanProperty idProp = _objectIdReader.idProperty;
++            if (idProp != null) {
++                return idProp.setAndReturn(bean, _idValue);
+             }
+         }
+         return bean;
+@@ -152,4 +150,3 @@ public final class PropertyValueBuffer
+         _buffered = new PropertyValue.Map(_buffered, value, key);
+     }
+ }
+-
+
+
+# Untracked source files (not included in patch):
++ src/test/java/tmp/InetTest.class
++ src/test/java/tmp/InetTest.java

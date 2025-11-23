@@ -1,0 +1,18 @@
+--- a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+@@ -1,4 +1,11 @@
+-            if (!rawBase.isAssignableFrom(subclass)) {
+-                throw new IllegalArgumentException(String.format(
+-                        "Class %s not subtype of %s", subclass.getName(), baseType));
+-            }
++            // [databind#61]: Need to allow unboxing for primitives
++            if (rawBase.isPrimitive()) {
++                // 26-Sep-2016, tatu: This is the only case where wrapper is not
++                //   assignable from primitive, but is compatible
++                if (subclass == ClassUtil.wrapperType(rawBase)) {
++                    return baseType;
++                }
++            } else if (!rawBase.isAssignableFrom(subclass)) {
++                throw new IllegalArgumentException(String.format(
++                        "Class %s not subtype of %s", subclass.getName(), baseType));
++            }

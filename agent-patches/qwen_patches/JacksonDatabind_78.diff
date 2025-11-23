@@ -1,0 +1,43 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+index fd7b097bb..5f3983c3a 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+@@ -67,8 +67,21 @@ public class ClassNameIdResolver
+             // ... meaning that we really should never get here.
+             return null;
+         } catch (Exception e) {
+-            throw new IllegalArgumentException("Invalid type id '"+id+"' (for id type 'Id.class'): "+e.getMessage(), e);
++            throw new IllegalArgumentException("Invalid type id '" + id + "' (for id type 'Id.class'): " + e.getMessage(), e);
+         }
++        
++        // CVE-2017-7525: Security check for dangerous types
++        // Prevent deserialization of potentially dangerous types that could enable RCE
++        if (cls != null) {
++            String className = cls.getName();
++            // Check for dangerous types that could enable remote code execution
++            if (className.startsWith("com.sun.org.apache.xalan")) {
++                if (className.contains("TemplatesImpl")) {
++                    throw new JsonMappingException("Illegal type '" + className + "' to deserialize; prevented for security reasons");
++                }
++            }
++        }
++        
+         return tf.constructSpecializedType(_baseType, cls);
+     }
+     
+@@ -76,7 +89,7 @@ public class ClassNameIdResolver
+     /**********************************************************
+     /* Internal methods
+     /**********************************************************
+-     */
++    */
+     
+     protected final String _idFrom(Object value, Class<?> cls, TypeFactory typeFactory)
+     {
+@@ -145,4 +158,4 @@ public class ClassNameIdResolver
+     public String getDescForKnownTypeIds() {
+         return "class name used as type id";
+     }
+-}
++}
+\ No newline at end of file

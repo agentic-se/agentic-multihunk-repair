@@ -1,0 +1,106 @@
+diff --git a/src/com/google/javascript/jscomp/TypeCheck.java b/src/com/google/javascript/jscomp/TypeCheck.java
+index a752e76a..1833655c 100644
+--- a/src/com/google/javascript/jscomp/TypeCheck.java
++++ b/src/com/google/javascript/jscomp/TypeCheck.java
+@@ -901,12 +901,55 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
+       ObjectType type = ObjectType.cast(
+           objectJsType.restrictByNotNullOrUndefined());
+       if (type != null) {
++        // If the property already exists on the instance type and is not
++        // inferred, verify the assignment is compatible with the declared
++        // property type.
+         if (type.hasProperty(property) &&
+             !type.isPropertyTypeInferred(property) &&
+             !propertyIsImplicitCast(type, property)) {
+           validator.expectCanAssignToPropertyOf(
+               t, assign, getJSType(rvalue),
+               type.getPropertyType(property), object, property);
++        } else {
++          // The property does not exist (or is inferred) on the instance type.
++          // If this instance implements interfaces that declare this property
++          // on their prototypes, enforce that the assignment is compatible
++          // with the interface-declared property type.
++          FunctionType ctor = type.getConstructor();
++          if (ctor != null && ctor.isConstructor()) {
++            for (JSType implementedInterface : ctor.getImplementedInterfaces()) {
++              if (implementedInterface.isUnknownType() ||
++                  implementedInterface.isEmptyType()) {
++                continue;
++              }
++              ObjectType interfaceObj = implementedInterface.toObjectType();
++              if (interfaceObj == null) {
++                continue;
++              }
++              FunctionType interfaceCtor = interfaceObj.getConstructor();
++              if (interfaceCtor == null) {
++                continue;
++              }
++              ObjectType interfaceProto = interfaceCtor.getPrototype();
++              if (interfaceProto != null && interfaceProto.hasProperty(property)) {
++                JSType interfacePropType = interfaceProto.getPropertyType(property);
++                JSType rvalueType = getJSType(rvalue);
++                if (!rvalueType.canAssignTo(interfacePropType)) {
++                  compiler.report(t.makeError(
++                      assign,
++                      HIDDEN_INTERFACE_PROPERTY_MISMATCH,
++                      property,
++                      interfaceCtor.getTopMostDefiningType(property).toString(),
++                      interfacePropType.toString(),
++                      rvalueType.toString()));
++                }
++                // If any implemented interface defines the property, we've
++                // done the relevant check; no need to continue searching.
++                // Do not break here, to allow reporting against multiple
++                // interfaces if applicable.
++              }
++            }
++          }
+         }
+         return;
+       }
+@@ -1176,6 +1219,45 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
+     // verifying that the rvalue has the correct type
+     validator.expectCanAssignToPropertyOf(t, assign, getJSType(rvalue), type,
+         object, property);
++
++    // Additionally, if the owner object is an instance of a constructor that
++    // implements interfaces, ensure that the declared property type conforms
++    // to any matching interface property types.
++    JSType objectJsType = getJSType(object);
++    ObjectType instanceType = ObjectType.cast(
++        objectJsType.restrictByNotNullOrUndefined());
++    if (instanceType != null) {
++      FunctionType ctor = instanceType.getConstructor();
++      if (ctor != null && ctor.isConstructor()) {
++        for (JSType implementedInterface : ctor.getImplementedInterfaces()) {
++          if (implementedInterface.isUnknownType() ||
++              implementedInterface.isEmptyType()) {
++            continue;
++          }
++          ObjectType interfaceObj = implementedInterface.toObjectType();
++          if (interfaceObj == null) {
++            continue;
++          }
++          FunctionType interfaceCtor = interfaceObj.getConstructor();
++          if (interfaceCtor == null) {
++            continue;
++          }
++          ObjectType interfaceProto = interfaceCtor.getPrototype();
++          if (interfaceProto != null && interfaceProto.hasProperty(property)) {
++            JSType interfacePropType = interfaceProto.getPropertyType(property);
++            if (!type.canAssignTo(interfacePropType)) {
++              compiler.report(t.makeError(
++                  assign,
++                  HIDDEN_INTERFACE_PROPERTY_MISMATCH,
++                  property,
++                  interfaceCtor.getTopMostDefiningType(property).toString(),
++                  interfacePropType.toString(),
++                  type.toString()));
++            }
++          }
++        }
++      }
++    }
+   }
+ 
+   /**

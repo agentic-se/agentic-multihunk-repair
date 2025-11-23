@@ -1,0 +1,30 @@
+--- a/src/main/java/org/apache/commons/lang3/ArrayUtils.java
++++ b/src/main/java/org/apache/commons/lang3/ArrayUtils.java
+@@ -1,7 +1,7 @@
+-        } else {
+-            type = Object.class;
+-        }
+-        @SuppressWarnings("unchecked") // type must be T
+-        T[] newArray = (T[]) copyArrayGrow1(array, type);
+-        newArray[newArray.length - 1] = element;
+-        return newArray;
++        } else {
++            throw new IllegalArgumentException("Array and element cannot both be null.");
++        }
++        @SuppressWarnings("unchecked") // type must be T
++        T[] newArray = (T[]) copyArrayGrow1(array, type);
++        newArray[newArray.length - 1] = element;
++        return newArray;
+@@ -1,6 +1,6 @@
+-        } else {
+-            return (T[]) new Object[] { null };
+-        }
+-        @SuppressWarnings("unchecked") // the add method creates an array of type clss, which is type T
+-        final T[] newArray = (T[]) add(array, index, element, clss);
+-        return newArray;
++        } else {
++            throw new IllegalArgumentException("Array and element cannot both be null.");
++        }
++        @SuppressWarnings("unchecked") // the add method creates an array of type clss, which is type T
++        final T[] newArray = (T[]) add(array, index, element, clss);
++        return newArray;

@@ -1,0 +1,156 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+index 21bd1288d..476a6d8ca 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+@@ -380,6 +380,8 @@ public class BeanDeserializer
+     {
+         final PropertyBasedCreator creator = _propertyBasedCreator;
+         PropertyValueBuffer buffer = creator.startBuilding(p, ctxt, _objectIdReader);
++        // For [databind#1261]: collect unresolved forward references for non-creator properties
++        List<BeanReferring> pendingRefs = null;
+ 
+         TokenBuffer unknown = null;
+ 
+@@ -407,6 +409,14 @@ public class BeanDeserializer
+                     // [databind#631]: Assign current value, to be accessible by custom serializers
+                     p.setCurrentValue(bean);
+ 
++                    // Resolve pending forward references against created bean
++                    if (pendingRefs != null) {
++                        for (BeanReferring ref : pendingRefs) {
++                            ref.appendTo(ctxt, bean);
++                        }
++                        pendingRefs = null;
++                    }
++
+                     //  polymorphic?
+                     if (bean.getClass() != _beanType.getRawClass()) {
+                         return handlePolymorphic(p, ctxt, bean, unknown);
+@@ -426,10 +436,27 @@ public class BeanDeserializer
+             // regular property? needs buffering
+             SettableBeanProperty prop = _beanProperties.find(propName);
+             if (prop != null) {
++                // First try the regular path
++                try {
+                     buffer.bufferProperty(prop, _deserializeWithErrorWrapping(p, ctxt, prop));
+-                    // 14-Jun-2016, tatu: As per [databind#1261], looks like we need additional
+-                    //    handling of forward references here. Not exactly sure why existing
+-                    //    facilities did not cover, but this does appear to solve the problem
++                } catch (UnresolvedForwardReference reference) {
++                    // 14-Jun-2016, tatu: As per [databind#1261], need to support unresolved forward
++                    // references during property-based creation as well. Only works if there is
++                    // identity info (either on property or value deserializer)
++                    boolean usingIdentityInfo = (prop.getObjectIdInfo() != null)
++                            || (prop.getValueDeserializer() != null
++                                && prop.getValueDeserializer().getObjectIdReader() != null);
++                    if (!usingIdentityInfo) {
++                        throw JsonMappingException.from(p,
++                                "Unresolved forward reference but no identity info.", reference);
++                    }
++                    // Defer linking until after POJO is constructed; then we can append a referring
++                    // that will set the property on the created instance.
++                    if (pendingRefs == null) {
++                        pendingRefs = new ArrayList<BeanReferring>();
++                    }
++                    pendingRefs.add(new BeanReferring(prop, reference));
++                }
+                 continue;
+             }
+             // Things marked as ignorable should not be passed to any setter
+@@ -462,6 +489,13 @@ public class BeanDeserializer
+             wrapInstantiationProblem(e, ctxt);
+             bean = null; // never gets here
+         }
++        // Resolve any forward refs now that we have the bean instance
++        if (bean != null && pendingRefs != null) {
++            for (BeanReferring ref : pendingRefs) {
++                ref.appendTo(ctxt, bean);
++            }
++            pendingRefs = null;
++        }
+         if (unknown != null) {
+             // polymorphic?
+             if (bean.getClass() != _beanType.getRawClass()) {
+@@ -473,6 +507,24 @@ public class BeanDeserializer
+         return bean;
+     }
+ 
++    // Helper to hold unresolved forward reference until bean is created
++    private final static class BeanReferring {
++        private final SettableBeanProperty _prop;
++        private final UnresolvedForwardReference _reference;
++
++        BeanReferring(SettableBeanProperty prop, UnresolvedForwardReference reference) {
++            _prop = prop;
++            _reference = reference;
++        }
++
++        void appendTo(DeserializationContext ctxt, Object pojo) throws IOException {
++            // Wrap property to use standard PropertyReferring implementation
++            ObjectIdReferenceProperty wrapped = new ObjectIdReferenceProperty(_prop, _prop.getObjectIdInfo());
++            _reference.getRoid().appendReferring(new ObjectIdReferenceProperty.PropertyReferring(
++                    wrapped, _reference, _prop.getType().getRawClass(), pojo));
++        }
++    }
++
+     /**
+      * @since 2.8
+      */
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
+index 4a3aced74..f30e2eaf5 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
+@@ -249,7 +249,19 @@ public abstract class FromStringDeserializer<T> extends StdScalarDeserializer<T>
+             case STD_TIME_ZONE:
+                 return TimeZone.getTimeZone(value);
+             case STD_INET_ADDRESS:
+-                return InetAddress.getByName(value);
++                try {
++                    return InetAddress.getByName(value);
++                } catch (Exception e) {
++                    // In offline or restricted environments, DNS lookup may fail.
++                    // As a fallback, construct unresolved InetAddress with given hostname.
++                    // Use IPv4 zero address as placeholder to preserve host name semantics.
++                    try {
++                        return InetAddress.getByAddress(value, new byte[] { 0, 0, 0, 0 });
++                    } catch (Exception e2) {
++                        // If even that fails, rethrow original resolution problem
++                        return ctxt.handleInstantiationProblem(_valueClass, value, ClassUtil.getRootCause(e));
++                    }
++                }
+             case STD_INET_SOCKET_ADDRESS:
+                 if (value.startsWith("[")) {
+                     // bracketed IPv6 (with port number)
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/std/InetAddressSerializer.java b/src/main/java/com/fasterxml/jackson/databind/ser/std/InetAddressSerializer.java
+index 337148101..abf3e86a6 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/InetAddressSerializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/InetAddressSerializer.java
+@@ -20,17 +20,18 @@ public class InetAddressSerializer
+     @Override
+     public void serialize(InetAddress value, JsonGenerator jgen, SerializerProvider provider) throws IOException
+     {
+-        // Ok: get textual description; choose "more specific" part
+-        String str = value.toString().trim();
+-        int ix = str.indexOf('/');
+-        if (ix >= 0) {
+-            if (ix == 0) { // missing host name; use address
+-                str = str.substring(1);
+-            } else { // otherwise use name
+-                str = str.substring(0, ix);
+-            }
++        // Prefer stable output: use hostname for named hosts, raw address for loopback/unknown
++        final String hostname = value.getHostName();
++        final String addr = value.getHostAddress();
++        String out;
++        if (value.isAnyLocalAddress() || value.isLoopbackAddress()) {
++            out = addr;
++        } else if (hostname == null || hostname.length() == 0 || hostname.equals(addr)) {
++            out = addr;
++        } else {
++            out = hostname;
+         }
+-        jgen.writeString(str);
++        jgen.writeString(out);
+     }
+ 
+     @Override

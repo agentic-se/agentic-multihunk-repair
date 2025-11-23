@@ -1,0 +1,37 @@
+diff --git a/src/java/org/apache/commons/math/util/MathUtils.java b/src/java/org/apache/commons/math/util/MathUtils.java
+index d51ec7a9f..f988894a9 100644
+--- a/src/java/org/apache/commons/math/util/MathUtils.java
++++ b/src/java/org/apache/commons/math/util/MathUtils.java
+@@ -540,6 +540,13 @@ public final class MathUtils {
+         int u = p;
+         int v = q;
+         if ((u == 0) || (v == 0)) {
++            // Special case: gcd(Integer.MIN_VALUE, 0) and gcd(0, Integer.MIN_VALUE) 
++            // would result in 2^31 which is too large for int
++            if ((u == Integer.MIN_VALUE && v == 0) || (u == 0 && v == Integer.MIN_VALUE)) {
++                throw MathRuntimeException.createArithmeticException(
++                    "overflow: gcd({0}, {1}) is 2^31",
++                    new Object[] { p, q });
++            }
+             return (Math.abs(u) + Math.abs(v));
+         }
+         // keep u and v negative, as negative integers range down to
+@@ -547,6 +554,18 @@ public final class MathUtils {
+         // (i.e. we can't necessarily negate a negative number without
+         // overflow)
+         /* assert u!=0 && v!=0; */
++        // Check for overflow conditions before proceeding
++        if (u == Integer.MIN_VALUE && v == Integer.MIN_VALUE) {
++            throw MathRuntimeException.createArithmeticException(
++                "overflow: gcd({0}, {1}) is 2^31",
++                new Object[] { p, q });
++        }
++        // Special case for gcd(Integer.MIN_VALUE, 1) which can lead to overflow
++        if ((u == Integer.MIN_VALUE && v == 1) || (u == 1 && v == Integer.MIN_VALUE)) {
++            throw MathRuntimeException.createArithmeticException(
++                "overflow: gcd({0}, {1}) is 2^31",
++                new Object[] { p, q });
++        }
+         if (u > 0) {
+             u = -u;
+         } // make u negative

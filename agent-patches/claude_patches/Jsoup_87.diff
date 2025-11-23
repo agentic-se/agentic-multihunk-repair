@@ -1,0 +1,82 @@
+diff --git a/src/main/java/org/jsoup/nodes/Element.java b/src/main/java/org/jsoup/nodes/Element.java
+index 9652120..2552fdd 100644
+--- a/src/main/java/org/jsoup/nodes/Element.java
++++ b/src/main/java/org/jsoup/nodes/Element.java
+@@ -26,6 +26,7 @@ import java.util.Set;
+ import java.util.regex.Pattern;
+ import java.util.regex.PatternSyntaxException;
+ 
++import static org.jsoup.internal.Normalizer.lowerCase;
+ import static org.jsoup.internal.Normalizer.normalize;
+ 
+ /**
+@@ -135,8 +136,11 @@ public class Element extends Node {
+     /**
+      * Get the normalized name of this Element's tag. This will always be the lowercased version of the tag, regardless
+      * of the tag case preserving setting of the parser.
+-     * @return
++     * @return the normalized tag name (lowercase)
+      */
++    public String normalName() {
++        return lowerCase(tag.getName());
++    }
+ 
+     /**
+      * Change the tag of this element. For example, convert a {@code <span>} to a {@code <div>} with
+@@ -146,7 +150,7 @@ public class Element extends Node {
+      * @return this element, for chaining
+      */
+     public Element tagName(String tagName) {
+-        Validate.notEmpty(tagName, "Tag name must not be empty.");
++        Validate.notNull(tagName, "Tag name must not be empty.");
+         tag = Tag.valueOf(tagName, NodeUtils.parser(this).settings()); // maintains the case option of the original parse
+         return this;
+     }
+diff --git a/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java b/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
+index 1bffec7..c519fc1 100644
+--- a/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
++++ b/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
+@@ -312,7 +312,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
+     Element getFromStack(String elName) {
+         for (int pos = stack.size() -1; pos >= 0; pos--) {
+             Element next = stack.get(pos);
+-            if (next.nodeName().equals(elName)) {
++            if (next.normalName().equals(elName)) {
+                 return next;
+             }
+         }
+@@ -686,7 +686,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
+             Element next = formattingElements.get(pos);
+             if (next == null) // scope marker
+                 break;
+-            else if (next.nodeName().equals(nodeName))
++            else if (next.normalName().equals(nodeName))
+                 return next;
+         }
+         return null;
+diff --git a/src/main/java/org/jsoup/parser/Tag.java b/src/main/java/org/jsoup/parser/Tag.java
+index 25488df..28e48f3 100644
+--- a/src/main/java/org/jsoup/parser/Tag.java
++++ b/src/main/java/org/jsoup/parser/Tag.java
+@@ -56,13 +56,13 @@ public class Tag {
+         Tag tag = tags.get(tagName);
+ 
+         if (tag == null) {
+-            tagName = settings.normalizeTag(tagName);
+-            Validate.notEmpty(tagName);
+-            tag = tags.get(tagName);
++            String normalName = settings.normalizeTag(tagName);
++            Validate.notEmpty(normalName);
++            tag = tags.get(normalName);
+ 
+             if (tag == null) {
+                 // not defined: create default; go anywhere, do anything! (incl be inside a <p>)
+-                tag = new Tag(tagName);
++                tag = new Tag(normalName);
+                 tag.isBlock = false;
+             }
+         }
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

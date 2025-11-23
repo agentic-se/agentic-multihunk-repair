@@ -1,0 +1,63 @@
+diff --git a/src/org/mockito/Mockito.java b/src/org/mockito/Mockito.java
+index a81955d6f..e99ba9553 100644
+--- a/src/org/mockito/Mockito.java
++++ b/src/org/mockito/Mockito.java
+@@ -4,6 +4,7 @@
+  */
+ package org.mockito;
+ 
++import org.mockito.exceptions.misusing.FriendlyReminderException;
+ import org.mockito.internal.MockitoCore;
+ import org.mockito.internal.creation.MockSettingsImpl;
+ import org.mockito.internal.debugging.MockitoDebuggerImpl;
+@@ -2160,6 +2161,10 @@ public class Mockito extends Matchers {
+      * @return verification mode
+      */
+     public static VerificationWithTimeout timeout(long millis) {
++        if (millis < 0) {
++            throw new FriendlyReminderException("Don't panic! I'm just a friendly reminder!\n" +
++                    "It is forbidden to use negative value for timeout.");
++        }
+         return new Timeout(millis, VerificationModeFactory.times(1));
+     }
+ 
+@@ -2200,6 +2205,10 @@ public class Mockito extends Matchers {
+      * @return verification mode
+      */
+     public static VerificationAfterDelay after(long millis) {
++        if (millis < 0) {
++            throw new FriendlyReminderException("Don't panic! I'm just a friendly reminder!\n" +
++                    "It is forbidden to use negative value for after.");
++        }
+         return new After(millis, VerificationModeFactory.times(1));
+     }
+ 
+diff --git a/src/org/mockito/internal/util/Timer.java b/src/org/mockito/internal/util/Timer.java
+index 4a51e5c8e..c6168be99 100644
+--- a/src/org/mockito/internal/util/Timer.java
++++ b/src/org/mockito/internal/util/Timer.java
+@@ -1,5 +1,6 @@
+ package org.mockito.internal.util;
+ 
++import org.mockito.exceptions.misusing.FriendlyReminderException;
+ 
+ public class Timer {
+ 
+@@ -7,9 +8,17 @@ public class Timer {
+     private long startTime = -1;
+ 
+     public Timer(long durationMillis) {
++        validateDuration(durationMillis);
+         this.durationMillis = durationMillis;
+     }
+ 
++    private void validateDuration(long durationMillis) {
++        if (durationMillis < 0) {
++            throw new FriendlyReminderException("Don't panic! I'm just a friendly reminder!\n" +
++                    "It is forbidden to use negative value for duration.");
++        }
++    }
++
+     /**
+      * Informs whether the timer is still counting down.
+      */

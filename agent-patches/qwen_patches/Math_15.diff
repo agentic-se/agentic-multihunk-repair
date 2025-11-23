@@ -1,0 +1,13 @@
+diff --git a/src/main/java/org/apache/commons/math3/util/FastMath.java b/src/main/java/org/apache/commons/math3/util/FastMath.java
+index d57132592..4091c0ca7 100644
+--- a/src/main/java/org/apache/commons/math3/util/FastMath.java
++++ b/src/main/java/org/apache/commons/math3/util/FastMath.java
+@@ -1538,7 +1538,7 @@ public class FastMath {
+         /* Handle special case x<0 */
+         if (x < 0) {
+             // y is an even integer in this case
+-            if (y >= TWO_POWER_52 || y <= -TWO_POWER_52) {
++            if (y >= 2*TWO_POWER_52 || y <= -2*TWO_POWER_52) {
+                 return pow(-x, y);
+             }
+ 

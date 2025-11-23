@@ -1,0 +1,134 @@
+--- a/src/main/java/org/jsoup/helper/StringUtil.java
++++ b/src/main/java/org/jsoup/helper/StringUtil.java
+@@ -1,13 +1,15 @@
+-            c = string.codePointAt(i);
+-            if (isActuallyWhitespace(c)) {
+-                if ((stripLeading && !reachedNonWhite) || lastWasWhite)
+-                    continue;
+-                accum.append(' ');
+-                lastWasWhite = true;
+-            }
+-            else {
+-                accum.appendCodePoint(c);
+-                lastWasWhite = false;
+-                reachedNonWhite = true;
+-            }
+-        }
++            c = string.codePointAt(i);
++            if (c == 0xAD) { // soft hyphen, skip
++                continue;
++            } else if (isActuallyWhitespace(c)) {
++                if ((stripLeading && !reachedNonWhite) || lastWasWhite)
++                    continue;
++                accum.append(' ');
++                lastWasWhite = true;
++            }
++            else {
++                accum.appendCodePoint(c);
++                lastWasWhite = false;
++                reachedNonWhite = true;
++            }
++        }
+@@ -1,15 +1,13 @@
+-            c = string.codePointAt(i);
+-            if (c == 0xAD) { // soft hyphen, skip
+-                continue;
+-            } else if (isActuallyWhitespace(c)) {
+-                if ((stripLeading && !reachedNonWhite) || lastWasWhite)
+-                    continue;
+-                accum.append(' ');
+-                lastWasWhite = true;
+-            }
+-            else {
+-                accum.appendCodePoint(c);
+-                lastWasWhite = false;
+-                reachedNonWhite = true;
+-            }
+-        }
++            c = string.codePointAt(i);
++            if (isActuallyWhitespace(c)) {
++                if ((stripLeading && !reachedNonWhite) || lastWasWhite)
++                    continue;
++                accum.append(' ');
++                lastWasWhite = true;
++            }
++            else {
++                accum.appendCodePoint(c);
++                lastWasWhite = false;
++                reachedNonWhite = true;
++            }
++        }
+@@ -1,13 +1,15 @@
+-            c = string.codePointAt(i);
+-            if (isActuallyWhitespace(c)) {
+-                if ((stripLeading && !reachedNonWhite) || lastWasWhite)
+-                    continue;
+-                accum.append(' ');
+-                lastWasWhite = true;
+-            }
+-            else {
+-                accum.appendCodePoint(c);
+-                lastWasWhite = false;
+-                reachedNonWhite = true;
+-            }
+-        }
++            c = string.codePointAt(i);
++            if (c == 0xAD || c == 0x200B || c == 0x200C || c == 0x200D) { // soft hyphen, zero width space, zero width non-joiner, zero width joiner
++                continue;
++            } else if (isActuallyWhitespace(c)) {
++                if ((stripLeading && !reachedNonWhite) || lastWasWhite)
++                    continue;
++                accum.append(' ');
++                lastWasWhite = true;
++            }
++            else {
++                accum.appendCodePoint(c);
++                lastWasWhite = false;
++                reachedNonWhite = true;
++            }
++        }
+
+--- a/src/test/java/org/jsoup/nodes/TextNodeTest.java
++++ b/src/test/java/org/jsoup/nodes/TextNodeTest.java
+@@ -1,6 +1,14 @@
+-    @Test public void testWithSupplementaryCharacter(){
+-        Document doc = Jsoup.parse(new String(Character.toChars(135361)));
+-        TextNode t = doc.body().textNodes().get(0);
+-        assertEquals(new String(Character.toChars(135361)), t.outerHtml().trim());
+-    }
+-}
++    @Test
++    public void testIfShyIsStripped(){
++        String htmlwithSHY = "<html><body>quite&shy;a&shy;long&shy;word</body></html>";
++        Document parse = Jsoup.parse(htmlwithSHY);
++        String text = parse.body().text();
++        assertEquals("quitealongword", text);
++    }
++
++    @Test public void testWithSupplementaryCharacter(){
++        Document doc = Jsoup.parse(new String(Character.toChars(135361)));
++        TextNode t = doc.body().textNodes().get(0);
++        assertEquals(new String(Character.toChars(135361)), t.outerHtml().trim());
++    }
++}
+@@ -1,14 +1,6 @@
+-    @Test
+-    public void testIfShyIsStripped(){
+-        String htmlwithSHY = "<html><body>quite&shy;a&shy;long&shy;word</body></html>";
+-        Document parse = Jsoup.parse(htmlwithSHY);
+-        String text = parse.body().text();
+-        assertEquals("quitealongword", text);
+-    }
+-
+-    @Test public void testWithSupplementaryCharacter(){
+-        Document doc = Jsoup.parse(new String(Character.toChars(135361)));
+-        TextNode t = doc.body().textNodes().get(0);
+-        assertEquals(new String(Character.toChars(135361)), t.outerHtml().trim());
+-    }
+-}
++    @Test public void testWithSupplementaryCharacter(){
++        Document doc = Jsoup.parse(new String(Character.toChars(135361)));
++        TextNode t = doc.body().textNodes().get(0);
++        assertEquals(new String(Character.toChars(135361)), t.outerHtml().trim());
++    }
++}

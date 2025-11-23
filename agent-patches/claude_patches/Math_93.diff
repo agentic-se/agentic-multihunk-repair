@@ -1,0 +1,31 @@
+diff --git a/src/java/org/apache/commons/math/util/MathUtils.java b/src/java/org/apache/commons/math/util/MathUtils.java
+index 7d8aa4d50..6384c61a0 100644
+--- a/src/java/org/apache/commons/math/util/MathUtils.java
++++ b/src/java/org/apache/commons/math/util/MathUtils.java
+@@ -342,8 +342,10 @@ public final class MathUtils {
+      * @throws IllegalArgumentException if n < 0
+      */
+     public static long factorial(final int n) {
+-        long result = Math.round(factorialDouble(n));
+-        if (result == Long.MAX_VALUE) {
++        if (n < 0) {
++            throw new IllegalArgumentException("must have n >= 0 for n!");
++        }
++        if (n > 20) {
+             throw new ArithmeticException(
+                     "factorial value is too large to fit in a long");
+         }
+@@ -374,6 +376,9 @@ public final class MathUtils {
+         if (n < 0) {
+             throw new IllegalArgumentException("must have n >= 0 for n!");
+         }
++        if (n < 21) {
++            return (double) factorials[n];
++        }
+         return Math.floor(Math.exp(factorialLog(n)) + 0.5);
+     }
+ 
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

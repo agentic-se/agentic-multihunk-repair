@@ -1,0 +1,45 @@
+diff --git a/src/com/google/javascript/jscomp/TypeCheck.java b/src/com/google/javascript/jscomp/TypeCheck.java
+index 1f7438c3..91dceada 100644
+--- a/src/com/google/javascript/jscomp/TypeCheck.java
++++ b/src/com/google/javascript/jscomp/TypeCheck.java
+@@ -1465,12 +1465,34 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
+         SuggestionPair pair =
+             getClosestPropertySuggestion(objectType, propName);
+         if (pair != null && pair.distance * 4 < propName.length()) {
++          // For error reporting, we want the type name without property details
++          JSType firstChildType = getJSType(n.getFirstChild());
++          String typeName = firstChildType.toString();
++          // Clean up the type name if it contains null information 
++          if (typeName.contains("(null") && typeName.contains(")")) {
++            int start = typeName.indexOf('(');
++            int end = typeName.indexOf(')');
++            if (start >= 0 && end > start) {
++              typeName = typeName.substring(0, start);
++            }
++          }
+           report(t, n, INEXISTENT_PROPERTY_WITH_SUGGESTION, propName,
+-              validator.getReadableJSTypeName(n.getFirstChild(), true),
++              typeName,
+               pair.suggestion);
+         } else {
++          // Same approach for the non-suggestion case
++          JSType firstChildType = getJSType(n.getFirstChild());
++          String typeName = firstChildType.toString();
++          // Clean up the type name if it contains null information 
++          if (typeName.contains("(null") && typeName.contains(")")) {
++            int start = typeName.indexOf('(');
++            int end = typeName.indexOf(')');
++            if (start >= 0 && end > start) {
++              typeName = typeName.substring(0, start);
++            }
++          }
+           report(t, n, INEXISTENT_PROPERTY, propName,
+-              validator.getReadableJSTypeName(n.getFirstChild(), true));
++              typeName);
+         }
+       }
+     }
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

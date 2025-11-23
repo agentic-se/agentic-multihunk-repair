@@ -1,0 +1,158 @@
+diff --git a/src/com/google/javascript/jscomp/FunctionTypeBuilder.java b/src/com/google/javascript/jscomp/FunctionTypeBuilder.java
+index 8ac4f113..f77ca7ae 100644
+--- a/src/com/google/javascript/jscomp/FunctionTypeBuilder.java
++++ b/src/com/google/javascript/jscomp/FunctionTypeBuilder.java
+@@ -196,12 +196,12 @@ final class FunctionTypeBuilder {
+    * Infer the return type from JSDocInfo.
+    */
+   FunctionTypeBuilder inferReturnType(@Nullable JSDocInfo info) {
+-    returnType = info != null && info.hasReturnType() ?
+-        info.getReturnType().evaluate(scope, typeRegistry) :
+-        typeRegistry.getNativeType(UNKNOWN_TYPE);
+-    if (templateTypeName != null &&
+-        returnType.restrictByNotNullOrUndefined().isTemplateType()) {
+-      reportError(TEMPLATE_TYPE_EXPECTED, fnName);
++    if (info != null && info.hasReturnType()) {
++      returnType = info.getReturnType().evaluate(scope, typeRegistry);
++      if (templateTypeName != null &&
++          returnType.restrictByNotNullOrUndefined().isTemplateType()) {
++        reportError(TEMPLATE_TYPE_EXPECTED, fnName);
++      }
+     }
+     return this;
+   }
+@@ -210,7 +210,122 @@ final class FunctionTypeBuilder {
+    * If we haven't found a return value yet, try to look at the "return"
+    * statements in the function.
+    */
++  FunctionTypeBuilder inferReturnStatementsAsLastResort() {
++    if (returnType == null && sourceNode != null) {
++      // Don't infer return type for functions defined in externs
++      // Externs are type declarations, not implementations
++      if (sourceName != null && sourceName.contains("externs")) {
++        return this;
++      }
++
++      // Don't infer return type for functions that are already registered
++      // (like built-in types)
++      if (isConstructor && typeRegistry.getType(fnName) != null) {
++        return this;
++      }
++
++      // Check if all return statements in the function are void (no value)
++      if (allReturnsAreVoid(sourceNode)) {
++        returnType = typeRegistry.getNativeType(VOID_TYPE);
++      }
++    }
++    return this;
++  }
++
++  /**
++   * Check if all return statements in a function are void (have no return value).
++   * Only returns true if:
++   * 1. There are NO return statements at all (function completes without returning), OR
++   * 2. There are ONLY empty return statements (return;)
++   *
++   * Returns false if there are any return statements with values.
++   *
++   * @param fn The function node
++   * @return true if all code paths that return are void, false otherwise
++   */
++  private boolean allReturnsAreVoid(Node fn) {
++    // Get the function body (third child of FUNCTION node)
++    if (fn.getType() != Token.FUNCTION) {
++      return false;
++    }
+ 
++    Node body = fn.getLastChild();
++
++    // Don't infer void for functions with no body node
++    if (body == null) {
++      return false;
++    }
++
++    // Don't infer void for functions with empty bodies if they're interfaces
++    // Interface methods are often just stubs
++    if (!body.hasChildren() && isInterface) {
++      return false;
++    }
++
++    return allReturnsAreVoidHelper(body);
++  }
++
++  /**
++   * Helper method to recursively check if all return statements are void.
++   * Returns:
++   * - false if there are any return statements with values
++   * - true otherwise (no returns, or only empty returns)
++   */
++  private boolean allReturnsAreVoidHelper(Node n) {
++    if (n == null) {
++      return true;
++    }
++
++    if (n.getType() == Token.RETURN) {
++      // If return has a child, it's returning a value
++      if (n.hasChildren()) {
++        return false;
++      }
++      // Empty return is void
++      return true;
++    }
++
++    // Don't traverse into nested functions
++    if (n.getType() == Token.FUNCTION) {
++      return true;
++    }
++
++    // Recursively check all children
++    for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
++      if (!allReturnsAreVoidHelper(child)) {
++        return false;
++      }
++    }
++
++    return true;
++  }
++
++  /**
++   * Check if a function has at least one return statement (even if empty).
++   */
++  private boolean hasAnyReturnStatements(Node n) {
++    if (n == null) {
++      return false;
++    }
++
++    if (n.getType() == Token.RETURN) {
++      return true;
++    }
++
++    // Don't traverse into nested functions
++    if (n.getType() == Token.FUNCTION) {
++      return false;
++    }
++
++    // Recursively check all children
++    for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
++      if (hasAnyReturnStatements(child)) {
++        return true;
++      }
++    }
++
++    return false;
++  }
+ 
+   /**
+    * Infer the role of the function (whether it's a constructor or interface)
+@@ -470,6 +585,11 @@ final class FunctionTypeBuilder {
+    * Builds the function type, and puts it in the registry.
+    */
+   FunctionType buildAndRegister() {
++    if (returnType == null) {
++      // Try to infer return type from return statements before defaulting to unknown
++      inferReturnStatementsAsLastResort();
++    }
++
+     if (returnType == null) {
+       returnType = typeRegistry.getNativeType(UNKNOWN_TYPE);
+     }

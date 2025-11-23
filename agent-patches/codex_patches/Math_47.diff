@@ -1,0 +1,26 @@
+diff --git a/src/main/java/org/apache/commons/math/complex/Complex.java b/src/main/java/org/apache/commons/math/complex/Complex.java
+index bebfead56..1ba9d6c83 100644
+--- a/src/main/java/org/apache/commons/math/complex/Complex.java
++++ b/src/main/java/org/apache/commons/math/complex/Complex.java
+@@ -254,7 +254,9 @@ public class Complex implements FieldElement<Complex>, Serializable  {
+         }
+ 
+         if (divisor.getReal() == 0.0 && divisor.getImaginary() == 0.0) {
+-            return NaN;
++            // Division by zero: return NaN only if numerator is also zero,
++            // otherwise return INF per documented behavior.
++            return (this.getReal() == 0.0 && this.getImaginary() == 0.0) ? NaN : INF;
+         }
+ 
+         if (divisor.isInfinite() && !isInfinite()) {
+@@ -290,7 +292,9 @@ public class Complex implements FieldElement<Complex>, Serializable  {
+             return NaN;
+         }
+         if (divisor == 0d) {
+-            return NaN;
++            // Division by zero: return NaN only if numerator is also zero,
++            // otherwise return INF per documented behavior.
++            return (this.getReal() == 0.0 && this.getImaginary() == 0.0) ? NaN : INF;
+         }
+         if (Double.isInfinite(divisor)) {
+             return !isInfinite() ? ZERO : NaN;

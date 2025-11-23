@@ -1,0 +1,48 @@
+diff --git a/src/main/java/org/apache/commons/math/complex/Complex.java b/src/main/java/org/apache/commons/math/complex/Complex.java
+index 8d28c5ffd..032324941 100644
+--- a/src/main/java/org/apache/commons/math/complex/Complex.java
++++ b/src/main/java/org/apache/commons/math/complex/Complex.java
+@@ -1015,10 +1015,18 @@ public class Complex implements FieldElement<Complex>, Serializable  {
+      * @since 1.2
+      */
+     public Complex tan() {
+-        if (isNaN) {
++        if (isNaN || Double.isInfinite(real)) {
+             return NaN;
+         }
+ 
++        if (Double.isInfinite(imaginary)) {
++            return createComplex(0.0, FastMath.copySign(1.0, imaginary));
++        }
++
++        if (FastMath.abs(imaginary) > 20.0) {
++            return createComplex(0.0, FastMath.copySign(1.0, imaginary));
++        }
++
+         double real2 = 2.0 * real;
+         double imaginary2 = 2.0 * imaginary;
+         double d = FastMath.cos(real2) + FastMath.cosh(imaginary2);
+@@ -1060,9 +1068,18 @@ public class Complex implements FieldElement<Complex>, Serializable  {
+      * @since 1.2
+      */
+     public Complex tanh() {
+-        if (isNaN) {
++        if (isNaN || Double.isInfinite(imaginary)) {
+             return NaN;
+         }
++
++        if (Double.isInfinite(real)) {
++            return createComplex(FastMath.copySign(1.0, real), 0.0);
++        }
++
++        if (FastMath.abs(real) > 20.0) {
++            return createComplex(FastMath.copySign(1.0, real), 0.0);
++        }
++
+         double real2 = 2.0 * real;
+         double imaginary2 = 2.0 * imaginary;
+         double d = FastMath.cosh(real2) + FastMath.cos(imaginary2);
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

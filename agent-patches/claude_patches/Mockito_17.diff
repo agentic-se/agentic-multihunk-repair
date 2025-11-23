@@ -1,0 +1,32 @@
+diff --git a/src/org/mockito/internal/creation/MockSettingsImpl.java b/src/org/mockito/internal/creation/MockSettingsImpl.java
+index bf2cf3bf2..a1b399225 100644
+--- a/src/org/mockito/internal/creation/MockSettingsImpl.java
++++ b/src/org/mockito/internal/creation/MockSettingsImpl.java
+@@ -26,7 +26,7 @@ public class MockSettingsImpl implements MockSettings {
+         if (extraInterfaces == null || extraInterfaces.length == 0) {
+             new Reporter().extraInterfacesRequiresAtLeastOneInterface();
+         }
+-            
++
+         for (Class<?> i : extraInterfaces) {
+             if (i == null) {
+                 new Reporter().extraInterfacesDoesNotAcceptNullParameters();
+@@ -34,7 +34,17 @@ public class MockSettingsImpl implements MockSettings {
+                 new Reporter().extraInterfacesAcceptsOnlyInterfaces(i);
+             }
+         }
+-        this.extraInterfaces = extraInterfaces;
++
++        // Merge with existing extraInterfaces instead of replacing
++        if (this.extraInterfaces == null || this.extraInterfaces.length == 0) {
++            this.extraInterfaces = extraInterfaces;
++        } else {
++            // Combine existing and new interfaces
++            Class<?>[] combined = new Class<?>[this.extraInterfaces.length + extraInterfaces.length];
++            System.arraycopy(this.extraInterfaces, 0, combined, 0, this.extraInterfaces.length);
++            System.arraycopy(extraInterfaces, 0, combined, this.extraInterfaces.length, extraInterfaces.length);
++            this.extraInterfaces = combined;
++        }
+         return this;
+     }
+ 

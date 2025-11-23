@@ -1,0 +1,31 @@
+diff --git a/src/main/java/org/jsoup/select/Selector.java b/src/main/java/org/jsoup/select/Selector.java
+index 0e52007..c482c5c 100644
+--- a/src/main/java/org/jsoup/select/Selector.java
++++ b/src/main/java/org/jsoup/select/Selector.java
+@@ -136,7 +136,25 @@ public class Selector {
+     
+     private void combinator(char combinator) {
+         tq.consumeWhitespace();
+-        String subQuery = tq.consumeToAny(combinators);
++        // Consume the next sub-query up to the next top-level combinator.
++        // Must respect balanced [...] and (...) so that combinator-like chars inside
++        // attribute selectors (e.g., ~=) or pseudos are not misinterpreted.
++        StringBuilder sq = new StringBuilder();
++        while (!tq.isEmpty()) {
++            if (tq.matches("[")) {
++                sq.append('[').append(tq.chompBalanced('[', ']')).append(']');
++                continue;
++            }
++            if (tq.matches("(")) {
++                sq.append('(').append(tq.chompBalanced('(', ')')).append(')');
++                continue;
++            }
++            if (tq.matchesAny(combinators)) {
++                break; // reached next combinator at top level
++            }
++            sq.append(tq.consume());
++        }
++        String subQuery = sq.toString();
+         
+         Elements output;
+         if (combinator == '>')

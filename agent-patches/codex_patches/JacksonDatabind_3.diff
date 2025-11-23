@@ -1,0 +1,65 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java
+index fdfeecb2e..bf404ac78 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java
+@@ -63,7 +63,8 @@ public final class StringArrayDeserializer
+             if (t == JsonToken.VALUE_STRING) {
+                 value = jp.getText();
+             } else if (t == JsonToken.VALUE_NULL) {
+-                value = _elementDeserializer.getNullValue();
++                // For default String deserializer, null tokens map to Java null
++                value = null;
+             } else {
+                 value = _parseString(jp, ctxt);
+             }
+diff --git a/src/test/java/com/fasterxml/jackson/databind/deser/TestJdkTypes.java b/src/test/java/com/fasterxml/jackson/databind/deser/TestJdkTypes.java
+index ad3305de9..a2cf29bc9 100644
+--- a/src/test/java/com/fasterxml/jackson/databind/deser/TestJdkTypes.java
++++ b/src/test/java/com/fasterxml/jackson/databind/deser/TestJdkTypes.java
+@@ -245,8 +245,8 @@ public class TestJdkTypes extends BaseMapTest
+         InetAddress address = MAPPER.readValue(quote("127.0.0.1"), InetAddress.class);
+         assertEquals("127.0.0.1", address.getHostAddress());
+ 
+-        // should we try resolving host names? That requires connectivity... 
+-        final String HOST = "google.com";
++        // Use localhost to avoid external DNS dependency
++        final String HOST = "localhost";
+         address = MAPPER.readValue(quote(HOST), InetAddress.class);
+         assertEquals(HOST, address.getHostName());
+     }
+@@ -265,8 +265,8 @@ public class TestJdkTypes extends BaseMapTest
+         assertEquals("2001:db8:85a3:8d3:1319:8a2e:370:7348", ip6port.getAddress().getHostAddress());
+         assertEquals(443, ip6port.getPort());
+ 
+-        // should we try resolving host names? That requires connectivity...
+-        final String HOST = "www.google.com";
++        // Use localhost to avoid external DNS dependency
++        final String HOST = "localhost";
+         address = MAPPER.readValue(quote(HOST), InetSocketAddress.class);
+         assertEquals(HOST, address.getHostName());
+ 
+diff --git a/src/test/java/com/fasterxml/jackson/databind/ser/TestJdkTypes.java b/src/test/java/com/fasterxml/jackson/databind/ser/TestJdkTypes.java
+index 79865449d..9d0fa5b99 100644
+--- a/src/test/java/com/fasterxml/jackson/databind/ser/TestJdkTypes.java
++++ b/src/test/java/com/fasterxml/jackson/databind/ser/TestJdkTypes.java
+@@ -84,7 +84,8 @@ public class TestJdkTypes
+     public void testInetAddress() throws IOException
+     {
+         assertEquals(quote("127.0.0.1"), MAPPER.writeValueAsString(InetAddress.getByName("127.0.0.1")));
+-        assertEquals(quote("ning.com"), MAPPER.writeValueAsString(InetAddress.getByName("ning.com")));
++        // Use localhost to avoid external DNS dependency
++        assertEquals(quote("localhost"), MAPPER.writeValueAsString(InetAddress.getByName("localhost")));
+     }
+ 
+     public void testInetSocketAddress() throws IOException
+@@ -93,8 +94,8 @@ public class TestJdkTypes
+                 quote("127.0.0.1:8080"),
+                 MAPPER.writeValueAsString(new InetSocketAddress("127.0.0.1", 8080)));
+         assertEquals(
+-                quote("ning.com:6667"),
+-                MAPPER.writeValueAsString(new InetSocketAddress("ning.com", 6667)));
++                quote("localhost:6667"),
++                MAPPER.writeValueAsString(new InetSocketAddress("localhost", 6667)));
+         assertEquals(
+                 quote("[2001:db8:85a3:8d3:1319:8a2e:370:7348]:443"),
+                 MAPPER.writeValueAsString(new InetSocketAddress("2001:db8:85a3:8d3:1319:8a2e:370:7348", 443)));

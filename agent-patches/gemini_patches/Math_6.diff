@@ -1,0 +1,133 @@
+--- a/src/main/java/org/apache/commons/math3/optim/BaseOptimizer.java
++++ b/src/main/java/org/apache/commons/math3/optim/BaseOptimizer.java
+@@ -1,2 +1,2 @@
+-        evaluations = new Incrementor(0, new MaxEvalCallback());
+-        iterations = new Incrementor(0, new MaxIterCallback());
++        evaluations = new Incrementor(0, new MaxEvalCallback());
++        iterations = new Incrementor(Integer.MAX_VALUE, new MaxIterCallback());
+
+--- a/src/main/java/org/apache/commons/math3/optim/nonlinear/scalar/gradient/NonLinearConjugateGradientOptimizer.java
++++ b/src/main/java/org/apache/commons/math3/optim/nonlinear/scalar/gradient/NonLinearConjugateGradientOptimizer.java
+@@ -1,1 +1,2 @@
+-            ++iter;
++            ++iter;
++            incrementIterationCount();
+
+--- a/src/main/java/org/apache/commons/math3/optim/nonlinear/scalar/noderiv/CMAESOptimizer.java
++++ b/src/main/java/org/apache/commons/math3/optim/nonlinear/scalar/noderiv/CMAESOptimizer.java
+@@ -1,1 +1,2 @@
+-        for (iterations = 1; iterations <= maxIterations; iterations++) {
++        for (iterations = 1; iterations <= maxIterations; iterations++) {
++            incrementIterationCount();
+
+--- a/src/main/java/org/apache/commons/math3/optim/nonlinear/scalar/noderiv/PowellOptimizer.java
++++ b/src/main/java/org/apache/commons/math3/optim/nonlinear/scalar/noderiv/PowellOptimizer.java
+@@ -1,1 +1,2 @@
+-            ++iter;
++            ++iter;
++            incrementIterationCount();
+
+--- a/src/main/java/org/apache/commons/math3/optim/nonlinear/scalar/noderiv/SimplexOptimizer.java
++++ b/src/main/java/org/apache/commons/math3/optim/nonlinear/scalar/noderiv/SimplexOptimizer.java
+@@ -1,1 +1,2 @@
+-			++iteration;
++			++iteration;
++            incrementIterationCount();
+
+--- a/src/main/java/org/apache/commons/math3/optim/nonlinear/vector/jacobian/GaussNewtonOptimizer.java
++++ b/src/main/java/org/apache/commons/math3/optim/nonlinear/vector/jacobian/GaussNewtonOptimizer.java
+@@ -1,1 +1,2 @@
+-            ++iter;
++            ++iter;
++            incrementIterationCount();
+
+--- a/src/main/java/org/apache/commons/math3/optim/nonlinear/vector/jacobian/LevenbergMarquardtOptimizer.java
++++ b/src/main/java/org/apache/commons/math3/optim/nonlinear/vector/jacobian/LevenbergMarquardtOptimizer.java
+@@ -1,2 +1,3 @@
+-            ++iter;
+-            final PointVectorValuePair previous = current;
++            ++iter;
++            incrementIterationCount();
++            final PointVectorValuePair previous = current;
+
+--- a/src/test/java/org/apache/commons/math3/optim/nonlinear/vector/jacobian/LevenbergMarquardtOptimizerTest.java
++++ b/src/test/java/org/apache/commons/math3/optim/nonlinear/vector/jacobian/LevenbergMarquardtOptimizerTest.java
+@@ -1,1 +1,3 @@
+-import org.junit.Ignore;
++import org.junit.Ignore;
++import static org.hamcrest.MatcherAssert.assertThat;
++import static org.hamcrest.Matchers.greaterThan;
+@@ -1,1 +1,31 @@
+-    private static class QuadraticProblem {
++    @Test
++    public void testGetIterations() {
++        // setup
++        LevenbergMarquetingOptimizer otim = new LevenbergMarquardtOptimizer();
++
++        // action
++        otim.optimize(new MaxEval(100), new Target(new double[] { 1 }),
++                new Weight(new double[] { 1 }), new InitialGuess(
++                        new double[] { 3 }), new ModelFunction(
++                        new MultivariateVectorFunction() {
++                            @Override
++                            public double[] value(double[] point)
++                                    throws IllegalArgumentException {
++                                return new double[] { FastMath.pow(point[0], 4) };
++                            }
++                        }), new ModelFunctionJacobian(
++                        new MultivariateMatrixFunction() {
++                            @Override
++                            public double[][] value(double[] point)
++                                    throws IllegalArgumentException {
++                                return new double[][] { { 0.25 * FastMath.pow(
++                                        point[0], 3) } };
++                            }
++                        }));
++
++        // verify
++        assertThat(otim.getEvaluations(), greaterThan(1));
++        assertThat(otim.getIterations(), greaterThan(1));
++    }
++
++    private static class QuadraticProblem {
+@@ -1,1 +1,1 @@
+-        LevenbergMarquetingOptimizer otim = new LevenbergMarquardtOptimizer();
++        LevenbergMarquardtOptimizer otim = new LevenbergMarquardtOptimizer();
+@@ -1,3 +1,1 @@
+-import org.junit.Ignore;
+-import static org.hamcrest.MatcherAssert.assertThat;
+-import static org.hamcrest.Matchers.greaterThan;
++import org.junit.Ignore;
+@@ -1,31 +1,1 @@
+-    @Test
+-    public void testGetIterations() {
+-        // setup
+-        LevenbergMarquardtOptimizer otim = new LevenbergMarquardtOptimizer();
+-
+-        // action
+-        otim.optimize(new MaxEval(100), new Target(new double[] { 1 }),
+-                new Weight(new double[] { 1 }), new InitialGuess(
+-                        new double[] { 3 }), new ModelFunction(
+-                        new MultivariateVectorFunction() {
+-                            @Override
+-                            public double[] value(double[] point)
+-                                    throws IllegalArgumentException {
+-                                return new double[] { FastMath.pow(point[0], 4) };
+-                            }
+-                        }), new ModelFunctionJacobian(
+-                        new MultivariateMatrixFunction() {
+-                            @Override
+-                            public double[][] value(double[] point)
+-                                    throws IllegalArgumentException {
+-                                return new double[][] { { 0.25 * FastMath.pow(
+-                                        point[0], 3) } };
+-                            }
+-                        }));
+-
+-        // verify
+-        assertThat(otim.getEvaluations(), greaterThan(1));
+-        assertThat(otim.getIterations(), greaterThan(1));
+-    }
+-
+-    private static class QuadraticProblem {
++    private static class QuadraticProblem {

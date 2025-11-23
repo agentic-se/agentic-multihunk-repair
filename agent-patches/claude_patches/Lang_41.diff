@@ -1,0 +1,68 @@
+diff --git a/src/java/org/apache/commons/lang/ClassUtils.java b/src/java/org/apache/commons/lang/ClassUtils.java
+index d5de42b2..c1e715d7 100644
+--- a/src/java/org/apache/commons/lang/ClassUtils.java
++++ b/src/java/org/apache/commons/lang/ClassUtils.java
+@@ -188,10 +188,28 @@ public class ClassUtils {
+             return StringUtils.EMPTY;
+         }
+ 
+-
+         // Handle array encoding
+-            // Strip Object type encoding
++        StringBuilder arrayPrefix = new StringBuilder();
++
++        // Strip leading array markers
++        while (className.startsWith("[")) {
++            className = className.substring(1);
++            arrayPrefix.append("[]");
++        }
+ 
++        // Strip Object type encoding
++        if (className.startsWith("L") && className.endsWith(";")) {
++            className = className.substring(1, className.length() - 1);
++        }
++
++        // Handle primitive types
++        if (arrayPrefix.length() > 0 && className.length() == 1) {
++            // Map primitive abbreviations
++            String primitiveType = reverseAbbreviationMap.get(className);
++            if (primitiveType != null) {
++                return primitiveType + arrayPrefix.toString();
++            }
++        }
+ 
+         int lastDotIdx = className.lastIndexOf(PACKAGE_SEPARATOR_CHAR);
+         int innerIdx = className.indexOf(
+@@ -200,7 +218,7 @@ public class ClassUtils {
+         if (innerIdx != -1) {
+             out = out.replace(INNER_CLASS_SEPARATOR_CHAR, PACKAGE_SEPARATOR_CHAR);
+         }
+-        return out;
++        return out + arrayPrefix.toString();
+     }
+ 
+     // Package name
+@@ -247,7 +265,19 @@ public class ClassUtils {
+         }
+ 
+         // Strip array encoding
++        while (className.startsWith("[")) {
++            className = className.substring(1);
++        }
++
+         // Strip Object type encoding
++        if (className.startsWith("L") && className.endsWith(";")) {
++            className = className.substring(1, className.length() - 1);
++        }
++
++        // Primitives have no package
++        if (className.length() == 1) {
++            return StringUtils.EMPTY;
++        }
+ 
+         int i = className.lastIndexOf(PACKAGE_SEPARATOR_CHAR);
+         if (i == -1) {
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

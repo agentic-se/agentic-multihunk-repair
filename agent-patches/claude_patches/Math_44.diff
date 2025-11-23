@@ -1,0 +1,21 @@
+diff --git a/src/main/java/org/apache/commons/math/ode/AbstractIntegrator.java b/src/main/java/org/apache/commons/math/ode/AbstractIntegrator.java
+index 544124fe7..aa0417c87 100644
+--- a/src/main/java/org/apache/commons/math/ode/AbstractIntegrator.java
++++ b/src/main/java/org/apache/commons/math/ode/AbstractIntegrator.java
+@@ -340,6 +340,12 @@ public abstract class AbstractIntegrator implements FirstOrderIntegrator {
+                     System.arraycopy(eventY, 0, y, 0, y.length);
+                     computeDerivatives(eventT, y, yDot);
+                     resetOccurred = true;
++                    // accept the reset time for all other events
++                    for (final EventState state : eventsStates) {
++                        if (state != currentEvent) {
++                            state.stepAccepted(eventT, eventY);
++                        }
++                    }
+                     return eventT;
+                 }
+ 
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

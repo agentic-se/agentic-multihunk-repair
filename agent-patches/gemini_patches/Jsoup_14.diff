@@ -1,0 +1,587 @@
+--- a/src/main/java/org/jsoup/parser/Tokeniser.java
++++ b/src/main/java/org/jsoup/parser/Tokeniser.java
+@@ -1,2 +1,3 @@
+-    private Token.StartTag lastStartTag; // the last start tag emitted, to test appropriate end tag
+-    private boolean selfClosingFlagAcknowledged = true;
++    private Token.StartTag lastStartTag; // the last start tag emitted, to test appropriate end tag
++    private String expectedEndTagName; // for RCDATA sections, what the current end tag should be
++    private boolean selfClosingFlagAcknowledged = true;
+@@ -1,3 +1,6 @@
+-    boolean isAppropriateEndTagToken() {
+-        return tagPending.tagName.equals(lastStartTag.tagName);
+-    }
++    boolean isAppropriateEndTagToken() {
++        if (expectedEndTagName != null) {
++            return tagPending.tagName.equals(expectedEndTagName);
++        }
++        return tagPending.tagName.equals(lastStartTag.tagName);
++    }
+@@ -1,1 +1,1 @@
+-    private String expectedEndTagName; // for RCDATA sections, what the current end tag should be
++    String expectedEndTagName; // for RCDATA sections, what the current end tag should be
+@@ -1,1 +1,1 @@
+-    private boolean selfClosingFlagAcknowledged = true;
++    String expectedEndTagName; // for RCDATA sections, what the current end tag should be
+@@ -1,2 +1,3 @@
+-    private Token.StartTag lastStartTag; // the last start tag emitted, to test appropriate end tag
+-    private boolean selfClosingFlagAcknowledged = true;
++    private Token.StartTag lastStartTag; // the last start tag emitted, to test appropriate end tag
++    String expectedEndTagName; // for RCDATA sections, what the current end tag should be
++    private boolean selfClosingFlagAcknowledged = true;
+
+--- a/src/main/java/org/jsoup/parser/TokeniserState.java
++++ b/src/main/java/org/jsoup/parser/TokeniserState.java
+@@ -1,28 +1,31 @@
+-                    if (t.isAppropriateEndTagToken())
+-                        t.transition(BeforeAttributeName);
+-                    else
+-                        anythingElse(t, r);
+-                    break;
+-                case '/':
+-                    if (t.isAppropriateEndTagToken())
+-                        t.transition(SelfClosingStartTag);
+-                    else
+-                        anythingElse(t, r);
+-                    break;
+-                case '>':
+-                    if (t.isAppropriateEndTagToken()) {
+-                        t.emitTagPending();
+-                        t.transition(Data);
+-                    }
+-                    else
+-                        anythingElse(t, r);
+-                    break;
+-                default:
+-                    anythingElse(t, r);
+-            }
+-        }
+-
+-        private void anythingElse(Tokeniser t, CharacterReader r) {
+-            t.emit("</" + t.dataBuffer.toString());
+-            t.transition(Rcdata);
+-        }
++                    if (t.isAppropriateEndTagToken())
++                        t.transition(BeforeAttributeName);
++                    else
++                        t.emit("</" + t.dataBuffer.toString());
++                        r.unconsume(); // unconsume the character that was just consumed
++                        t.transition(Rcdata);
++                    break;
++                case '/':
++                    if (t.isAppropriateEndTagToken())
++                        t.transition(SelfClosingStartTag);
++                    else
++                        t.emit("</" + t.dataBuffer.toString());
++                        r.unconsume(); // unconsume the character that was just consumed
++                        t.transition(Rcdata);
++                    break;
++                case '>':
++                    if (t.isAppropriateEndTagToken()) {
++                        t.emitTagPending();
++                        t.transition(Data);
++                    }
++                    else
++                        t.emit("</" + t.dataBuffer.toString());
++                        r.unconsume(); // unconsume the character that was just consumed
++                        t.transition(Rcdata);
++                    break;
++                default:
++                    t.emit("</" + t.dataBuffer.toString());
++                    r.unconsume(); // unconsume the character that was just consumed
++                    t.transition(Rcdata);
++            }
++        }
+@@ -1,34 +1,34 @@
+-            char c = r.consume();
+-            switch (c) {
+-                case '\t':
+-                case '\n':
+-                case '\f':
+-                case ' ':
+-                    if (t.isAppropriateEndTagToken())
+-                        t.transition(BeforeAttributeName);
+-                    else
+-                        anythingElse(t, r);
+-                    break;
+-                case '/':
+-                    if (t.isAppropriateEndTagToken())
+-                        t.transition(SelfClosingStartTag);
+-                    else
+-                        anythingElse(t, r);
+-                    break;
+-                case '>':
+-                    if (t.isAppropriateEndTagToken()) {
+-                        t.emitTagPending();
+-                        t.transition(Data);
+-                    }
+-                    else
+-                        anythingElse(t, r);
+-                    break;
+-                default:
+-                    anythingElse(t, r);
+-            }
+-        }
+-
+-        private void anythingElse(Tokeniser t, CharacterReader r) {
+-            t.emit("</" + t.dataBuffer.toString());
+-            t.transition(Rcdata);
+-        }
++            char c = r.consume();
++            if (t.isAppropriateEndTagToken()) {
++                switch (c) {
++                    case '\t':
++                    case '\n':
++                    case '\f':
++                    case ' ':
++                        t.transition(BeforeAttributeName);
++                        break;
++                    case '/':
++                        t.transition(SelfClosingStartTag);
++                        break;
++                    case '>':
++                        t.emitTagPending();
++                        t.transition(Data);
++                        break;
++                    default:
++                        emitInappropriateEndTag(t, r, c);
++                        break;
++                }
++            } else { // Not an appropriate end tag
++                emitInappropriateEndTag(t, r, c);
++            }
++        }
++
++        private void emitInappropriateEndTag(Tokeniser t, CharacterReader r, char c) {
++            t.emit('<');
++            t.emit('/');
++            for (int i = 0; i < t.dataBuffer.length(); i++) {
++                t.emit(t.dataBuffer.charAt(i));
++            }
++            r.unconsume(); // Reconsume the current character 'c'
++            t.transition(Rcdata);
++        }
+@@ -1,34 +1,35 @@
+-            char c = r.consume();
+-            if (t.isAppropriateEndTagToken()) {
+-                switch (c) {
+-                    case '\t':
+-                    case '\n':
+-                    case '\f':
+-                    case ' ':
+-                        t.transition(BeforeAttributeName);
+-                        break;
+-                    case '/':
+-                        t.transition(SelfClosingStartTag);
+-                        break;
+-                    case '>':
+-                        t.emitTagPending();
+-                        t.transition(Data);
+-                        break;
+-                    default:
+-                        emitInappropriateEndTag(t, r, c);
+-                        break;
+-                }
+-            } else { // Not an appropriate end tag
+-                emitInappropriateEndTag(t, r, c);
+-            }
+-        }
+-
+-        private void emitInappropriateEndTag(Tokeniser t, CharacterReader r, char c) {
+-            t.emit('<');
+-            t.emit('/');
+-            for (int i = 0; i < t.dataBuffer.length(); i++) {
+-                t.emit(t.dataBuffer.charAt(i));
+-            }
+-            r.unconsume(); // Reconsume the current character 'c'
+-            t.transition(Rcdata);
+-        }
++            char c = r.consume();
++            if (t.isAppropriateEndTagToken()) {
++                switch (c) {
++                    case '\t':
++                    case '\n':
++                    case '\f':
++                    case ' ':
++                        t.transition(BeforeAttributeName);
++                        break;
++                    case '/':
++                        t.transition(SelfClosingStartTag);
++                        break;
++                    case '>':
++                        t.emitTagPending();
++                        t.expectedEndTagName = null; // Clear expected end tag name
++                        t.transition(Data);
++                        break;
++                    default:
++                        emitInappropriateEndTag(t, r, c);
++                        break;
++                }
++            } else { // Not an appropriate end tag
++                emitInappropriateEndTag(t, r, c);
++            }
++        }
++
++        private void emitInappropriateEndTag(Tokeniser t, CharacterReader r, char c) {
++            t.emit('<');
++            t.emit('/');
++            for (int i = 0; i < t.dataBuffer.length(); i++) {
++                t.emit(t.dataBuffer.charAt(i));
++            }
++            r.unconsume(); // Reconsume the current character 'c'
++            t.transition(Rcdata);
++        }
+@@ -1,9 +1,12 @@
+-            if (r.matches('/')) {
+-                t.createTempBuffer();
+-                t.advanceTransition(RCDATAEndTagOpen);
+-                // diverge from spec: got a start tag, but there's no appropriate end tag (</title>), so rather than
+-                // consuming to EOF; break out here
+-            } else {
+-                t.emit("<");
+-                t.transition(Rcdata);
+-            }
++            if (r.matches('/')) {
++                t.createTempBuffer();
++                t.advanceTransition(RCDATAEndTagOpen);
++            } else if (r.matchesLetter()) {
++                t.emit('<'); // Emit the '<' character
++                t.createTagPending(true); // Create a new start tag token
++                t.transition(TagName); // Transition to TagName state to parse the tag name
++            }
++            else {
++                t.emit("<");
++                t.transition(Rcdata);
++            }
+@@ -1,14 +1,16 @@
+-    RcdataLessthanSign {
+-        // from < in rcdata
+-        void read(Tokeniser t, CharacterReader r) {
+-            if (r.matches('/')) {
+-                t.createTempBuffer();
+-                t.advanceTransition(RCDATAEndTagOpen);
+-                // diverge from spec: got a start tag, but there's no appropriate end tag (</title>), so rather than
+-                // consuming to EOF; break out here
+-            } else {
+-                t.emit("<");
+-                t.transition(Rcdata);
+-            }
+-        }
+-    },
++    RcdataLessthanSign {
++        // from < in rcdata
++        void read(Tokeniser t, CharacterReader r) {
++            if (r.matches('/')) {
++                t.createTempBuffer();
++                t.advanceTransition(RCDATAEndTagOpen);
++            } else if (r.matchesLetter()) { // Potential start tag, e.g., <p>
++                t.createTagPending(true); // Create a new start tag token
++                t.transition(TagName); // Transition to TagName state to parse the tag name
++            }
++            else {
++                t.emit("<");
++                t.transition(Rcdata);
++            }
++        }
++    },
+@@ -1,34 +1,30 @@
+-            char c = r.consume();
+-            switch (c) {
+-                case '\t':
+-                case '\n':
+-                case '\f':
+-                case ' ':
+-                    if (t.isAppropriateEndTagToken())
+-                        t.transition(BeforeAttributeName);
+-                    else
+-                        anythingElse(t, r);
+-                    break;
+-                case '/':
+-                    if (t.isAppropriateEndTagToken())
+-                        t.transition(SelfClosingStartTag);
+-                    else
+-                        anythingElse(t, r);
+-                    break;
+-                case '>':
+-                    if (t.isAppropriateEndTagToken()) {
+-                        t.emitTagPending();
+-                        t.transition(Data);
+-                    }
+-                    else
+-                        anythingElse(t, r);
+-                    break;
+-                default:
+-                    anythingElse(t, r);
+-            }
+-        }
+-
+-        private void anythingElse(Tokeniser t, CharacterReader r) {
+-            t.emit("</" + t.dataBuffer.toString());
+-            t.transition(Rcdata);
+-        }
++            char c = r.consume();
++            if (t.isAppropriateEndTagToken()) {
++                switch (c) {
++                    case '\t':
++                    case '\n':
++                    case '\f':
++                    case ' ':
++                        t.transition(BeforeAttributeName);
++                        break;
++                    case '/':
++                        t.transition(SelfClosingStartTag);
++                        break;
++                    case '>':
++                        t.emitTagPending();
++                        t.transition(Data);
++                        break;
++                    default:
++                        emitInappropriateEndTag(t, r, c);
++                        break;
++                }
++            } else { // Not an appropriate end tag
++                emitInappropriateEndTag(t, r, c);
++            }
++        }
++
++        private void emitInappropriateEndTag(Tokeniser t, CharacterReader r, char c) {
++            t.emit("</" + t.dataBuffer.toString());
++            r.unconsume(); // Reconsume the current character 'c'
++            t.transition(Rcdata);
++        }
+@@ -1,14 +1,17 @@
+-    RcdataLessthanSign {
+-        // from < in rcdata
+-        void read(Tokeniser t, CharacterReader r) {
+-            if (r.matches('/')) {
+-                t.createTempBuffer();
+-                t.advanceTransition(RCDATAEndTagOpen);
+-                // diverge from spec: got a start tag, but there's no appropriate end tag (</title>), so rather than
+-                // consuming to EOF; break out here
+-            } else {
+-                t.emit("<");
+-                t.transition(Rcdata);
+-            }
+-        }
+-    },
++    RcdataLessthanSign {
++        // from < in rcdata
++        void read(Tokeniser t, CharacterReader r) {
++            if (r.matches('/')) {
++                t.createTempBuffer();
++                t.advanceTransition(RCDATAEndTagOpen);
++            } else if (r.matchesLetter()) { // Potential start tag, e.g., <p>
++                t.emit('<'); // Emit the '<' character
++                t.createTagPending(true); // Create a new start tag token
++                t.transition(TagName); // Transition to TagName state to parse the tag name
++            }
++            else {
++                t.emit("<");
++                t.transition(Rcdata);
++            }
++        }
++    },
+@@ -1,34 +1,30 @@
+-            char c = r.consume();
+-            switch (c) {
+-                case '\t':
+-                case '\n':
+-                case '\f':
+-                case ' ':
+-                    if (t.isAppropriateEndTagToken())
+-                        t.transition(BeforeAttributeName);
+-                    else
+-                        anythingElse(t, r);
+-                    break;
+-                case '/':
+-                    if (t.isAppropriateEndTagToken())
+-                        t.transition(SelfClosingStartTag);
+-                    else
+-                        anythingElse(t, r);
+-                    break;
+-                case '>':
+-                    if (t.isAppropriateEndTagToken()) {
+-                        t.emitTagPending();
+-                        t.transition(Data);
+-                    }
+-                    else
+-                        anythingElse(t, r);
+-                    break;
+-                default:
+-                    anythingElse(t, r);
+-            }
+-        }
+-
+-        private void anythingElse(Tokeniser t, CharacterReader r) {
+-            t.emit("</" + t.dataBuffer.toString());
+-            t.transition(Rcdata);
+-        }
++            char c = r.consume();
++            if (t.isAppropriateEndTagToken()) {
++                switch (c) {
++                    case '\t':
++                    case '\n':
++                    case '\f':
++                    case ' ':
++                        t.transition(BeforeAttributeName);
++                        break;
++                    case '/':
++                        t.transition(SelfClosingStartTag);
++                        break;
++                    case '>':
++                        t.emitTagPending();
++                        t.transition(Data);
++                        break;
++                    default:
++                        emitInappropriateEndTag(t, r, c);
++                        break;
++                }
++            } else { // Not an appropriate end tag
++                emitInappropriateEndTag(t, r, c);
++            }
++        }
++
++        private void emitInappropriateEndTag(Tokeniser t, CharacterReader r, char c) {
++            t.emit("</" + t.dataBuffer.toString());
++            r.unconsume(); // Reconsume the current character 'c'
++            t.transition(Rcdata);
++        }
+
+--- a/src/main/java/org/jsoup/parser/TreeBuilder.java
++++ b/src/main/java/org/jsoup/parser/TreeBuilder.java
+@@ -1,3 +1,5 @@
+-            String contextTag = context.tagName();
+-            if (StringUtil.in(contextTag, "title", "textarea"))
+-                tokeniser.transition(TokeniserState.Rcdata);
++            String contextTag = context.tagName();
++            if (StringUtil.in(contextTag, "title", "textarea")) {
++                tokeniser.transition(TokeniserState.Rcdata);
++                tokeniser.expectedEndTagName = contextTag;
++            }
+
+--- a/src/main/java/org/jsoup/parser/TreeBuilderState.java
++++ b/src/main/java/org/jsoup/parser/TreeBuilderState.java
+@@ -1,7 +1,13 @@
+-                    } else if (name.equals("head")) {
+-                        tb.error(this);
+-                        return false;
+-                    } else {
+-                        return anythingElse(t, tb);
+-                    }
+-                    break;
++                    } else if (name.equals("head")) {
++                        tb.error(this);
++                        return false;
++                    } else {
++                        // If current element is title, implicitly close title.
++                        if (tb.currentElement().tagName().equals("title")) {
++                            tb.process(new Token.EndTag("title")); // Implicitly close title
++                            return tb.process(t); // Re-process the current start tag
++                        } else {
++                            return anythingElse(t, tb);
++                        }
++                    }
++                    break;
+@@ -1,2 +1,6 @@
+-                    } else if (name.equals("frameset")) {
+-                        tb.error(this);
++                    } else if (name.equals("frameset")) {
++                        tb.error(this);
++                    } else if (tb.currentElement().tagName().equals("textarea")) { // If current element is textarea, implicitly close textarea.
++                        tb.process(new Token.EndTag("textarea")); // Implicitly close textarea
++                        return tb.process(t); // Re-process the current start tag
++                    }
+@@ -1,7 +1,13 @@
+-                    } else if (name.equals("head")) {
+-                        tb.error(this);
+-                        return false;
+-                    } else {
+-                        return anythingElse(t, tb);
+-                    }
+-                    break;
++                    } else if (name.equals("head")) {
++                        tb.error(this);
++                        return false;
++                    } else {
++                        // If current element is title, implicitly close title.
++                        if (tb.currentElement().tagName().equals("title")) {
++                            tb.process(new Token.EndTag("title")); // Implicitly close title
++                            return tb.process(t); // Re-process the current start tag
++                        } else {
++                            return anythingElse(t, tb);
++                        }
++                    }
++                    break;
+@@ -1,18 +1,21 @@
+-                    } else if (name.equals("frameset")) {
+-                        tb.error(this);
+-                        LinkedList<Element> stack = tb.getStack();
+-                        if (stack.size() == 1 || (stack.size() > 2 && !stack.get(1).nodeName().equals("body"))) {
+-                            // only in fragment case
+-                            return false; // ignore
+-                        } else if (!tb.framesetOk()) {
+-                            return false; // ignore frameset
+-                        } else {
+-                            Element second = stack.get(1);
+-                            if (second.parent() != null)
+-                                second.remove();
+-                            // pop up to html element
+-                            while (stack.size() > 1)
+-                                stack.removeLast();
+-                            tb.insert(startTag);
+-                            tb.transition(InFrameset);
+-                        }
++                    } else if (name.equals("frameset")) {
++                        tb.error(this);
++                        LinkedList<Element> stack = tb.getStack();
++                        if (stack.size() == 1 || (stack.size() > 2 && !stack.get(1).nodeName().equals("body"))) {
++                            // only in fragment case
++                            return false; // ignore
++                        } else if (!tb.framesetOk()) {
++                            return false; // ignore frameset
++                        } else {
++                            Element second = stack.get(1);
++                            if (second.parent() != null)
++                                second.remove();
++                            // pop up to html element
++                            while (stack.size() > 1)
++                                stack.removeLast();
++                            tb.insert(startTag);
++                            tb.transition(InFrameset);
++                        }
++                    } else if (tb.currentElement().tagName().equals("textarea")) { // If current element is textarea, implicitly close textarea.
++                        tb.process(new Token.EndTag("textarea")); // Implicitly close textarea
++                        return tb.process(t); // Re-process the current start tag
+@@ -1,6 +1,10 @@
+-            } else if (t.isEndTag()) {
+-                // if: An end tag whose tag name is "script" -- scripting nesting level, if evaluating scripts
+-                tb.pop();
+-                tb.transition(tb.originalState());
+-            }
+-            return true;
++            } else if (t.isEndTag()) {
++                // if: An end tag whose tag name is "script" -- scripting nesting level, if evaluating scripts
++                tb.pop();
++                tb.transition(tb.originalState());
++            } else if (t.isStartTag()) { // Handle unexpected start tags in RCDATA
++                tb.pop(); // Pop the current RCDATA element (e.g., title or textarea)
++                tb.transition(tb.originalState()); // Go back to the original insertion mode (InHead or InBody)
++                return tb.process(t); // Re-process the current StartTag in the original mode
++            }
++            return true;
+@@ -1,6 +1,10 @@
+-            } else if (t.isEndTag()) {
+-                // if: An end tag whose tag name is "script" -- scripting nesting level, if evaluating scripts
+-                tb.pop();
+-                tb.transition(tb.originalState());
+-            }
+-            return true;
++            } else if (t.isEndTag()) {
++                // if: An end tag whose tag name is "script" -- scripting nesting level, if evaluating scripts
++                tb.pop();
++                tb.transition(tb.originalState());
++            } else if (t.isStartTag()) { // Handle unexpected start tags in RCDATA
++                tb.pop(); // Pop the current RCDATA element (e.g., title or textarea)
++                tb.transition(tb.originalState()); // Go back to the original insertion mode (InHead or InBody)
++                return tb.process(t); // Re-process the current StartTag in the original mode
++            }
++            return true;

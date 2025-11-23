@@ -1,0 +1,22 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/std/JsonValueSerializer.java b/src/main/java/com/fasterxml/jackson/databind/ser/std/JsonValueSerializer.java
+index c7cb812a0..7f47f434e 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/JsonValueSerializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/JsonValueSerializer.java
+@@ -222,8 +222,15 @@ public class JsonValueSerializer
+             }
+             // 28-Sep-2016, tatu: As per [databind#1385], we do need to do some juggling
+             //    to use different Object for type id (logical type) and actual serialization
+-            //    (delegat type).
+-            ser.serializeWithType(value, gen, provider, typeSer0);
++            //    (delegate type).
++            /* 02-Nov-2016, tatu: As per fix for [databind#1385], need to do some juggling
++             *    to use different Object for type id (logical type) and actual serialization
++             *    (delegated type).
++             */
++            TypeSerializer typeSer = typeSer0.forProperty(_property);
++            typeSer.writeTypePrefixForScalar(bean, gen, bean.getClass());
++            ser.serialize(value, gen, provider);
++            typeSer.writeTypeSuffixForScalar(bean, gen);
+         } catch (IOException ioe) {
+             throw ioe;
+         } catch (Exception e) {

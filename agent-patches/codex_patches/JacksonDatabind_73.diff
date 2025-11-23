@@ -1,0 +1,32 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/introspect/POJOPropertiesCollector.java b/src/main/java/com/fasterxml/jackson/databind/introspect/POJOPropertiesCollector.java
+index 3d36b0ffc..638818752 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/introspect/POJOPropertiesCollector.java
++++ b/src/main/java/com/fasterxml/jackson/databind/introspect/POJOPropertiesCollector.java
+@@ -4,6 +4,7 @@ import java.lang.reflect.Modifier;
+ import java.util.*;
+ 
+ import com.fasterxml.jackson.annotation.JsonAnySetter;
++import com.fasterxml.jackson.annotation.JsonProperty;
+ import com.fasterxml.jackson.databind.*;
+ import com.fasterxml.jackson.databind.cfg.HandlerInstantiator;
+ import com.fasterxml.jackson.databind.cfg.MapperConfig;
+@@ -727,8 +728,19 @@ public class POJOPropertiesCollector
+ 
+         while (it.hasNext()) {
+             POJOPropertyBuilder prop = it.next();
++            // capture access setting before potential removal of accessors
++            JsonProperty.Access origAcc = prop.findAccess();
+             // 26-Jan-2017, tatu: [databind#935]: need to denote removal of
+             prop.removeNonVisible(inferMutators);
++            // and for deserialization case, if property no longer has any deserializable
++            // members specifically due to access like READ_ONLY, ensure name is collected
++            // as ignorable so that incoming JSON with such property is not reported as unknown
++            if (!_forSerialization && !prop.couldDeserialize()) {
++                JsonProperty.Access acc = (origAcc == null) ? JsonProperty.Access.AUTO : origAcc;
++                if (acc == JsonProperty.Access.READ_ONLY) {
++                    _collectIgnorals(prop.getName());
++                }
++            }
+         }
+     }
+ 

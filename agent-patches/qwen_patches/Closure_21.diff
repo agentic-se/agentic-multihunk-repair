@@ -1,0 +1,22 @@
+diff --git a/src/com/google/javascript/jscomp/CheckSideEffects.java b/src/com/google/javascript/jscomp/CheckSideEffects.java
+index 0d1e95a0..54afc29d 100644
+--- a/src/com/google/javascript/jscomp/CheckSideEffects.java
++++ b/src/com/google/javascript/jscomp/CheckSideEffects.java
+@@ -114,6 +114,8 @@ final class CheckSideEffects extends AbstractPostOrderCallback
+       if (isResultUsed) {
+         return;
+       }
++      // For comma expressions, we want to flag unused elements regardless of whether they're last child
++      // This handles cases like (5, 6) where the first element 5 is discarded
+       if (n == parent.getLastChild()) {
+         for (Node an : parent.getAncestors()) {
+           int ancestorType = an.getType();
+@@ -122,6 +124,8 @@ final class CheckSideEffects extends AbstractPostOrderCallback
+           else break;
+         }
+       }
++      // Even for non-last children in comma expressions, we should still analyze them
++      // if they are simple expressions with no side effects
+     } else if (parent.getType() != Token.EXPR_RESULT && parent.getType() != Token.BLOCK) {
+       if (! (parent.getType() == Token.FOR && parent.getChildCount() == 4 && (n == parent.getFirstChild() || n == parent.getFirstChild().getNext().getNext()))) {
+         return;

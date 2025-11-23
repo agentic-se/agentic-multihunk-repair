@@ -1,0 +1,17 @@
+diff --git a/src/main/java/org/apache/commons/lang3/SerializationUtils.java b/src/main/java/org/apache/commons/lang3/SerializationUtils.java
+index 1ee636cb..a1049f68 100644
+--- a/src/main/java/org/apache/commons/lang3/SerializationUtils.java
++++ b/src/main/java/org/apache/commons/lang3/SerializationUtils.java
+@@ -265,7 +265,12 @@ public class SerializationUtils {
+             try {
+                 return Class.forName(name, false, classLoader);
+             } catch (ClassNotFoundException ex) {
++                try {
+                     return Class.forName(name, false, Thread.currentThread().getContextClassLoader());
++                } catch (ClassNotFoundException cnfe) {
++                    // Fallback to default implementation to handle primitives and other cases
++                    return super.resolveClass(desc);
++                }
+             }
+         }
+ 

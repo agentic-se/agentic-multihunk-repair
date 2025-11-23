@@ -1,0 +1,53 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java b/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
+index 9dadc51f..3c69a3fd 100644
+--- a/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
++++ b/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
+@@ -32,6 +32,7 @@ public class JsonParserSequence extends JsonParserDelegate
+      *
+      * @since 2.8
+      */
++    protected boolean _hasToken;
+     
+     /*
+      *******************************************************
+@@ -44,6 +45,8 @@ public class JsonParserSequence extends JsonParserDelegate
+         super(parsers[0]);
+         _parsers = parsers;
+         _nextParser = 1;
++        // If the first parser is already pointing to a token, remember to return it first
++        _hasToken = (delegate.getCurrentToken() != null);
+     }
+ 
+     /**
+@@ -103,9 +106,22 @@ public class JsonParserSequence extends JsonParserDelegate
+     @Override
+     public JsonToken nextToken() throws IOException, JsonParseException
+     {
++        // If current delegate already points to a token (from prior advancement),
++        // return it once before advancing further
++        if (_hasToken) {
++            _hasToken = false;
++            return delegate.getCurrentToken();
++        }
++
+         JsonToken t = delegate.nextToken();
+         if (t != null) return t;
++        // If exhausted, move to next parsers, taking into account
++        // possibility that next parser may already have current token
+         while (switchToNext()) {
++            if (_hasToken) {
++                _hasToken = false;
++                return delegate.getCurrentToken();
++            }
+             t = delegate.nextToken();
+             if (t != null) return t;
+         }
+@@ -147,6 +163,8 @@ public class JsonParserSequence extends JsonParserDelegate
+             return false;
+         }
+         delegate = _parsers[_nextParser++];
++        // New delegate may already be positioned on a token; capture that
++        _hasToken = (delegate.getCurrentToken() != null);
+         return true;
+     }
+ }

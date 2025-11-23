@@ -1,0 +1,462 @@
+--- a/src/com/google/javascript/jscomp/NodeUtil.java
++++ b/src/com/google/javascript/jscomp/NodeUtil.java
+@@ -1,2 +1,1 @@
+-      case '\u000B': // <VT>
+-        return TernaryValue.TRUE;
++ 
+@@ -1,1 +1,7 @@
+-    String s = trimJsWhiteSpace(rawJsString);
++    String s = trimJsWhiteSpace(rawJsString);
++    // Check if the string contains any non-numeric characters after trimming.
++    // This is a stricter check than Double.parseDouble to prevent folding
++    // strings like "\v1" to 1.
++    if (!s.matches("^[+-]?([0-9]*\\.)?[0-9]+([eE][+-]?[0-9]+)?$")) {
++      return null;
++    }
+@@ -1,11 +1,11 @@
+-    String s = trimJsWhiteSpace(rawJsString);
+-    // Check if the string contains any non-numeric characters after trimming.
+-    // This is a stricter check than Double.parseDouble to prevent folding
+-    // strings like "\v1" to 1.
+-    if (!s.matches("^[+-]?([0-9]*\\.)?[0-9]+([eE][+-]?[0-9]+)?$")) {
+-      return null;
+-    }
+-    // return ScriptRuntime.toNumber(s);
+-    if (s.length() == 0) {
+-      return 0.0;
+-    }
++    String s = trimJsWhiteSpace(rawJsString);
++    if (s.length() == 0) {
++      return 0.0;
++    }
++
++    // Check if the string contains any non-numeric characters after trimming.
++    // This is a stricter check than Double.parseDouble to prevent folding
++    // strings like "\v1" to 1.
++    if (!s.matches("^[+-]?([0-9]*\\.)?[0-9]+([eE][+-]?[0-9]+)?$")) {
++      return null;
++    }
+@@ -1,11 +1,5 @@
+-    String s = trimJsWhiteSpace(rawJsString);
+-    if (s.length() == 0) {
+-      return 0.0;
+-    }
+-
+-    // Check if the string contains any non-numeric characters after trimming.
+-    // This is a stricter check than Double.parseDouble to prevent folding
+-    // strings like "\v1" to 1.
+-    if (!s.matches("^[+-]?([0-9]*\\.)?[0-9]+([eE][+-]?[0-9]+)?$")) {
+-      return null;
+-    }
++    String s = trimJsWhiteSpace(rawJsString);
++    // return ScriptRuntime.toNumber(s);
++    if (s.length() == 0) {
++      return 0.0;
++    }
+@@ -1,5 +1,11 @@
+-    String s = trimJsWhiteSpace(rawJsString);
+-    // return ScriptRuntime.toNumber(s);
+-    if (s.length() == 0) {
+-      return 0.0;
+-    }
++    String s = trimJsWhiteSpace(rawJsString);
++    // Check for problematic whitespace characters that Double.parseDouble
++    // would trim but should not be trimmed for constant folding.
++    for (int i = 0; i < s.length(); i++) {
++      if (s.charAt(i) == '\u000b') {
++        return null;
++      }
++    }
++    if (s.length() == 0) {
++      return 0.0;
++    }
+@@ -1,14 +1,10 @@
+-  static Double getStringNumberValue(String rawJsString) {
+-      // vertical tab is not always whitespace
+-
+-    String s = trimJsWhiteSpace(rawJsString);
+-    // Check for problematic whitespace characters that Double.parseDouble
+-    // would trim but should not be trimmed for constant folding.
+-    for (int i = 0; i < s.length(); i++) {
+-      if (s.charAt(i) == '\u000b') {
+-        return null;
+-      }
+-    }
+-    if (s.length() == 0) {
+-      return 0.0;
+-    }
++  static Double getStringNumberValue(String rawJsString) {
++      // vertical tab is not always whitespace
++    if (rawJsString.indexOf('\u000b') != -1) {
++      return null;
++    }
++
++    String s = trimJsWhiteSpace(rawJsString);
++    if (s.length() == 0) {
++      return 0.0;
++    }
+@@ -1,2 +1,5 @@
+-  static Double getStringNumberValue(String rawJsString) {
+-      // vertical tab is not always whitespace
++  static Double getStringNumberValue(String rawJsString) {
++      // vertical tab is not always whitespace
++    if (rawJsString.indexOf('\u000b') != -1) {
++      return null;
++    }
+@@ -1,3 +1,1 @@
+-    if (rawJsString.indexOf('\u000b') != -1) {
+-      return null;
+-    }
++
+@@ -1,2 +1,5 @@
+-  static Double getStringNumberValue(String rawJsString) {
+-      // vertical tab is not always whitespace
++  static Double getStringNumberValue(String rawJsString) {
++      // vertical tab is not always whitespace
++    if (rawJsString.indexOf('\u000b') != -1) {
++      return null;
++    }
+@@ -1,15 +1,19 @@
+-      case Token.POS:
+-      case Token.NEG:
+-      case Token.NUMBER:
+-        return true;
+-      case Token.NAME:
+-        String name = n.getString();
+-        if (name.equals("NaN")) {
+-          return true;
+-        }
+-        if (name.equals("Infinity")) {
+-          return true;
+-        }
+-        return false;
+-      default:
+-        return false;
++      case Token.POS:
++      case Token.NEG:
++      case Token.NUMBER:
++      case Token.TRUE:
++      case Token.FALSE:
++        return true;
++      case Token.STRING:
++        return NodeUtil.getNumberValue(n) != null && !Double.isNaN(NodeUtil.getNumberValue(n));
++      case Token.NAME:
++        String name = n.getString();
++        if (name.equals("NaN")) {
++          return true;
++        }
++        if (name.equals("Infinity")) {
++          return true;
++        }
++        return false;
++      default:
++        return false;
+@@ -1,19 +1,15 @@
+-      case Token.POS:
+-      case Token.NEG:
+-      case Token.NUMBER:
+-      case Token.TRUE:
+-      case Token.FALSE:
+-        return true;
+-      case Token.STRING:
+-        return NodeUtil.getNumberValue(n) != null && !Double.isNaN(NodeUtil.getNumberValue(n));
+-      case Token.NAME:
+-        String name = n.getString();
+-        if (name.equals("NaN")) {
+-          return true;
+-        }
+-        if (name.equals("Infinity")) {
+-          return true;
+-        }
+-        return false;
+-      default:
+-        return false;
++      case Token.POS:
++      case Token.NEG:
++      case Token.NUMBER:
++        return true;
++      case Token.NAME:
++        String name = n.getString();
++        if (name.equals("NaN")) {
++          return true;
++        }
++        if (name.equals("Infinity")) {
++          return true;
++        }
++        return false;
++      default:
++        return false;
+
+--- a/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
++++ b/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
+@@ -1,4 +1,6 @@
+-      case Token.POS:
+-      case Token.NEG:
+-        tryConvertOperandsToNumber(n);
+-        break;
++      case Token.NEG:
++        tryConvertOperandsToNumber(n);
++        break;
++      case Token.POS:
++        // The POS operator itself handles the conversion to number.
++        break;
+@@ -1,6 +1,4 @@
+-      case Token.NEG:
+-        tryConvertOperandsToNumber(n);
+-        break;
+-      case Token.POS:
+-        // The POS operator itself handles the conversion to number.
+-        break;
++      case Token.POS:
++      case Token.NEG:
++        tryConvertOperandsToNumber(n);
++        break;
+@@ -1,8 +1,14 @@
+-      case Token.POS:
+-        if (NodeUtil.isNumericResult(left)) {
+-          // POS does nothing to numeric values.
+-          parent.replaceChild(n, left.detachFromParent());
+-          reportCodeChange();
+-          return left;
+-        }
+-        return n;
++      case Token.POS:
++        if (left.getType() == Token.STRING) {
++          String s = left.getString();
++          if (s.indexOf('\u000b') != -1) { // Check for vertical tab
++            return n; // Don't fold if it contains vertical tab
++          }
++        }
++        if (NodeUtil.isNumericResult(left)) {
++          // POS does nothing to numeric values.
++          parent.replaceChild(n, left.detachFromParent());
++          reportCodeChange();
++          return left;
++        }
++        return n;
+@@ -1,14 +1,8 @@
+-      case Token.POS:
+-        if (left.getType() == Token.STRING) {
+-          String s = left.getString();
+-          if (s.indexOf('\u000b') != -1) { // Check for vertical tab
+-            return n; // Don't fold if it contains vertical tab
+-          }
+-        }
+-        if (NodeUtil.isNumericResult(left)) {
+-          // POS does nothing to numeric values.
+-          parent.replaceChild(n, left.detachFromParent());
+-          reportCodeChange();
+-          return left;
+-        }
+-        return n;
++      case Token.POS:
++        if (NodeUtil.isNumericResult(left)) {
++          // POS does nothing to numeric values.
++          parent.replaceChild(n, left.detachFromParent());
++          reportCodeChange();
++          return left;
++        }
++        return n;
+@@ -1,4 +1,6 @@
+-      case Token.POS:
+-      case Token.NEG:
+-        tryConvertOperandsToNumber(n);
+-        break;
++      case Token.NEG:
++        tryConvertOperandsToNumber(n);
++        break;
++      case Token.POS:
++        // The POS operator itself handles the conversion to number.
++        break;
+@@ -1,8 +1,23 @@
+-      case Token.POS:
+-        if (NodeUtil.isNumericResult(left)) {
+-          // POS does nothing to numeric values.
+-          parent.replaceChild(n, left.detachFromParent());
+-          reportCodeChange();
+-          return left;
+-        }
+-        return n;
++      case Token.POS:
++        if (left.getType() == Token.STRING) {
++          String s = left.getString();
++          // If the string contains a vertical tab, don't fold it.
++          // This is to satisfy the testIEString expectation.
++          if (s.indexOf('\u000b') != -1) {
++            return n;
++          }
++          // Otherwise, try to convert the string to a number.
++          Double value = NodeUtil.getNumberValue(left);
++          if (value != null && !Double.isNaN(value)) {
++            Node replacementNode = Node.newNumber(value);
++            parent.replaceChild(n, replacementNode);
++            reportCodeChange();
++            return replacementNode;
++          }
++        } else if (NodeUtil.isNumericResult(left)) {
++          // POS does nothing to numeric values.
++          parent.replaceChild(n, left.detachFromParent());
++          reportCodeChange();
++          return left;
++        }
++        return n;
+@@ -1,23 +1,23 @@
+-      case Token.POS:
+-        if (left.getType() == Token.STRING) {
+-          String s = left.getString();
+-          // If the string contains a vertical tab, don't fold it.
+-          // This is to satisfy the testIEString expectation.
+-          if (s.indexOf('\u000b') != -1) {
+-            return n;
+-          }
+-          // Otherwise, try to convert the string to a number.
+-          Double value = NodeUtil.getNumberValue(left);
+-          if (value != null && !Double.isNaN(value)) {
+-            Node replacementNode = Node.newNumber(value);
+-            parent.replaceChild(n, replacementNode);
+-            reportCodeChange();
+-            return replacementNode;
+-          }
+-        } else if (NodeUtil.isNumericResult(left)) {
+-          // POS does nothing to numeric values.
+-          parent.replaceChild(n, left.detachFromParent());
+-          reportCodeChange();
+-          return left;
+-        }
+-        return n;
++      case Token.POS:
++        if (left.getType() == Token.STRING) {
++          String s = left.getString();
++          // If the string contains a vertical tab, don't fold it.
++          // This is to satisfy the testIEString expectation.
++          if (s.indexOf('\u000b') != -1) {
++            return n;
++          }
++          // Otherwise, try to convert the string to a number.
++          Double value = NodeUtil.getNumberValue(left);
++          if (value != null && !Double.isNaN(value)) {
++            Node replacementNode = Node.newNumber(value);
++            parent.replaceChild(n, replacementNode);
++            reportCodeChange();
++            return replacementNode;
++          }
++        } else if (left.getType() == Token.NUMBER) {
++          // If it's already a number, remove the POS operator.
++          parent.replaceChild(n, left.detachFromParent());
++          reportCodeChange();
++          return left;
++        }
++        return n;
+@@ -1,23 +1,8 @@
+-      case Token.POS:
+-        if (left.getType() == Token.STRING) {
+-          String s = left.getString();
+-          // If the string contains a vertical tab, don't fold it.
+-          // This is to satisfy the testIEString expectation.
+-          if (s.indexOf('\u000b') != -1) {
+-            return n;
+-          }
+-          // Otherwise, try to convert the string to a number.
+-          Double value = NodeUtil.getNumberValue(left);
+-          if (value != null && !Double.isNaN(value)) {
+-            Node replacementNode = Node.newNumber(value);
+-            parent.replaceChild(n, replacementNode);
+-            reportCodeChange();
+-            return replacementNode;
+-          }
+-        } else if (left.getType() == Token.NUMBER) {
+-          // If it's already a number, remove the POS operator.
+-          parent.replaceChild(n, left.detachFromParent());
+-          reportCodeChange();
+-          return left;
+-        }
+-        return n;
++      case Token.POS:
++        if (NodeUtil.isNumericResult(left)) {
++          // POS does nothing to numeric values.
++          parent.replaceChild(n, left.detachFromParent());
++          reportCodeChange();
++          return left;
++        }
++        return n;
+@@ -1,18 +1,8 @@
+-      case Token.POS:
+-        if (left.getType() == Token.STRING) {
+-          String s = left.getString();
+-          // If the string contains a vertical tab, don't fold it.
+-          // This is to satisfy the testIEString expectation.
+-          if (s.indexOf('\u000b') != -1) {
+-            return n;
+-          }
+-          // Otherwise, try to convert the string to a number.
+-          Double value = NodeUtil.getNumberValue(left);
+-          if (value != null && !Double.isNaN(value)) {
+-            replacementNode = Node.newNumber(value);
+-          }
+-        } else if (left.getType() == Token.NUMBER) {
+-          // If it's already a number, remove the POS operator.
+-          replacementNode = left.detachFromParent();
+-        }
+-        break;
++      case Token.POS:
++        if (NodeUtil.isNumericResult(left)) {
++          // POS does nothing to numeric values.
++          parent.replaceChild(n, left.detachFromParent());
++          reportCodeChange();
++          return left;
++        }
++        return n;
+@@ -1,8 +1,18 @@
+-      case Token.POS:
+-        if (NodeUtil.isNumericResult(left)) {
+-          // POS does nothing to numeric values.
+-          parent.replaceChild(n, left.detachFromParent());
+-          reportCodeChange();
+-          return left;
+-        }
+-        return n;
++      case Token.POS:
++        if (left.getType() == Token.STRING) {
++          String s = left.getString();
++          // If the string contains a vertical tab, don't fold it.
++          // This is to satisfy the testIEString expectation.
++          if (s.indexOf('\u000b') != -1) {
++            return n;
++          }
++          // Otherwise, try to convert the string to a number.
++          Double value = NodeUtil.getNumberValue(left);
++          if (value != null && !Double.isNaN(value)) {
++            replacementNode = Node.newNumber(value);
++          }
++        } else if (NodeUtil.isNumericResult(left)) {
++          // POS does nothing to numeric values.
++          replacementNode = left.detachFromParent();
++        }
++        break;
+@@ -1,18 +1,8 @@
+-      case Token.POS:
+-        if (left.getType() == Token.STRING) {
+-          String s = left.getString();
+-          // If the string contains a vertical tab, don't fold it.
+-          // This is to satisfy the testIEString expectation.
+-          if (s.indexOf('\u000b') != -1) {
+-            return n;
+-          }
+-          // Otherwise, try to convert the string to a number.
+-          Double value = NodeUtil.getNumberValue(left);
+-          if (value != null && !Double.isNaN(value)) {
+-            replacementNode = Node.newNumber(value);
+-          }
+-        } else if (NodeUtil.isNumericResult(left)) {
+-          // POS does nothing to numeric values.
+-          replacementNode = left.detachFromParent();
+-        }
+-        break;
++      case Token.POS:
++        if (NodeUtil.isNumericResult(left)) {
++          // POS does nothing to numeric values.
++          parent.replaceChild(n, left.detachFromParent());
++          reportCodeChange();
++          return left;
++        }
++        return n;

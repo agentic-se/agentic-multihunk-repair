@@ -1,0 +1,34 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/axes/UnionContext.java b/src/java/org/apache/commons/jxpath/ri/axes/UnionContext.java
+index 04adadf..0f3da32 100644
+--- a/src/java/org/apache/commons/jxpath/ri/axes/UnionContext.java
++++ b/src/java/org/apache/commons/jxpath/ri/axes/UnionContext.java
+@@ -46,19 +46,25 @@ public class UnionContext extends NodeSetContext {
+         if (!prepared) {
+             prepared = true;
+             BasicNodeSet nodeSet = (BasicNodeSet) getNodeSet();
+-            ArrayList pointers = new ArrayList();
++            ArrayList list = new ArrayList();
++            java.util.HashSet seen = new java.util.HashSet();
+             for (int i = 0; i < contexts.length; i++) {
+                 EvalContext ctx = (EvalContext) contexts[i];
+                 while (ctx.nextSet()) {
+                     while (ctx.nextNode()) {
+                         NodePointer ptr = ctx.getCurrentNodePointer();
+-                        if (!pointers.contains(ptr)) {
+-                            nodeSet.add(ptr);
+-                            pointers.add(ptr);
++                        if (!seen.contains(ptr)) {
++                            seen.add(ptr);
++                            list.add(ptr);
+                         }
+                     }
+                 }
+             }
++            // Ensure the union result is in document order
++            sortPointers(list);
++            for (int i = 0; i < list.size(); i++) {
++                nodeSet.add((NodePointer) list.get(i));
++            }
+         }
+         return super.setPosition(position);
+     }

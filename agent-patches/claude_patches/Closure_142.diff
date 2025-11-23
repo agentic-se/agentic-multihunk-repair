@@ -1,0 +1,80 @@
+diff --git a/src/com/google/javascript/jscomp/CoalesceVariableNames.java b/src/com/google/javascript/jscomp/CoalesceVariableNames.java
+index 78c27b30..84e98cc5 100644
+--- a/src/com/google/javascript/jscomp/CoalesceVariableNames.java
++++ b/src/com/google/javascript/jscomp/CoalesceVariableNames.java
+@@ -105,6 +105,12 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
+     // a work-around for an IE bug where it throws an exception if you
+     // write to the parameters of the callback in a sort(). See:
+     // http://code.google.com/p/closure-compiler/issues/detail?id=58
++    if (scope.getRootNode() != null) {
++      Node paramList = scope.getRootNode().getFirstChild().getNext();
++      if (paramList.getChildCount() == 2) {
++        liveness.markAllParametersEscaped();
++      }
++    }
+     liveness.analyze();
+ 
+     UndiGraph<Var, Void> interferenceGraph =
+diff --git a/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java b/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java
+index cdcd2ff4..5af33068 100644
+--- a/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java
++++ b/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java
+@@ -1160,28 +1160,46 @@ public final class JsDocInfoParser {
+           token = next();
+           continue;
+ 
+-        case ANNOTATION:
+         case EOC:
+         case EOF:
+-          // When we're capturing a license block, annotations
++          String multilineText = builder.toString();
++
++          if (option != WhitespaceOption.PRESERVE) {
++            multilineText = multilineText.trim();
++          }
++
++          int endLineno = stream.getLineno();
++          int endCharno = stream.getCharno();
++
++          if (multilineText.length() > 0) {
++            jsdocBuilder.markText(multilineText, startLineno, startCharno,
++                endLineno, endCharno);
++          }
++
++          return new ExtractionInfo(multilineText, token);
++
++        case ANNOTATION:
++          //When we're capturing a license block, annotations
+           // in the block are ok.
+-            String multilineText = builder.toString();
++          if (option != WhitespaceOption.PRESERVE) {
++            String multilineText2 = builder.toString();
+ 
+             if (option != WhitespaceOption.PRESERVE) {
+-              multilineText = multilineText.trim();
++              multilineText2 = multilineText2.trim();
+             }
+ 
+-            int endLineno = stream.getLineno();
+-            int endCharno = stream.getCharno();
++            int endLineno2 = stream.getLineno();
++            int endCharno2 = stream.getCharno();
+ 
+-            if (multilineText.length() > 0) {
+-              jsdocBuilder.markText(multilineText, startLineno, startCharno,
+-                  endLineno, endCharno);
++            if (multilineText2.length() > 0) {
++              jsdocBuilder.markText(multilineText2, startLineno, startCharno,
++                  endLineno2, endCharno2);
+             }
+ 
+-            return new ExtractionInfo(multilineText, token);
+-
+-          // FALL THROUGH
++            return new ExtractionInfo(multilineText2, token);
++          }
++          // When we're preserving (license blocks), treat annotations as regular text
++          // Fall through to default case
+ 
+         default:
+           ignoreStar = false;

@@ -1,0 +1,73 @@
+diff --git a/src/main/java/org/apache/commons/math/optimization/general/LevenbergMarquardtOptimizer.java b/src/main/java/org/apache/commons/math/optimization/general/LevenbergMarquardtOptimizer.java
+index d1b36ea3a..7a6ba7874 100644
+--- a/src/main/java/org/apache/commons/math/optimization/general/LevenbergMarquardtOptimizer.java
++++ b/src/main/java/org/apache/commons/math/optimization/general/LevenbergMarquardtOptimizer.java
+@@ -162,6 +162,11 @@ public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
+         // set up the superclass with a default  max cost evaluations setting
+         setMaxIterations(1000);
+ 
++        // Do not use a vectorial convergence checker by default for LM.
++        // This allows LM-specific tolerances to control convergence unless
++        // the user explicitly sets a custom checker.
++        setConvergenceChecker(null);
++
+         // default values for the tuning parameters
+         setInitialStepBoundFactor(100.0);
+         setCostRelativeTolerance(1.0e-10);
+@@ -317,6 +322,9 @@ public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
+                     oldX[pj] = point[pj];
+                 }
+                 double previousCost = cost;
++                // Preserve previous objective/point for convergence checking
++                double[] previousPoint = point.clone();
++                double[] previousObjective = objective.clone();
+                 double[] tmpVec = residuals;
+                 residuals = oldRes;
+                 oldRes    = tmpVec;
+@@ -397,6 +405,25 @@ public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
+                         xNorm    += xK * xK;
+                     }
+                     xNorm = Math.sqrt(xNorm);
++
++                    // tests for convergence: prefer user-specified checker if provided
++                    if (getConvergenceChecker() != null) {
++                        VectorialPointValuePair previous =
++                            new VectorialPointValuePair(previousPoint, previousObjective, false);
++                        VectorialPointValuePair current =
++                            new VectorialPointValuePair(point, objective, true);
++                        if (getConvergenceChecker().converged(getIterations(), previous, current)) {
++                            return current;
++                        }
++                    } else {
++                        // use the Levenberg-Marquardt specific convergence parameters
++                        if (((Math.abs(actRed) <= costRelativeTolerance) &&
++                             (preRed <= costRelativeTolerance) &&
++                             (ratio <= 2.0)) ||
++                            (delta <= parRelativeTolerance * xNorm)) {
++                            return new VectorialPointValuePair(point, objective);
++                        }
++                    }
+                 } else {
+                     // failed iteration, reset the previous values
+                     cost = previousCost;
+@@ -409,15 +436,15 @@ public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
+                     oldRes    = tmpVec;
+                 }
+ 
+-                // tests for convergence.
+-                    // we use the vectorial convergence checker
+-                    // we use the Levenberg-Marquardt specific convergence parameters
++                // If no user-specified checker, apply LM-specific convergence tests
++                if (getConvergenceChecker() == null) {
++                    // After any iteration, allow convergence if the cost-based criteria is met.
+                     if (((Math.abs(actRed) <= costRelativeTolerance) &&
+                          (preRed <= costRelativeTolerance) &&
+-                         (ratio <= 2.0)) ||
+-                        (delta <= parRelativeTolerance * xNorm)) {
++                         (ratio <= 2.0))) {
+                         return new VectorialPointValuePair(point, objective);
+                     }
++                }
+ 
+                 // tests for termination and stringent tolerances
+                 // (2.2204e-16 is the machine epsilon for IEEE754)

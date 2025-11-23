@@ -1,0 +1,125 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMAttributeIterator.java b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMAttributeIterator.java
+index f4c2ac6..2714866 100644
+--- a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMAttributeIterator.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMAttributeIterator.java
+@@ -87,12 +87,23 @@ public class DOMAttributeIterator implements NodeIterator {
+ 
+             String testNS = null;
+             if (testPrefix != null) {
+-                testNS = parent.getNamespaceURI(testPrefix);
++                // Prefer resolver-registered namespaces
++                if (parent.getNamespaceResolver() != null) {
++                    testNS = parent.getNamespaceResolver().getNamespaceURI(testPrefix);
++                }
++                if (testNS == null) {
++                    testNS = parent.getNamespaceURI(testPrefix);
++                }
+             }
+ 
+             String nodeNS = null;
+             if (nodePrefix != null) {
+-                nodeNS = parent.getNamespaceURI(nodePrefix);
++                if (parent.getNamespaceResolver() != null) {
++                    nodeNS = parent.getNamespaceResolver().getNamespaceURI(nodePrefix);
++                }
++                if (nodeNS == null) {
++                    nodeNS = parent.getNamespaceURI(nodePrefix);
++                }
+             }
+             return equalStrings(testNS, nodeNS);
+         }
+@@ -108,7 +119,13 @@ public class DOMAttributeIterator implements NodeIterator {
+         String testNS = null;
+ 
+         if (testPrefix != null) {
+-            testNS = parent.getNamespaceURI(testPrefix);
++            // Prefer resolver-registered namespaces
++            if (parent.getNamespaceResolver() != null) {
++                testNS = parent.getNamespaceResolver().getNamespaceURI(testPrefix);
++            }
++            if (testNS == null) {
++                testNS = parent.getNamespaceURI(testPrefix);
++            }
+         }
+ 
+         if (testNS != null) {
+@@ -154,4 +171,4 @@ public class DOMAttributeIterator implements NodeIterator {
+         this.position = position;
+         return position >= 1 && position <= attributes.size();
+     }
+-}
+\ No newline at end of file
++}
+diff --git a/src/java/org/apache/commons/jxpath/ri/model/jdom/JDOMAttributeIterator.java b/src/java/org/apache/commons/jxpath/ri/model/jdom/JDOMAttributeIterator.java
+index cfa6da3..894920d 100644
+--- a/src/java/org/apache/commons/jxpath/ri/model/jdom/JDOMAttributeIterator.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/jdom/JDOMAttributeIterator.java
+@@ -44,17 +44,30 @@ public class JDOMAttributeIterator implements NodeIterator {
+             Element element = (Element) parent.getNode();
+             String prefix = name.getPrefix();
+             Namespace ns = null;
++            String desiredURI = null;
+             if (prefix != null) {
+                 if (prefix.equals("xml")) {
+                     ns = Namespace.XML_NAMESPACE;
+                 }
+                 else {
++                    // Prefer resolver-registered namespaces
++                    if (parent.getNamespaceResolver() != null) {
++                        desiredURI = parent.getNamespaceResolver().getNamespaceURI(prefix);
++                    }
++                    if (desiredURI == null) {
++                        desiredURI = parent.getNamespaceURI(prefix);
++                    }
++                    if (desiredURI != null) {
++                        ns = Namespace.getNamespace(prefix, desiredURI);
++                    }
++                    else {
+                         ns = element.getNamespace(prefix);
+-                        if (ns == null) {
+-                            // TBD: no attributes
+-                            attributes = Collections.EMPTY_LIST;
+-                            return;
+-                        }
++                    }
++                    if (ns == null && desiredURI == null) {
++                        // No mapping for this prefix
++                        attributes = Collections.EMPTY_LIST;
++                        return;
++                    }
+                 }
+             }
+             else {
+@@ -66,6 +79,18 @@ public class JDOMAttributeIterator implements NodeIterator {
+                 attributes = new ArrayList();
+                 if (ns != null) {
+                     Attribute attr = element.getAttribute(lname, ns);
++                    if (attr == null && desiredURI != null) {
++                        // Fallback: find by URI if prefix differs
++                        List allAttributes = element.getAttributes();
++                        for (int i = 0; i < allAttributes.size(); i++) {
++                            Attribute a = (Attribute) allAttributes.get(i);
++                            if (lname.equals(a.getName())
++                                    && desiredURI.equals(a.getNamespace().getURI())) {
++                                attr = a;
++                                break;
++                            }
++                        }
++                    }
+                     if (attr != null) {
+                         attributes.add(attr);
+                     }
+@@ -76,7 +101,12 @@ public class JDOMAttributeIterator implements NodeIterator {
+                 List allAttributes = element.getAttributes();
+                 for (int i = 0; i < allAttributes.size(); i++) {
+                     Attribute attr = (Attribute) allAttributes.get(i);
+-                    if (attr.getNamespace().equals(ns)) {
++                    if (ns != null && desiredURI != null) {
++                        if (desiredURI.equals(attr.getNamespace().getURI())) {
++                            attributes.add(attr);
++                        }
++                    }
++                    else if (attr.getNamespace().equals(ns)) {
+                         attributes.add(attr);
+                     }
+                 }

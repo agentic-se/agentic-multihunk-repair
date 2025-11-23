@@ -1,0 +1,80 @@
+diff --git a/src/com/google/javascript/jscomp/CheckGlobalThis.java b/src/com/google/javascript/jscomp/CheckGlobalThis.java
+index 25327afe..082eab27 100644
+--- a/src/com/google/javascript/jscomp/CheckGlobalThis.java
++++ b/src/com/google/javascript/jscomp/CheckGlobalThis.java
+@@ -89,6 +89,7 @@ final class CheckGlobalThis implements Callback {
+       JSDocInfo jsDoc = getFunctionJsDocInfo(n);
+       if (jsDoc != null &&
+           (jsDoc.isConstructor() ||
++           jsDoc.isInterface() ||
+            jsDoc.hasThisType() ||
+            jsDoc.isOverride())) {
+         return false;
+@@ -120,15 +121,13 @@ final class CheckGlobalThis implements Callback {
+           assignLhsChild = lhs;
+         }
+       } else {
+-        // Only traverse the right side if it's not an assignment to a prototype
+-        // property or subproperty.
+-          if (lhs.getType() == Token.GETPROP &&
+-              lhs.getLastChild().getString().equals("prototype")) {
+-            return false;
+-          }
+-          if (lhs.getQualifiedName() != null && lhs.getQualifiedName().contains(".prototype.")) {
+-            return false;
+-          }
++        // Only traverse the right side if it's not an assignment to a
++        // prototype property (i.e. X.prototype.Y or X.prototype[...]).
++        // We still want to traverse for deeper subproperties like
++        // X.prototype.Y.Z, since those are not direct prototype methods.
++        if (isDirectPrototypeProperty(lhs)) {
++          return false;
++        }
+       }
+     }
+ 
+@@ -181,4 +180,44 @@ final class CheckGlobalThis implements Callback {
+     }
+     return jsDoc;
+   }
++
++  /**
++   * Returns true if the given LHS node represents a direct assignment to a
++   * prototype property of the form X.prototype.Y or X.prototype[...].
++   * Does not match deeper chains like X.prototype.Y.Z.
++   */
++  private static boolean isDirectPrototypeProperty(Node lhs) {
++    // Direct assignment to the prototype object itself: X.prototype = ...
++    if (lhs.getType() == Token.GETPROP &&
++        lhs.getLastChild() != null &&
++        "prototype".equals(lhs.getLastChild().getString())) {
++      return true;
++    }
++
++    // Assignment to a direct property of the prototype: X.prototype.Y
++    if (lhs.getType() == Token.GETPROP) {
++      Node target = lhs.getFirstChild();
++      if (target != null && target.getType() == Token.GETPROP) {
++        Node last = target.getLastChild();
++        if (last != null && "prototype".equals(last.getString())) {
++          return true;
++        }
++      }
++      return false;
++    }
++
++    // Bracket form: X.prototype[...]
++    if (lhs.getType() == Token.GETELEM) {
++      Node target = lhs.getFirstChild();
++      if (target != null && target.getType() == Token.GETPROP) {
++        Node last = target.getLastChild();
++        if (last != null && "prototype".equals(last.getString())) {
++          return true;
++        }
++      }
++      return false;
++    }
++
++    return false;
++  }
+ }

@@ -1,0 +1,29 @@
+diff --git a/src/com/google/javascript/rhino/IR.java b/src/com/google/javascript/rhino/IR.java
+index 081f01f5..1a288fc4 100644
+--- a/src/com/google/javascript/rhino/IR.java
++++ b/src/com/google/javascript/rhino/IR.java
+@@ -221,8 +221,11 @@ public class IR {
+   }
+ 
+   public static Node tryFinally(Node tryBody, Node finallyBody) {
+-    Preconditions.checkState(tryBody.isLabelName());
+-    Preconditions.checkState(finallyBody.isLabelName());
++    // A try-finally statement consists of a try block, an empty catch body
++    // (no catch clauses), and a finally block. Both tryBody and finallyBody
++    // must be BLOCK nodes.
++    Preconditions.checkState(tryBody.isBlock());
++    Preconditions.checkState(finallyBody.isBlock());
+     Node catchBody = block().copyInformationFrom(tryBody);
+     return new Node(Token.TRY, tryBody, catchBody, finallyBody);
+   }
+@@ -230,7 +233,9 @@ public class IR {
+   public static Node tryCatch(Node tryBody, Node catchNode) {
+     Preconditions.checkState(tryBody.isBlock());
+     Preconditions.checkState(catchNode.isCatch());
+-    Node catchBody = block(catchNode).copyInformationFrom(catchNode);
++    // Wrap the catch clause in a BLOCK without asserting it as a statement,
++    // as CATCH is not a standalone statement outside of TRY.
++    Node catchBody = new Node(Token.BLOCK, catchNode).copyInformationFrom(catchNode);
+     return new Node(Token.TRY, tryBody, catchBody);
+   }
+ 

@@ -1,0 +1,27 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/json/UTF8JsonGenerator.java b/src/main/java/com/fasterxml/jackson/core/json/UTF8JsonGenerator.java
+index 4f4394c8..030366f7 100644
+--- a/src/main/java/com/fasterxml/jackson/core/json/UTF8JsonGenerator.java
++++ b/src/main/java/com/fasterxml/jackson/core/json/UTF8JsonGenerator.java
+@@ -533,9 +533,16 @@ public class UTF8JsonGenerator
+         while (len > 0) {
+             int len2 = Math.min(buf.length, len);
+             text.getChars(offset, offset+len2, buf, 0);
+-            writeRaw(buf, 0, len2);
+             // If this is NOT the last segment and if the last character looks like
+-            // split surrogate second half, drop it
++            // split surrogate first half, drop it and defer to next segment
++            if (len2 > 0 && len > len2) { // not the last segment
++                char lastChar = buf[len2-1];
++                if (lastChar >= SURR1_FIRST && lastChar <= SURR1_LAST) {
++                    // last char is high surrogate; don't split the pair, leave it for next segment
++                    --len2;
++                }
++            }
++            writeRaw(buf, 0, len2);
+             offset += len2;
+             len -= len2;
+         }
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

@@ -1,0 +1,23 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/introspect/POJOPropertiesCollector.java b/src/main/java/com/fasterxml/jackson/databind/introspect/POJOPropertiesCollector.java
+index dd4733f52..e22a38ff6 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/introspect/POJOPropertiesCollector.java
++++ b/src/main/java/com/fasterxml/jackson/databind/introspect/POJOPropertiesCollector.java
+@@ -560,6 +560,14 @@ public class POJOPropertiesCollector
+             visible = true;
+         }
+         boolean ignore = (ai == null) ? false : ai.hasIgnoreMarker(m);
++        
++        // Respect AUTO_DETECT_GETTERS feature
++        if (!_config.isEnabled(MapperFeature.AUTO_DETECT_GETTERS) && !nameExplicit) {
++            // If auto detection is disabled AND the getter is not explicitly named,
++            // we should not include it as a property
++            return;
++        }
++        
+         _property(props, implName).addGetter(m, pn, nameExplicit, visible, ignore);
+     }
+ 
+
+
+# Untracked source files (not included in patch):
++ src/main/java/com/fasterxml/jackson/databind/introspect/POJOPropertiesCollector.java.bak

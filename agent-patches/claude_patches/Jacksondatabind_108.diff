@@ -1,0 +1,28 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ObjectReader.java b/src/main/java/com/fasterxml/jackson/databind/ObjectReader.java
+index ae5f43175..889f7ce79 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ObjectReader.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ObjectReader.java
+@@ -1663,7 +1663,12 @@ public class ObjectReader
+ 
+     protected final JsonNode _bindAndCloseAsTree(JsonParser p0) throws IOException {
+         try (JsonParser p = p0) {
+-            return _bindAsTree(p);
++            JsonNode result = _bindAsTree(p);
++            // [databind#2211]: for non-JsonParser sources, convert `null` to `MissingNode`
++            if (result == null) {
++                result = _config.getNodeFactory().missingNode();
++            }
++            return result;
+         }
+     }
+ 
+@@ -1679,7 +1684,8 @@ public class ObjectReader
+         if (t == null) {
+             t = p.nextToken();
+             if (t == null) {
+-                return _config.getNodeFactory().missingNode();
++                // [databind#1406]: expose end-of-input as `null` when passing `JsonParser`
++                return null;
+             }
+         }
+         final JsonNode resultNode;

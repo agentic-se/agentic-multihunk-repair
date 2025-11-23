@@ -1,0 +1,51 @@
+--- a/src/org/mockito/Matchers.java
++++ b/src/org/mockito/Matchers.java
+@@ -1,3 +1,4 @@
+-    public static <T> T isA(Class<T> clazz) {
+-        return reportMatcher(new InstanceOf(clazz)).<T>returnNull();
+-    }
++    public static <T> T isA(Class<T> clazz) {
++        mockingProgress.getArgumentMatcherStorage().reportMatcher(new InstanceOf(clazz));
++        return (T) new HandyReturnValues().returnFor(clazz);
++    }
+@@ -1,4 +1,3 @@
+-    public static <T> T isA(Class<T> clazz) {
+-        mockingProgress.getArgumentMatcherStorage().reportMatcher(new InstanceOf(clazz));
+-        return (T) new HandyReturnValues().returnFor(clazz);
+-    }
++    public static <T> T isA(Class<T> clazz) {
++        return (T) reportMatcher(new InstanceOf(clazz)).returnFor(clazz);
++    }
+
+--- a/src/org/mockito/internal/MockHandler.java
++++ b/src/org/mockito/internal/MockHandler.java
+@@ -1,5 +1,5 @@
+-        if (verificationMode != null) {
+-            VerificationDataImpl data = new VerificationDataImpl(registeredInvocations.getAll(), invocationMatcher);
+-            verificationMode.verify(data);
+-            return null;
+-        }
++        if (verificationMode != null) {
++            VerificationDataImpl data = new VerificationDataImpl(registeredInvocations.getAll(), invocationMatcher);
++            verificationMode.verify(data);
++            return mockSettings.getDefaultAnswer().answer(invocation);
++        }
+
+--- a/src/org/mockito/internal/progress/HandyReturnValues.java
++++ b/src/org/mockito/internal/progress/HandyReturnValues.java
+@@ -1,6 +1,9 @@
+-    public <T> T returnFor(Class<T> clazz) {
+-        if (isPrimitiveWrapper(clazz)) {
+-            return primitiveWrapperOf(clazz);
+-        } 
+-        return primitiveValueOrNullFor(clazz);
+-    }
++    public <T> T returnFor(Class<T> clazz) {
++        if (isPrimitiveWrapper(clazz)) {
++            System.out.println("returnFor: " + clazz.getName() + ", wrapper: " + primitiveWrapperOf(clazz));
++            return primitiveWrapperOf(clazz);
++        } 
++        T value = primitiveValueOrNullFor(clazz);
++        System.out.println("returnFor: " + clazz.getName() + ", primitive or null: " + value);
++        return value;
++    }

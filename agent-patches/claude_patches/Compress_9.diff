@@ -1,0 +1,29 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
+index 15beec89..f920967b 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
+@@ -327,7 +327,6 @@ public class TarArchiveOutputStream extends ArchiveOutputStream {
+             numToWrite -= num;
+             wOffset += num;
+         }
+-        count(numToWrite);
+     }
+ 
+     /**
+@@ -356,4 +355,12 @@ public class TarArchiveOutputStream extends ArchiveOutputStream {
+         }
+         return new TarArchiveEntry(inputFile, entryName);
+     }
++
++    /**
++     * {@inheritDoc}
++     */
++    @Override
++    public long getBytesWritten() {
++        return ((CountingOutputStream) out).getBytesWritten();
++    }
+ }
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

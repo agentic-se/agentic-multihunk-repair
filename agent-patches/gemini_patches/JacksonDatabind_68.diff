@@ -1,0 +1,1510 @@
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializer.java
+@@ -1,11 +1,35 @@
+-    protected Exception _creatorReturnedNullException() {
+-        if (_nullFromCreator == null) {
+-            _nullFromCreator = new NullPointerException("JSON Creator returned null");
+-        }
+-        return _nullFromCreator;
+-    }
+-
+-    /**
+-     * @since 2.8
+-     */
+-    static class BeanReferring extends Referring
++    protected Exception _creatorReturnedNullException() {
++        if (_nullFromCreator == null) {
++            _nullFromCreator = new NullPointerException("JSON Creator returned null");
++        }
++        return _nullFromCreator;
++    }
++
++    protected Object _deserializeCreatorValue(JsonParser p, DeserializationContext ctxt,
++            SettableBeanProperty prop) throws IOException
++    {
++        JsonDeserializer<Object> deser = prop.getValueDeserializer();
++        if (deser.isCachable() && (p.getCurrentToken() != JsonToken.START_ARRAY)
++                && ctxt.isEnabled(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY)) {
++            // 1.2.1: [databind#1043] need to be careful with `null`
++            if (p.getCurrentToken() == JsonToken.VALUE_NULL) {
++                return deser.getNullValue(ctxt);
++            }
++            // Need to wrap the current token in an array
++            TokenBuffer tb = new TokenBuffer(p, ctxt);
++            tb.writeStartArray();
++            tb.copyCurrentStructure(p);
++            tb.writeEndArray();
++            JsonParser p2 = tb.asParser();
++            p2.nextToken(); // move to START_ARRAY
++            Object value = deser.deserialize(p2, ctxt);
++            p2.close();
++            return value;
++        }
++        return _deserializeWithErrorWrapping(p, ctxt, prop);
++    }
++
++    /**
++     * @since 2.8
++     */
++    static class BeanReferring extends Referring
+@@ -1,2 +1,2 @@
+-                if (buffer.assignParameter(creatorProp,
+-                        _deserializeWithErrorWrapping(p, ctxt, creatorProp))) {
++                if (buffer.assignParameter(creatorProp,
++                        _deserializeCreatorValue(p, ctxt, creatorProp))) {
+@@ -1,23 +1,24 @@
+-    protected Object _deserializeCreatorValue(JsonParser p, DeserializationContext ctxt,
+-            SettableBeanProperty prop) throws IOException
+-    {
+-        JsonDeserializer<Object> deser = prop.getValueDeserializer();
+-        if (deser.isCachable() && (p.getCurrentToken() != JsonToken.START_ARRAY)
+-                && ctxt.isEnabled(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY)) {
+-            // 1.2.1: [databind#1043] need to be careful with `null`
+-            if (p.getCurrentToken() == JsonToken.VALUE_NULL) {
+-                return deser.getNullValue(ctxt);
+-            }
+-            // Need to wrap the current token in an array
+-            TokenBuffer tb = new TokenBuffer(p, ctxt);
+-            tb.writeStartArray();
+-            tb.copyCurrentStructure(p);
+-            tb.writeEndArray();
+-            JsonParser p2 = tb.asParser();
+-            p2.nextToken(); // move to START_ARRAY
+-            Object value = deser.deserialize(p2, ctxt);
+-            p2.close();
+-            return value;
+-        }
+-        return _deserializeWithErrorWrapping(p, ctxt, prop);
+-    }
++    protected Object _deserializeCreatorValue(JsonParser p, DeserializationContext ctxt,
++            SettableBeanProperty prop) throws IOException
++    {
++        JsonDeserializer<Object> deser = prop.getValueDeserializer();
++        // [databind#68]: Allow wrapping of single values for Collection/array creators
++        if (prop.getType().isContainerType() && (p.getCurrentToken() != JsonToken.START_ARRAY)
++                && ctxt.isEnabled(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY)) {
++            // 1.2.1: [databind#1043] need to be careful with `null`
++            if (p.getCurrentToken() == JsonToken.VALUE_NULL) {
++                return deser.getNullValue(ctxt);
++            }
++            // Need to wrap the current token in an array
++            TokenBuffer tb = new TokenBuffer(p, ctxt);
++            tb.writeStartArray();
++            tb.copyCurrentStructure(p);
++            tb.writeEndArray();
++            JsonParser p2 = tb.asParser();
++            p2.nextToken(); // move to START_ARRAY
++            Object value = deser.deserialize(p2, ctxt);
++            p2.close();
++            return value;
++        }
++        return _deserializeWithErrorWrapping(p, ctxt, prop);
++    }
+@@ -1,36 +1,11 @@
+-    protected Exception _creatorReturnedNullException() {
+-        if (_nullFromCreator == null) {
+-            _nullFromCreator = new NullPointerException("JSON Creator returned null");
+-        }
+-        return _nullFromCreator;
+-    }
+-
+-    protected Object _deserializeCreatorValue(JsonParser p, DeserializationContext ctxt,
+-            SettableBeanProperty prop) throws IOException
+-    {
+-        JsonDeserializer<Object> deser = prop.getValueDeserializer();
+-        // [databind#68]: Allow wrapping of single values for Collection/array creators
+-        if (prop.getType().isContainerType() && (p.getCurrentToken() != JsonToken.START_ARRAY)
+-                && ctxt.isEnabled(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY)) {
+-            // 1.2.1: [databind#1043] need to be careful with `null`
+-            if (p.getCurrentToken() == JsonToken.VALUE_NULL) {
+-                return deser.getNullValue(ctxt);
+-            }
+-            // Need to wrap the current token in an array
+-            TokenBuffer tb = new TokenBuffer(p, ctxt);
+-            tb.writeStartArray();
+-            tb.copyCurrentStructure(p);
+-            tb.writeEndArray();
+-            JsonParser p2 = tb.asParser();
+-            p2.nextToken(); // move to START_ARRAY
+-            Object value = deser.deserialize(p2, ctxt);
+-            p2.close();
+-            return value;
+-        }
+-        return _deserializeWithErrorWrapping(p, ctxt, prop);
+-    }
+-
+-    /**
+-     * @since 2.8
+-     */
+-    static class BeanReferring extends Referring
++    protected Exception _creatorReturnedNullException() {
++        if (_nullFromCreator == null) {
++            _nullFromCreator = new NullPointerException("JSON Creator returned null");
++        }
++        return _nullFromCreator;
++    }
++
++    /**
++     * @since 2.8
++     */
++    static class BeanReferring extends Referring
+@@ -1,2 +1,2 @@
+-                if (buffer.assignParameter(creatorProp,
+-                        _deserializeCreatorValue(p, ctxt, creatorProp))) {
++                if (buffer.assignParameter(creatorProp,
++                        _deserializeWithErrorWrapping(p, ctxt, creatorProp))) {
+@@ -1,11 +1,36 @@
+-    protected Exception _creatorReturnedNullException() {
+-        if (_nullFromCreator == null) {
+-            _nullFromCreator = new NullPointerException("JSON Creator returned null");
+-        }
+-        return _nullFromCreator;
+-    }
+-
+-    /**
+-     * @since 2.8
+-     */
+-    static class BeanReferring extends Referring
++    protected Exception _creatorReturnedNullException() {
++        if (_nullFromCreator == null) {
++            _nullFromCreator = new NullPointerException("JSON Creator returned null");
++        }
++        return _nullFromCreator;
++    }
++
++    protected Object _deserializeCreatorCollectionProperty(JsonParser p, DeserializationContext ctxt,
++            SettableBeanProperty prop) throws IOException
++    {
++        JsonDeserializer<Object> deser = prop.getValueDeserializer();
++        // [databind#68]: Allow wrapping of single values for Collection/array creators
++        if (prop.getType().isContainerType() && (p.getCurrentToken() != JsonToken.START_ARRAY)
++                && ctxt.isEnabled(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY)) {
++            // 1.2.1: [databind#1043] need to be careful with `null`
++            if (p.getCurrentToken() == JsonToken.VALUE_NULL) {
++                return deser.getNullValue(ctxt);
++            }
++            // Need to wrap the current token in an array
++            TokenBuffer tb = new TokenBuffer(p, ctxt);
++            tb.writeStartArray();
++            tb.copyCurrentStructure(p);
++            tb.writeEndArray();
++            JsonParser p2 = tb.asParser();
++            p2.nextToken(); // move to START_ARRAY
++            Object value = deser.deserialize(p2, ctxt);
++            p2.close();
++            return value;
++        }
++        return _deserializeWithErrorWrapping(p, ctxt, prop);
++    }
++
++    /**
++     * @since 2.8
++     */
++    static class BeanReferring extends Referring
+@@ -1,2 +1,2 @@
+-                if (buffer.assignParameter(creatorProp,
+-                        _deserializeWithErrorWrapping(p, ctxt, creatorProp))) {
++                if (buffer.assignParameter(creatorProp,
++                        _deserializeCreatorCollectionProperty(p, ctxt, creatorProp))) {
+@@ -1,6 +1,8 @@
+-            tb.writeEndArray();
+-            JsonParser p2 = tb.asParser();
+-            p2.nextToken(); // move to START_ARRAY
+-            Object value = deser.deserialize(p2, ctxt);
+-            p2.close();
+-            return value;
++            tb.writeEndArray();
++            JsonParser p2 = tb.asParser();
++            p2.nextToken(); // move to START_ARRAY
++            // 11-Dec-2015, tatu: Need to pass `p2` as current parser for `CollectionDeserializer`
++            //   to correctly handle `handleNonArray` logic.
++            Object value = deser.deserialize(p2, ctxt);
++            p2.close();
++            return value;
+@@ -1,2 +1,2 @@
+-                if (buffer.assignParameter(creatorProp,
+-                        _deserializeCreatorCollectionProperty(p, ctxt, creatorProp))) {
++                if (buffer.assignParameter(creatorProp,
++                        _deserializeWithErrorWrapping(p, ctxt, creatorProp))) {
+@@ -1,38 +1,11 @@
+-    protected Exception _creatorReturnedNullException() {
+-        if (_nullFromCreator == null) {
+-            _nullFromCreator = new NullPointerException("JSON Creator returned null");
+-        }
+-        return _nullFromCreator;
+-    }
+-
+-    protected Object _deserializeCreatorCollectionProperty(JsonParser p, DeserializationContext ctxt,
+-            SettableBeanProperty prop) throws IOException
+-    {
+-        JsonDeserializer<Object> deser = prop.getValueDeserializer();
+-        // [databind#68]: Allow wrapping of single values for Collection/array creators
+-        if (prop.getType().isContainerType() && (p.getCurrentToken() != JsonToken.START_ARRAY)
+-                && ctxt.isEnabled(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY)) {
+-            // 1.2.1: [databind#1043] need to be careful with `null`
+-            if (p.getCurrentToken() == JsonToken.VALUE_NULL) {
+-                return deser.getNullValue(ctxt);
+-            }
+-            // Need to wrap the current token in an array
+-            TokenBuffer tb = new TokenBuffer(p, ctxt);
+-            tb.writeStartArray();
+-            tb.copyCurrentStructure(p);
+-            tb.writeEndArray();
+-            JsonParser p2 = tb.asParser();
+-            p2.nextToken(); // move to START_ARRAY
+-            // 11-Dec-2015, tatu: Need to pass `p2` as current parser for `CollectionDeserializer`
+-            //   to correctly handle `handleNonArray` logic.
+-            Object value = deser.deserialize(p2, ctxt);
+-            p2.close();
+-            return value;
+-        }
+-        return _deserializeWithErrorWrapping(p, ctxt, prop);
+-    }
+-
+-    /**
+-     * @since 2.8
+-     */
+-    static class BeanReferring extends Referring
++    protected Exception _creatorReturnedNullException() {
++        if (_nullFromCreator == null) {
++            _nullFromCreator = new NullPointerException("JSON Creator returned null");
++        }
++        return _nullFromCreator;
++    }
++
++    /**
++     * @since 2.8
++     */
++    static class BeanReferring extends Referring
+@@ -1,2 +1,2 @@
+-                if (buffer.assignParameter(creatorProp,
+-                        _deserializeWithErrorWrapping(p, ctxt, creatorProp))) {
++                if (buffer.assignParameter(creatorProp,
++                        ((CreatorProperty) creatorProp).deserializeWithSingleArrayWrap(p, ctxt))) {
+@@ -1,2 +1,2 @@
+-                if (buffer.assignParameter(creatorProp,
+-                        ((CreatorProperty) creatorProp).deserializeWithSingleArrayWrap(p, ctxt))) {
++                if (buffer.assignParameter(creatorProp,
++                        _deserializeWithErrorWrapping(p, ctxt, creatorProp))) {
+@@ -1,8 +1,9 @@
+-import java.io.IOException;
+-import java.util.*;
+-
+-import com.fasterxml.jackson.core.*;
+-import com.fasterxml.jackson.databind.*;
+-import com.fasterxml.jackson.databind.deser.impl.*;
+-import com.fasterxml.jackson.databind.deser.impl.ReadableObjectId.Referring;
+-import com.fasterxml.jackson.databind.util.NameTransformer;
++import java.io.IOException;
++import java.util.*;
++
++import com.fasterxml.jackson.core.*;
++import com.fasterxml.jackson.databind.util.TokenBuffer;
++import com.fasterxml.jackson.databind.*;
++import com.fasterxml.jackson.databind.deser.impl.*;
++import com.fasterxml.jackson.databind.deser.impl.ReadableObjectId.Referring;
++import com.fasterxml.jackson.databind.util.NameTransformer;
+@@ -1,5 +1,21 @@
+-            SettableBeanProperty creatorProp = creator.findCreatorProperty(propName);
+-            if (creatorProp != null) {
+-                // Last creator property to set?
+-                if (buffer.assignParameter(creatorProp,
+-                        _deserializeWithErrorWrapping(p, ctxt, creatorProp))) {
++            SettableBeanProperty creatorProp = creator.findCreatorProperty(propName);
++            if (creatorProp != null) {
++                Object value;
++                // [databind#68]: Allow wrapping of single values for Collection/array creators
++                if (creatorProp.getType().isContainerType()
++                        && (p.getCurrentToken() != JsonToken.START_ARRAY)
++                        && ctxt.isEnabled(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY)) {
++                    // Need to wrap the current token in an array
++                    TokenBuffer tb = new TokenBuffer(p, ctxt);
++                    tb.writeStartArray();
++                    tb.copyCurrentStructure(p);
++                    tb.writeEndArray();
++                    JsonParser p2 = tb.asParser();
++                    p2.nextToken(); // move to START_ARRAY
++                    value = _deserializeWithErrorWrapping(p2, ctxt, creatorProp);
++                    p2.close();
++                } else {
++                    value = _deserializeWithErrorWrapping(p, ctxt, creatorProp);
++                }
++                // Last creator property to set?
++                if (buffer.assignParameter(creatorProp, value)) {
+
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerBase.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerBase.java
+@@ -1,1 +1,6 @@
+-import com.fasterxml.jackson.core.*;
++import com.fasterxml.jackson.core.JsonParser;
++import com.fasterxml.jackson.core.JsonToken;
++import com.fasterxml.jackson.core.JsonProcessingException;
++import com.fasterxml.jackson.databind.util.TokenBuffer;
++import com.fasterxml.jackson.databind.deser.std.CollectionDeserializer;
++import com.fasterxml.jackson.databind.*;
+
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/CreatorProperty.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/CreatorProperty.java
+@@ -1,7 +1,10 @@
+-import com.fasterxml.jackson.core.JsonParser;
+-
+-import com.fasterxml.jackson.databind.*;
+-import com.fasterxml.jackson.databind.introspect.AnnotatedMember;
+-import com.fasterxml.jackson.databind.introspect.AnnotatedParameter;
+-import com.fasterxml.jackson.databind.jsontype.TypeDeserializer;
+-import com.fasterxml.jackson.databind.util.Annotations;
++import com.fasterxml.jackson.core.JsonParser;
++import com.fasterxml.jackson.core.JsonToken;
++import com.fasterxml.jackson.databind.util.TokenBuffer;
++
++import com.fasterxml.jackson.databind.*;
++import com.fasterxml.jackson.databind.deser.std.CollectionDeserializer;
++import com.fasterxml.jackson.databind.introspect.AnnotatedMember;
++import com.fasterxml.jackson.databind.introspect.AnnotatedParameter;
++import com.fasterxml.jackson.databind.jsontype.TypeDeserializer;
++import com.fasterxml.jackson.databind.util.Annotations;
+@@ -1,2 +1,29 @@
+-    @Override
+-    public void deserializeAndSet(JsonParser p, DeserializationContext ctxt,
++    @Override
++    public Object deserialize(JsonParser p, DeserializationContext ctxt) throws IOException
++    {
++        if (_valueTypeDeserializer != null) {
++            return _valueDeserializer.deserializeWithType(p, ctxt, _valueTypeDeserializer);
++        }
++        // [databind#68]: Allow wrapping of single values for Collection/array creators
++        if (_valueDeserializer.isCachable() && (p.getCurrentToken() != JsonToken.START_ARRAY)
++                && ctxt.isEnabled(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY)) {
++            // 1.2.1: [databind#1043] need to be careful with `null`
++            if (p.getCurrentToken() == JsonToken.VALUE_NULL) {
++                return _valueDeserializer.getNullValue(ctxt);
++            }
++            // Need to wrap the current token in an array
++            TokenBuffer tb = new TokenBuffer(p, ctxt);
++            tb.writeStartArray();
++            tb.copyCurrentStructure(p);
++            tb.writeEndArray();
++            JsonParser p2 = tb.asParser();
++            p2.nextToken(); // move to START_ARRAY
++            Object value = _valueDeserializer.deserialize(p2, ctxt);
++            p2.close();
++            return value;
++        }
++        return _valueDeserializer.deserialize(p, ctxt);
++    }
++
++    @Override
++    public void deserializeAndSet(JsonParser p, DeserializationContext ctxt,
+@@ -1,33 +1,6 @@
+-    @Override
+-    public Object deserialize(JsonParser p, DeserializationContext ctxt) throws IOException
+-    {
+-        if (_valueTypeDeserializer != null) {
+-            return _valueDeserializer.deserializeWithType(p, ctxt, _valueTypeDeserializer);
+-        }
+-        // [databind#68]: Allow wrapping of single values for Collection/array creators
+-        if (_valueDeserializer.isCachable() && (p.getCurrentToken() != JsonToken.START_ARRAY)
+-                && ctxt.isEnabled(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY)) {
+-            // 1.2.1: [databind#1043] need to be careful with `null`
+-            if (p.getCurrentToken() == JsonToken.VALUE_NULL) {
+-                return _valueDeserializer.getNullValue(ctxt);
+-            }
+-            // Need to wrap the current token in an array
+-            TokenBuffer tb = new TokenBuffer(p, ctxt);
+-            tb.writeStartArray();
+-            tb.copyCurrentStructure(p);
+-            tb.writeEndArray();
+-            JsonParser p2 = tb.asParser();
+-            p2.nextToken(); // move to START_ARRAY
+-            Object value = _valueDeserializer.deserialize(p2, ctxt);
+-            p2.close();
+-            return value;
+-        }
+-        return _valueDeserializer.deserialize(p, ctxt);
+-    }
+-
+-    @Override
+-    public void deserializeAndSet(JsonParser p, DeserializationContext ctxt,
+-            Object instance) throws IOException
+-    {
+-        set(instance, deserialize(p, ctxt));
+-    }
++    @Override
++    public void deserializeAndSet(JsonParser p, DeserializationContext ctxt,
++            Object instance) throws IOException
++    {
++        set(instance, deserialize(p, ctxt));
++    }
+@@ -1,10 +1,7 @@
+-import com.fasterxml.jackson.core.JsonParser;
+-import com.fasterxml.jackson.core.JsonToken;
+-import com.fasterxml.jackson.databind.util.TokenBuffer;
+-
+-import com.fasterxml.jackson.databind.*;
+-import com.fasterxml.jackson.databind.deser.std.CollectionDeserializer;
+-import com.fasterxml.jackson.databind.introspect.AnnotatedMember;
+-import com.fasterxml.jackson.databind.introspect.AnnotatedParameter;
+-import com.fasterxml.jackson.databind.jsontype.TypeDeserializer;
+-import com.fasterxml.jackson.databind.util.Annotations;
++import com.fasterxml.jackson.core.JsonParser;
++
++import com.fasterxml.jackson.databind.*;
++import com.fasterxml.jackson.databind.introspect.AnnotatedMember;
++import com.fasterxml.jackson.databind.introspect.AnnotatedParameter;
++import com.fasterxml.jackson.databind.jsontype.TypeDeserializer;
++import com.fasterxml.jackson.databind.util.Annotations;
+@@ -1,7 +1,9 @@
+-import com.fasterxml.jackson.core.JsonParser;
+-
+-import com.fasterxml.jackson.databind.*;
+-import com.fasterxml.jackson.databind.introspect.AnnotatedMember;
+-import com.fasterxml.jackson.databind.introspect.AnnotatedParameter;
+-import com.fasterxml.jackson.databind.jsontype.TypeDeserializer;
+-import com.fasterxml.jackson.databind.util.Annotations;
++import com.fasterxml.jackson.core.JsonParser;
++import com.fasterxml.jackson.core.JsonToken;
++import com.fasterxml.jackson.databind.util.TokenBuffer;
++
++import com.fasterxml.jackson.databind.*;
++import com.fasterxml.jackson.databind.introspect.AnnotatedMember;
++import com.fasterxml.jackson.databind.introspect.AnnotatedParameter;
++import com.fasterxml.jackson.databind.jsontype.TypeDeserializer;
++import com.fasterxml.jackson.databind.util.Annotations;
+@@ -1,9 +1,35 @@
+-    @Override
+-    public Object deserializeSetAndReturn(JsonParser p,
+-            DeserializationContext ctxt, Object instance) throws IOException
+-    {
+-        return setAndReturn(instance, deserialize(p, ctxt));
+-    }
+-    
+-    @Override
+-    public void set(Object instance, Object value) throws IOException
++    @Override
++    public Object deserializeSetAndReturn(JsonParser p,
++            DeserializationContext ctxt, Object instance) throws IOException
++    {
++        return setAndReturn(instance, deserialize(p, ctxt));
++    }
++
++    public Object deserializeWithSingleArrayWrap(JsonParser p, DeserializationContext ctxt) throws IOException
++    {
++        if (_valueTypeDeserializer != null) {
++            return _valueDeserializer.deserializeWithType(p, ctxt, _valueTypeDeserializer);
++        }
++        // [databind#68]: Allow wrapping of single values for Collection/array creators
++        if (getType().isContainerType() && (p.getCurrentToken() != JsonToken.START_ARRAY)
++                && ctxt.isEnabled(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY)) {
++            // 1.2.1: [databind#1043] need to be careful with `null`
++            if (p.getCurrentToken() == JsonToken.VALUE_NULL) {
++                return _valueDeserializer.getNullValue(ctxt);
++            }
++            // Need to wrap the current token in an array
++            TokenBuffer tb = new TokenBuffer(p, ctxt);
++            tb.writeStartArray();
++            tb.copyCurrentStructure(p);
++            tb.writeEndArray();
++            JsonParser p2 = tb.asParser();
++            p2.nextToken(); // move to START_ARRAY
++            Object value = _valueDeserializer.deserialize(p2, ctxt);
++            p2.close();
++            return value;
++        }
++        return deserialize(p, ctxt);
++    }
++
++    @Override
++    public void set(Object instance, Object value) throws IOException
+@@ -1,16 +1,20 @@
+-            // Need to wrap the current token in an array
+-            TokenBuffer tb = new TokenBuffer(p, ctxt);
+-            tb.writeStartArray();
+-            tb.copyCurrentStructure(p);
+-            tb.writeEndArray();
+-            JsonParser p2 = tb.asParser();
+-            p2.nextToken(); // move to START_ARRAY
+-            Object value = _valueDeserializer.deserialize(p2, ctxt);
+-            p2.close();
+-            return value;
+-        }
+-        return deserialize(p, ctxt);
+-    }
+-
+-    @Override
+-    public void set(Object instance, Object value) throws IOException
++            // Need to wrap the current token in an array
++            TokenBuffer tb = new TokenBuffer(p, ctxt);
++            tb.writeStartArray();
++            tb.copyCurrentStructure(p);
++            tb.writeEndArray();
++            JsonParser p2 = tb.asParser();
++            p2.nextToken(); // move to START_ARRAY
++            Object value = _valueDeserializer.deserialize(p2, ctxt);
++            p2.close();
++            // 11-Dec-2015, tatu: Need to create a List with correct element type
++            //   and add the single value to it.
++            Collection<Object> list = new java.util.ArrayList<Object>();
++            list.add(value);
++            return list;
++        }
++        return deserialize(p, ctxt);
++    }
++
++    @Override
++    public void set(Object instance, Object value) throws IOException
+@@ -1,12 +1,13 @@
+-import java.io.IOException;
+-import java.lang.annotation.Annotation;
+-
+-import com.fasterxml.jackson.core.JsonParser;
+-import com.fasterxml.jackson.core.JsonToken;
+-import com.fasterxml.jackson.databind.util.TokenBuffer;
+-
+-import com.fasterxml.jackson.databind.*;
+-import com.fasterxml.jackson.databind.introspect.AnnotatedMember;
+-import com.fasterxml.jackson.databind.introspect.AnnotatedParameter;
+-import com.fasterxml.jackson.databind.jsontype.TypeDeserializer;
+-import com.fasterxml.jackson.databind.util.Annotations;
++import java.io.IOException;
++import java.lang.annotation.Annotation;
++import java.util.Collection;
++
++import com.fasterxml.jackson.core.JsonParser;
++import com.fasterxml.jackson.core.JsonToken;
++import com.fasterxml.jackson.databind.util.TokenBuffer;
++
++import com.fasterxml.jackson.databind.*;
++import com.fasterxml.jackson.databind.introspect.AnnotatedMember;
++import com.fasterxml.jackson.databind.introspect.AnnotatedParameter;
++import com.fasterxml.jackson.databind.jsontype.TypeDeserializer;
++import com.fasterxml.jackson.databind.util.Annotations;
+@@ -1,11 +1,11 @@
+-            // 11-Dec-2015, tatu: Need to create a List with correct element type
+-            //   and add the single value to it.
+-            Collection<Object> list = new java.util.ArrayList<Object>();
+-            list.add(value);
+-            return list;
+-        }
+-        return deserialize(p, ctxt);
+-    }
+-
+-    @Override
+-    public void set(Object instance, Object value) throws IOException
++            // 11-Dec-2015, tatu: Need to create a List with correct element type
++            //   and add the single value to it.
++            java.util.Collection<Object> list = new java.util.ArrayList<Object>();
++            list.add(value);
++            return list;
++        }
++        return deserialize(p, ctxt);
++    }
++
++    @Override
++    public void set(Object instance, Object value) throws IOException
+@@ -1,11 +1,16 @@
+-            // 11-Dec-2015, tatu: Need to create a List with correct element type
+-            //   and add the single value to it.
+-            java.util.Collection<Object> list = new java.util.ArrayList<Object>();
+-            list.add(value);
+-            return list;
+-        }
+-        return deserialize(p, ctxt);
+-    }
+-
+-    @Override
+-    public void set(Object instance, Object value) throws IOException
++            // Need to wrap the current token in an array
++            TokenBuffer tb = new TokenBuffer(p, ctxt);
++            tb.writeStartArray();
++            tb.copyCurrentStructure(p);
++            tb.writeEndArray();
++            JsonParser p2 = tb.asParser();
++            p2.nextToken(); // move to START_ARRAY
++            Object value = _valueDeserializer.deserialize(p2, ctxt);
++            p2.close();
++            return value;
++        }
++        return deserialize(p, ctxt);
++    }
++
++    @Override
++    public void set(Object instance, Object value) throws IOException
+@@ -1,13 +1,12 @@
+-import java.io.IOException;
+-import java.lang.annotation.Annotation;
+-import java.util.Collection;
+-
+-import com.fasterxml.jackson.core.JsonParser;
+-import com.fasterxml.jackson.core.JsonToken;
+-import com.fasterxml.jackson.databind.util.TokenBuffer;
+-
+-import com.fasterxml.jackson.databind.*;
+-import com.fasterxml.jackson.databind.introspect.AnnotatedMember;
+-import com.fasterxml.jackson.databind.introspect.AnnotatedParameter;
+-import com.fasterxml.jackson.databind.jsontype.TypeDeserializer;
+-import com.fasterxml.jackson.databind.util.Annotations;
++import java.io.IOException;
++import java.lang.annotation.Annotation;
++
++import com.fasterxml.jackson.core.JsonParser;
++import com.fasterxml.jackson.core.JsonToken;
++import com.fasterxml.jackson.databind.util.TokenBuffer;
++
++import com.fasterxml.jackson.databind.*;
++import com.fasterxml.jackson.databind.introspect.AnnotatedMember;
++import com.fasterxml.jackson.databind.introspect.AnnotatedParameter;
++import com.fasterxml.jackson.databind.jsontype.TypeDeserializer;
++import com.fasterxml.jackson.databind.util.Annotations;
+@@ -1,13 +1,10 @@
+-import java.io.IOException;
+-import java.lang.annotation.Annotation;
+-import java.util.Collection;
+-
+-import com.fasterxml.jackson.core.JsonParser;
+-import com.fasterxml.jackson.core.JsonToken;
+-import com.fasterxml.jackson.databind.util.TokenBuffer;
+-
+-import com.fasterxml.jackson.databind.*;
+-import com.fasterxml.jackson.databind.introspect.AnnotatedMember;
+-import com.fasterxml.jackson.databind.introspect.AnnotatedParameter;
+-import com.fasterxml.jackson.databind.jsontype.TypeDeserializer;
+-import com.fasterxml.jackson.databind.util.Annotations;
++import java.io.IOException;
++import java.lang.annotation.Annotation;
++
++import com.fasterxml.jackson.core.JsonParser;
++
++import com.fasterxml.jackson.databind.*;
++import com.fasterxml.jackson.databind.introspect.AnnotatedMember;
++import com.fasterxml.jackson.databind.introspect.AnnotatedParameter;
++import com.fasterxml.jackson.databind.jsontype.TypeDeserializer;
++import com.fasterxml.jackson.databind.util.Annotations;
+
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/PropertyBasedCreator.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/PropertyBasedCreator.java
+@@ -1,10 +1,13 @@
+-import java.io.IOException;
+-import java.util.Collection;
+-import java.util.HashMap;
+-
+-import com.fasterxml.jackson.core.JsonParser;
+-
+-import com.fasterxml.jackson.databind.DeserializationContext;
+-import com.fasterxml.jackson.databind.JsonMappingException;
+-import com.fasterxml.jackson.databind.deser.SettableBeanProperty;
+-import com.fasterxml.jackson.databind.deser.ValueInstantiator;
++import java.io.IOException;
++import java.util.Collection;
++import java.util.HashMap;
++import java.util.ArrayList;
++
++import com.fasterxml.jackson.core.JsonParser;
++import com.fasterxml.jackson.core.JsonToken;
++import com.fasterxml.jackson.databind.DeserializationContext;
++import com.fasterxml.jackson.databind.DeserializationFeature;
++import com.fasterxml.jackson.databind.JsonMappingException;
++import com.fasterxml.jackson.databind.deser.SettableBeanProperty;
++import com.fasterxml.jackson.databind.deser.ValueInstantiator;
++import com.fasterxml.jackson.databind.util.TokenBuffer;
+@@ -1,13 +1,10 @@
+-import java.io.IOException;
+-import java.util.Collection;
+-import java.util.HashMap;
+-import java.util.ArrayList;
+-
+-import com.fasterxml.jackson.core.JsonParser;
+-import com.fasterxml.jackson.core.JsonToken;
+-import com.fasterxml.jackson.databind.DeserializationContext;
+-import com.fasterxml.jackson.databind.DeserializationFeature;
+-import com.fasterxml.jackson.databind.JsonMappingException;
+-import com.fasterxml.jackson.databind.deser.SettableBeanProperty;
+-import com.fasterxml.jackson.databind.deser.ValueInstantiator;
+-import com.fasterxml.jackson.databind.util.TokenBuffer;
++import java.io.IOException;
++import java.util.Collection;
++import java.util.HashMap;
++
++import com.fasterxml.jackson.core.JsonParser;
++
++import com.fasterxml.jackson.databind.DeserializationContext;
++import com.fasterxml.jackson.databind.JsonMappingException;
++import com.fasterxml.jackson.databind.deser.SettableBeanProperty;
++import com.fasterxml.jackson.databind.deser.ValueInstantiator;
+
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/PropertyValueBuffer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/PropertyValueBuffer.java
+@@ -1,10 +1,12 @@
+-import java.io.IOException;
+-import java.util.BitSet;
+-
+-import com.fasterxml.jackson.core.JsonParser;
+-import com.fasterxml.jackson.databind.DeserializationContext;
+-import com.fasterxml.jackson.databind.DeserializationFeature;
+-import com.fasterxml.jackson.databind.JsonDeserializer;
+-import com.fasterxml.jackson.databind.JsonMappingException;
+-import com.fasterxml.jackson.databind.deser.SettableAnyProperty;
+-import com.fasterxml.jackson.databind.deser.SettableBeanProperty;
++import java.io.IOException;
++import java.util.BitSet;
++import java.util.Collection;
++import java.util.ArrayList;
++
++import com.fasterxml.jackson.core.JsonParser;
++import com.fasterxml.jackson.databind.DeserializationContext;
++import com.fasterxml.jackson.databind.DeserializationFeature;
++import com.fasterxml.jackson.databind.JsonDeserializer;
++import com.fasterxml.jackson.databind.JsonMappingException;
++import com.fasterxml.jackson.databind.deser.SettableAnyProperty;
++import com.fasterxml.jackson.databind.deser.SettableBeanProperty;
+@@ -1,24 +1,32 @@
+-    public boolean assignParameter(SettableBeanProperty prop, Object value)
+-    {
+-        final int ix = prop.getCreatorIndex();
+-        _creatorParameters[ix] = value;
+-
+-        if (_paramsSeenBig == null) {
+-            int old = _paramsSeen;
+-            int newValue = (old | (1 << ix));
+-            if (old != newValue) {
+-                _paramsSeen = newValue;
+-                if (--_paramsNeeded <= 0) {
+-                    return true;
+-                }
+-            }
+-        } else {
+-            if (!_paramsSeenBig.get(ix)) {
+-                _paramsSeenBig.set(ix);
+-                if (--_paramsNeeded <= 0) {
+-                    return true;
+-                }
+-            }
+-        }
+-        return false;
+-    }
++    public boolean assignParameter(SettableBeanProperty prop, Object value)
++    {
++        final int ix = prop.getCreatorIndex();
++        // [databind#68]: Allow wrapping of single values for Collection/array creators
++        if (prop.getType().isContainerType()
++                && ! (value instanceof Collection)
++                && _context.isEnabled(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY)) {
++            ArrayList<Object> list = new ArrayList<Object>();
++            list.add(value);
++            value = list;
++        }
++        _creatorParameters[ix] = value;
++
++        if (_paramsSeenBig == null) {
++            int old = _paramsSeen;
++            int newValue = (old | (1 << ix));
++            if (old != newValue) {
++                _paramsSeen = newValue;
++                if (--_paramsNeeded <= 0) {
++                    return true;
++                }
++            }
++        } else {
++            if (!_paramsSeenBig.get(ix)) {
++                _paramsSeenBig.set(ix);
++                if (--_paramsNeeded <= 0) {
++                    return true;
++                }
++            }
++        }
++        return false;
++    }
+@@ -1,7 +1,9 @@
+-        if (prop.getType().isContainerType()
+-                && ! (value instanceof Collection)
+-                && _context.isEnabled(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY)) {
+-            ArrayList<Object> list = new ArrayList<Object>();
+-            list.add(value);
+-            value = list;
+-        }
++        if (prop.getType().isContainerType()
++                && ! (value instanceof Collection)
++                && _context.isEnabled(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY)) {
++            // 11-Dec-2015, tatu: Need to create a List with correct element type
++            Collection<Object> list = (Collection<Object>) _context.constructListType(
++                    prop.getType().getRawClass(), prop.getType().getContentType()).getRawClass().newInstance();
++            list.add(value);
++            value = list;
++        }
+@@ -1,12 +1,13 @@
+-import java.io.IOException;
+-import java.util.BitSet;
+-import java.util.Collection;
+-import java.util.ArrayList;
+-
+-import com.fasterxml.jackson.core.JsonParser;
+-import com.fasterxml.jackson.databind.DeserializationContext;
+-import com.fasterxml.jackson.databind.DeserializationFeature;
+-import com.fasterxml.jackson.databind.JsonDeserializer;
+-import com.fasterxml.jackson.databind.JsonMappingException;
+-import com.fasterxml.jackson.databind.deser.SettableAnyProperty;
+-import com.fasterxml.jackson.databind.deser.SettableBeanProperty;
++import java.io.IOException;
++import java.lang.reflect.InvocationTargetException;
++import java.util.BitSet;
++import java.util.Collection;
++import java.util.ArrayList;
++
++import com.fasterxml.jackson.core.JsonParser;
++import com.fasterxml.jackson.databind.DeserializationContext;
++import com.fasterxml.jackson.databind.DeserializationFeature;
++import com.fasterxml.jackson.databind.JsonDeserializer;
++import com.fasterxml.jackson.databind.JsonMappingException;
++import com.fasterxml.jackson.databind.deser.SettableAnyProperty;
++import com.fasterxml.jackson.databind.deser.SettableBeanProperty;
+@@ -1,5 +1,12 @@
+-            // 11-Dec-2015, tatu: Need to create a List with correct element type
+-            Collection<Object> list = (Collection<Object>) _context.constructListType(
+-                    prop.getType().getRawClass(), prop.getType().getContentType()).getRawClass().newInstance();
+-            list.add(value);
+-            value = list;
++            // 11-Dec-2015, tatu: Need to create a List with correct element type
++            Collection<Object> list;
++            try {
++                list = (Collection<Object>) _context.constructListType(
++                        prop.getType().getRawClass(), prop.getType().getContentType()).getRawClass().newInstance();
++            } catch (InstantiationException e) {
++                throw new JsonMappingException(_parser, "Failed to instantiate Collection type "+prop.getType()+ ": "+e.getMessage(), e);
++            } catch (IllegalAccessException e) {
++                throw new JsonMappingException(_parser, "Failed to instantiate Collection type "+prop.getType()+ ": "+e.getMessage(), e);
++            }
++            list.add(value);
++            value = list;
+@@ -1,9 +1,9 @@
+-            Collection<Object> list;
+-            try {
+-                list = (Collection<Object>) _context.constructListType(
+-                        prop.getType().getRawClass(), prop.getType().getContentType()).getRawClass().newInstance();
+-            } catch (InstantiationException e) {
+-                throw new JsonMappingException(_parser, "Failed to instantiate Collection type "+prop.getType()+ ": "+e.getMessage(), e);
+-            } catch (IllegalAccessException e) {
+-                throw new JsonMappingException(_parser, "Failed to instantiate Collection type "+prop.getType()+ ": "+e.getMessage(), e);
+-            }
++            Collection<Object> list;
++            try {
++                list = (Collection<Object>) _context.constructCollectionType(
++                        (Class<? extends Collection>) prop.getType().getRawClass(), prop.getType().getContentType()).getRawClass().newInstance();
++            } catch (InstantiationException e) {
++                throw new JsonMappingException(_parser, "Failed to instantiate Collection type "+prop.getType()+ ": "+e.getMessage(), e);
++            } catch (IllegalAccessException e) {
++                throw new JsonMappingException(_parser, "Failed to instantiate Collection type "+prop.getType()+ ": "+e.getMessage(), e);
++            }
+@@ -1,9 +1,10 @@
+-            Collection<Object> list;
+-            try {
+-                list = (Collection<Object>) _context.constructCollectionType(
+-                        (Class<? extends Collection>) prop.getType().getRawClass(), prop.getType().getContentType()).getRawClass().newInstance();
+-            } catch (InstantiationException e) {
+-                throw new JsonMappingException(_parser, "Failed to instantiate Collection type "+prop.getType()+ ": "+e.getMessage(), e);
+-            } catch (IllegalAccessException e) {
+-                throw new JsonMappingException(_parser, "Failed to instantiate Collection type "+prop.getType()+ ": "+e.getMessage(), e);
+-            }
++            Collection<Object> list;
++            try {
++                Class<?> rawListClass = prop.getType().getRawClass();
++                list = (Collection<Object>) _context.constructCollectionType(
++                        (Class<? extends Collection>) rawListClass, prop.getType().getContentType()).getRawClass().newInstance();
++            } catch (InstantiationException e) {
++                throw new JsonMappingException(_parser, "Failed to instantiate Collection type "+prop.getType()+ ": "+e.getMessage(), e);
++            } catch (IllegalAccessException e) {
++                throw new JsonMappingException(_parser, "Failed to instantiate Collection type "+prop.getType()+ ": "+e.getMessage(), e);
++            }
+@@ -1,10 +1,7 @@
+-            Collection<Object> list;
+-            try {
+-                Class<?> rawListClass = prop.getType().getRawClass();
+-                list = (Collection<Object>) _context.constructCollectionType(
+-                        (Class<? extends Collection>) rawListClass, prop.getType().getContentType()).getRawClass().newInstance();
+-            } catch (InstantiationException e) {
+-                throw new JsonMappingException(_parser, "Failed to instantiate Collection type "+prop.getType()+ ": "+e.getMessage(), e);
+-            } catch (IllegalAccessException e) {
+-                throw new JsonMappingException(_parser, "Failed to instantiate Collection type "+prop.getType()+ ": "+e.getMessage(), e);
+-            }
++        if (prop.getType().isContainerType()
++                && ! (value instanceof Collection)
++                && _context.isEnabled(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY)) {
++            ArrayList<Object> list = new ArrayList<Object>();
++            list.add(value);
++            value = list;
++        }
+@@ -1,13 +1,11 @@
+-import java.io.IOException;
+-import java.lang.reflect.InvocationTargetException;
+-import java.util.BitSet;
+-import java.util.Collection;
+-import java.util.ArrayList;
+-
+-import com.fasterxml.jackson.core.JsonParser;
+-import com.fasterxml.jackson.databind.DeserializationContext;
+-import com.fasterxml.jackson.databind.DeserializationFeature;
+-import com.fasterxml.jackson.databind.JsonDeserializer;
+-import com.fasterxml.jackson.databind.JsonMappingException;
+-import com.fasterxml.jackson.databind.deser.SettableAnyProperty;
+-import com.fasterxml.jackson.databind.deser.SettableBeanProperty;
++import java.io.IOException;
++import java.util.BitSet;
++import java.util.ArrayList;
++
++import com.fasterxml.jackson.core.JsonParser;
++import com.fasterxml.jackson.databind.DeserializationContext;
++import com.fasterxml.jackson.databind.DeserializationFeature;
++import com.fasterxml.jackson.databind.JsonDeserializer;
++import com.fasterxml.jackson.databind.JsonMappingException;
++import com.fasterxml.jackson.databind.deser.SettableAnyProperty;
++import com.fasterxml.jackson.databind.deser.SettableBeanProperty;
+@@ -1,11 +1,12 @@
+-import java.io.IOException;
+-import java.util.BitSet;
+-import java.util.ArrayList;
+-
+-import com.fasterxml.jackson.core.JsonParser;
+-import com.fasterxml.jackson.databind.DeserializationContext;
+-import com.fasterxml.jackson.databind.DeserializationFeature;
+-import com.fasterxml.jackson.databind.JsonDeserializer;
+-import com.fasterxml.jackson.databind.JsonMappingException;
+-import com.fasterxml.jackson.databind.deser.SettableAnyProperty;
+-import com.fasterxml.jackson.databind.deser.SettableBeanProperty;
++import java.io.IOException;
++import java.util.BitSet;
++import java.util.Collection;
++import java.util.ArrayList;
++
++import com.fasterxml.jackson.core.JsonParser;
++import com.fasterxml.jackson.databind.DeserializationContext;
++import com.fasterxml.jackson.databind.DeserializationFeature;
++import com.fasterxml.jackson.databind.JsonDeserializer;
++import com.fasterxml.jackson.databind.JsonMappingException;
++import com.fasterxml.jackson.databind.deser.SettableAnyProperty;
++import com.fasterxml.jackson.databind.deser.SettableBeanProperty;
+@@ -1,32 +1,34 @@
+-    public boolean assignParameter(SettableBeanProperty prop, Object value)
+-    {
+-        final int ix = prop.getCreatorIndex();
+-        // [databind#68]: Allow wrapping of single values for Collection/array creators
+-        if (prop.getType().isContainerType()
+-                && ! (value instanceof Collection)
+-                && _context.isEnabled(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY)) {
+-            ArrayList<Object> list = new ArrayList<Object>();
+-            list.add(value);
+-            value = list;
+-        }
+-        _creatorParameters[ix] = value;
+-
+-        if (_paramsSeenBig == null) {
+-            int old = _paramsSeen;
+-            int newValue = (old | (1 << ix));
+-            if (old != newValue) {
+-                _paramsSeen = newValue;
+-                if (--_paramsNeeded <= 0) {
+-                    return true;
+-                }
+-            }
+-        } else {
+-            if (!_paramsSeenBig.get(ix)) {
+-                _paramsSeenBig.set(ix);
+-                if (--_paramsNeeded <= 0) {
+-                    return true;
+-                }
+-            }
+-        }
+-        return false;
+-    }
++    public boolean assignParameter(SettableBeanProperty prop, Object value)
++    {
++        final int ix = prop.getCreatorIndex();
++        Object actualValue = value; // Declare actualValue here
++
++        // [databind#68]: Allow wrapping of single values for Collection/array creators
++        if (prop.getType().isContainerType()
++                && ! (actualValue instanceof Collection)
++                && _context.isEnabled(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY)) {
++            ArrayList<Object> list = new ArrayList<Object>();
++            list.add(actualValue);
++            actualValue = list;
++        }
++        _creatorParameters[ix] = actualValue;
++
++        if (_paramsSeenBig == null) {
++            int old = _paramsSeen;
++            int newValue = (old | (1 << ix));
++            if (old != newValue) {
++                _paramsSeen = newValue;
++                if (--_paramsNeeded <= 0) {
++                    return true;
++                }
++            }
++        } else {
++            if (!_paramsSeenBig.get(ix)) {
++                _paramsSeenBig.set(ix);
++                if (--_paramsNeeded <= 0) {
++                    return true;
++                }
++            }
++        }
++        return false;
++    }
+@@ -1,3 +1,3 @@
+-            ArrayList<Object> list = new ArrayList<Object>();
+-            list.add(actualValue);
+-            actualValue = list;
++            ArrayList<Object> list = new ArrayList<Object>();
++            list.add(actualValue);
++            actualValue = (Collection) list;
+@@ -1,34 +1,24 @@
+-    public boolean assignParameter(SettableBeanProperty prop, Object value)
+-    {
+-        final int ix = prop.getCreatorIndex();
+-        Object actualValue = value; // Declare actualValue here
+-
+-        // [databind#68]: Allow wrapping of single values for Collection/array creators
+-        if (prop.getType().isContainerType()
+-                && ! (actualValue instanceof Collection)
+-                && _context.isEnabled(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY)) {
+-            ArrayList<Object> list = new ArrayList<Object>();
+-            list.add(actualValue);
+-            actualValue = (Collection) list;
+-        }
+-        _creatorParameters[ix] = actualValue;
+-
+-        if (_paramsSeenBig == null) {
+-            int old = _paramsSeen;
+-            int newValue = (old | (1 << ix));
+-            if (old != newValue) {
+-                _paramsSeen = newValue;
+-                if (--_paramsNeeded <= 0) {
+-                    return true;
+-                }
+-            }
+-        } else {
+-            if (!_paramsSeenBig.get(ix)) {
+-                _paramsSeenBig.set(ix);
+-                if (--_paramsNeeded <= 0) {
+-                    return true;
+-                }
+-            }
+-        }
+-        return false;
+-    }
++    public boolean assignParameter(SettableBeanProperty prop, Object value)
++    {
++        final int ix = prop.getCreatorIndex();
++        _creatorParameters[ix] = value;
++
++        if (_paramsSeenBig == null) {
++            int old = _paramsSeen;
++            int newValue = (old | (1 << ix));
++            if (old != newValue) {
++                _paramsSeen = newValue;
++                if (--_paramsNeeded <= 0) {
++                    return true;
++                }
++            }
++        } else {
++            if (!_paramsSeenBig.get(ix)) {
++                _paramsSeenBig.set(ix);
++                if (--_paramsNeeded <= 0) {
++                    return true;
++                }
++            }
++        }
++        return false;
++    }
+@@ -1,12 +1,11 @@
+-import java.io.IOException;
+-import java.util.BitSet;
+-import java.util.Collection;
+-import java.util.ArrayList;
+-
+-import com.fasterxml.jackson.core.JsonParser;
+-import com.fasterxml.jackson.databind.DeserializationContext;
+-import com.fasterxml.jackson.databind.DeserializationFeature;
+-import com.fasterxml.jackson.databind.JsonDeserializer;
+-import com.fasterxml.jackson.databind.JsonMappingException;
+-import com.fasterxml.jackson.databind.deser.SettableAnyProperty;
+-import com.fasterxml.jackson.databind.deser.SettableBeanProperty;
++import java.io.IOException;
++import java.util.BitSet;
++import java.util.ArrayList;
++
++import com.fasterxml.jackson.core.JsonParser;
++import com.fasterxml.jackson.databind.DeserializationContext;
++import com.fasterxml.jackson.databind.DeserializationFeature;
++import com.fasterxml.jackson.databind.JsonDeserializer;
++import com.fasterxml.jackson.databind.JsonMappingException;
++import com.fasterxml.jackson.databind.deser.SettableAnyProperty;
++import com.fasterxml.jackson.databind.deser.SettableBeanProperty;
+
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/CollectionDeserializer.java
+@@ -1,21 +1,35 @@
+-    @SuppressWarnings("unchecked")
+-    @Override
+-    public Collection<Object> deserialize(JsonParser p, DeserializationContext ctxt)
+-        throws IOException
+-    {
+-        if (_delegateDeserializer != null) {
+-            return (Collection<Object>) _valueInstantiator.createUsingDelegate(ctxt,
+-                    _delegateDeserializer.deserialize(p, ctxt));
+-        }
+-        /* Empty String may be ok; bit tricky to check, however, since
+-         * there is also possibility of "auto-wrapping" of single-element arrays.
+-         * Hence we only accept empty String here.
+-         */
+-        if (p.hasToken(JsonToken.VALUE_STRING)) {
+-            String str = p.getText();
+-            if (str.length() == 0) {
+-                return (Collection<Object>) _valueInstantiator.createFromString(ctxt, str);
+-            }
+-        }
+-        return deserialize(p, ctxt, (Collection<Object>) _valueInstantiator.createUsingDefault(ctxt));
+-    }
++    @SuppressWarnings("unchecked")
++    @Override
++    public Collection<Object> deserialize(JsonParser p, DeserializationContext ctxt)
++        throws IOException
++    {
++        if (_delegateDeserializer != null) {
++            return (Collection<Object>) _valueInstantiator.createUsingDelegate(ctxt,
++                    _delegateDeserializer.deserialize(p, ctxt));
++        }
++        // [databind#68]: Allow wrapping of single values for Collection/array creators
++        if (p.getCurrentToken() == JsonToken.START_OBJECT
++                && ctxt.isEnabled(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY)) {
++            // Need to wrap the current token in an array
++            TokenBuffer tb = new TokenBuffer(p, ctxt);
++            tb.writeStartArray();
++            tb.copyCurrentStructure(p);
++            tb.writeEndArray();
++            JsonParser p2 = tb.asParser();
++            p2.nextToken(); // move to START_ARRAY
++            Collection<Object> result = deserialize(p2, ctxt);
++            p2.close();
++            return result;
++        }
++        /* Empty String may be ok; bit tricky to check, however, since
++         * there is also possibility of "auto-wrapping" of single-element arrays.
++         * Hence we only accept empty String here.
++         */
++        if (p.hasToken(JsonToken.VALUE_STRING)) {
++            String str = p.getText();
++            if (str.length() == 0) {
++                return (Collection<Object>) _valueInstantiator.createFromString(ctxt, str);
++            }
++        }
++        return deserialize(p, ctxt, (Collection<Object>) _valueInstantiator.createUsingDefault(ctxt));
++    }
+@@ -1,1 +1,2 @@
+-import com.fasterxml.jackson.core.*;
++import com.fasterxml.jackson.core.*;
++import com.fasterxml.jackson.databind.util.TokenBuffer;
+@@ -1,2 +1,1 @@
+-import com.fasterxml.jackson.core.*;
+-import com.fasterxml.jackson.databind.util.TokenBuffer;
++import com.fasterxml.jackson.core.*;
+@@ -1,35 +1,21 @@
+-    @SuppressWarnings("unchecked")
+-    @Override
+-    public Collection<Object> deserialize(JsonParser p, DeserializationContext ctxt)
+-        throws IOException
+-    {
+-        if (_delegateDeserializer != null) {
+-            return (Collection<Object>) _valueInstantiator.createUsingDelegate(ctxt,
+-                    _delegateDeserializer.deserialize(p, ctxt));
+-        }
+-        // [databind#68]: Allow wrapping of single values for Collection/array creators
+-        if (p.getCurrentToken() == JsonToken.START_OBJECT
+-                && ctxt.isEnabled(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY)) {
+-            // Need to wrap the current token in an array
+-            TokenBuffer tb = new TokenBuffer(p, ctxt);
+-            tb.writeStartArray();
+-            tb.copyCurrentStructure(p);
+-            tb.writeEndArray();
+-            JsonParser p2 = tb.asParser();
+-            p2.nextToken(); // move to START_ARRAY
+-            Collection<Object> result = deserialize(p2, ctxt);
+-            p2.close();
+-            return result;
+-        }
+-        /* Empty String may be ok; bit tricky to check, however, since
+-         * there is also possibility of "auto-wrapping" of single-element arrays.
+-         * Hence we only accept empty String here.
+-         */
+-        if (p.hasToken(JsonToken.VALUE_STRING)) {
+-            String str = p.getText();
+-            if (str.length() == 0) {
+-                return (Collection<Object>) _valueInstantiator.createFromString(ctxt, str);
+-            }
+-        }
+-        return deserialize(p, ctxt, (Collection<Object>) _valueInstantiator.createUsingDefault(ctxt));
+-    }
++    @SuppressWarnings("unchecked")
++    @Override
++    public Collection<Object> deserialize(JsonParser p, DeserializationContext ctxt)
++        throws IOException
++    {
++        if (_delegateDeserializer != null) {
++            return (Collection<Object>) _valueInstantiator.createUsingDelegate(ctxt,
++                    _delegateDeserializer.deserialize(p, ctxt));
++        }
++        /* Empty String may be ok; bit tricky to check, however, since
++         * there is also possibility of "auto-wrapping" of single-element arrays.
++         * Hence we only accept empty String here.
++         */
++        if (p.hasToken(JsonToken.VALUE_STRING)) {
++            String str = p.getText();
++            if (str.length() == 0) {
++                return (Collection<Object>) _valueInstantiator.createFromString(ctxt, str);
++            }
++        }
++        return deserialize(p, ctxt, (Collection<Object>) _valueInstantiator.createUsingDefault(ctxt));
++    }
+@@ -1,13 +1,14 @@
+-import java.io.IOException;
+-import java.util.*;
+-
+-import com.fasterxml.jackson.annotation.JsonFormat;
+-import com.fasterxml.jackson.core.*;
+-import com.fasterxml.jackson.databind.*;
+-import com.fasterxml.jackson.databind.annotation.JacksonStdImpl;
+-import com.fasterxml.jackson.databind.deser.ContextualDeserializer;
+-import com.fasterxml.jackson.databind.deser.UnresolvedForwardReference;
+-import com.fasterxml.jackson.databind.deser.ValueInstantiator;
+-import com.fasterxml.jackson.databind.deser.impl.ReadableObjectId.Referring;
+-import com.fasterxml.jackson.databind.deser.std.ContainerDeserializerBase;
+-import com.fasterxml.jackson.databind.jsontype.TypeDeserializer;
++import java.io.IOException;
++import java.util.*;
++
++import com.fasterxml.jackson.annotation.JsonFormat;
++import com.fasterxml.jackson.core.*;
++import com.fasterxml.jackson.databind.util.TokenBuffer;
++import com.fasterxml.jackson.databind.*;
++import com.fasterxml.jackson.databind.annotation.JacksonStdImpl;
++import com.fasterxml.jackson.databind.deser.ContextualDeserializer;
++import com.fasterxml.jackson.databind.deser.UnresolvedForwardReference;
++import com.fasterxml.jackson.databind.deser.ValueInstantiator;
++import com.fasterxml.jackson.databind.deser.impl.ReadableObjectId.Referring;
++import com.fasterxml.jackson.databind.deser.std.ContainerDeserializerBase;
++import com.fasterxml.jackson.databind.jsontype.TypeDeserializer;
+@@ -1,21 +1,35 @@
+-    @SuppressWarnings("unchecked")
+-    @Override
+-    public Collection<Object> deserialize(JsonParser p, DeserializationContext ctxt)
+-        throws IOException
+-    {
+-        if (_delegateDeserializer != null) {
+-            return (Collection<Object>) _valueInstantiator.createUsingDelegate(ctxt,
+-                    _delegateDeserializer.deserialize(p, ctxt));
+-        }
+-        /* Empty String may be ok; bit tricky to check, however, since
+-         * there is also possibility of "auto-wrapping" of single-element arrays.
+-         * Hence we only accept empty String here.
+-         */
+-        if (p.hasToken(JsonToken.VALUE_STRING)) {
+-            String str = p.getText();
+-            if (str.length() == 0) {
+-                return (Collection<Object>) _valueInstantiator.createFromString(ctxt, str);
+-            }
+-        }
+-        return deserialize(p, ctxt, (Collection<Object>) _valueInstantiator.createUsingDefault(ctxt));
+-    }
++    @SuppressWarnings("unchecked")
++    @Override
++    public Collection<Object> deserialize(JsonParser p, DeserializationContext ctxt)
++        throws IOException
++    {
++        if (_delegateDeserializer != null) {
++            return (Collection<Object>) _valueInstantiator.createUsingDelegate(ctxt,
++                    _delegateDeserializer.deserialize(p, ctxt));
++        }
++        // [databind#68]: Allow wrapping of single values for Collection/array creators
++        if (p.getCurrentToken() == JsonToken.START_OBJECT
++                && ctxt.isEnabled(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY)) {
++            // Need to wrap the current token in an array
++            TokenBuffer tb = new TokenBuffer(p, ctxt);
++            tb.writeStartArray();
++            tb.copyCurrentStructure(p);
++            tb.writeEndArray();
++            JsonParser p2 = tb.asParser();
++            p2.nextToken(); // move to START_ARRAY
++            Collection<Object> result = deserialize(p2, ctxt);
++            p2.close();
++            return result;
++        }
++        /* Empty String may be ok; bit tricky to check, however, since
++         * there is also possibility of "auto-wrapping" of single-element arrays.
++         * Hence we only accept empty String here.
++         */
++        if (p.hasToken(JsonToken.VALUE_STRING)) {
++            String str = p.getText();
++            if (str.length() == 0) {
++                return (Collection<Object>) _valueInstantiator.createFromString(ctxt, str);
++            }
++        }
++        return deserialize(p, ctxt, (Collection<Object>) _valueInstantiator.createUsingDefault(ctxt));
++    }
+@@ -1,14 +1,13 @@
+-import java.io.IOException;
+-import java.util.*;
+-
+-import com.fasterxml.jackson.annotation.JsonFormat;
+-import com.fasterxml.jackson.core.*;
+-import com.fasterxml.jackson.databind.util.TokenBuffer;
+-import com.fasterxml.jackson.databind.*;
+-import com.fasterxml.jackson.databind.annotation.JacksonStdImpl;
+-import com.fasterxml.jackson.databind.deser.ContextualDeserializer;
+-import com.fasterxml.jackson.databind.deser.UnresolvedForwardReference;
+-import com.fasterxml.jackson.databind.deser.ValueInstantiator;
+-import com.fasterxml.jackson.databind.deser.impl.ReadableObjectId.Referring;
+-import com.fasterxml.jackson.databind.deser.std.ContainerDeserializerBase;
+-import com.fasterxml.jackson.databind.jsontype.TypeDeserializer;
++import java.io.IOException;
++import java.util.*;
++
++import com.fasterxml.jackson.annotation.JsonFormat;
++import com.fasterxml.jackson.core.*;
++import com.fasterxml.jackson.databind.*;
++import com.fasterxml.jackson.databind.annotation.JacksonStdImpl;
++import com.fasterxml.jackson.databind.deser.ContextualDeserializer;
++import com.fasterxml.jackson.databind.deser.UnresolvedForwardReference;
++import com.fasterxml.jackson.databind.deser.ValueInstantiator;
++import com.fasterxml.jackson.databind.deser.impl.ReadableObjectId.Referring;
++import com.fasterxml.jackson.databind.deser.std.ContainerDeserializerBase;
++import com.fasterxml.jackson.databind.jsontype.TypeDeserializer;
+@@ -1,35 +1,21 @@
+-    @SuppressWarnings("unchecked")
+-    @Override
+-    public Collection<Object> deserialize(JsonParser p, DeserializationContext ctxt)
+-        throws IOException
+-    {
+-        if (_delegateDeserializer != null) {
+-            return (Collection<Object>) _valueInstantiator.createUsingDelegate(ctxt,
+-                    _delegateDeserializer.deserialize(p, ctxt));
+-        }
+-        // [databind#68]: Allow wrapping of single values for Collection/array creators
+-        if (p.getCurrentToken() == JsonToken.START_OBJECT
+-                && ctxt.isEnabled(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY)) {
+-            // Need to wrap the current token in an array
+-            TokenBuffer tb = new TokenBuffer(p, ctxt);
+-            tb.writeStartArray();
+-            tb.copyCurrentStructure(p);
+-            tb.writeEndArray();
+-            JsonParser p2 = tb.asParser();
+-            p2.nextToken(); // move to START_ARRAY
+-            Collection<Object> result = deserialize(p2, ctxt);
+-            p2.close();
+-            return result;
+-        }
+-        /* Empty String may be ok; bit tricky to check, however, since
+-         * there is also possibility of "auto-wrapping" of single-element arrays.
+-         * Hence we only accept empty String here.
+-         */
+-        if (p.hasToken(JsonToken.VALUE_STRING)) {
+-            String str = p.getText();
+-            if (str.length() == 0) {
+-                return (Collection<Object>) _valueInstantiator.createFromString(ctxt, str);
+-            }
+-        }
+-        return deserialize(p, ctxt, (Collection<Object>) _valueInstantiator.createUsingDefault(ctxt));
+-    }
++    @SuppressWarnings("unchecked")
++    @Override
++    public Collection<Object> deserialize(JsonParser p, DeserializationContext ctxt)
++        throws IOException
++    {
++        if (_delegateDeserializer != null) {
++            return (Collection<Object>) _valueInstantiator.createUsingDelegate(ctxt,
++                    _delegateDeserializer.deserialize(p, ctxt));
++        }
++        /* Empty String may be ok; bit tricky to check, however, since
++         * there is also possibility of "auto-wrapping" of single-element arrays.
++         * Hence we only accept empty String here.
++         */
++        if (p.hasToken(JsonToken.VALUE_STRING)) {
++            String str = p.getText();
++            if (str.length() == 0) {
++                return (Collection<Object>) _valueInstantiator.createFromString(ctxt, str);
++            }
++        }
++        return deserialize(p, ctxt, (Collection<Object>) _valueInstantiator.createUsingDefault(ctxt));
++    }
+
+--- a/src/test/java/com/fasterxml/jackson/databind/creators/JsonCreatorWithCollectionTest.java
++++ b/src/test/java/com/fasterxml/jackson/databind/creators/JsonCreatorWithCollectionTest.java
+@@ -1,1 +1,1 @@
+-    private static final String JSON = "[{\"message\":\"messageHere\"}]";
++    private static final String JSON = "[{\"message\":\"messageHere\"}]";
+@@ -1,17 +1,17 @@
+-    static class A {
+-        List<B> bs = Collections.emptyList();
+-
+-        @JsonCreator
+-        A(final List<B> bs) {
+-            this.bs = bs;
+-        }
+-    }
+-
+-    static class B {
+-        List<C> cs = Collections.emptyList();
+-
+-        @JsonCreator
+-        B(final List<C> cs) {
+-            this.cs = cs;
+-        }
+-    }
++    static class A {
++        List<B> bs = Collections.emptyList();
++
++        @JsonCreator
++        A(@JsonProperty("bs") final List<B> bs) {
++            this.bs = bs;
++        }
++    }
++
++    static class B {
++        List<C> cs = Collections.emptyList();
++
++        @JsonCreator
++        B(@JsonProperty("cs") final List<C> cs) {
++            this.cs = cs;
++        }
++    }
+@@ -1,17 +1,17 @@
+-    static class A {
+-        List<B> bs = Collections.emptyList();
+-
+-        @JsonCreator
+-        A(@JsonProperty("bs") final List<B> bs) {
+-            this.bs = bs;
+-        }
+-    }
+-
+-    static class B {
+-        List<C> cs = Collections.emptyList();
+-
+-        @JsonCreator
+-        B(@JsonProperty("cs") final List<C> cs) {
+-            this.cs = cs;
+-        }
+-    }
++    static class A {
++        List<B> bs = Collections.emptyList();
++
++        @JsonCreator
++        A(final List<B> bs) {
++            this.bs = bs;
++        }
++    }
++
++    static class B {
++        List<C> cs = Collections.emptyList();
++
++        @JsonCreator
++        B(final List<C> cs) {
++            this.cs = cs;
++        }
++    }

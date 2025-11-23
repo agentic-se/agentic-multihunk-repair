@@ -1,0 +1,63 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index 34880d8..9487df2 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -123,9 +123,56 @@ public final class DataUtil {
+             Validate.notEmpty(charsetName, "Must set charset arg to character set of file to parse. Set to null to attempt to detect from HTML");
+             docData = Charset.forName(charsetName).decode(byteData).toString();
+         }
++        // Check for UTF-16 and UTF-32 BOMs in the first bytes before decoding to avoid misinterpreting UTF-16/32 as UTF-8
++        if (charsetName == null && byteData.remaining() >= 2) {
++            int originalPosition = byteData.position();
++            byteData.mark();
++            int firstByte = byteData.get() & 0xFF;
++            int secondByte = byteData.get() & 0xFF;
++            
++            // UTF-16BE BOM: FE FF
++            if (firstByte == 0xFE && secondByte == 0xFF) {
++                charsetName = "UTF-16BE";
++                byteData.reset();
++                byteData.position(2); // Skip BOM
++            }
++            // UTF-16LE BOM: FF FE  
++            else if (firstByte == 0xFF && secondByte == 0xFE) {
++                charsetName = "UTF-16LE";
++                byteData.reset();
++                byteData.position(2); // Skip BOM
++            }
++            // Check for 4-byte BOMs (UTF-32)
++            else if (byteData.remaining() >= 2) {
++                int thirdByte = byteData.get() & 0xFF;
++                int fourthByte = byteData.get() & 0xFF;
++                
++                // UTF-32BE BOM: 00 00 FE FF
++                if (firstByte == 0x00 && secondByte == 0x00 && thirdByte == 0xFE && fourthByte == 0xFF) {
++                    charsetName = "UTF-32BE";
++                    byteData.reset();
++                    byteData.position(4); // Skip BOM
++                }
++                // UTF-32LE BOM: FF FE 00 00
++                else if (firstByte == 0xFF && secondByte == 0xFE && thirdByte == 0x00 && fourthByte == 0x00) {
++                    charsetName = "UTF-32LE";
++                    byteData.reset();
++                    byteData.position(4); // Skip BOM
++                }
++                else {
++                    // Reset if not a known BOM
++                    byteData.reset();
++                }
++            }
++            else {
++                // Reset if not enough bytes for BOM check
++                byteData.reset();
++            }
++        }
++        
++        // If we still have a BOM character in the decoded data, it's likely UTF-8 BOM
+         if (docData.length() > 0 && docData.charAt(0) == UNICODE_BOM) {
+-            byteData.rewind();
+-            docData = Charset.forName(defaultCharset).decode(byteData).toString();
++            // Remove BOM from the decoded data and set charset to UTF-8
+             docData = docData.substring(1);
+             charsetName = defaultCharset;
+             doc = null;

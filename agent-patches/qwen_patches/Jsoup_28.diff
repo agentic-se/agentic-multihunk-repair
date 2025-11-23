@@ -1,0 +1,13 @@
+diff --git a/src/main/java/org/jsoup/nodes/Entities.java b/src/main/java/org/jsoup/nodes/Entities.java
+index be73e32..aa8d2d9 100644
+--- a/src/main/java/org/jsoup/nodes/Entities.java
++++ b/src/main/java/org/jsoup/nodes/Entities.java
+@@ -118,7 +118,7 @@ public class Entities {
+                 if (full.containsKey(name))
+                     charval = full.get(name);
+             }
+-            if (charval != -1 || charval > 0xFFFF) {
++            if (charval != -1 && charval <= 0xFFFF) {
+                 String c = Character.toString((char) charval);
+                 m.appendReplacement(accum, Matcher.quoteReplacement(c));
+             } else {

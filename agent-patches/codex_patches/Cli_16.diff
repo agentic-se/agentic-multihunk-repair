@@ -1,0 +1,90 @@
+diff --git a/src/java/org/apache/commons/cli2/commandline/WriteableCommandLineImpl.java b/src/java/org/apache/commons/cli2/commandline/WriteableCommandLineImpl.java
+index 337eeb6..0b6b95e 100644
+--- a/src/java/org/apache/commons/cli2/commandline/WriteableCommandLineImpl.java
++++ b/src/java/org/apache/commons/cli2/commandline/WriteableCommandLineImpl.java
+@@ -28,6 +28,9 @@ import java.util.Set;
+ import org.apache.commons.cli2.Argument;
+ import org.apache.commons.cli2.Option;
+ import org.apache.commons.cli2.WriteableCommandLine;
++import org.apache.commons.cli2.Group;
++import org.apache.commons.cli2.option.ParentImpl;
++import org.apache.commons.cli2.option.GroupImpl;
+ import org.apache.commons.cli2.option.PropertyOption;
+ import org.apache.commons.cli2.resource.ResourceConstants;
+ import org.apache.commons.cli2.resource.ResourceHelper;
+@@ -48,6 +51,7 @@ public class WriteableCommandLineImpl
+     private final Map defaultSwitches = new HashMap();
+     private final List normalised;
+     private final Set prefixes;
++    private final GroupImpl rootGroup;
+ 
+     /**
+      * Creates a new WriteableCommandLineImpl rooted on the specified Option, to
+@@ -60,17 +64,63 @@ public class WriteableCommandLineImpl
+                                     final List arguments) {
+         this.prefixes = rootOption.getPrefixes();
+         this.normalised = arguments;
++        // The parser's root option is expected to be a GroupImpl
++        this.rootGroup = (rootOption instanceof GroupImpl) ? (GroupImpl) rootOption : null;
+     }
+ 
+     public void addOption(Option option) {
+         options.add(option);
+-        nameToOption.put(option.getPreferredName(), option);
+ 
+-        for (Iterator i = option.getTriggers().iterator(); i.hasNext();) {
+-            nameToOption.put(i.next(), option);
++        // Only register triggers for non-group options to avoid shadowing child triggers
++        if (!(option instanceof Group)) {
++            nameToOption.put(option.getPreferredName(), option);
++
++            for (Iterator i = option.getTriggers().iterator(); i.hasNext();) {
++                nameToOption.put(i.next(), option);
++            }
++        }
++
++        // ensure that all ancestor groups are also marked present when a child is present
++        if (rootGroup != null) {
++            markAncestorGroupsPresent(option);
++        }
++    }
++
++    private void markAncestorGroupsPresent(final Option child) {
++        // Traverse from the root group and add any containing groups to the options list
++        containsAndMark(rootGroup, child);
++    }
++
++    private boolean containsAndMark(final GroupImpl container, final Option target) {
++        boolean found = false;
++
++        // Iterate over non-anonymous options of the group
++        for (Iterator it = container.getOptions().iterator(); it.hasNext();) {
++            final Option opt = (Option) it.next();
++
++            if (opt == target) {
++                found = true;
++            } else if (opt instanceof GroupImpl) {
++                if (containsAndMark((GroupImpl) opt, target)) {
++                    found = true;
++                }
++            } else if (opt instanceof ParentImpl) {
++                Group children = ((ParentImpl) opt).getChildren();
++                if (children instanceof GroupImpl && containsAndMark((GroupImpl) children, target)) {
++                    found = true;
++                }
++            }
+         }
+ 
+-        // ensure that all parent options are also added
++        if (found) {
++            // Mark this container group as present if not already recorded
++            if (!options.contains(container)) {
++                options.add(container);
++            }
++            return true;
++        }
++
++        return false;
+     }
+ 
+     public void addValue(final Option option,

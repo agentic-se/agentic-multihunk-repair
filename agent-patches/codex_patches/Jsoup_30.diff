@@ -1,0 +1,14 @@
+diff --git a/src/main/java/org/jsoup/safety/Cleaner.java b/src/main/java/org/jsoup/safety/Cleaner.java
+index e4d45bd..1af51ef 100644
+--- a/src/main/java/org/jsoup/safety/Cleaner.java
++++ b/src/main/java/org/jsoup/safety/Cleaner.java
+@@ -90,6 +90,9 @@ public class Cleaner {
+                 TextNode sourceText = (TextNode) source;
+                 TextNode destText = new TextNode(sourceText.getWholeText(), source.baseUri());
+                 destination.appendChild(destText);
++            } else {
++                // Comments, CDATA, processing instructions, etc. are not copied and should be considered discarded
++                numDiscarded++;
+             }
+         }
+         return numDiscarded;

@@ -1,0 +1,5 @@
+--- a/src/main/java/org/apache/commons/lang3/text/translate/LookupTranslator.java
++++ b/src/main/java/org/apache/commons/lang3/text/translate/LookupTranslator.java
+@@ -1,1 +1,1 @@
+-                this.lookupMap.put(seq[0], seq[1]);
++                this.lookupMap.put(seq[0].toString(), seq[1]);

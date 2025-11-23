@@ -1,0 +1,428 @@
+--- a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
+@@ -1,11 +1,11 @@
+-        if (nodeType == Node.COMMENT_NODE) {
+-            String text = ((Comment) node).getData();
+-            return text == null ? "" : text.trim();
+-        }
+-        if (nodeType == Node.TEXT_NODE || nodeType == Node.CDATA_SECTION_NODE) {
+-            String text = node.getNodeValue();
+-            return text == null ? "" : text.trim();
+-        }
+-        if (nodeType == Node.PROCESSING_INSTRUCTION_NODE) {
+-            String text = ((ProcessingInstruction) node).getData();
+-            return text == null ? "" : text.trim();
++        if (nodeType == Node.COMMENT_NODE) {
++            String text = ((Comment) node).getData();
++            return text == null ? "" : text;
++        }
++        if (nodeType == Node.TEXT_NODE || nodeType == Node.CDATA_SECTION_NODE) {
++            String text = node.getNodeValue();
++            return text == null ? "" : text;
++        }
++        if (nodeType == Node.PROCESSING_INSTRUCTION_NODE) {
++            String text = ((ProcessingInstruction) node).getData();
++            return text == null ? "" : text;
+@@ -1,4 +1,4 @@
+-            buf.append(stringValue(child));
+-            }
+-        }
+-        return buf.toString().trim();
++            buf.append(stringValue(child));
++            }
++        }
++        return buf.toString();
+@@ -1,3 +1,3 @@
+-        if (nodeType == Node.TEXT_NODE || nodeType == Node.CDATA_SECTION_NODE) {
+-            String text = node.getNodeValue();
+-            return text == null ? "" : text.trim();
++        if (nodeType == Node.TEXT_NODE || nodeType == Node.CDATA_SECTION_NODE) {
++            String text = node.getNodeValue();
++            return text == null ? "" : text;
+@@ -1,4 +1,4 @@
+-            buf.append(stringValue(child));
+-            }
+-        }
+-        return buf.toString().trim();
++            buf.append(stringValue(child));
++            }
++        }
++        return buf.toString();
+@@ -1,3 +1,3 @@
+-        if (nodeType == Node.TEXT_NODE || nodeType == Node.CDATA_SECTION_NODE) {
+-            String text = node.getNodeValue();
+-            return text == null ? "" : text.trim();
++        if (nodeType == Node.TEXT_NODE || nodeType == Node.CDATA_SECTION_NODE) {
++            String text = node.getNodeValue();
++            return text == null ? "" : text;
+@@ -1,3 +1,3 @@
+-        if (nodeType == Node.TEXT_NODE || nodeType == Node.CDATA_SECTION_NODE) {
+-            String text = node.getNodeValue();
+-            return text == null ? "" : text.trim();
++        if (nodeType == Node.TEXT_NODE || nodeType == Node.CDATA_SECTION_NODE) {
++            String text = node.getNodeValue();
++            return text == null ? "" : text;
+@@ -1,4 +1,4 @@
+-            buf.append(stringValue(child));
+-            }
+-        }
+-        return buf.toString().trim();
++            buf.append(stringValue(child));
++            }
++        }
++        return buf.toString();
+@@ -1,3 +1,3 @@
+-        if (nodeType == Node.TEXT_NODE || nodeType == Node.CDATA_SECTION_NODE) {
+-            String text = node.getNodeValue();
+-            return text == null ? "" : text.trim();
++        if (nodeType == Node.TEXT_NODE || nodeType == Node.CDATA_SECTION_NODE) {
++            String text = node.getNodeValue();
++            return text == null ? "" : text;
+@@ -1,4 +1,4 @@
+-            buf.append(stringValue(child));
+-            }
+-        }
+-        return buf.toString().trim();
++            buf.append(stringValue(child));
++            }
++        }
++        return buf.toString();
+@@ -1,3 +1,3 @@
+-        if (nodeType == Node.TEXT_NODE || nodeType == Node.CDATA_SECTION_NODE) {
+-            String text = node.getNodeValue();
+-            return text == null ? "" : text.trim();
++        if (nodeType == Node.TEXT_NODE || nodeType == Node.CDATA_SECTION_NODE) {
++            String text = node.getNodeValue();
++            return text == null ? "" : text;
+@@ -1,4 +1,4 @@
+-            buf.append(stringValue(child));
+-            }
+-        }
+-        return buf.toString().trim();
++            buf.append(stringValue(child));
++            }
++        }
++        return buf.toString();
+@@ -1,3 +1,3 @@
+-        if (nodeType == Node.TEXT_NODE || nodeType == Node.CDATA_SECTION_NODE) {
+-            String text = node.getNodeValue();
+-            return text == null ? "" : text.trim();
++        if (nodeType == Node.TEXT_NODE || nodeType == Node.CDATA_SECTION_NODE) {
++            String text = node.getNodeValue();
++            return text == null ? "" : text;
+@@ -1,4 +1,4 @@
+-            buf.append(stringValue(child));
+-            }
+-        }
+-        return buf.toString().trim();
++            buf.append(stringValue(child));
++            }
++        }
++        return buf.toString();
+@@ -1,3 +1,3 @@
+-        if (nodeType == Node.TEXT_NODE || nodeType == Node.CDATA_SECTION_NODE) {
+-            String text = node.getNodeValue();
+-            return text == null ? "" : text.trim();
++        if (nodeType == Node.TEXT_NODE || nodeType == Node.CDATA_SECTION_NODE) {
++            String text = node.getNodeValue();
++            return text == null ? "" : text;
+@@ -1,4 +1,4 @@
+-            buf.append(stringValue(child));
+-            }
+-        }
+-        return buf.toString().trim();
++            buf.append(stringValue(child));
++            }
++        }
++        return buf.toString();
+@@ -1,3 +1,3 @@
+-        if (nodeType == Node.TEXT_NODE || nodeType == Node.CDATA_SECTION_NODE) {
+-            String text = node.getNodeValue();
+-            return text == null ? "" : text.trim();
++        if (nodeType == Node.TEXT_NODE || nodeType == Node.CDATA_SECTION_NODE) {
++            String text = node.getNodeValue();
++            return text == null ? "" : text;
+@@ -1,4 +1,4 @@
+-            buf.append(stringValue(child));
+-            }
+-        }
+-        return buf.toString().trim();
++            buf.append(stringValue(child));
++            }
++        }
++        return buf.toString();
+@@ -1,3 +1,3 @@
+-        if (nodeType == Node.TEXT_NODE || nodeType == Node.CDATA_SECTION_NODE) {
+-            String text = node.getNodeValue();
+-            return text == null ? "" : text.trim();
++        if (nodeType == Node.TEXT_NODE || nodeType == Node.CDATA_SECTION_NODE) {
++            String text = node.getNodeValue();
++            return text == null ? "" : text;
+@@ -1,4 +1,4 @@
+-            buf.append(stringValue(child));
+-            }
+-        }
+-        return buf.toString().trim();
++            buf.append(stringValue(child));
++            }
++        }
++        return buf.toString();
+@@ -1,3 +1,3 @@
+-        if (nodeType == Node.TEXT_NODE || nodeType == Node.CDATA_SECTION_NODE) {
+-            String text = node.getNodeValue();
+-            return text == null ? "" : text.trim();
++        if (nodeType == Node.TEXT_NODE || nodeType == Node.CDATA_SECTION_NODE) {
++            String text = node.getNodeValue();
++            return text == null ? "" : text;
+@@ -1,4 +1,4 @@
+-            buf.append(stringValue(child));
+-            }
+-        }
+-        return buf.toString().trim();
++            buf.append(stringValue(child));
++            }
++        }
++        return buf.toString();
+@@ -1,3 +1,3 @@
+-        if (nodeType == Node.TEXT_NODE || nodeType == Node.CDATA_SECTION_NODE) {
+-            String text = node.getNodeValue();
+-            return text == null ? "" : text.trim();
++        if (nodeType == Node.TEXT_NODE || nodeType == Node.CDATA_SECTION_NODE) {
++            String text = node.getNodeValue();
++            return text == null ? "" : text;
+@@ -1,4 +1,4 @@
+-            buf.append(stringValue(child));
+-            }
+-        }
+-        return buf.toString().trim();
++            buf.append(stringValue(child));
++            }
++        }
++        return buf.toString();
+
+--- a/src/java/org/apache/commons/jxpath/ri/model/jdom/JDOMNodePointer.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/jdom/JDOMNodePointer.java
+@@ -1,11 +1,8 @@
+-    public Object getValue() {
+-        if (node instanceof Element) {
+-            return ((Element) node).getTextTrim();
+-        }
+-        if (node instanceof Comment) {
+-            String text = ((Comment) node).getText();
+-            if (text != null) {
+-                text = text.trim();
+-            }
+-            return text;
+-        }
++    public Object getValue() {
++        if (node instanceof Element) {
++            return ((Element) node).getText();
++        }
++        if (node instanceof Comment) {
++            String text = ((Comment) node).getText();
++            return text;
++        }
+@@ -1,13 +1,10 @@
+-        if (node instanceof Text) {
+-            return ((Text) node).getTextTrim();
+-        }
+-        if (node instanceof CDATA) {
+-            return ((CDATA) node).getTextTrim();
+-        }
+-        if (node instanceof ProcessingInstruction) {
+-            String text = ((ProcessingInstruction) node).getData();
+-            if (text != null) {
+-                text = text.trim();
+-            }
+-            return text;
+-        }
++        if (node instanceof Text) {
++            return ((Text) node).getText();
++        }
++        if (node instanceof CDATA) {
++            return ((CDATA) node).getText();
++        }
++        if (node instanceof ProcessingInstruction) {
++            String text = ((ProcessingInstruction) node).getData();
++            return text;
++        }
+@@ -1,3 +1,3 @@
+-    public Object getValue() {
+-        if (node instanceof Element) {
+-            return ((Element) node).getTextTrim();
++    public Object getValue() {
++        if (node instanceof Element) {
++            return ((Element) node).getText();
+@@ -1,5 +1,5 @@
+-        if (node instanceof Text) {
+-            return ((Text) node).getTextTrim();
+-        }
+-        if (node instanceof CDATA) {
+-            return ((CDATA) node).getTextTrim();
++        if (node instanceof Text) {
++            return ((Text) node).getText();
++        }
++        if (node instanceof CDATA) {
++            return ((CDATA) node).getText();
+@@ -1,5 +1,5 @@
+-        if (node instanceof Text) {
+-            return ((Text) node).getTextTrim();
+-        }
+-        if (node instanceof CDATA) {
+-            return ((CDATA) node).getTextTrim();
++        if (node instanceof Text) {
++            return ((Text) node).getText();
++        }
++        if (node instanceof CDATA) {
++            return ((CDATA) node).getText();
+@@ -1,3 +1,3 @@
+-    public Object getValue() {
+-        if (node instanceof Element) {
+-            return ((Element) node).getTextTrim();
++    public Object getValue() {
++        if (node instanceof Element) {
++            return ((Element) node).getText();
+@@ -1,5 +1,5 @@
+-        if (node instanceof Text) {
+-            return ((Text) node).getTextTrim();
+-        }
+-        if (node instanceof CDATA) {
+-            return ((CDATA) node).getTextTrim();
++        if (node instanceof Text) {
++            return ((Text) node).getText();
++        }
++        if (node instanceof CDATA) {
++            return ((CDATA) node).getText();
+@@ -1,3 +1,3 @@
+-    public Object getValue() {
+-        if (node instanceof Element) {
+-            return ((Element) node).getTextTrim();
++    public Object getValue() {
++        if (node instanceof Element) {
++            return ((Element) node).getText();
+@@ -1,5 +1,5 @@
+-        if (node instanceof Text) {
+-            return ((Text) node).getTextTrim();
+-        }
+-        if (node instanceof CDATA) {
+-            return ((CDATA) node).getTextTrim();
++        if (node instanceof Text) {
++            return ((Text) node).getText();
++        }
++        if (node instanceof CDATA) {
++            return ((CDATA) node).getText();
+@@ -1,3 +1,3 @@
+-    public Object getValue() {
+-        if (node instanceof Element) {
+-            return ((Element) node).getTextTrim();
++    public Object getValue() {
++        if (node instanceof Element) {
++            return ((Element) node).getText();
+@@ -1,5 +1,5 @@
+-        if (node instanceof Text) {
+-            return ((Text) node).getTextTrim();
+-        }
+-        if (node instanceof CDATA) {
+-            return ((CDATA) node).getTextTrim();
++        if (node instanceof Text) {
++            return ((Text) node).getText();
++        }
++        if (node instanceof CDATA) {
++            return ((CDATA) node).getText();
+@@ -1,3 +1,3 @@
+-    public Object getValue() {
+-        if (node instanceof Element) {
+-            return ((Element) node).getTextTrim();
++    public Object getValue() {
++        if (node instanceof Element) {
++            return ((Element) node).getText();
+@@ -1,5 +1,5 @@
+-        if (node instanceof Text) {
+-            return ((Text) node).getTextTrim();
+-        }
+-        if (node instanceof CDATA) {
+-            return ((CDATA) node).getTextTrim();
++        if (node instanceof Text) {
++            return ((Text) node).getText();
++        }
++        if (node instanceof CDATA) {
++            return ((CDATA) node).getText();
+@@ -1,3 +1,3 @@
+-    public Object getValue() {
+-        if (node instanceof Element) {
+-            return ((Element) node).getTextTrim();
++    public Object getValue() {
++        if (node instanceof Element) {
++            return ((Element) node).getText();
+@@ -1,5 +1,5 @@
+-        if (node instanceof Text) {
+-            return ((Text) node).getTextTrim();
+-        }
+-        if (node instanceof CDATA) {
+-            return ((CDATA) node).getTextTrim();
++        if (node instanceof Text) {
++            return ((Text) node).getText();
++        }
++        if (node instanceof CDATA) {
++            return ((CDATA) node).getText();
+@@ -1,3 +1,3 @@
+-    public Object getValue() {
+-        if (node instanceof Element) {
+-            return ((Element) node).getTextTrim();
++    public Object getValue() {
++        if (node instanceof Element) {
++            return ((Element) node).getText();
+@@ -1,5 +1,5 @@
+-        if (node instanceof Text) {
+-            return ((Text) node).getTextTrim();
+-        }
+-        if (node instanceof CDATA) {
+-            return ((CDATA) node).getTextTrim();
++        if (node instanceof Text) {
++            return ((Text) node).getText();
++        }
++        if (node instanceof CDATA) {
++            return ((CDATA) node).getText();
+@@ -1,3 +1,3 @@
+-    public Object getValue() {
+-        if (node instanceof Element) {
+-            return ((Element) node).getTextTrim();
++    public Object getValue() {
++        if (node instanceof Element) {
++            return ((Element) node).getText();
+@@ -1,5 +1,5 @@
+-        if (node instanceof Text) {
+-            return ((Text) node).getTextTrim();
+-        }
+-        if (node instanceof CDATA) {
+-            return ((CDATA) node).getTextTrim();
++        if (node instanceof Text) {
++            return ((Text) node).getText();
++        }
++        if (node instanceof CDATA) {
++            return ((CDATA) node).getText();
+@@ -1,3 +1,3 @@
+-    public Object getValue() {
+-        if (node instanceof Element) {
+-            return ((Element) node).getTextTrim();
++    public Object getValue() {
++        if (node instanceof Element) {
++            return ((Element) node).getText();
+@@ -1,5 +1,5 @@
+-        if (node instanceof Text) {
+-            return ((Text) node).getTextTrim();
+-        }
+-        if (node instanceof CDATA) {
+-            return ((CDATA) node).getTextTrim();
++        if (node instanceof Text) {
++            return ((Text) node).getText();
++        }
++        if (node instanceof CDATA) {
++            return ((CDATA) node).getText();
+@@ -1,3 +1,3 @@
+-    public Object getValue() {
+-        if (node instanceof Element) {
+-            return ((Element) node).getTextTrim();
++    public Object getValue() {
++        if (node instanceof Element) {
++            return ((Element) node).getText();

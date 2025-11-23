@@ -1,0 +1,38 @@
+diff --git a/src/com/google/javascript/jscomp/FunctionToBlockMutator.java b/src/com/google/javascript/jscomp/FunctionToBlockMutator.java
+index 64764c09..f1ce8d04 100644
+--- a/src/com/google/javascript/jscomp/FunctionToBlockMutator.java
++++ b/src/com/google/javascript/jscomp/FunctionToBlockMutator.java
+@@ -149,6 +149,33 @@ class FunctionToBlockMutator {
+                 "inline_",
+                 isCallInLoop)));
+     // Make label names unique to this instance.
++    makeLabelNamesUnique(fnNode, new LabelNameSupplier(idSupplier));
++  }
++
++  /**
++   * Rename all labels in the given node tree to make them unique.
++   */
++  private void makeLabelNamesUnique(Node fnNode, Supplier<String> labelSupplier) {
++    renameLabelNodes(fnNode, labelSupplier, fnNode);
++  }
++
++  /**
++   * Recursively rename all LABEL nodes in the tree.
++   */
++  private void renameLabelNodes(Node node, Supplier<String> labelSupplier, Node fnNode) {
++    if (node.getType() == Token.LABEL) {
++      // Rename the label
++      Node labelNameNode = node.getFirstChild();
++      String newName = labelSupplier.get();
++      labelNameNode.setString(newName);
++    }
++
++    // Don't traverse into nested functions
++    if (node.getType() != Token.FUNCTION || node == fnNode) {
++      for (Node child = node.getFirstChild(); child != null; child = child.getNext()) {
++        renameLabelNodes(child, labelSupplier, fnNode);
++      }
++    }
+   }
+ 
+   static class LabelNameSupplier implements Supplier<String> {

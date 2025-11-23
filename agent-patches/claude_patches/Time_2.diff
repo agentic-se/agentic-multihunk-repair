@@ -1,0 +1,76 @@
+diff --git a/src/main/java/org/joda/time/Partial.java b/src/main/java/org/joda/time/Partial.java
+index b9ec964f..383f64db 100644
+--- a/src/main/java/org/joda/time/Partial.java
++++ b/src/main/java/org/joda/time/Partial.java
+@@ -219,18 +219,30 @@ public final class Partial
+                     throw new IllegalArgumentException("Types array must be in order largest-smallest: " +
+                             types[i - 1].getName() + " < " + loopType.getName());
+                 } else if (compare == 0) {
+-                    if (types[i - 1].getRangeDurationType() == null) {
+-                        if (loopType.getRangeDurationType() == null) {
+-                            throw new IllegalArgumentException("Types array must not contain duplicate: " +
+-                                            types[i - 1].getName() + " and " + loopType.getName());
++                    DurationFieldType lastRangeType = types[i - 1].getRangeDurationType();
++                    DurationFieldType loopRangeType = loopType.getRangeDurationType();
++                    if (lastRangeType == null) {
++                        if (loopRangeType == null) {
++                            // Both are null - cannot determine order via range
++                            // Check if they are actually the same field type
++                            if (types[i - 1].equals(loopType)) {
++                                throw new IllegalArgumentException("Types array must not contain duplicate: " +
++                                                types[i - 1].getName() + " and " + loopType.getName());
++                            }
++                            // Different field types but same unit and both have null range - accept either order
++                        } else {
++                            // lastRangeType is null, but loopRangeType is not
++                            // A null range type means the field is unbounded/imprecise (like era or year)
++                            // A non-null range type means the field is bounded (like dayOfMonth by monthOfYear)
++                            // Generally, unbounded fields are "larger" but this is an unusual case
+                         }
+                     } else {
+-                        if (loopType.getRangeDurationType() == null) {
++                        if (loopRangeType == null) {
+                             throw new IllegalArgumentException("Types array must be in order largest-smallest: " +
+                                     types[i - 1].getName() + " < " + loopType.getName());
+                         }
+-                        DurationField lastRangeField = types[i - 1].getRangeDurationType().getField(iChronology);
+-                        DurationField loopRangeField = loopType.getRangeDurationType().getField(iChronology);
++                        DurationField lastRangeField = lastRangeType.getField(iChronology);
++                        DurationField loopRangeField = loopRangeType.getField(iChronology);
+                         if (lastRangeField.compareTo(loopRangeField) < 0) {
+                             throw new IllegalArgumentException("Types array must be in order largest-smallest: " +
+                                     types[i - 1].getName() + " < " + loopType.getName());
+@@ -446,11 +458,26 @@ public final class Partial
+                         if (compare > 0) {
+                             break;
+                         } else if (compare == 0) {
+-                            DurationField rangeField = fieldType.getRangeDurationType().getField(iChronology);
+-                            DurationField loopRangeField = loopType.getRangeDurationType().getField(iChronology);
+-                            if (rangeField.compareTo(loopRangeField) > 0) {
++                            DurationFieldType rangeType = fieldType.getRangeDurationType();
++                            DurationFieldType loopRangeType = loopType.getRangeDurationType();
++                            if (rangeType == null) {
++                                if (loopRangeType == null) {
++                                    // both are null, can't determine order
++                                    break;
++                                }
++                                // rangeType is null, fieldType is "larger" (less specific)
+                                 break;
+                             }
++                            if (loopRangeType == null) {
++                                // loopRangeType is null, so loopType is "larger" (less specific)
++                                // continue searching
++                            } else {
++                                DurationField rangeField = rangeType.getField(iChronology);
++                                DurationField loopRangeField = loopRangeType.getField(iChronology);
++                                if (rangeField.compareTo(loopRangeField) > 0) {
++                                    break;
++                                }
++                            }
+                         }
+                     }
+                 }
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

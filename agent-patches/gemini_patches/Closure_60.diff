@@ -1,0 +1,326 @@
+--- a/src/com/google/javascript/jscomp/MarkNoSideEffectCalls.java
++++ b/src/com/google/javascript/jscomp/MarkNoSideEffectCalls.java
+@@ -1,1 +1,1 @@
+-      if (definitions == null) {
++      if (definitions == null || definitions.isEmpty()) {
+@@ -1,6 +1,11 @@
+-      if (!NodeUtil.isCall(node) && !NodeUtil.isNew(node)) {
+-        return;
+-      }
+-
+-      Collection<Definition> definitions =
+-          defFinder.getDefinitionsReferencedAt(node.getFirstChild());
++      if (!NodeUtil.isCall(node) && !NodeUtil.isNew(node)) {
++        return;
++      }
++
++      // If the function being called is a function literal (IIFE), do not mark as no side effects.
++      if (node.getFirstChild().getType() == Token.FUNCTION) {
++        return;
++      }
++
++      Collection<Definition> definitions =
++          defFinder.getDefinitionsReferencedAt(node.getFirstChild());
+@@ -1,4 +1,9 @@
+-  static final DiagnosticType INVALID_NO_SIDE_EFFECT_ANNOTATION =
+-      DiagnosticType.error(
+-          "JSC_INVALID_NO_SIDE_EFFECT_ANNOTATION",
+-          "@nosideeffects may only appear in externs files.");
++  static final DiagnosticType INVALID_NO_SIDE_EFFECT_ANNOTATION =
++      DiagnosticType.error(
++          "JSC_INVALID_NO_SIDE_EFFECT_ANNOTATION",
++          "@nosideeffects may only appear in externs files.");
++
++  static final DiagnosticType IIFE_NO_SIDE_EFFECT_MARKING =
++      DiagnosticType.error(
++          "JSC_IIFE_NO_SIDE_EFFECT_MARKING",
++          "IIFE encountered, preventing NO_SIDE_EFFECTS marking.");
+@@ -1,4 +1,5 @@
+-      // If the function being called is a function literal (IIFE), do not mark as no side effects.
+-      if (node.getFirstChild().getType() == Token.FUNCTION) {
+-        return;
+-      }
++      // If the function being called is a function literal (IIFE), do not mark as no side effects.
++      if (node.getFirstChild().getType() == Token.FUNCTION) {
++        traversal.report(node, IIFE_NO_SIDE_EFFECT_MARKING);
++        return;
++      }
+@@ -1,5 +1,4 @@
+-      // If the function being called is a function literal (IIFE), do not mark as no side effects.
+-      if (node.getFirstChild().getType() == Token.FUNCTION) {
+-        traversal.report(node, IIFE_NO_SIDE_EFFECT_MARKING);
+-        return;
+-      }
++      // If the function being called is a function literal (IIFE), do not mark as no side effects.
++      if (node.getFirstChild().getType() == Token.FUNCTION) {
++        return;
++      }
+@@ -1,9 +1,4 @@
+-  static final DiagnosticType INVALID_NO_SIDE_EFFECT_ANNOTATION =
+-      DiagnosticType.error(
+-          "JSC_INVALID_NO_SIDE_EFFECT_ANNOTATION",
+-          "@nosideeffects may only appear in externs files.");
+-
+-  static final DiagnosticType IIFE_NO_SIDE_EFFECT_MARKING =
+-      DiagnosticType.error(
+-          "JSC_IIFE_NO_SIDE_EFFECT_MARKING",
+-          "IIFE encountered, preventing NO_SIDE_EFFECTS marking.");
++  static final DiagnosticType INVALID_NO_SIDE_EFFECT_ANNOTATION =
++      DiagnosticType.error(
++          "JSC_INVALID_NO_SIDE_EFFECT_ANNOTATION",
++          "@nosideeffects may only appear in externs files.");
+@@ -1,4 +1,6 @@
+-      // If the function being called is a function literal (IIFE), do not mark as no side effects.
+-      if (node.getFirstChild().getType() == Token.FUNCTION) {
+-        return;
+-      }
++      // If the function being called is a function literal (IIFE), do not mark as no side effects.
++      if (node.getFirstChild().getType() == Token.LP &&
++          node.getFirstChild().getFirstChild() != null &&
++          node.getFirstChild().getFirstChild().getType() == Token.FUNCTION) {
++        return;
++      }
+@@ -1,9 +1,12 @@
+-      // If the function being called is a function literal (IIFE), do not mark as no side effects.
+-      if (node.getFirstChild().getType() == Token.LP &&
+-          node.getFirstChild().getFirstChild() != null &&
+-          node.getFirstChild().getFirstChild().getType() == Token.FUNCTION) {
+-        return;
+-      }
+-
+-      Collection<Definition> definitions =
+-          defFinder.getDefinitionsReferencedAt(node.getFirstChild());
++      Node functionNode = node.getFirstChild();
++      if (functionNode.getType() == Token.LP) { // Check for (function() {})()
++          functionNode = functionNode.getFirstChild();
++      }
++
++      // If the function being called is a function literal (IIFE), do not mark as no side effects.
++      if (functionNode != null && functionNode.getType() == Token.FUNCTION) {
++        return;
++      }
++
++      Collection<Definition> definitions =
++          defFinder.getDefinitionsReferencedAt(node.getFirstChild());
+
+--- a/src/com/google/javascript/jscomp/NodeUtil.java
++++ b/src/com/google/javascript/jscomp/NodeUtil.java
+@@ -1,2 +1,7 @@
+-      case Token.VOID:
+-          return TernaryValue.FALSE;
++      case Token.VOID:
++          // If the VOID operator's operand has side effects, the boolean value
++          // is unknown. Otherwise, it's always false (undefined).
++          if (mayHaveSideEffects(n.getFirstChild())) {
++            return TernaryValue.UNKNOWN;
++          }
++          return TernaryValue.FALSE;
+@@ -1,2 +1,5 @@
+-      default:
+-        return getPureBooleanValue(n);
++      case Token.VOID:
++        // The VOID operator always results in 'undefined', which is falsey.
++        // getImpureBooleanValue ignores side-effects, so we don't check
++        // the child for side-effects here.
++        return TernaryValue.FALSE;
+@@ -1,5 +1,2 @@
+-      case Token.VOID:
+-        // The VOID operator always results in 'undefined', which is falsey.
+-        // getImpureBooleanValue ignores side-effects, so we don't check
+-        // the child for side-effects here.
+-        return TernaryValue.FALSE;
++      default:
++        return getPureBooleanValue(n);
+@@ -1,8 +1,13 @@
+-      case Token.ARRAYLIT:
+-      case Token.OBJECTLIT:
+-        // ignoring side-effects
+-        return TernaryValue.TRUE;
+-
+-
+-      default:
+-        return getPureBooleanValue(n);
++      case Token.ARRAYLIT:
++      case Token.OBJECTLIT:
++        // ignoring side-effects
++        return TernaryValue.TRUE;
++
++      case Token.VOID:
++        // The VOID operator always results in 'undefined', which is falsey.
++        // getImpureBooleanValue ignores side-effects, so we don't check
++        // the child for side-effects here.
++        return TernaryValue.FALSE;
++
++      default:
++        return getPureBooleanValue(n);
+@@ -1,4 +1,9 @@
+-    Node nameNode = callNode.getFirstChild();
+-
+-    // Built-in functions with no side effects.
+-    if (nameNode.getType() == Token.NAME) {
++    Node nameNode = callNode.getFirstChild();
++
++    // If the function being called is a function literal (IIFE), it always has side effects.
++    if (nameNode.getType() == Token.FUNCTION) {
++      return true;
++    }
++
++    // Built-in functions with no side effects.
++    if (nameNode.getType() == Token.NAME) {
+@@ -1,9 +1,4 @@
+-    Node nameNode = callNode.getFirstChild();
+-
+-    // If the function being called is a function literal (IIFE), it always has side effects.
+-    if (nameNode.getType() == Token.FUNCTION) {
+-      return true;
+-    }
+-
+-    // Built-in functions with no side effects.
+-    if (nameNode.getType() == Token.NAME) {
++    Node nameNode = callNode.getFirstChild();
++
++    // Built-in functions with no side effects.
++    if (nameNode.getType() == Token.NAME) {
+@@ -1,8 +1,18 @@
+-  static boolean functionCallHasSideEffects(
+-      Node callNode, @Nullable AbstractCompiler compiler) {
+-    if (callNode.getType() != Token.CALL) {
+-      throw new IllegalStateException(
+-          "Expected CALL node, got " + Token.name(callNode.getType()));
+-    }
+-
+-    if (callNode.isNoSideEffectsCall()) {
++  static boolean functionCallHasSideEffects(
++      Node callNode, @Nullable AbstractCompiler compiler) {
++    if (callNode.getType() != Token.CALL) {
++      throw new IllegalStateException(
++          "Expected CALL node, got " + Token.name(callNode.getType()));
++    }
++
++    Node targetFunction = callNode.getFirstChild();
++    if (targetFunction.getType() == Token.LP) {
++        targetFunction = targetFunction.getFirstChild();
++    }
++
++    // If the function being called is a function literal (IIFE), it always has side effects.
++    if (targetFunction != null && targetFunction.getType() == Token.FUNCTION) {
++      return true;
++    }
++
++    if (callNode.isNoSideEffectsCall()) {
+@@ -1,18 +1,8 @@
+-  static boolean functionCallHasSideEffects(
+-      Node callNode, @Nullable AbstractCompiler compiler) {
+-    if (callNode.getType() != Token.CALL) {
+-      throw new IllegalStateException(
+-          "Expected CALL node, got " + Token.name(callNode.getType()));
+-    }
+-
+-    Node targetFunction = callNode.getFirstChild();
+-    if (targetFunction.getType() == Token.LP) {
+-        targetFunction = targetFunction.getFirstChild();
+-    }
+-
+-    // If the function being called is a function literal (IIFE), it always has side effects.
+-    if (targetFunction != null && targetFunction.getType() == Token.FUNCTION) {
+-      return true;
+-    }
+-
+-    if (callNode.isNoSideEffectsCall()) {
++  static boolean functionCallHasSideEffects(
++      Node callNode, @Nullable AbstractCompiler compiler) {
++    if (callNode.getType() != Token.CALL) {
++      throw new IllegalStateException(
++          "Expected CALL node, got " + Token.name(callNode.getType()));
++    }
++
++    if (callNode.isNoSideEffectsCall()) {
+@@ -1,8 +1,15 @@
+-    if (callNode.isNoSideEffectsCall()) {
+-      return false;
+-    }
+-
+-    Node nameNode = callNode.getFirstChild();
+-
+-    // Built-in functions with no side effects.
+-    if (nameNode.getType() == Token.NAME) {
++    if (callNode.isNoSideEffectsCall()) {
++      return false;
++    }
++
++    Node nameNode = callNode.getFirstChild();
++
++    // If the function being called is a function literal (IIFE), it always has side effects.
++    if (nameNode.getType() == Token.LP &&
++        nameNode.getFirstChild() != null &&
++        nameNode.getFirstChild().getType() == Token.FUNCTION) {
++      return true;
++    }
++
++    // Built-in functions with no side effects.
++    if (nameNode.getType() == Token.NAME) {
+
+--- a/test/com/google/javascript/jscomp/NodeUtilTest.java
++++ b/test/com/google/javascript/jscomp/NodeUtilTest.java
+@@ -1,2 +1,2 @@
+-    assertSideEffect(false, "(function() { })");
+-    assertSideEffect(false, "(function() { i++ })");
++    assertSideEffect(true, "(function() { })");
++    assertSideEffect(true, "(function() { i++ })");
+@@ -1,2 +1,2 @@
+-    assertSideEffect(true, "(function() { })");
+-    assertSideEffect(true, "(function() { i++ })");
++    assertSideEffect(false, "(function() { })");
++    assertSideEffect(false, "(function() { i++ })");
+@@ -1,2 +1,2 @@
+-    assertSideEffect(false, "(function() { })");
+-    assertSideEffect(false, "(function() { i++ })");
++    assertSideEffect(true, "(function() { })");
++    assertSideEffect(true, "(function() { i++ })");
+@@ -1,1 +1,6 @@
+-    assertSideEffect(true, "(function() { i++ })");
++    assertSideEffect(true, "(function() { i++ })");
++
++    public void testMayHaveSideEffectsIIFE() {
++      Node callNode = getNode("(function() {})");
++      assertTrue(NodeUtil.mayHaveSideEffects(callNode));
++    }
+@@ -1,6 +1,1 @@
+-    assertSideEffect(true, "(function() { i++ })");
+-
+-    public void testMayHaveSideEffectsIIFE() {
+-      Node callNode = getNode("(function() {})");
+-      assertTrue(NodeUtil.mayHaveSideEffects(callNode));
+-    }
++    assertSideEffect(true, "(function() { i++ })");
+@@ -1,1 +1,6 @@
+-    assertSideEffect(true, "(function() { i++ })");
++    assertSideEffect(true, "(function() { i++ })");
++  }
++
++  public void testMayHaveSideEffectsIIFE() {
++    Node callNode = getNode("(function() {})");
++    assertTrue(NodeUtil.mayHaveSideEffects(callNode));
+@@ -1,3 +1,3 @@
+-  public void testMayHaveSideEffectsIIFE() {
+-    Node callNode = getNode("(function() {})");
+-    assertTrue(NodeUtil.mayHaveSideEffects(callNode));
++  public void testMayHaveSideEffectsIIFE() {
++    Node callNode = parse("(function() {})()").getFirstChild().getFirstChild();
++    assertTrue(NodeUtil.mayHaveSideEffects(callNode));
+@@ -1,1 +1,1 @@
+-    assertSideEffect(true, "(function() { })");
++    assertSideEffect(false, "(function() { })");
+@@ -1,1 +1,1 @@
+-    assertSideEffect(true, "(function() { i++ })");
++    assertSideEffect(false, "(function() { i++ })");
+@@ -1,7 +1,2 @@
+-    assertSideEffect(false, "(function() { })");
+-    assertSideEffect(false, "(function() { i++ })");
+-  }
+-
+-  public void testMayHaveSideEffectsIIFE() {
+-    Node callNode = parse("(function() {})()").getFirstChild().getFirstChild();
+-    assertTrue(NodeUtil.mayHaveSideEffects(callNode));
++    assertSideEffect(false, "(function() { })");
++    assertSideEffect(false, "(function() { i++ })");

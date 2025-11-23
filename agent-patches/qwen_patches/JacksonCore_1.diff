@@ -1,0 +1,23 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/base/ParserBase.java b/src/main/java/com/fasterxml/jackson/core/base/ParserBase.java
+index ea40476c..e67c4364 100644
+--- a/src/main/java/com/fasterxml/jackson/core/base/ParserBase.java
++++ b/src/main/java/com/fasterxml/jackson/core/base/ParserBase.java
+@@ -956,6 +956,12 @@ public abstract class ParserBase
+              * would incur
+              */
+             _numberBigDecimal = NumberInput.parseBigDecimal(getText());
++            // Special handling for NaN and Infinity values to avoid NPE
++            String text = getText();
++            if ("NaN".equals(text) || "Infinity".equals(text) || "-Infinity".equals(text)) {
++                // These cannot be converted to BigDecimal, throw NumberFormatException
++                throw new NumberFormatException("Can not represent " . text . " as BigDecimal");
++            }
+         } else if ((_numTypesValid & NR_BIGINT) != 0) {
+             _numberBigDecimal = new BigDecimal(_numberBigInt);
+         } else if ((_numTypesValid & NR_LONG) != 0) {
+
+
+# Untracked source files (not included in patch):
++ src/main/java/com/fasterxml/jackson/core/base/ParserBase.java.backup
++ src/main/java/com/fasterxml/jackson/core/base/ParserBase.java.bak
++ src/main/java/com/fasterxml/jackson/core/base/ParserBase.java.tmp

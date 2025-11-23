@@ -1,0 +1,36 @@
+diff --git a/src/com/google/javascript/jscomp/PureFunctionIdentifier.java b/src/com/google/javascript/jscomp/PureFunctionIdentifier.java
+index 55afa607..08a44c42 100644
+--- a/src/com/google/javascript/jscomp/PureFunctionIdentifier.java
++++ b/src/com/google/javascript/jscomp/PureFunctionIdentifier.java
+@@ -176,7 +176,30 @@ class PureFunctionIdentifier implements CompilerPass {
+       DefinitionProvider definitionProvider, Node name) {
+       List<Definition> result = Lists.newArrayList();
+ 
+-      if (!NodeUtil.isGetProp(name) && !NodeUtil.isName(name)) {
++      if (name.getType() == Token.OR || name.getType() == Token.HOOK) {
++        // For OR and HOOK operators, we need to check both branches
++        Node firstVal;
++        if (name.getType() == Token.HOOK) {
++          // For HOOK, skip the condition and get the true branch
++          firstVal = name.getFirstChild().getNext();
++        } else {
++          // For OR, get the left side
++          firstVal = name.getFirstChild();
++        }
++        Node secondVal = name.getLastChild();
++
++        Collection<Definition> defs1 = getCallableDefinitions(definitionProvider, firstVal);
++        Collection<Definition> defs2 = getCallableDefinitions(definitionProvider, secondVal);
++
++        // If either side is unknown, the whole expression is unknown
++        if (defs1 == null || defs2 == null) {
++          return null;
++        }
++
++        result.addAll(defs1);
++        result.addAll(defs2);
++        return result;
++      } else if (!NodeUtil.isGetProp(name) && !NodeUtil.isName(name)) {
+         return null;
+       }
+       Collection<Definition> decls =

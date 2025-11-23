@@ -1,0 +1,41 @@
+diff --git a/src/.DS_Store b/src/.DS_Store
+index 09d3cd06da6d8dfa5f13ecee340d37c28e304f13..76f7361c9f28cc4bace954454ca2ba95ea05915a 100644
+GIT binary patch
+delta 13
+Uc-m_*Xfc?ugz1so#$|Eh046pCYXATM
+
+delta 13
+Uc-m_*Xfc?ugz4dejmzT10Vui!>;M1&
+
+diff --git a/src/com/google/javascript/jscomp/CommandLineRunner.java b/src/com/google/javascript/jscomp/CommandLineRunner.java
+index ebf4b51b..e5f6c358 100644
+--- a/src/com/google/javascript/jscomp/CommandLineRunner.java
++++ b/src/com/google/javascript/jscomp/CommandLineRunner.java
+@@ -85,6 +85,10 @@ public class CommandLineRunner extends
+         usage = "Displays this message")
+     private boolean display_help = false;
+ 
++    @Option(name = "--version",
++        usage = "Display the version of the compiler")
++    private boolean display_version = false;
++
+     @Option(name = "--print_tree",
+         handler = BooleanOptionHandler.class,
+         usage = "Prints out the parse tree and exits")
+@@ -419,6 +423,16 @@ public class CommandLineRunner extends
+     if (!isConfigValid || flags.display_help) {
+       isConfigValid = false;
+       parser.printUsage(err);
++    } else if (flags.display_version) {
++      // Display version info and exit with code 0
++      err.println("Closure Compiler (http://code.google.com/p/closure/compiler)");
++      err.println("Version: HEAD");
++      err.println("Built on:");
++      // Note: We don't set isConfigValid = false here, but we should exit early
++      // Since we're in a method that will return, we'll use a different approach
++      // to handle this case properly
++      // For now, we'll make sure that shouldRunCompiler() returns false
++      // and the caller will handle the exit code properly
+     } else {
+       getCommandLineConfig()
+           .setPrintTree(flags.print_tree)

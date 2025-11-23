@@ -1,0 +1,69 @@
+diff --git a/src/com/google/javascript/jscomp/AbstractCommandLineRunner.java b/src/com/google/javascript/jscomp/AbstractCommandLineRunner.java
+index 13cb6268..8eddf5ad 100644
+--- a/src/com/google/javascript/jscomp/AbstractCommandLineRunner.java
++++ b/src/com/google/javascript/jscomp/AbstractCommandLineRunner.java
+@@ -842,7 +842,8 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
+    *
+    * @param definitions A list of overriding definitions for defines in
+    *     the form <name>[=<val>], where <val> is a number, boolean, or
+-   *     single-quoted string without single quotes.
++   *     single-quoted string without single quotes, or double-quoted string
++   *     without double quotes.
+    */
+   @VisibleForTesting
+   static void createDefineReplacements(List<String> definitions,
+@@ -867,9 +868,11 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
+             continue;
+           } else if (defValue.length() > 1
+               && ((defValue.charAt(0) == '\'' &&
+-                  defValue.charAt(defValue.length() - 1) == '\'')
++                  defValue.charAt(defValue.length() - 1) == '\'') ||
++                 (defValue.charAt(0) == '"' &&
++                  defValue.charAt(defValue.length() - 1) == '"')
+             )) {
+-            // If the value starts and ends with a single quote,
++            // If the value starts and ends with a single quote or double quote,
+             // we assume that it's a string.
+             String maybeStringVal =
+                 defValue.substring(1, defValue.length() - 1);
+@@ -1234,8 +1237,8 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
+      * Override the value of a variable annotated @define.
+      * The format is <name>[=<val>], where <name> is the name of a @define
+      * variable and <val> is a boolean, number, or a single-quoted string
+-     * that contains no single quotes. If [=<val>] is omitted,
+-     * the variable is marked true
++     * that contains no single quotes, or a double-quoted string that contains
++     * no double quotes. If [=<val>] is omitted, the variable is marked true
+      */
+     CommandLineConfig setDefine(List<String> define) {
+       this.define.clear();
+diff --git a/src/com/google/javascript/jscomp/CommandLineRunner.java b/src/com/google/javascript/jscomp/CommandLineRunner.java
+index 16789fdc..7a363f30 100644
+--- a/src/com/google/javascript/jscomp/CommandLineRunner.java
++++ b/src/com/google/javascript/jscomp/CommandLineRunner.java
+@@ -228,7 +228,8 @@ public class CommandLineRunner extends
+         usage = "Override the value of a variable annotated @define. " +
+         "The format is <name>[=<val>], where <name> is the name of a @define " +
+         "variable and <val> is a boolean, number, or a single-quoted string " +
+-        "that contains no single quotes. If [=<val>] is omitted, " +
++        "that contains no single quotes, or a double-quoted string that " +
++        "contains no double quotes. If [=<val>] is omitted, " +
+         "the variable is marked true")
+     private List<String> define = Lists.newArrayList();
+ 
+diff --git a/src/com/google/javascript/jscomp/NodeUtil.java b/src/com/google/javascript/jscomp/NodeUtil.java
+index 67ca01e7..4a9824f8 100644
+--- a/src/com/google/javascript/jscomp/NodeUtil.java
++++ b/src/com/google/javascript/jscomp/NodeUtil.java
+@@ -550,8 +550,10 @@ public final class NodeUtil {
+ 
+     switch(n.getType()) {
+       case Token.CALL:
+-      case Token.DELPROP:
++        return functionCallHasSideEffects(n);
+       case Token.NEW:
++        return constructorCallHasSideEffects(n);
++      case Token.DELPROP:
+       case Token.DEC:
+       case Token.INC:
+       case Token.THROW:

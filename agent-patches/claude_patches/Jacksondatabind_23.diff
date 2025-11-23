@@ -1,0 +1,107 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializers.java b/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializers.java
+index c11155e6c..1e6c08138 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializers.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializers.java
+@@ -121,6 +121,10 @@ public class NumberSerializers
+ 
+         public ShortSerializer() { super(Short.class, JsonParser.NumberType.INT, "number"); }
+ 
++        @Override
++        public boolean isEmpty(SerializerProvider prov, Short value) {
++            return (value == null) || (value.shortValue() == 0);
++        }
+ 
+         @Override
+         public void serialize(Short value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+@@ -142,18 +146,23 @@ public class NumberSerializers
+     public final static class IntegerSerializer extends Base<Object>
+     {
+         public IntegerSerializer() { super(Integer.class, JsonParser.NumberType.INT ,"integer"); }
+-    
++
++        @Override
++        public boolean isEmpty(SerializerProvider prov, Object value) {
++            return (value == null) || (((Integer) value).intValue() == 0);
++        }
++
+         @Override
+         public void serialize(Object value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+             gen.writeNumber(((Integer) value).intValue());
+         }
+-        
++
+         // IMPORTANT: copied from `NonTypedScalarSerializerBase`
+         @Override
+         public void serializeWithType(Object value, JsonGenerator gen,
+                 SerializerProvider provider, TypeSerializer typeSer) throws IOException {
+             // no type info, just regular serialization
+-            serialize(value, gen, provider);            
++            serialize(value, gen, provider);
+         }
+ 
+     }
+@@ -172,6 +181,10 @@ public class NumberSerializers
+             super(Number.class, JsonParser.NumberType.INT, "integer");
+         }
+ 
++        @Override
++        public boolean isEmpty(SerializerProvider prov, Number value) {
++            return (value == null) || (value.intValue() == 0);
++        }
+ 
+         @Override
+         public void serialize(Number value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+@@ -184,9 +197,13 @@ public class NumberSerializers
+     {
+ 
+         final static LongSerializer instance = new LongSerializer();
+-    
++
+         public LongSerializer() { super(Long.class, JsonParser.NumberType.LONG, "number"); }
+ 
++        @Override
++        public boolean isEmpty(SerializerProvider prov, Object value) {
++            return (value == null) || (((Long) value).longValue() == 0L);
++        }
+ 
+         @Override
+         public void serialize(Object value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+@@ -202,6 +219,10 @@ public class NumberSerializers
+ 
+         public FloatSerializer() { super(Float.class, JsonParser.NumberType.FLOAT, "number"); }
+ 
++        @Override
++        public boolean isEmpty(SerializerProvider prov, Object value) {
++            return (value == null) || (((Float) value).floatValue() == 0.0f);
++        }
+ 
+         @Override
+         public void serialize(Object value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+@@ -221,9 +242,13 @@ public class NumberSerializers
+     {
+ 
+         final static DoubleSerializer instance = new DoubleSerializer();
+-    
++
+         public DoubleSerializer() { super(Double.class, JsonParser.NumberType.DOUBLE, "number"); }
+ 
++        @Override
++        public boolean isEmpty(SerializerProvider prov, Object value) {
++            return (value == null) || (((Double) value).doubleValue() == 0.0);
++        }
+ 
+         @Override
+         public void serialize(Object value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+@@ -235,7 +260,7 @@ public class NumberSerializers
+         public void serializeWithType(Object value, JsonGenerator gen,
+                 SerializerProvider provider, TypeSerializer typeSer) throws IOException {
+             // no type info, just regular serialization
+-            serialize(value, gen, provider);            
++            serialize(value, gen, provider);
+         }
+     }
+ }
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

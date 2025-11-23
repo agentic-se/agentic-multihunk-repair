@@ -1,0 +1,13 @@
+--- a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+@@ -1,5 +1,5 @@
+-            if (baseType.isInterface()) {
+-                newType = baseType.refine(subclass, TypeBindings.emptyBindings(), null, new JavaType[] { baseType });
+-            } else {
+-                newType = baseType.refine(subclass, TypeBindings.emptyBindings(), baseType, NO_TYPES);
+-            }
++            if (baseType.isInterface()) {
++                newType = baseType.refine(subclass, baseType.getBindings(), null, new JavaType[] { baseType });
++            } else {
++                newType = baseType.refine(subclass, baseType.getBindings(), baseType, NO_TYPES);
++            }

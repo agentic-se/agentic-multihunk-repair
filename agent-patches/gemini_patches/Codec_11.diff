@@ -1,0 +1,537 @@
+--- a/src/main/java/org/apache/commons/codec/net/QuotedPrintableCodec.java
++++ b/src/main/java/org/apache/commons/codec/net/QuotedPrintableCodec.java
+@@ -1,8 +1,15 @@
+-                try {
+-                    // if the next octet is a CR we have found a soft line break
+-                    int u = Utils.digit16(bytes[++i]);
+-                    int l = Utils.digit16(bytes[++i]);
+-                    buffer.write((char) ((u << 4) + l));
+-                } catch (ArrayIndexOutOfBoundsException e) {
+-                    throw new DecoderException("Invalid quoted-printable encoding", e);
+-                }
++                // If an equals sign is not followed by two hexadecimal digits, it is treated as a literal "=".
++                // This is not in RFC 1521, but is commonly done as it does not break anything and
++                // it allows to decode broken quoted-printable messages.
++                if (i + 1 < bytes.length && bytes[i + 1] == '' && i + 2 < bytes.length && bytes[i + 2] == '
++') {
++                    i += 2;
++                } else {
++                    try {
++                        final int u = Utils.digit16(bytes[++i]);
++                        final int l = Utils.digit16(bytes[++i]);
++                        buffer.write((char) ((u << 4) + l));
++                    } catch (final ArrayIndexOutOfBoundsException e) {
++                        throw new DecoderException("Invalid quoted-printable encoding", e);
++                    }
++                }
+@@ -1,15 +1,9 @@
+-                // If an equals sign is not followed by two hexadecimal digits, it is treated as a literal "=".
+-                // This is not in RFC 1521, but is commonly done as it does not break anything and
+-                // it allows to decode broken quoted-printable messages.
+-                if (i + 1 < bytes.length && bytes[i + 1] == '' && i + 2 < bytes.length && bytes[i + 2] == '
+-') {
+-                    i += 2;
+-                } else {
+-                    try {
+-                        final int u = Utils.digit16(bytes[++i]);
+-                        final int l = Utils.digit16(bytes[++i]);
+-                        buffer.write((char) ((u << 4) + l));
+-                    } catch (final ArrayIndexOutOfBoundsException e) {
+-                        throw new DecoderException("Invalid quoted-printable encoding", e);
+-                    }
+-                }
++                try {
++                    // if the next octet is a CR we have found a soft line break
++                    int u = Utils.digit16(bytes[++i]);
++                    int l = Utils.digit16(bytes[++i]);
++                    buffer.write((char) ((u << 4) + l));
++                } catch (ArrayIndexOutOfBoundsException e) {
++                    throw new DecoderException("Invalid quoted-printable encoding", e);
++                }
++
+@@ -1,9 +1,14 @@
+-                try {
+-                    // if the next octet is a CR we have found a soft line break
+-                    int u = Utils.digit16(bytes[++i]);
+-                    int l = Utils.digit16(bytes[++i]);
+-                    buffer.write((char) ((u << 4) + l));
+-                } catch (ArrayIndexOutOfBoundsException e) {
+-                    throw new DecoderException("Invalid quoted-printable encoding", e);
+-                }
+-
++                // If an equals sign is not followed by two hexadecimal digits, it is treated as a literal "=".
++                // This is not in RFC 1521, but is commonly done as it does not break anything and
++                // it allows to decode broken quoted-printable messages.
++                if (i + 1 < bytes.length && bytes[i + 1] == '\r' && i + 2 < bytes.length && bytes[i + 2] == '\n') {
++                    i += 2;
++                } else {
++                    try {
++                        final int u = Utils.digit16(bytes[++i]);
++                        final int l = Utils.digit16(bytes[++i]);
++                        buffer.write((char) ((u << 4) + l));
++                    } catch (final ArrayIndexOutOfBoundsException e) {
++                        throw new DecoderException("Invalid quoted-printable encoding", e);
++                    }
++                }
+@@ -1,15 +1,18 @@
+-                if (i + 1 < bytes.length && bytes[i + 1] == '\r' && i + 2 < bytes.length && bytes[i + 2] == '\n') {
+-                    i += 2;
+-                } else {
+-                    try {
+-                        final int u = Utils.digit16(bytes[++i]);
+-                        final int l = Utils.digit16(bytes[++i]);
+-                        buffer.write((char) ((u << 4) + l));
+-                    } catch (final ArrayIndexOutOfBoundsException e) {
+-                        throw new DecoderException("Invalid quoted-printable encoding", e);
+-                    }
+-                }
+-            } else {
+-                // every other octet is appended except for CR & LF
+-                buffer.write(b);
+-            }
++                if (i + 1 < bytes.length && bytes[i + 1] == '\r' && i + 2 < bytes.length && bytes[i + 2] == '\n') {
++                    i += 2;
++                } else {
++                    try {
++                        final int u = Utils.digit16(bytes[++i]);
++                        final int l = Utils.digit16(bytes[++i]);
++                        buffer.write((char) ((u << 4) + l));
++                    } catch (final ArrayIndexOutOfBoundsException e) {
++                        throw new DecoderException("Invalid quoted-printable encoding", e);
++                    }
++                }
++            } else if (b == '\r' || b == '\n') {
++                // soft line breaks are handled already, so we should skip hard line breaks
++                // (i.e. CR or LF characters that are not part of an encoded sequence)
++                continue;
++            } else {
++                buffer.write(b);
++            }
+@@ -1,28 +1,35 @@
+-        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+-        // encode up to buffer.length - 3, the last three octets will be treated
+-        // separately for simplification of note #3
+-                // up to this length it is safe to add any byte, encoded or not
+-        for (byte c : bytes) {
+-            int b = c;
+-            if (b < 0) {
+-                b = 256 + b;
+-            }
+-            if (printable.get(b)) {
+-                buffer.write(b);
+-            } else {
+-                // rule #3: whitespace at the end of a line *must* be encoded
+-
+-                // rule #5: soft line break
+-                encodeQuotedPrintable(b, buffer);
+-            }
+-        }
+-
+-        // rule #3: whitespace at the end of a line *must* be encoded
+-        // if we would do a soft break line after this octet, encode whitespace
+-
+-        // note #3: '=' *must not* be the ultimate or penultimate character
+-        // simplification: if < 6 bytes left, do a soft line break as we may need
+-        //                 exactly 6 bytes space for the last 2 bytes
+-            // rule #3: trailing whitespace shall be encoded
+-
+-        return buffer.toByteArray();
++        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
++        int count = 0;
++        for (int i = 0; i < bytes.length; i++) {
++            int b = bytes[i];
++            if (b < 0) {
++                b = 256 + b;
++            }
++            if (printable.get(b)) {
++                if (b == SPACE || b == TAB) {
++                    // rule #3: encode whitespace at the end of a line
++                    // and if this is not the last character
++                    if (i + 1 < bytes.length && bytes[i + 1] != '\r' && bytes[i + 1] != '\n') {
++                        buffer.write(b);
++                        count++;
++                    } else {
++                        encodeQuotedPrintable(b, buffer);
++                        count += 3;
++                    }
++                } else {
++                    buffer.write(b);
++                    count++;
++                }
++            } else {
++                encodeQuotedPrintable(b, buffer);
++                count += 3;
++            }
++            // rule #5: soft line break
++            if (count > 73) {
++                buffer.write(ESCAPE_CHAR);
++                buffer.write('\r');
++                buffer.write('\n');
++                count = 0;
++            }
++        }
++        return buffer.toByteArray();
+@@ -1,35 +1,28 @@
+-        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+-        int count = 0;
+-        for (int i = 0; i < bytes.length; i++) {
+-            int b = bytes[i];
+-            if (b < 0) {
+-                b = 256 + b;
+-            }
+-            if (printable.get(b)) {
+-                if (b == SPACE || b == TAB) {
+-                    // rule #3: encode whitespace at the end of a line
+-                    // and if this is not the last character
+-                    if (i + 1 < bytes.length && bytes[i + 1] != '\r' && bytes[i + 1] != '\n') {
+-                        buffer.write(b);
+-                        count++;
+-                    } else {
+-                        encodeQuotedPrintable(b, buffer);
+-                        count += 3;
+-                    }
+-                } else {
+-                    buffer.write(b);
+-                    count++;
+-                }
+-            } else {
+-                encodeQuotedPrintable(b, buffer);
+-                count += 3;
+-            }
+-            // rule #5: soft line break
+-            if (count > 73) {
+-                buffer.write(ESCAPE_CHAR);
+-                buffer.write('\r');
+-                buffer.write('\n');
+-                count = 0;
+-            }
+-        }
+-        return buffer.toByteArray();
++        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
++        // encode up to buffer.length - 3, the last three octets will be treated
++        // separately for simplification of note #3
++                // up to this length it is safe to add any byte, encoded or not
++        for (byte c : bytes) {
++            int b = c;
++            if (b < 0) {
++                b = 256 + b;
++            }
++            if (printable.get(b)) {
++                buffer.write(b);
++            } else {
++                // rule #3: whitespace at the end of a line *must* be encoded
++
++                // rule #5: soft line break
++                encodeQuotedPrintable(b, buffer);
++            }
++        }
++
++        // rule #3: whitespace at the end of a line *must* be encoded
++        // if we would do a soft break line after this octet, encode whitespace
++
++        // note #3: '=' *must not* be the ultimate or penultimate character
++        // simplification: if < 6 bytes left, do a soft line break as we may need
++        //                 exactly 6 bytes space for the last 2 bytes
++            // rule #3: trailing whitespace shall be encoded
++
++        return buffer.toByteArray();
+@@ -1,28 +1,35 @@
+-        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+-        // encode up to buffer.length - 3, the last three octets will be treated
+-        // separately for simplification of note #3
+-                // up to this length it is safe to add any byte, encoded or not
+-        for (byte c : bytes) {
+-            int b = c;
+-            if (b < 0) {
+-                b = 256 + b;
+-            }
+-            if (printable.get(b)) {
+-                buffer.write(b);
+-            } else {
+-                // rule #3: whitespace at the end of a line *must* be encoded
+-
+-                // rule #5: soft line break
+-                encodeQuotedPrintable(b, buffer);
+-            }
+-        }
+-
+-        // rule #3: whitespace at the end of a line *must* be encoded
+-        // if we would do a soft break line after this octet, encode whitespace
+-
+-        // note #3: '=' *must not* be the ultimate or penultimate character
+-        // simplification: if < 6 bytes left, do a soft line break as we may need
+-        //                 exactly 6 bytes space for the last 2 bytes
+-            // rule #3: trailing whitespace shall be encoded
+-
+-        return buffer.toByteArray();
++        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
++        int lineLength = 0;
++        for (int i = 0; i < bytes.length; i++) {
++            int b = bytes[i];
++            if (b < 0) {
++                b = 256 + b;
++            }
++            if (printable.get(b)) {
++                if (b == SPACE || b == TAB) {
++                    // rule #3: encode whitespace at the end of a line
++                    // and if this is not the last character
++                    if (i + 1 < bytes.length && bytes[i + 1] != '\r' && bytes[i + 1] != '\n') {
++                        buffer.write(b);
++                        lineLength++;
++                    } else {
++                        encodeQuotedPrintable(b, buffer);
++                        lineLength += 3;
++                    }
++                } else {
++                    buffer.write(b);
++                    lineLength++;
++                }
++            } else {
++                encodeQuotedPrintable(b, buffer);
++                lineLength += 3;
++            }
++            // rule #5: soft line break
++            if (lineLength > 73) {
++                buffer.write(ESCAPE_CHAR);
++                buffer.write('\r');
++                buffer.write('\n');
++                lineLength = 0;
++            }
++        }
++        return buffer.toByteArray();
+@@ -1,35 +1,28 @@
+-        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+-        int lineLength = 0;
+-        for (int i = 0; i < bytes.length; i++) {
+-            int b = bytes[i];
+-            if (b < 0) {
+-                b = 256 + b;
+-            }
+-            if (printable.get(b)) {
+-                if (b == SPACE || b == TAB) {
+-                    // rule #3: encode whitespace at the end of a line
+-                    // and if this is not the last character
+-                    if (i + 1 < bytes.length && bytes[i + 1] != '\r' && bytes[i + 1] != '\n') {
+-                        buffer.write(b);
+-                        lineLength++;
+-                    } else {
+-                        encodeQuotedPrintable(b, buffer);
+-                        lineLength += 3;
+-                    }
+-                } else {
+-                    buffer.write(b);
+-                    lineLength++;
+-                }
+-            } else {
+-                encodeQuotedPrintable(b, buffer);
+-                lineLength += 3;
+-            }
+-            // rule #5: soft line break
+-            if (lineLength > 73) {
+-                buffer.write(ESCAPE_CHAR);
+-                buffer.write('\r');
+-                buffer.write('\n');
+-                lineLength = 0;
+-            }
+-        }
+-        return buffer.toByteArray();
++        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
++        // encode up to buffer.length - 3, the last three octets will be treated
++        // separately for simplification of note #3
++                // up to this length it is safe to add any byte, encoded or not
++        for (byte c : bytes) {
++            int b = c;
++            if (b < 0) {
++                b = 256 + b;
++            }
++            if (printable.get(b)) {
++                buffer.write(b);
++            } else {
++                // rule #3: whitespace at the end of a line *must* be encoded
++
++                // rule #5: soft line break
++                encodeQuotedPrintable(b, buffer);
++            }
++        }
++
++        // rule #3: whitespace at the end of a line *must* be encoded
++        // if we would do a soft break line after this octet, encode whitespace
++
++        // note #3: '=' *must not* be the ultimate or penultimate character
++        // simplification: if < 6 bytes left, do a soft line break as we may need
++        //                 exactly 6 bytes space for the last 2 bytes
++            // rule #3: trailing whitespace shall be encoded
++
++        return buffer.toByteArray();
+@@ -1,28 +1,35 @@
+-        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+-        // encode up to buffer.length - 3, the last three octets will be treated
+-        // separately for simplification of note #3
+-                // up to this length it is safe to add any byte, encoded or not
+-        for (byte c : bytes) {
+-            int b = c;
+-            if (b < 0) {
+-                b = 256 + b;
+-            }
+-            if (printable.get(b)) {
+-                buffer.write(b);
+-            } else {
+-                // rule #3: whitespace at the end of a line *must* be encoded
+-
+-                // rule #5: soft line break
+-                encodeQuotedPrintable(b, buffer);
+-            }
+-        }
+-
+-        // rule #3: whitespace at the end of a line *must* be encoded
+-        // if we would do a soft break line after this octet, encode whitespace
+-
+-        // note #3: '=' *must not* be the ultimate or penultimate character
+-        // simplification: if < 6 bytes left, do a soft line break as we may need
+-        //                 exactly 6 bytes space for the last 2 bytes
+-            // rule #3: trailing whitespace shall be encoded
+-
+-        return buffer.toByteArray();
++        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
++        int lineLength = 0;
++        for (int i = 0; i < bytes.length; i++) {
++            int b = bytes[i];
++            if (b < 0) {
++                b = 256 + b;
++            }
++
++            boolean encode = !printable.get(b);
++            if (!encode) {
++                // Check for SPACE or TAB at the end of a line
++                if (b == SPACE || b == TAB) {
++                    if (i + 1 == bytes.length || (i + 1 < bytes.length && bytes[i + 1] == '\r' && i + 2 < bytes.length && bytes[i + 2] == '\n')) {
++                        encode = true;
++                    }
++                }
++            }
++
++            if (encode) {
++                encodeQuotedPrintable(b, buffer);
++                lineLength += 3;
++            } else {
++                buffer.write(b);
++                lineLength++;
++            }
++
++            // rule #5: soft line break
++            if (lineLength > 73) {
++                buffer.write(ESCAPE_CHAR);
++                buffer.write('\r');
++                buffer.write('\n');
++                lineLength = 0;
++            }
++        }
++        return buffer.toByteArray();
+@@ -1,35 +1,28 @@
+-        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+-        int lineLength = 0;
+-        for (int i = 0; i < bytes.length; i++) {
+-            int b = bytes[i];
+-            if (b < 0) {
+-                b = 256 + b;
+-            }
+-
+-            boolean encode = !printable.get(b);
+-            if (!encode) {
+-                // Check for SPACE or TAB at the end of a line
+-                if (b == SPACE || b == TAB) {
+-                    if (i + 1 == bytes.length || (i + 1 < bytes.length && bytes[i + 1] == '\r' && i + 2 < bytes.length && bytes[i + 2] == '\n')) {
+-                        encode = true;
+-                    }
+-                }
+-            }
+-
+-            if (encode) {
+-                encodeQuotedPrintable(b, buffer);
+-                lineLength += 3;
+-            } else {
+-                buffer.write(b);
+-                lineLength++;
+-            }
+-
+-            // rule #5: soft line break
+-            if (lineLength > 73) {
+-                buffer.write(ESCAPE_CHAR);
+-                buffer.write('\r');
+-                buffer.write('\n');
+-                lineLength = 0;
+-            }
+-        }
+-        return buffer.toByteArray();
++        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
++        // encode up to buffer.length - 3, the last three octets will be treated
++        // separately for simplification of note #3
++                // up to this length it is safe to add any byte, encoded or not
++        for (byte c : bytes) {
++            int b = c;
++            if (b < 0) {
++                b = 256 + b;
++            }
++            if (printable.get(b)) {
++                buffer.write(b);
++            } else {
++                // rule #3: whitespace at the end of a line *must* be encoded
++
++                // rule #5: soft line break
++                encodeQuotedPrintable(b, buffer);
++            }
++        }
++
++        // rule #3: whitespace at the end of a line *must* be encoded
++        // if we would do a soft break line after this octet, encode whitespace
++
++        // note #3: '=' *must not* be the ultimate or penultimate character
++        // simplification: if < 6 bytes left, do a soft line break as we may need
++        //                 exactly 6 bytes space for the last 2 bytes
++            // rule #3: trailing whitespace shall be encoded
++
++        return buffer.toByteArray();
+@@ -1,5 +1,16 @@
+-    private static final byte SPACE = 32;
+-
+-
+-
+-    /** Safe line length for quoted printable encoded text. */
++    private static final byte SPACE = 32;
++
++    /**
++     * Checks whether the given byte is whitespace.
++     *
++     * @param b
++     *                  byte to be checked
++     * @return <code>true</code> if the byte is either a space or tab character
++     */
++    private static boolean isWhitespace(final int b) {
++        return b == SPACE || b == TAB;
++    }
++
++
++
++    /** Safe line length for quoted printable encoded text. */
+@@ -1,16 +1,5 @@
+-    private static final byte SPACE = 32;
+-
+-    /**
+-     * Checks whether the given byte is whitespace.
+-     *
+-     * @param b
+-     *                  byte to be checked
+-     * @return <code>true</code> if the byte is either a space or tab character
+-     */
+-    private static boolean isWhitespace(final int b) {
+-        return b == SPACE || b == TAB;
+-    }
+-
+-
+-
+-    /** Safe line length for quoted printable encoded text. */
++    private static final byte SPACE = 32;
++
++
++
++    /** Safe line length for quoted printable encoded text. */

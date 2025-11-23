@@ -1,0 +1,7 @@
+--- a/src/main/java/org/apache/commons/lang3/math/NumberUtils.java
++++ b/src/main/java/org/apache/commons/lang3/math/NumberUtils.java
+@@ -1,3 +1,1 @@
+-        if (str.startsWith("--")) {
+-            return null;
+-        }
++

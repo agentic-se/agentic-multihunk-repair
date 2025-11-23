@@ -1,0 +1,104 @@
+diff --git a/src/main/java/com/fasterxml/jackson/dataformat/xml/ser/ToXmlGenerator.java b/src/main/java/com/fasterxml/jackson/dataformat/xml/ser/ToXmlGenerator.java
+index 63e42a1..25708f6 100644
+--- a/src/main/java/com/fasterxml/jackson/dataformat/xml/ser/ToXmlGenerator.java
++++ b/src/main/java/com/fasterxml/jackson/dataformat/xml/ser/ToXmlGenerator.java
+@@ -806,7 +806,7 @@ public final class ToXmlGenerator
+ 
+     @Override
+     public void writeBinary(Base64Variant b64variant,
+-    		byte[] data, int offset, int len) throws IOException
++			byte[] data, int offset, int len) throws IOException
+     {
+         if (data == null) {
+             writeNull();
+@@ -823,16 +823,28 @@ public final class ToXmlGenerator
+                 _xmlWriter.writeBinaryAttribute("", _nextName.getNamespaceURI(), _nextName.getLocalPart(), fullBuffer);
+             } else if (checkNextIsUnwrapped()) {
+             	// should we consider pretty-printing or not?
+-                _xmlWriter.writeBinary(data, offset, len);
++                if (len > 0) {
++                    _xmlWriter.writeBinary(data, offset, len);
++                } // else: nothing to write for empty content
+             } else {
+-                if (_xmlPrettyPrinter != null) {
+-                    _xmlPrettyPrinter.writeLeafElement(_xmlWriter,
+-                            _nextName.getNamespaceURI(), _nextName.getLocalPart(),
+-                            data, offset, len);
++                if (len == 0) {
++                    // For empty content, write an empty element to produce self-closing tag
++                    if (_xmlPrettyPrinter != null) {
++                        _xmlPrettyPrinter.writeLeafNullElement(_xmlWriter,
++                                _nextName.getNamespaceURI(), _nextName.getLocalPart());
++                    } else {
++                        _xmlWriter.writeEmptyElement(_nextName.getNamespaceURI(), _nextName.getLocalPart());
++                    }
+                 } else {
+-                    _xmlWriter.writeStartElement(_nextName.getNamespaceURI(), _nextName.getLocalPart());
+-                    _xmlWriter.writeBinary(data, offset, len);
+-                    _xmlWriter.writeEndElement();
++                    if (_xmlPrettyPrinter != null) {
++                        _xmlPrettyPrinter.writeLeafElement(_xmlWriter,
++                                _nextName.getNamespaceURI(), _nextName.getLocalPart(),
++                                data, offset, len);
++                    } else {
++                        _xmlWriter.writeStartElement(_nextName.getNamespaceURI(), _nextName.getLocalPart());
++                        _xmlWriter.writeBinary(data, offset, len);
++                        _xmlWriter.writeEndElement();
++                    }
+                 }
+             }
+         } catch (XMLStreamException e) {
+@@ -840,6 +852,53 @@ public final class ToXmlGenerator
+         }
+     }
+ 
++    @Override
++    public int writeBinary(Base64Variant b64variant, InputStream data, int dataLength)
++            throws IOException
++    {
++        if (data == null) {
++            writeNull();
++            return 0;
++        }
++        // Reuse existing byte[] based implementation by buffering input
++        // (streaming variant is not available via Stax2 in all cases)
++        int total = 0;
++        if (dataLength >= 0) {
++            byte[] buffer = new byte[dataLength];
++            int offset = 0;
++            while (offset < dataLength) {
++                int count = data.read(buffer, offset, dataLength - offset);
++                if (count < 0) {
++                    break;
++                }
++                offset += count;
++            }
++            total = offset;
++            writeBinary(b64variant, buffer, 0, total);
++        } else {
++            ByteArrayOutputStream baos = new ByteArrayOutputStream();
++            byte[] buf = new byte[4000];
++            int count;
++            while ((count = data.read(buf)) >= 0) {
++                if (count == 0) {
++                    // avoid potential busy loop on odd streams
++                    int b = data.read();
++                    if (b < 0) {
++                        break;
++                    }
++                    baos.write(b);
++                    total += 1;
++                    continue;
++                }
++                baos.write(buf, 0, count);
++                total += count;
++            }
++            byte[] all = baos.toByteArray();
++            writeBinary(b64variant, all, 0, all.length);
++        }
++        return total;
++    }
++
+                 // Stax2 API only has 'full buffer' write method:
+               // should we consider pretty-printing or not?
+ 

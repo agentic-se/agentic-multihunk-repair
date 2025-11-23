@@ -1,0 +1,45 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/std/StdKeySerializers.java b/src/main/java/com/fasterxml/jackson/databind/ser/std/StdKeySerializers.java
+index 7f55a3f29..620be9714 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/StdKeySerializers.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/StdKeySerializers.java
+@@ -79,7 +79,10 @@ public class StdKeySerializers
+                 return new Dynamic();
+             }
+             if (rawKeyType.isEnum()) {
+-                return new Default(Default.TYPE_ENUM, rawKeyType);
++                // [databind#1322]: New specialized key serializer for handling @JsonProperty on enums
++                @SuppressWarnings("unchecked")
++                Class<Enum<?>> enumClass = (Class<Enum<?>>) rawKeyType;
++                return new EnumKeySerializer(com.fasterxml.jackson.databind.util.EnumValues.constructFromName(config, enumClass));
+             }
+         }
+         return DEFAULT_KEY_SERIALIZER;
+@@ -212,7 +215,27 @@ public class StdKeySerializers
+      *
+      * @since 2.8
+      */
++    public static class EnumKeySerializer extends StdSerializer<Object>
++    {
++        protected final com.fasterxml.jackson.databind.util.EnumValues _values;
++
++        public EnumKeySerializer(com.fasterxml.jackson.databind.util.EnumValues values) {
++            super(Enum.class, false);
++            _values = values;
++        }
++
++        @Override
++        public void serialize(Object value, JsonGenerator g, SerializerProvider provider) throws IOException {
++            // [databind#749]: or via toString()?
++            if (provider.isEnabled(SerializationFeature.WRITE_ENUMS_USING_TO_STRING)) {
++                g.writeFieldName(value.toString());
++                return;
++            }
++            // This will use @JsonProperty values if present
++            Enum<?> en = (Enum<?>) value;
++            g.writeFieldName(_values.serializedValueFor(en).getValue());
++        }
++    }
+ 
+ 
+-        
+ }

@@ -1,0 +1,154 @@
+--- a/src/com/google/javascript/jscomp/CodeGenerator.java
++++ b/src/com/google/javascript/jscomp/CodeGenerator.java
+@@ -1,10 +1,3 @@
+-  /**
+-   * Insert a ECMASCRIPT 5 strict annotation.
+-   */
+-  public void tagAsStrict() {
+-    add("'use strict';");
+-  }
+-
+-  void add(String str) {
+-    cc.add(str);
+-  }
++  void add(String str) {
++    cc.add(str);
++  }
+
+--- a/src/com/google/javascript/jscomp/CodePrinter.java
++++ b/src/com/google/javascript/jscomp/CodePrinter.java
+@@ -1,6 +1,5 @@
+-  private static String toSource(Node root, Format outputFormat,
+-                                 boolean lineBreak,  int lineLengthThreshold,
+-                                 SourceMap sourceMap,
+-                                 SourceMap.DetailLevel sourceMapDetailLevel,
+-                                 Charset outputCharset,
+-                                 boolean tagAsStrict) {
++  private static String toSource(Node root, Format outputFormat,
++                                 boolean lineBreak,  int lineLengthThreshold,
++                                 SourceMap sourceMap,
++                                 SourceMap.DetailLevel sourceMapDetailLevel,
++                                 Charset outputCharset) {
+@@ -1,4 +1,3 @@
+-    // Specify a charset to use when outputting source code.  If null,
+-    // then just output ASCII.
+-    private Charset outputCharset = null;
+-    private boolean tagAsStrict;
++    // Specify a charset to use when outputting source code.  If null,
++    // then just output ASCII.
++    private Charset outputCharset = null;
+@@ -1,11 +1,3 @@
+-    /**
+-     * Set whether the output should be tags as ECMASCRIPT 5 Strict.
+-     */
+-    Builder setTagAsStrict(boolean tagAsStrict) {
+-      this.tagAsStrict = tagAsStrict;
+-      return this;
+-    }
+-
+-    /**
+-     * Generates the source code and returns it.
+-     */
++    /**
++     * Generates the source code and returns it.
++     */
+@@ -1,10 +1,6 @@
+-    CodeGenerator cg =
+-        outputFormat == Format.TYPED
+-        ? new TypedCodeGenerator(mcp, outputCharset)
+-        : new CodeGenerator(mcp, outputCharset);
+-
+-    if (tagAsStrict) {
+-      cg.tagAsStrict();
+-    }
+-
+-    cg.add(root);
++    CodeGenerator cg =
++        outputFormat == Format.TYPED
++        ? new TypedCodeGenerator(mcp, outputCharset)
++        : new CodeGenerator(mcp, outputCharset);
++
++    cg.add(root);
+@@ -1,2 +1,2 @@
+-      return toSource(root, outputFormat, lineBreak, lineLengthThreshold,
+-          sourceMap, sourceMapDetailLevel, outputCharset, tagAsStrict);
++      return toSource(root, outputFormat, lineBreak, lineLengthThreshold,
++          sourceMap, sourceMapDetailLevel, outputCharset);
+
+--- a/src/com/google/javascript/jscomp/Compiler.java
++++ b/src/com/google/javascript/jscomp/Compiler.java
+@@ -1,1 +1,4 @@
+-  private GlobalVarReferenceMap globalRefMap = null;
++  private GlobalVarReferenceMap globalRefMap = null;
++
++  /** Whether a 'use strict' directive has been added to the output. */
++  private boolean hasUseStrictBeenAdded = false;
+@@ -1,2 +1,3 @@
+-  private void compileInternal() {
+-    parse();
++  private void compileInternal() {
++    hasUseStrictBeenAdded = false;
++    parse();
+@@ -1,3 +1,1 @@
+-    builder.setSourceMapDetailLevel(options.sourceMapDetailLevel);
+-    builder.setTagAsStrict(
+-        options.getLanguageOut() == LanguageMode.ECMASCRIPT5_STRICT);
++    builder.setSourceMapDetailLevel(options.sourceMapDetailLevel);
+@@ -1,3 +1,8 @@
+-        // if LanguageMode is ECMASCRIPT5_STRICT, only print 'use strict'
+-        // for the first input file
+-        String code = toSource(root, sourceMap);
++        // if LanguageMode is ECMASCRIPT5_STRICT, only print 'use strict'
++        // for the first input file
++        if (options.getLanguageOut() == LanguageMode.ECMASCRIPT5_STRICT
++            && !hasUseStrictBeenAdded) {
++          cb.append("'use strict';\n");
++          hasUseStrictBeenAdded = true;
++        }
++        String code = toSource(root, sourceMap);
+@@ -1,8 +1,3 @@
+-        // if LanguageMode is ECMASCRIPT5_STRICT, only print 'use strict'
+-        // for the first input file
+-        if (options.getLanguageOut() == LanguageMode.ECMASCRIPT5_STRICT
+-            && !hasUseStrictBeenAdded) {
+-          cb.append("'use strict';\n");
+-          hasUseStrictBeenAdded = true;
+-        }
+-        String code = toSource(root, sourceMap);
++        // if LanguageMode is ECMASCRIPT5_STRICT, only print 'use strict'
++        // for the first input file
++        String code = toSource(root, sourceMap);
+@@ -1,4 +1,1 @@
+-  private GlobalVarReferenceMap globalRefMap = null;
+-
+-  /** Whether a 'use strict' directive has been added to the output. */
+-  private boolean hasUseStrictBeenAdded = false;
++  private GlobalVarReferenceMap globalRefMap = null;
+@@ -1,3 +1,2 @@
+-  private void compileInternal() {
+-    hasUseStrictBeenAdded = false;
+-    parse();
++  private void compileInternal() {
++    parse();
+@@ -1,9 +1,12 @@
+-          CodeBuilder cb = new CodeBuilder();
+-          if (jsRoot != null) {
+-            int i = 0;
+-            for (Node scriptNode = jsRoot.getFirstChild();
+-                 scriptNode != null;
+-                 scriptNode = scriptNode.getNext()) {
+-              toSource(cb, i++, scriptNode);
+-            }
+-          }
++          CodeBuilder cb = new CodeBuilder();
++          if (options.getLanguageOut() == LanguageMode.ECMASCRIPT5_STRICT) {
++            cb.append("'use strict';\n");
++          }
++          if (jsRoot != null) {
++            int i = 0;
++            for (Node scriptNode = jsRoot.getFirstChild();
++                 scriptNode != null;
++                 scriptNode = scriptNode.getNext()) {
++              toSource(cb, i++, scriptNode);
++            }
++          }

@@ -1,0 +1,47 @@
+diff --git a/source/org/jfree/chart/plot/PiePlot3D.java b/source/org/jfree/chart/plot/PiePlot3D.java
+index e8fbaf2..8e1c25e 100644
+--- a/source/org/jfree/chart/plot/PiePlot3D.java
++++ b/source/org/jfree/chart/plot/PiePlot3D.java
+@@ -267,7 +267,7 @@ public class PiePlot3D extends PiePlot implements Serializable {
+         double linkY = plotArea.getY() + gapVertical / 2;
+         double linkW = plotArea.getWidth() - gapHorizontal;
+         double linkH = plotArea.getHeight() - gapVertical;
+-        
++
+         // make the link area a square if the pie chart is to be circular...
+         if (isCircular()) { // is circular?
+             double min = Math.min(linkW, linkH) / 2;
+@@ -276,7 +276,16 @@ public class PiePlot3D extends PiePlot implements Serializable {
+             linkW = 2 * min;
+             linkH = 2 * min;
+         }
+-        
++
++        // get the data source - return if null;
++        PieDataset dataset = getDataset();
++        if (DatasetUtilities.isEmptyOrNull(getDataset())) {
++            drawNoDataMessage(g2, plotArea);
++            g2.setClip(savedClip);
++            drawOutline(g2, plotArea);
++            return;
++        }
++
+         PiePlotState state = initialise(g2, plotArea, this, null, info);
+ 
+         // the link area defines the dog leg points for the linking lines to 
+@@ -328,15 +337,6 @@ public class PiePlot3D extends PiePlot implements Serializable {
+         state.setPieWRadius(pieArea.getWidth() / 2.0);
+         state.setPieHRadius((pieArea.getHeight() - depth) / 2.0);
+ 
+-        // get the data source - return if null;
+-        PieDataset dataset = getDataset();
+-        if (DatasetUtilities.isEmptyOrNull(getDataset())) {
+-            drawNoDataMessage(g2, plotArea);
+-            g2.setClip(savedClip);
+-            drawOutline(g2, plotArea);
+-            return;
+-        }
+-
+         // if too any elements
+         if (dataset.getKeys().size() > plotArea.getWidth()) {
+             String text = "Too many elements";

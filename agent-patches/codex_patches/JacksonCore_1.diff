@@ -1,0 +1,75 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/io/NumberInput.java b/src/main/java/com/fasterxml/jackson/core/io/NumberInput.java
+index 01c18d94..265b90c9 100644
+--- a/src/main/java/com/fasterxml/jackson/core/io/NumberInput.java
++++ b/src/main/java/com/fasterxml/jackson/core/io/NumberInput.java
+@@ -292,7 +292,18 @@ public final class NumberInput
+ 
+     public static BigDecimal parseBigDecimal(String numStr) throws NumberFormatException
+     {
+-            return new BigDecimal(numStr);
++        // Handle non-numeric tokens explicitly to provide a clear message
++        if ("NaN".equals(numStr)
++                || "INF".equals(numStr)
++                || "+INF".equals(numStr)
++                || "-INF".equals(numStr)
++                || "Infinity".equals(numStr)
++                || "+Infinity".equals(numStr)
++                || "-Infinity".equals(numStr)) {
++            throw new NumberFormatException("Non-standard token '" + numStr
++                    + "': can not be represented as BigDecimal");
++        }
++        return new BigDecimal(numStr);
+     }
+ 
+     public static BigDecimal parseBigDecimal(char[] buffer) throws NumberFormatException {
+@@ -302,7 +313,49 @@ public final class NumberInput
+     public static BigDecimal parseBigDecimal(char[] buffer, int offset, int len)
+             throws NumberFormatException
+     {
+-            return new BigDecimal(buffer, offset, len);
++        // Fast-path checks for known non-numeric tokens without constructing a String
++        if (len == 3) { // "NaN" or "INF"
++            char c0 = buffer[offset];
++            char c1 = buffer[offset + 1];
++            char c2 = buffer[offset + 2];
++            if ((c0 == 'N' && c1 == 'a' && c2 == 'N') ||
++                (c0 == 'I' && c1 == 'N' && c2 == 'F')) {
++                String token = new String(buffer, offset, len);
++                throw new NumberFormatException("Non-standard token '" + token
++                        + "': can not be represented as BigDecimal");
++            }
++        } else if (len == 4) { // "+INF" or "-INF"
++            char c0 = buffer[offset];
++            char c1 = buffer[offset + 1];
++            char c2 = buffer[offset + 2];
++            char c3 = buffer[offset + 3];
++            if ((c0 == '+' || c0 == '-') && c1 == 'I' && c2 == 'N' && c3 == 'F') {
++                String token = new String(buffer, offset, len);
++                throw new NumberFormatException("Non-standard token '" + token
++                        + "': can not be represented as BigDecimal");
++            }
++        } else if (len == 8) { // "Infinity"
++            if (buffer[offset] == 'I' && buffer[offset + 1] == 'n'
++                    && buffer[offset + 2] == 'f' && buffer[offset + 3] == 'i'
++                    && buffer[offset + 4] == 'n' && buffer[offset + 5] == 'i'
++                    && buffer[offset + 6] == 't' && buffer[offset + 7] == 'y') {
++                String token = new String(buffer, offset, len);
++                throw new NumberFormatException("Non-standard token '" + token
++                        + "': can not be represented as BigDecimal");
++            }
++        } else if (len == 9) { // "+Infinity" or "-Infinity"
++            char c0 = buffer[offset];
++            if ((c0 == '+' || c0 == '-')
++                    && buffer[offset + 1] == 'I' && buffer[offset + 2] == 'n'
++                    && buffer[offset + 3] == 'f' && buffer[offset + 4] == 'i'
++                    && buffer[offset + 5] == 'n' && buffer[offset + 6] == 'i'
++                    && buffer[offset + 7] == 't' && buffer[offset + 8] == 'y') {
++                String token = new String(buffer, offset, len);
++                throw new NumberFormatException("Non-standard token '" + token
++                        + "': can not be represented as BigDecimal");
++            }
++        }
++        return new BigDecimal(buffer, offset, len);
+     }
+ 
+ }

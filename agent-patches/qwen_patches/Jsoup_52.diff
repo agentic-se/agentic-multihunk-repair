@@ -1,0 +1,332 @@
+diff --git a/src/main/java/org/jsoup/nodes/XmlDeclaration.java b/src/main/java/org/jsoup/nodes/XmlDeclaration.java
+index 24a9f16..f32b82b 100644
+--- a/src/main/java/org/jsoup/nodes/XmlDeclaration.java
++++ b/src/main/java/org/jsoup/nodes/XmlDeclaration.java
+@@ -3,6 +3,8 @@ package org.jsoup.nodes;
+ import org.jsoup.helper.Validate;
+ 
+ import java.io.IOException;
++import java.util.regex.Matcher;
++import java.util.regex.Pattern;
+ 
+ /**
+  An XML Declaration.
+@@ -11,6 +13,7 @@ import java.io.IOException;
+ public class XmlDeclaration extends Node {
+     private final String name;
+     private final boolean isProcessingInstruction; // <! if true, <? if false, declaration (and last data char should be ?)
++    private static final Pattern attrPattern = Pattern.compile("(\\w+)\\s*=\\s*[\"']([^\"']*)[\"']");
+ 
+     /**
+      Create a new XML declaration
+@@ -23,6 +26,35 @@ public class XmlDeclaration extends Node {
+         Validate.notNull(name);
+         this.name = name;
+         this.isProcessingInstruction = isProcessingInstruction;
++        
++        // Parse attributes from the name string if it looks like an XML declaration
++        // Handle both cases where it starts with '?' or not (depends on how it's constructed)
++        if (name.startsWith("?xml ") || name.startsWith("xml ")) {
++            parseAttributes(name);
++        } else if (name.startsWith("?xml") || name.startsWith("xml")) {
++            // For cases like "?xml version=\"1.0\" encoding=\"ISO-8859-1\"?"
++            parseAttributes(name);
++        }
++    }
++    
++    private void parseAttributes(String declaration) {
++        // Simple regex to extract attributes from XML declaration
++        // This is a simplified approach that should work with standard XML declaration formats
++        // Remove any leading/trailing characters like ? that might be there
++        String cleanName = declaration;
++        if (cleanName.startsWith("?")) {
++            cleanName = cleanName.substring(1);
++        }
++        cleanName = cleanName.trim();
++        
++        // Try to handle the case where attributes are in the format 
++        // "xml version=\"1.0\" encoding=\"ISO-8859-1\"?"
++        Matcher matcher = attrPattern.matcher(cleanName);
++        while (matcher.find()) {
++            String key = matcher.group(1);
++            String value = matcher.group(2);
++            attributes.put(key, value);
++        }
+     }
+ 
+     public String nodeName() {
+@@ -75,4 +107,4 @@ public class XmlDeclaration extends Node {
+     public String toString() {
+         return outerHtml();
+     }
+-}
++}
+\ No newline at end of file
+diff --git a/src/main/java/org/jsoup/parser/XmlTreeBuilder.java b/src/main/java/org/jsoup/parser/XmlTreeBuilder.java
+index 99807fc..7f29036 100644
+--- a/src/main/java/org/jsoup/parser/XmlTreeBuilder.java
++++ b/src/main/java/org/jsoup/parser/XmlTreeBuilder.java
+@@ -118,9 +118,32 @@ public class XmlTreeBuilder extends TreeBuilder {
+         }
+     }
+ 
++    @Override
++    public Document parse(String input, String baseUri, ParseErrorList errors) {
++        Document doc = super.parse(input, baseUri, errors);
++        
++        // Detect charset from XML declaration if present
++        if (doc.childNodeSize() > 0) {
++            Node firstChild = doc.childNode(0);
++            if (firstChild instanceof XmlDeclaration) {
++                XmlDeclaration decl = (XmlDeclaration) firstChild;
++                String encoding = decl.attr("encoding");
++                if (encoding != null && !encoding.isEmpty()) {
++                    try {
++                        doc.charset(java.nio.charset.Charset.forName(encoding));
++                    } catch (IllegalArgumentException e) {
++                        // Invalid charset name, ignore
++                    }
++                }
++            }
++        }
++        
++        return doc;
++    }
++
+     List<Node> parseFragment(String inputFragment, String baseUri, ParseErrorList errors) {
+         initialiseParse(inputFragment, baseUri, errors);
+         runParser();
+         return doc.childNodes();
+     }
+-}
++}
+\ No newline at end of file
+
+
+# Untracked source files (not included in patch):
++ src/main/java/org/jsoup/Connection$Base.class
++ src/main/java/org/jsoup/Connection$KeyVal.class
++ src/main/java/org/jsoup/Connection$Method.class
++ src/main/java/org/jsoup/Connection$Request.class
++ src/main/java/org/jsoup/Connection$Response.class
++ src/main/java/org/jsoup/Connection.class
++ src/main/java/org/jsoup/HttpStatusException.class
++ src/main/java/org/jsoup/Jsoup.class
++ src/main/java/org/jsoup/SerializationException.class
++ src/main/java/org/jsoup/UnsupportedMimeTypeException.class
++ src/main/java/org/jsoup/helper/DataUtil.class
++ src/main/java/org/jsoup/helper/HttpConnection$1.class
++ src/main/java/org/jsoup/helper/HttpConnection$Base.class
++ src/main/java/org/jsoup/helper/HttpConnection$KeyVal.class
++ src/main/java/org/jsoup/helper/HttpConnection$Request.class
++ src/main/java/org/jsoup/helper/HttpConnection$Response$1.class
++ src/main/java/org/jsoup/helper/HttpConnection$Response$2.class
++ src/main/java/org/jsoup/helper/HttpConnection$Response.class
++ src/main/java/org/jsoup/helper/HttpConnection.class
++ src/main/java/org/jsoup/helper/StringUtil.class
++ src/main/java/org/jsoup/helper/Validate.class
++ src/main/java/org/jsoup/nodes/Attribute.class
++ src/main/java/org/jsoup/nodes/Attributes$1.class
++ src/main/java/org/jsoup/nodes/Attributes$Dataset$DatasetIterator.class
++ src/main/java/org/jsoup/nodes/Attributes$Dataset$EntrySet.class
++ src/main/java/org/jsoup/nodes/Attributes$Dataset.class
++ src/main/java/org/jsoup/nodes/Attributes.class
++ src/main/java/org/jsoup/nodes/BooleanAttribute.class
++ src/main/java/org/jsoup/nodes/Comment.class
++ src/main/java/org/jsoup/nodes/DataNode.class
++ src/main/java/org/jsoup/nodes/Document$OutputSettings$Syntax.class
++ src/main/java/org/jsoup/nodes/Document$OutputSettings.class
++ src/main/java/org/jsoup/nodes/Document$QuirksMode.class
++ src/main/java/org/jsoup/nodes/Document.class
++ src/main/java/org/jsoup/nodes/DocumentType.class
++ src/main/java/org/jsoup/nodes/Element$1.class
++ src/main/java/org/jsoup/nodes/Element.class
++ src/main/java/org/jsoup/nodes/Entities$1.class
++ src/main/java/org/jsoup/nodes/Entities$CoreCharset.class
++ src/main/java/org/jsoup/nodes/Entities$EscapeMode.class
++ src/main/java/org/jsoup/nodes/Entities.class
++ src/main/java/org/jsoup/nodes/FormElement.class
++ src/main/java/org/jsoup/nodes/Node$1.class
++ src/main/java/org/jsoup/nodes/Node$OuterHtmlVisitor.class
++ src/main/java/org/jsoup/nodes/Node.class
++ src/main/java/org/jsoup/nodes/TextNode.class
++ src/main/java/org/jsoup/nodes/XmlDeclaration.class
++ src/main/java/org/jsoup/parser/CharacterReader.class
++ src/main/java/org/jsoup/parser/HtmlTreeBuilder.class
++ src/main/java/org/jsoup/parser/HtmlTreeBuilderState$1.class
++ src/main/java/org/jsoup/parser/HtmlTreeBuilderState$10.class
++ src/main/java/org/jsoup/parser/HtmlTreeBuilderState$11.class
++ src/main/java/org/jsoup/parser/HtmlTreeBuilderState$12.class
++ src/main/java/org/jsoup/parser/HtmlTreeBuilderState$13.class
++ src/main/java/org/jsoup/parser/HtmlTreeBuilderState$14.class
++ src/main/java/org/jsoup/parser/HtmlTreeBuilderState$15.class
++ src/main/java/org/jsoup/parser/HtmlTreeBuilderState$16.class
++ src/main/java/org/jsoup/parser/HtmlTreeBuilderState$17.class
++ src/main/java/org/jsoup/parser/HtmlTreeBuilderState$18.class
++ src/main/java/org/jsoup/parser/HtmlTreeBuilderState$19.class
++ src/main/java/org/jsoup/parser/HtmlTreeBuilderState$2.class
++ src/main/java/org/jsoup/parser/HtmlTreeBuilderState$20.class
++ src/main/java/org/jsoup/parser/HtmlTreeBuilderState$21.class
++ src/main/java/org/jsoup/parser/HtmlTreeBuilderState$22.class
++ src/main/java/org/jsoup/parser/HtmlTreeBuilderState$23.class
++ src/main/java/org/jsoup/parser/HtmlTreeBuilderState$24.class
++ src/main/java/org/jsoup/parser/HtmlTreeBuilderState$3.class
++ src/main/java/org/jsoup/parser/HtmlTreeBuilderState$4.class
++ src/main/java/org/jsoup/parser/HtmlTreeBuilderState$5.class
++ src/main/java/org/jsoup/parser/HtmlTreeBuilderState$6.class
++ src/main/java/org/jsoup/parser/HtmlTreeBuilderState$7.class
++ src/main/java/org/jsoup/parser/HtmlTreeBuilderState$8.class
++ src/main/java/org/jsoup/parser/HtmlTreeBuilderState$9.class
++ src/main/java/org/jsoup/parser/HtmlTreeBuilderState$Constants.class
++ src/main/java/org/jsoup/parser/HtmlTreeBuilderState.class
++ src/main/java/org/jsoup/parser/ParseError.class
++ src/main/java/org/jsoup/parser/ParseErrorList.class
++ src/main/java/org/jsoup/parser/Parser.class
++ src/main/java/org/jsoup/parser/Tag.class
++ src/main/java/org/jsoup/parser/Token$1.class
++ src/main/java/org/jsoup/parser/Token$Character.class
++ src/main/java/org/jsoup/parser/Token$Comment.class
++ src/main/java/org/jsoup/parser/Token$Doctype.class
++ src/main/java/org/jsoup/parser/Token$EOF.class
++ src/main/java/org/jsoup/parser/Token$EndTag.class
++ src/main/java/org/jsoup/parser/Token$StartTag.class
++ src/main/java/org/jsoup/parser/Token$Tag.class
++ src/main/java/org/jsoup/parser/Token$TokenType.class
++ src/main/java/org/jsoup/parser/Token.class
++ src/main/java/org/jsoup/parser/TokenQueue.class
++ src/main/java/org/jsoup/parser/Tokeniser.class
++ src/main/java/org/jsoup/parser/TokeniserState$1.class
++ src/main/java/org/jsoup/parser/TokeniserState$10.class
++ src/main/java/org/jsoup/parser/TokeniserState$11.class
++ src/main/java/org/jsoup/parser/TokeniserState$12.class
++ src/main/java/org/jsoup/parser/TokeniserState$13.class
++ src/main/java/org/jsoup/parser/TokeniserState$14.class
++ src/main/java/org/jsoup/parser/TokeniserState$15.class
++ src/main/java/org/jsoup/parser/TokeniserState$16.class
++ src/main/java/org/jsoup/parser/TokeniserState$17.class
++ src/main/java/org/jsoup/parser/TokeniserState$18.class
++ src/main/java/org/jsoup/parser/TokeniserState$19.class
++ src/main/java/org/jsoup/parser/TokeniserState$2.class
++ src/main/java/org/jsoup/parser/TokeniserState$20.class
++ src/main/java/org/jsoup/parser/TokeniserState$21.class
++ src/main/java/org/jsoup/parser/TokeniserState$22.class
++ src/main/java/org/jsoup/parser/TokeniserState$23.class
++ src/main/java/org/jsoup/parser/TokeniserState$24.class
++ src/main/java/org/jsoup/parser/TokeniserState$25.class
++ src/main/java/org/jsoup/parser/TokeniserState$26.class
++ src/main/java/org/jsoup/parser/TokeniserState$27.class
++ src/main/java/org/jsoup/parser/TokeniserState$28.class
++ src/main/java/org/jsoup/parser/TokeniserState$29.class
++ src/main/java/org/jsoup/parser/TokeniserState$3.class
++ src/main/java/org/jsoup/parser/TokeniserState$30.class
++ src/main/java/org/jsoup/parser/TokeniserState$31.class
++ src/main/java/org/jsoup/parser/TokeniserState$32.class
++ src/main/java/org/jsoup/parser/TokeniserState$33.class
++ src/main/java/org/jsoup/parser/TokeniserState$34.class
++ src/main/java/org/jsoup/parser/TokeniserState$35.class
++ src/main/java/org/jsoup/parser/TokeniserState$36.class
++ src/main/java/org/jsoup/parser/TokeniserState$37.class
++ src/main/java/org/jsoup/parser/TokeniserState$38.class
++ src/main/java/org/jsoup/parser/TokeniserState$39.class
++ src/main/java/org/jsoup/parser/TokeniserState$4.class
++ src/main/java/org/jsoup/parser/TokeniserState$40.class
++ src/main/java/org/jsoup/parser/TokeniserState$41.class
++ src/main/java/org/jsoup/parser/TokeniserState$42.class
++ src/main/java/org/jsoup/parser/TokeniserState$43.class
++ src/main/java/org/jsoup/parser/TokeniserState$44.class
++ src/main/java/org/jsoup/parser/TokeniserState$45.class
++ src/main/java/org/jsoup/parser/TokeniserState$46.class
++ src/main/java/org/jsoup/parser/TokeniserState$47.class
++ src/main/java/org/jsoup/parser/TokeniserState$48.class
++ src/main/java/org/jsoup/parser/TokeniserState$49.class
++ src/main/java/org/jsoup/parser/TokeniserState$5.class
++ src/main/java/org/jsoup/parser/TokeniserState$50.class
++ src/main/java/org/jsoup/parser/TokeniserState$51.class
++ src/main/java/org/jsoup/parser/TokeniserState$52.class
++ src/main/java/org/jsoup/parser/TokeniserState$53.class
++ src/main/java/org/jsoup/parser/TokeniserState$54.class
++ src/main/java/org/jsoup/parser/TokeniserState$55.class
++ src/main/java/org/jsoup/parser/TokeniserState$56.class
++ src/main/java/org/jsoup/parser/TokeniserState$57.class
++ src/main/java/org/jsoup/parser/TokeniserState$58.class
++ src/main/java/org/jsoup/parser/TokeniserState$59.class
++ src/main/java/org/jsoup/parser/TokeniserState$6.class
++ src/main/java/org/jsoup/parser/TokeniserState$60.class
++ src/main/java/org/jsoup/parser/TokeniserState$61.class
++ src/main/java/org/jsoup/parser/TokeniserState$62.class
++ src/main/java/org/jsoup/parser/TokeniserState$63.class
++ src/main/java/org/jsoup/parser/TokeniserState$64.class
++ src/main/java/org/jsoup/parser/TokeniserState$65.class
++ src/main/java/org/jsoup/parser/TokeniserState$66.class
++ src/main/java/org/jsoup/parser/TokeniserState$67.class
++ src/main/java/org/jsoup/parser/TokeniserState$7.class
++ src/main/java/org/jsoup/parser/TokeniserState$8.class
++ src/main/java/org/jsoup/parser/TokeniserState$9.class
++ src/main/java/org/jsoup/parser/TokeniserState.class
++ src/main/java/org/jsoup/parser/TreeBuilder.class
++ src/main/java/org/jsoup/parser/XmlTreeBuilder$1.class
++ src/main/java/org/jsoup/parser/XmlTreeBuilder.class
++ src/main/java/org/jsoup/safety/Cleaner$1.class
++ src/main/java/org/jsoup/safety/Cleaner$CleaningVisitor.class
++ src/main/java/org/jsoup/safety/Cleaner$ElementMeta.class
++ src/main/java/org/jsoup/safety/Cleaner.class
++ src/main/java/org/jsoup/safety/Whitelist$AttributeKey.class
++ src/main/java/org/jsoup/safety/Whitelist$AttributeValue.class
++ src/main/java/org/jsoup/safety/Whitelist$Protocol.class
++ src/main/java/org/jsoup/safety/Whitelist$TagName.class
++ src/main/java/org/jsoup/safety/Whitelist$TypedValue.class
++ src/main/java/org/jsoup/safety/Whitelist.class
++ src/main/java/org/jsoup/select/Collector$Accumulator.class
++ src/main/java/org/jsoup/select/Collector.class
++ src/main/java/org/jsoup/select/CombiningEvaluator$And.class
++ src/main/java/org/jsoup/select/CombiningEvaluator$Or.class
++ src/main/java/org/jsoup/select/CombiningEvaluator.class
++ src/main/java/org/jsoup/select/Elements.class
++ src/main/java/org/jsoup/select/Evaluator$AllElements.class
++ src/main/java/org/jsoup/select/Evaluator$Attribute.class
++ src/main/java/org/jsoup/select/Evaluator$AttributeKeyPair.class
++ src/main/java/org/jsoup/select/Evaluator$AttributeStarting.class
++ src/main/java/org/jsoup/select/Evaluator$AttributeWithValue.class
++ src/main/java/org/jsoup/select/Evaluator$AttributeWithValueContaining.class
++ src/main/java/org/jsoup/select/Evaluator$AttributeWithValueEnding.class
++ src/main/java/org/jsoup/select/Evaluator$AttributeWithValueMatching.class
++ src/main/java/org/jsoup/select/Evaluator$AttributeWithValueNot.class
++ src/main/java/org/jsoup/select/Evaluator$AttributeWithValueStarting.class
++ src/main/java/org/jsoup/select/Evaluator$Class.class
++ src/main/java/org/jsoup/select/Evaluator$ContainsOwnText.class
++ src/main/java/org/jsoup/select/Evaluator$ContainsText.class
++ src/main/java/org/jsoup/select/Evaluator$CssNthEvaluator.class
++ src/main/java/org/jsoup/select/Evaluator$Id.class
++ src/main/java/org/jsoup/select/Evaluator$IndexEquals.class
++ src/main/java/org/jsoup/select/Evaluator$IndexEvaluator.class
++ src/main/java/org/jsoup/select/Evaluator$IndexGreaterThan.class
++ src/main/java/org/jsoup/select/Evaluator$IndexLessThan.class
++ src/main/java/org/jsoup/select/Evaluator$IsEmpty.class
++ src/main/java/org/jsoup/select/Evaluator$IsFirstChild.class
++ src/main/java/org/jsoup/select/Evaluator$IsFirstOfType.class
++ src/main/java/org/jsoup/select/Evaluator$IsLastChild.class
++ src/main/java/org/jsoup/select/Evaluator$IsLastOfType.class
++ src/main/java/org/jsoup/select/Evaluator$IsNthChild.class
++ src/main/java/org/jsoup/select/Evaluator$IsNthLastChild.class
++ src/main/java/org/jsoup/select/Evaluator$IsNthLastOfType.class
++ src/main/java/org/jsoup/select/Evaluator$IsNthOfType.class
++ src/main/java/org/jsoup/select/Evaluator$IsOnlyChild.class
++ src/main/java/org/jsoup/select/Evaluator$IsOnlyOfType.class
++ src/main/java/org/jsoup/select/Evaluator$IsRoot.class
++ src/main/java/org/jsoup/select/Evaluator$Matches.class
++ src/main/java/org/jsoup/select/Evaluator$MatchesOwn.class
++ src/main/java/org/jsoup/select/Evaluator$Tag.class
++ src/main/java/org/jsoup/select/Evaluator.class
++ src/main/java/org/jsoup/select/NodeTraversor.class
++ src/main/java/org/jsoup/select/NodeVisitor.class
++ src/main/java/org/jsoup/select/QueryParser.class
++ src/main/java/org/jsoup/select/Selector$SelectorParseException.class
++ src/main/java/org/jsoup/select/Selector.class
++ src/main/java/org/jsoup/select/StructuralEvaluator$Has.class
++ src/main/java/org/jsoup/select/StructuralEvaluator$ImmediateParent.class
++ src/main/java/org/jsoup/select/StructuralEvaluator$ImmediatePreviousSibling.class
++ src/main/java/org/jsoup/select/StructuralEvaluator$Not.class
++ src/main/java/org/jsoup/select/StructuralEvaluator$Parent.class
++ src/main/java/org/jsoup/select/StructuralEvaluator$PreviousSibling.class
++ src/main/java/org/jsoup/select/StructuralEvaluator$Root.class
++ src/main/java/org/jsoup/select/StructuralEvaluator.class
