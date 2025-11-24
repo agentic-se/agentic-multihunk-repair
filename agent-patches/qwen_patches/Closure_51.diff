@@ -1,0 +1,19 @@
+diff --git a/src/com/google/javascript/jscomp/CodeConsumer.java b/src/com/google/javascript/jscomp/CodeConsumer.java
+index 146d2f8b..dac068fe 100644
+--- a/src/com/google/javascript/jscomp/CodeConsumer.java
++++ b/src/com/google/javascript/jscomp/CodeConsumer.java
+@@ -238,6 +238,14 @@ abstract class CodeConsumer {
+       add(" ");
+     }
+ 
++    // Special handling for -0.0 to ensure it's not converted to 0
++    // Using bit comparison to check for negative zero as Double.isNegativeZero()
++    // is not available in older Java versions
++    if (x == 0.0 && (1.0 / x < 0)) {
++      add("-0.0");
++      return;
++    }
++
+     if ((long) x == x) {
+       long value = (long) x;
+       long mantissa = value;

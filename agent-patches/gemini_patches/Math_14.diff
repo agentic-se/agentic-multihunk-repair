@@ -1,0 +1,34 @@
+--- a/src/main/java/org/apache/commons/math3/optim/nonlinear/vector/Weight.java
++++ b/src/main/java/org/apache/commons/math3/optim/nonlinear/vector/Weight.java
+@@ -1,7 +1,3 @@
+-    public Weight(double[] weight) {
+-        final int dim = weight.length;
+-        weightMatrix = org.apache.commons.math3.linear.MatrixUtils.createRealMatrix(dim, dim);
+-        for (int i = 0; i < dim; i++) {
+-            weightMatrix.setEntry(i, i, weight[i]);
+-        }
+-    }
++    public Weight(double[] weight) {
++        weightMatrix = new DiagonalMatrix(weight);
++    }
+
+--- a/src/main/java/org/apache/commons/math3/optim/nonlinear/vector/jacobian/AbstractLeastSquaresOptimizer.java
++++ b/src/main/java/org/apache/commons/math3/optim/nonlinear/vector/jacobian/AbstractLeastSquaresOptimizer.java
+@@ -1,4 +1,13 @@
+-    private RealMatrix squareRoot(RealMatrix m) {
+-            final EigenDecomposition dec = new EigenDecomposition(m);
+-            return dec.getSquareRoot();
+-    }
++    private RealMatrix squareRoot(RealMatrix m) {
++        if (m instanceof DiagonalMatrix) {
++            final int dim = m.getRowDimension();
++            final double[] diag = new double[dim];
++            for (int i = 0; i < dim; ++i) {
++                diag[i] = FastMath.sqrt(m.getEntry(i, i));
++            }
++            return new DiagonalMatrix(diag);
++        } else {
++            final EigenDecomposition dec = new EigenDecomposition(m);
++            return dec.getSquareRoot();
++        }
++    }

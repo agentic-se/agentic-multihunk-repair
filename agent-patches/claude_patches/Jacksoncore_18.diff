@@ -1,0 +1,89 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/base/GeneratorBase.java b/src/main/java/com/fasterxml/jackson/core/base/GeneratorBase.java
+index a4148391..4c3e26a1 100644
+--- a/src/main/java/com/fasterxml/jackson/core/base/GeneratorBase.java
++++ b/src/main/java/com/fasterxml/jackson/core/base/GeneratorBase.java
+@@ -47,10 +47,11 @@ public abstract class GeneratorBase extends JsonGenerator
+      * in "plain" (non-engineering) notation; intent is to prevent asymmetric
+      * attack whereupon simple eng-notation with big scale is used to generate
+      * huge "plain" serialization. See [core#315] for details.
+-     * 
++     *
+      * @since 2.7.7
+      */
+-    
++    protected final static int MAX_BIG_DECIMAL_SCALE = 9999;
++
+     /*
+     /**********************************************************
+     /* Configuration
+@@ -435,6 +436,22 @@ public abstract class GeneratorBase extends JsonGenerator
+         return value.toString();
+     }
+ 
++    /**
++     * Helper method used to check whether given {@link java.math.BigDecimal}
++     * value can be serialized as plain string (using {@link BigDecimal#toPlainString()})
++     * without risking an OutOfMemoryError.
++     *
++     * @since 2.7.7
++     */
++    protected void _verifyBigDecimalRange(BigDecimal value) throws IOException {
++        int scale = value.scale();
++        if (scale < -MAX_BIG_DECIMAL_SCALE || scale > MAX_BIG_DECIMAL_SCALE) {
++            _reportError(String.format(
++                "Attempt to write plain `java.math.BigDecimal` (see JsonGenerator.Feature.WRITE_BIGDECIMAL_AS_PLAIN) with illegal scale (%d): maximum (absolute) scale supported is %d",
++                scale, MAX_BIG_DECIMAL_SCALE));
++        }
++    }
++
+     /*
+     /**********************************************************
+     /* UTF-8 related helper method(s)
+diff --git a/src/main/java/com/fasterxml/jackson/core/json/UTF8JsonGenerator.java b/src/main/java/com/fasterxml/jackson/core/json/UTF8JsonGenerator.java
+index cf6ca3a6..5b4cf939 100644
+--- a/src/main/java/com/fasterxml/jackson/core/json/UTF8JsonGenerator.java
++++ b/src/main/java/com/fasterxml/jackson/core/json/UTF8JsonGenerator.java
+@@ -907,9 +907,16 @@ public class UTF8JsonGenerator
+         if (value == null) {
+             _writeNull();
+         } else  if (_cfgNumbersAsStrings) {
+-            String raw = Feature.WRITE_BIGDECIMAL_AS_PLAIN.enabledIn(_features) ? value.toPlainString() : value.toString();
++            String raw;
++            if (Feature.WRITE_BIGDECIMAL_AS_PLAIN.enabledIn(_features)) {
++                _verifyBigDecimalRange(value);
++                raw = value.toPlainString();
++            } else {
++                raw = value.toString();
++            }
+             _writeQuotedRaw(raw);
+         } else if (Feature.WRITE_BIGDECIMAL_AS_PLAIN.enabledIn(_features)) {
++            _verifyBigDecimalRange(value);
+             writeRaw(value.toPlainString());
+         } else {
+             writeRaw(_asString(value));
+diff --git a/src/main/java/com/fasterxml/jackson/core/json/WriterBasedJsonGenerator.java b/src/main/java/com/fasterxml/jackson/core/json/WriterBasedJsonGenerator.java
+index 156d997b..d5c3e66e 100644
+--- a/src/main/java/com/fasterxml/jackson/core/json/WriterBasedJsonGenerator.java
++++ b/src/main/java/com/fasterxml/jackson/core/json/WriterBasedJsonGenerator.java
+@@ -684,9 +684,16 @@ public final class WriterBasedJsonGenerator
+         if (value == null) {
+             _writeNull();
+         } else  if (_cfgNumbersAsStrings) {
+-            String raw = isEnabled(Feature.WRITE_BIGDECIMAL_AS_PLAIN) ? value.toPlainString() : value.toString();
++            String raw;
++            if (isEnabled(Feature.WRITE_BIGDECIMAL_AS_PLAIN)) {
++                _verifyBigDecimalRange(value);
++                raw = value.toPlainString();
++            } else {
++                raw = value.toString();
++            }
+             _writeQuotedRaw(raw);
+         } else if (isEnabled(Feature.WRITE_BIGDECIMAL_AS_PLAIN)) {
++            _verifyBigDecimalRange(value);
+             writeRaw(value.toPlainString());
+         } else {
+             writeRaw(_asString(value));
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

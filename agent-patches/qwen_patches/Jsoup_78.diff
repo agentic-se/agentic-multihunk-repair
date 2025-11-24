@@ -1,0 +1,16 @@
+diff --git a/src/main/java/org/jsoup/parser/CharacterReader.java b/src/main/java/org/jsoup/parser/CharacterReader.java
+index b3b82e9..e66f071 100644
+--- a/src/main/java/org/jsoup/parser/CharacterReader.java
++++ b/src/main/java/org/jsoup/parser/CharacterReader.java
+@@ -58,6 +58,11 @@ public final class CharacterReader {
+                 bufPos = 0;
+                 bufMark = 0;
+                 bufSplitPoint = bufLength > readAheadLimit ? readAheadLimit : bufLength;
++            } else {
++                // Handle the case where the underlying input stream returns zero bytes
++                // This can happen when a server sets a content length greater than what it actually writes
++                // Instead of continuing with empty data, throw an IOException
++                throw new IOException("Underlying input stream returned zero bytes");
+             }
+         } catch (IOException e) {
+             throw new UncheckedIOException(e);

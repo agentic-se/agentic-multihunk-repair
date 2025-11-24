@@ -1,0 +1,140 @@
+diff --git a/src/main/java/org/jsoup/parser/TokenQueue.java b/src/main/java/org/jsoup/parser/TokenQueue.java
+index fc22b04..a96b776 100644
+--- a/src/main/java/org/jsoup/parser/TokenQueue.java
++++ b/src/main/java/org/jsoup/parser/TokenQueue.java
+@@ -262,23 +262,26 @@ public class TokenQueue {
+         int end = -1;
+         int depth = 0;
+         char last = 0;
+-        boolean inQuote = false;
++        char inQuote = 0;
+ 
+         do {
+             if (isEmpty()) break;
+             Character c = consume();
+             if (last == 0 || last != ESC) {
+-                if ((c.equals('\'') || c.equals('"')) && c != open)
+-                    inQuote = !inQuote;
+-                if (inQuote)
+-                    continue;
+-                if (c.equals(open)) {
+-                    depth++;
+-                    if (start == -1)
+-                        start = pos;
++                if (inQuote != 0) {
++                    if (c.equals(inQuote))
++                        inQuote = 0;
++                } else {
++                    if (c.equals('\'') || c.equals('"'))
++                        inQuote = c;
++                    if (c.equals(open)) {
++                        depth++;
++                        if (start == -1)
++                            start = pos;
++                    }
++                    else if (c.equals(close))
++                        depth--;
+                 }
+-                else if (c.equals(close))
+-                    depth--;
+             }
+ 
+             if (depth > 0 && last != 0)
+@@ -286,6 +289,8 @@ public class TokenQueue {
+             last = c;
+         } while (depth > 0);
+         final String out = (end >= 0) ? queue.substring(start, end) : "";
++        if (inQuote != 0)
++            throw new IllegalArgumentException("Did not find matching closing quote");
+         return out;
+     }
+     
+diff --git a/src/main/java/org/jsoup/select/QueryParser.java b/src/main/java/org/jsoup/select/QueryParser.java
+index 923cfe9..a34a17e 100644
+--- a/src/main/java/org/jsoup/select/QueryParser.java
++++ b/src/main/java/org/jsoup/select/QueryParser.java
+@@ -128,9 +128,9 @@ public class QueryParser {
+         StringBuilder sq = new StringBuilder();
+         while (!tq.isEmpty()) {
+             if (tq.matches("("))
+-                sq.append("(").append(tq.chompBalanced('(', ')')).append(")");
++                sq.append("(").append(chompBalancedNotEmpty('(', ')')).append(")");
+             else if (tq.matches("["))
+-                sq.append("[").append(tq.chompBalanced('[', ']')).append("]");
++                sq.append("[").append(chompBalancedNotEmpty('[', ']')).append("]");
+             else if (tq.matchesAny(combinators))
+                 break;
+             else
+@@ -139,6 +139,14 @@ public class QueryParser {
+         return sq.toString();
+     }
+ 
++    private String chompBalancedNotEmpty(char open, char close) {
++        try {
++            return tq.chompBalanced(open, close);
++        } catch (IllegalArgumentException e) {
++            throw new Selector.SelectorParseException("Could not parse query '%s': %s", query, e.getMessage());
++        }
++    }
++
+     private void findElements() {
+         if (tq.matchChomp("#"))
+             byId();
+@@ -229,7 +237,7 @@ public class QueryParser {
+     }
+ 
+     private void byAttribute() {
+-        TokenQueue cq = new TokenQueue(tq.chompBalanced('[', ']')); // content queue
++        TokenQueue cq = new TokenQueue(chompBalancedNotEmpty('[', ']')); // content queue
+         String key = cq.consumeToAny(AttributeEvals); // eq, not, start, end, contain, match, (no val)
+         Validate.notEmpty(key);
+         cq.consumeWhitespace();
+@@ -325,7 +333,7 @@ public class QueryParser {
+     // pseudo selector :has(el)
+     private void has() {
+         tq.consume(":has");
+-        String subQuery = tq.chompBalanced('(', ')');
++        String subQuery = chompBalancedNotEmpty('(', ')');
+         Validate.notEmpty(subQuery, ":has(el) subselect must not be empty");
+         evals.add(new StructuralEvaluator.Has(parse(subQuery)));
+     }
+@@ -333,7 +341,7 @@ public class QueryParser {
+     // pseudo selector :contains(text), containsOwn(text)
+     private void contains(boolean own) {
+         tq.consume(own ? ":containsOwn" : ":contains");
+-        String searchText = TokenQueue.unescape(tq.chompBalanced('(', ')'));
++        String searchText = TokenQueue.unescape(chompBalancedNotEmpty('(', ')'));
+         Validate.notEmpty(searchText, ":contains(text) query must not be empty");
+         if (own)
+             evals.add(new Evaluator.ContainsOwnText(searchText));
+@@ -344,7 +352,7 @@ public class QueryParser {
+     // pseudo selector :containsData(data)
+     private void containsData() {
+         tq.consume(":containsData");
+-        String searchText = TokenQueue.unescape(tq.chompBalanced('(', ')'));
++        String searchText = TokenQueue.unescape(chompBalancedNotEmpty('(', ')'));
+         Validate.notEmpty(searchText, ":containsData(text) query must not be empty");
+         evals.add(new Evaluator.ContainsData(searchText));
+     }
+@@ -352,7 +360,7 @@ public class QueryParser {
+     // :matches(regex), matchesOwn(regex)
+     private void matches(boolean own) {
+         tq.consume(own ? ":matchesOwn" : ":matches");
+-        String regex = tq.chompBalanced('(', ')'); // don't unescape, as regex bits will be escaped
++        String regex = chompBalancedNotEmpty('(', ')'); // don't unescape, as regex bits will be escaped
+         Validate.notEmpty(regex, ":matches(regex) query must not be empty");
+ 
+         if (own)
+@@ -364,7 +372,7 @@ public class QueryParser {
+     // :not(selector)
+     private void not() {
+         tq.consume(":not");
+-        String subQuery = tq.chompBalanced('(', ')');
++        String subQuery = chompBalancedNotEmpty('(', ')');
+         Validate.notEmpty(subQuery, ":not(selector) subselect must not be empty");
+ 
+         evals.add(new StructuralEvaluator.Not(parse(subQuery)));
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

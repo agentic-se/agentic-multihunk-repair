@@ -1,0 +1,63 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/JsonMappingException.java b/src/main/java/com/fasterxml/jackson/databind/JsonMappingException.java
+index e0c6408b2..d65584340 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/JsonMappingException.java
++++ b/src/main/java/com/fasterxml/jackson/databind/JsonMappingException.java
+@@ -377,7 +377,7 @@ public class JsonMappingException
+             jme = (JsonMappingException) src;
+         } else {
+             // [databind#2128]: try to avoid duplication
+-            String msg = src.getMessage();
++            String msg = com.fasterxml.jackson.databind.util.ClassUtil.exceptionMessage(src);
+             // Let's use a more meaningful placeholder if all we have is null
+             if (msg == null || msg.length() == 0) {
+                 msg = "(was "+src.getClass().getName()+")";
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
+index c904c2e54..c0cf09cce 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
+@@ -132,7 +132,7 @@ public class StdKeyDeserializer extends KeyDeserializer
+         } catch (Exception re) {
+             return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation, problem: (%s) %s",
+                     re.getClass().getName(),
+-                    re.getMessage());
++                    ClassUtil.exceptionMessage(re));
+         }
+         if (_keyClass.isEnum() && ctxt.getConfig().isEnabled(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL)) {
+             return null;
+@@ -259,7 +259,7 @@ public class StdKeyDeserializer extends KeyDeserializer
+     // @since 2.9
+     protected Object _weirdKey(DeserializationContext ctxt, String key, Exception e) throws IOException {
+         return ctxt.handleWeirdKey(_keyClass, key, "problem: %s",
+-                e.getMessage());
++                ClassUtil.exceptionMessage(e));
+     }
+ 
+     /*
+@@ -340,7 +340,7 @@ public class StdKeyDeserializer extends KeyDeserializer
+                 }
+                 return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation");
+             } catch (Exception re) {
+-                return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation: %s", re.getMessage());
++                return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation: %s", ClassUtil.exceptionMessage(re));
+             }
+         }
+ 
+diff --git a/src/main/java/com/fasterxml/jackson/databind/util/ClassUtil.java b/src/main/java/com/fasterxml/jackson/databind/util/ClassUtil.java
+index b241a7552..5b40e3a16 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/util/ClassUtil.java
++++ b/src/main/java/com/fasterxml/jackson/databind/util/ClassUtil.java
+@@ -749,7 +749,13 @@ public final class ClassUtil
+      *
+      * @since 2.9.7
+      */
+-    
++    public static String exceptionMessage(Throwable t) {
++        if (t instanceof com.fasterxml.jackson.core.JsonProcessingException) {
++            return ((com.fasterxml.jackson.core.JsonProcessingException) t).getOriginalMessage();
++        }
++        return t.getMessage();
++    }
++
+     /*
+     /**********************************************************
+     /* Primitive type support

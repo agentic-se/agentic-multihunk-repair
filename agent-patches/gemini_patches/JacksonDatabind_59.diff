@@ -1,0 +1,319 @@
+--- a/src/main/java/com/fasterxml/jackson/databind/DeserializationContext.java
++++ b/src/main/java/com/fasterxml/jackson/databind/DeserializationContext.java
+@@ -1,4 +1,4 @@
+-    public final KeyDeserializer findKeyDeserializer(JavaType keyType,
+-            BeanProperty prop) throws JsonMappingException {
+-        KeyDeserializer kd = _cache.findKeyDeserializer(this,
+-                _factory, keyType);
++    public final KeyDeserializer findKeyDeserializer(JavaType keyType,
++            BeanProperty prop) throws JsonMappingException {
++        KeyDeserializer kd = _cache.findKeyDeserializer(this,
++                _factory, keyType, prop);
+@@ -1,4 +1,4 @@
+-    public final KeyDeserializer findKeyDeserializer(JavaType keyType,
+-            BeanProperty prop) throws JsonMappingException {
+-        KeyDeserializer kd = _cache.findKeyDeserializer(this,
+-                _factory, keyType, prop);
++    public final KeyDeserializer findKeyDeserializer(JavaType keyType,
++            BeanProperty prop) throws JsonMappingException {
++        KeyDeserializer kd = _cache.findKeyDeserializer(this,
++                _factory, keyType);
+@@ -1,4 +1,4 @@
+-    public final KeyDeserializer findKeyDeserializer(JavaType keyType,
+-            BeanProperty prop) throws JsonMappingException {
+-        KeyDeserializer kd = _cache.findKeyDeserializer(this,
+-                _factory, keyType);
++    public final KeyDeserializer findKeyDeserializer(JavaType keyType,
++            BeanProperty prop) throws JsonMappingException {
++        KeyDeserializer kd = _cache.findKeyDeserializer(this,
++                _factory, keyType, prop);
+
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BasicDeserializerFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BasicDeserializerFactory.java
+@@ -1,4 +1,9 @@
+-            if (type.isEnumType()) {
+-                return _createEnumKeyDeserializer(ctxt, type);
+-            }
+-            deser = StdKeyDeserializers.findStringBasedKeyDeserializer(config, type);
++            if (type.isEnumType()) {
++                return _createEnumKeyDeserializer(ctxt, type);
++            }
++            // [databind#59]: Allow @JsonDeserialize.keyUsing for non-enum types
++            BeanDescription beanDesc = config.introspectClassAnnotations(type.getRawClass());
++            deser = findKeyDeserializerFromAnnotation(ctxt, beanDesc.getClassInfo());
++            if (deser == null) {
++                deser = StdKeyDeserializers.findStringBasedKeyDeserializer(config, type);
++            }
+@@ -1,27 +1,28 @@
+-    @Override
+-    public KeyDeserializer createKeyDeserializer(DeserializationContext ctxt,
+-            JavaType type)
+-        throws JsonMappingException
+-    {
+-        final DeserializationConfig config = ctxt.getConfig();
+-        KeyDeserializer deser = null;
+-        if (_factoryConfig.hasKeyDeserializers()) {
+-            BeanDescription beanDesc = config.introspectClassAnnotations(type.getRawClass());
+-            for (KeyDeserializers d  : _factoryConfig.keyDeserializers()) {
+-                deser = d.findKeyDeserializer(type, config, beanDesc);
+-                if (deser != null) {
+-                    break;
+-                }
+-            }
+-        }
+-        // the only non-standard thing is this:
+-        if (deser == null) {
+-            if (type.isEnumType()) {
+-                return _createEnumKeyDeserializer(ctxt, type);
+-            }
+-            // [databind#59]: Allow @JsonDeserialize.keyUsing for non-enum types
+-            BeanDescription beanDesc = config.introspectClassAnnotations(type.getRawClass());
+-            deser = findKeyDeserializerFromAnnotation(ctxt, beanDesc.getClassInfo());
+-            if (deser == null) {
+-                deser = StdKeyDeserializers.findStringBasedKeyDeserializer(config, type);
+-            }
++    @Override
++    public KeyDeserializer createKeyDeserializer(DeserializationContext ctxt,
++            JavaType type, BeanProperty property)
++        throws JsonMappingException
++    {
++        final DeserializationConfig config = ctxt.getConfig();
++        KeyDeserializer deser = null;
++        if (_factoryConfig.hasKeyDeserializers()) {
++            BeanDescription beanDesc = config.introspectClassAnnotations(type.getRawClass());
++            for (KeyDeserializers d  : _factoryConfig.keyDeserializers()) {
++                deser = d.findKeyDeserializer(type, config, beanDesc);
++                if (deser != null) {
++                    break;
++                }
++            }
++        }
++        // the only non-standard thing is this:
++        if (deser == null) {
++            if (type.isEnumType()) {
++                return _createEnumKeyDeserializer(ctxt, type);
++            }
++            // [databind#59]: Allow @JsonDeserialize.keyUsing for non-enum types
++            BeanDescription beanDesc = config.introspectClassAnnotations(type.getRawClass());
++            // Use property to find annotation
++            deser = findKeyDeserializerFromAnnotation(ctxt, property.getMember());
++            if (deser == null) {
++                deser = StdKeyDeserializers.findStringBasedKeyDeserializer(config, type);
++            }
+@@ -1,10 +1,4 @@
+-            if (type.isEnumType()) {
+-                return _createEnumKeyDeserializer(ctxt, type);
+-            }
+-            // [databind#59]: Allow @JsonDeserialize.keyUsing for non-enum types
+-            BeanDescription beanDesc = config.introspectClassAnnotations(type.getRawClass());
+-            // Use property to find annotation
+-            deser = findKeyDeserializerFromAnnotation(ctxt, property.getMember());
+-            if (deser == null) {
+-                deser = StdKeyDeserializers.findStringBasedKeyDeserializer(config, type);
+-            }
++            if (type.isEnumType()) {
++                return _createEnumKeyDeserializer(ctxt, type);
++            }
++            deser = StdKeyDeserializers.findStringBasedKeyDeserializer(config, type);
+@@ -1,8 +1,15 @@
+-    @Override
+-    public KeyDeserializer createKeyDeserializer(DeserializationContext ctxt,
+-            JavaType type, BeanProperty property)
+-        throws JsonMappingException
+-    {
+-        final DeserializationConfig config = ctxt.getConfig();
+-        KeyDeserializer deser = null;
+-        if (_factoryConfig.hasKeyDeserializers()) {
++    @Override
++    public KeyDeserializer createKeyDeserializer(DeserializationContext ctxt,
++            JavaType type, BeanProperty property)
++        throws JsonMappingException
++    {
++        final DeserializationConfig config = ctxt.getConfig();
++        KeyDeserializer deser = null;
++
++        // First, check if a KeyDeserializer is already associated with the type (e.g., from annotations on a property)
++        deser = (KeyDeserializer) type.getValueHandler();
++        if (deser != null) {
++            return deser;
++        }
++
++        if (_factoryConfig.hasKeyDeserializers()) {
+@@ -1,15 +1,9 @@
+-    @Override
+-    public KeyDeserializer createKeyDeserializer(DeserializationContext ctxt,
+-            JavaType type, BeanProperty property)
+-        throws JsonMappingException
+-    {
+-        final DeserializationConfig config = ctxt.getConfig();
+-        KeyDeserializer deser = null;
+-
+-        // First, check if a KeyDeserializer is already associated with the type (e.g., from annotations on a property)
+-        deser = (KeyDeserializer) type.getValueHandler();
+-        if (deser != null) {
+-            return deser;
+-        }
+-
+-        if (_factoryConfig.hasKeyDeserializers()) {
++    @Override
++    public KeyDeserializer createKeyDeserializer(DeserializationContext ctxt,
++            JavaType type, BeanProperty property)
++        throws JsonMappingException
++    {
++        final DeserializationConfig config = ctxt.getConfig();
++        KeyDeserializer deser = null;
++
++        if (_factoryConfig.hasKeyDeserializers()) {
+@@ -1,7 +1,16 @@
+-        // the only non-standard thing is this:
+-        if (deser == null) {
+-            if (type.isEnumType()) {
+-                return _createEnumKeyDeserializer(ctxt, type);
+-            }
+-            deser = StdKeyDeserializers.findStringBasedKeyDeserializer(config, type);
+-        }
++        // the only non-standard thing is this:
++        if (deser == null) {
++            // [databind#59]: Allow @JsonDeserialize.keyUsing for non-enum types
++            // Prioritize annotation on property if available
++            if (property != null) {
++                AnnotatedMember member = property.getMember();
++                if (member != null) {
++                    deser = findKeyDeserializerFromAnnotation(ctxt, member);
++                }
++            }
++            if (deser == null) { // If not found from property, try other means
++                if (type.isEnumType()) {
++                    return _createEnumKeyDeserializer(ctxt, type);
++                }
++                deser = StdKeyDeserializers.findStringBasedKeyDeserializer(config, type);
++            }
+@@ -1,17 +1,7 @@
+-        // the only non-standard thing is this:
+-        if (deser == null) {
+-            // [databind#59]: Allow @JsonDeserialize.keyUsing for non-enum types
+-            // Prioritize annotation on property if available
+-            if (property != null) {
+-                AnnotatedMember member = property.getMember();
+-                if (member != null) {
+-                    deser = findKeyDeserializerFromAnnotation(ctxt, member);
+-                }
+-            }
+-            if (deser == null) { // If not found from property, try other means
+-                if (type.isEnumType()) {
+-                    return _createEnumKeyDeserializer(ctxt, type);
+-                }
+-                deser = StdKeyDeserializers.findStringBasedKeyDeserializer(config, type);
+-            }
+-
++        // the only non-standard thing is this:
++        if (deser == null) {
++            if (type.isEnumType()) {
++                return _createEnumKeyDeserializer(ctxt, type);
++            }
++            deser = StdKeyDeserializers.findStringBasedKeyDeserializer(config, type);
++        }
+@@ -1,4 +1,4 @@
+-    @Override
+-    public KeyDeserializer createKeyDeserializer(DeserializationContext ctxt,
+-            JavaType type, BeanProperty property)
+-        throws JsonMappingException
++    @Override
++    public KeyDeserializer createKeyDeserializer(DeserializationContext ctxt,
++            JavaType type)
++        throws JsonMappingException
+@@ -1,7 +1,18 @@
+-        // the only non-standard thing is this:
+-        if (deser == null) {
+-            if (type.isEnumType()) {
+-                return _createEnumKeyDeserializer(ctxt, type);
+-            }
+-            deser = StdKeyDeserializers.findStringBasedKeyDeserializer(config, type);
+-        }
++        // the only non-standard thing is this:
++        if (deser == null) {
++            // [databind#59]: Allow @JsonDeserialize.keyUsing for non-enum types
++            // If property context is available, try to find key deserializer from it
++            BeanProperty prop = ctxt.findProperty(type);
++            if (prop != null) {
++                AnnotatedMember member = prop.getMember();
++                if (member != null) {
++                    deser = findKeyDeserializerFromAnnotation(ctxt, member);
++                }
++            }
++
++            if (deser == null) { // If not found from property, try other means
++                if (type.isEnumType()) {
++                    return _createEnumKeyDeserializer(ctxt, type);
++                }
++                deser = StdKeyDeserializers.findStringBasedKeyDeserializer(config, type);
++            }
+@@ -1,4 +1,4 @@
+-    @Override
+-    public KeyDeserializer createKeyDeserializer(DeserializationContext ctxt,
+-            JavaType type)
+-        throws JsonMappingException
++    @Override
++    public KeyDeserializer createKeyDeserializer(DeserializationContext ctxt,
++            JavaType type, BeanProperty property)
++        throws JsonMappingException
+
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/DeserializerCache.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/DeserializerCache.java
+@@ -1,5 +1,5 @@
+-    public KeyDeserializer findKeyDeserializer(DeserializationContext ctxt,
+-            DeserializerFactory factory, JavaType type)
+-        throws JsonMappingException
+-    {
+-        KeyDeserializer kd = factory.createKeyDeserializer(ctxt, type);
++    public KeyDeserializer findKeyDeserializer(DeserializationContext ctxt,
++            DeserializerFactory factory, JavaType type, BeanProperty property)
++        throws JsonMappingException
++    {
++        KeyDeserializer kd = factory.createKeyDeserializer(ctxt, type, property);
+@@ -1,5 +1,5 @@
+-    public KeyDeserializer findKeyDeserializer(DeserializationContext ctxt,
+-            DeserializerFactory factory, JavaType type, BeanProperty property)
+-        throws JsonMappingException
+-    {
+-        KeyDeserializer kd = factory.createKeyDeserializer(ctxt, type, property);
++    public KeyDeserializer findKeyDeserializer(DeserializationContext ctxt,
++            DeserializerFactory factory, JavaType type)
++        throws JsonMappingException
++    {
++        KeyDeserializer kd = factory.createKeyDeserializer(ctxt, type);
+@@ -1,5 +1,5 @@
+-    public KeyDeserializer findKeyDeserializer(DeserializationContext ctxt,
+-            DeserializerFactory factory, JavaType type)
+-        throws JsonMappingException
+-    {
+-        KeyDeserializer kd = factory.createKeyDeserializer(ctxt, type);
++    public KeyDeserializer findKeyDeserializer(DeserializationContext ctxt,
++            DeserializerFactory factory, JavaType type, BeanProperty property)
++        throws JsonMappingException
++    {
++        KeyDeserializer kd = factory.createKeyDeserializer(ctxt, type, property);
+
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/DeserializerFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/DeserializerFactory.java
+@@ -1,3 +1,3 @@
+-    public abstract KeyDeserializer createKeyDeserializer(DeserializationContext ctxt,
+-            JavaType type)
+-        throws JsonMappingException;
++    public abstract KeyDeserializer createKeyDeserializer(DeserializationContext ctxt,
++            JavaType type, BeanProperty property)
++        throws JsonMappingException;
+@@ -1,3 +1,3 @@
+-    public abstract KeyDeserializer createKeyDeserializer(DeserializationContext ctxt,
+-            JavaType type, BeanProperty property)
+-        throws JsonMappingException;
++    public abstract KeyDeserializer createKeyDeserializer(DeserializationContext ctxt,
++            JavaType type)
++        throws JsonMappingException;
+@@ -1,3 +1,3 @@
+-    public abstract KeyDeserializer createKeyDeserializer(DeserializationContext ctxt,
+-            JavaType type)
+-        throws JsonMappingException;
++    public abstract KeyDeserializer createKeyDeserializer(DeserializationContext ctxt,
++            JavaType type, BeanProperty property)
++        throws JsonMappingException;

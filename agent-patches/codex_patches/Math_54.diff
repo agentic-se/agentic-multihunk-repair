@@ -1,0 +1,30 @@
+diff --git a/src/main/java/org/apache/commons/math/dfp/Dfp.java b/src/main/java/org/apache/commons/math/dfp/Dfp.java
+index 73f1ea3e8..755474b97 100644
+--- a/src/main/java/org/apache/commons/math/dfp/Dfp.java
++++ b/src/main/java/org/apache/commons/math/dfp/Dfp.java
+@@ -269,7 +269,8 @@ public class Dfp implements FieldElement<Dfp> {
+         if (exponent == -1023) {
+             // Zero or sub-normal
+             if (x == 0) {
+-                // make sure 0 has the right sign
++                // set correct sign for signed zero and return
++                sign = ((bits & 0x8000000000000000L) == 0) ? (byte) 1 : (byte) -1;
+                 return;
+             }
+ 
+@@ -2302,6 +2303,15 @@ public class Dfp implements FieldElement<Dfp> {
+      */
+     public double toDouble() {
+ 
++        // Fast-path zero to avoid constructing invalid bit patterns.
++        // When the value is exactly zero (mantissa all zeros), the
++        // method below could compute a negative mantissa and later
++        // OR it into the exponent field, yielding -Infinity.
++        // Return the correctly signed zero directly instead.
++        if (nans == FINITE && mant[mant.length - 1] == 0) {
++            return (sign < 0) ? -0.0 : 0.0;
++        }
++
+         if (isInfinite()) {
+             if (lessThan(getZero())) {
+                 return Double.NEGATIVE_INFINITY;

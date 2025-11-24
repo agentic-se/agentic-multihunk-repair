@@ -1,0 +1,28 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/json/ReaderBasedJsonParser.java b/src/main/java/com/fasterxml/jackson/core/json/ReaderBasedJsonParser.java
+index 60919c88..39dae9f0 100644
+--- a/src/main/java/com/fasterxml/jackson/core/json/ReaderBasedJsonParser.java
++++ b/src/main/java/com/fasterxml/jackson/core/json/ReaderBasedJsonParser.java
+@@ -710,7 +710,8 @@ public class ReaderBasedJsonParser // final in 2.3, earlier
+         JsonToken t = _nextToken;
+         _nextToken = null;
+ 
+-// !!! 16-Nov-2015, tatu: TODO: fix [databind#37], copy next location to current here
++        // Fix for [databind#37]: update location after name
++        _updateLocation();
+         
+         // Also: may need to start new context?
+         if (t == JsonToken.START_ARRAY) {
+diff --git a/src/main/java/com/fasterxml/jackson/core/json/UTF8StreamJsonParser.java b/src/main/java/com/fasterxml/jackson/core/json/UTF8StreamJsonParser.java
+index 589a34c4..7780ad2f 100644
+--- a/src/main/java/com/fasterxml/jackson/core/json/UTF8StreamJsonParser.java
++++ b/src/main/java/com/fasterxml/jackson/core/json/UTF8StreamJsonParser.java
+@@ -842,7 +842,8 @@ public class UTF8StreamJsonParser
+         JsonToken t = _nextToken;
+         _nextToken = null;
+ 
+- // !!! 16-Nov-2015, tatu: TODO: fix [databind#37], copy next location to current here
++        // Fix for [databind#37]: update location after name
++        _updateLocation();
+         
+         // Also: may need to start new context?
+         if (t == JsonToken.START_ARRAY) {

@@ -1,0 +1,30 @@
+diff --git a/src/main/java/org/jsoup/nodes/FormElement.java b/src/main/java/org/jsoup/nodes/FormElement.java
+index 4ce1190..0b83e22 100644
+--- a/src/main/java/org/jsoup/nodes/FormElement.java
++++ b/src/main/java/org/jsoup/nodes/FormElement.java
+@@ -80,6 +80,8 @@ public class FormElement extends Element {
+             String name = el.attr("name");
+             if (name.length() == 0) continue;
+             String type = el.attr("type");
++            // per HTML form submit rules, disabled controls are not successful and must be ignored
++            if (el.hasAttr("disabled")) continue;
+ 
+             if ("select".equals(el.tagName())) {
+                 Elements options = el.select("option[selected]");
+@@ -96,10 +98,15 @@ public class FormElement extends Element {
+             } else if ("checkbox".equalsIgnoreCase(type) || "radio".equalsIgnoreCase(type)) {
+                 // only add checkbox or radio if they have the checked attribute
+                 if (el.hasAttr("checked")) {
+-                    final String val = el.val();
++                    String val = el.val();
++                    // if no value attribute is set, browsers submit "on" by default
++                    if (val.length() == 0)
++                        val = "on";
+                     data.add(HttpConnection.KeyVal.create(name, val));
+                 }
+             } else {
++                // ignore input type=button, which is not successful on submit
++                if ("button".equalsIgnoreCase(type)) continue;
+                 data.add(HttpConnection.KeyVal.create(name, el.val()));
+             }
+         }

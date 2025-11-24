@@ -1,0 +1,264 @@
+--- a/src/main/java/org/jsoup/parser/TokenQueue.java
++++ b/src/main/java/org/jsoup/parser/TokenQueue.java
+@@ -1,1 +1,2 @@
+-import org.jsoup.helper.Validate;
++import org.jsoup.helper.Validate;
++import org.jsoup.select.Selector;
+@@ -1,2 +1,8 @@
+-        final String out = (end >= 0) ? queue.substring(start, end) : "";
+-        return out;
++        final String out = (end >= 0) ? queue.substring(start, end) : "";
++        if (inQuote) {
++            throw new Selector.SelectorParseException("Unclosed quote in the balanced text: %s", out);
++        }
++        if (depth > 0) {
++            throw new Selector.SelectorParseException("Unbalanced quotes or brackets in the balanced text: %s", out);
++        }
++        return out;
+
+--- a/src/main/java/org/jsoup/select/QueryParser.java
++++ b/src/main/java/org/jsoup/select/QueryParser.java
+@@ -1,5 +1,6 @@
+-import java.util.regex.Pattern;
+-
+-import org.jsoup.helper.StringUtil;
+-import org.jsoup.helper.Validate;
+-import org.jsoup.parser.TokenQueue;
++import java.util.regex.Pattern;
++
++import org.jsoup.helper.StringUtil;
++import org.jsoup.helper.Validate;
++import org.jsoup.nodes.Entities;
++import org.jsoup.parser.TokenQueue;
+@@ -1,5 +1,6 @@
+-    // pseudo selector :contains(text), containsOwn(text)
+-    private void contains(boolean own) {
+-        tq.consume(own ? ":containsOwn" : ":contains");
+-        String searchText = TokenQueue.unescape(tq.chompBalanced('(', ')'));
+-        Validate.notEmpty(searchText, ":contains(text) query must not be empty");
++    // pseudo selector :contains(text), containsOwn(text)
++    private void contains(boolean own) {
++        tq.consume(own ? ":containsOwn" : ":contains");
++        String searchText = TokenQueue.unescape(tq.chompBalanced('(', ')'));
++        searchText = Entities.unescape(searchText);
++        Validate.notEmpty(searchText, ":contains(text) query must not be empty");
+@@ -1,2 +1,1 @@
+-import org.jsoup.nodes.Entities;
+-import org.jsoup.parser.TokenQueue;
++import org.jsoup.parser.TokenQueue;
+@@ -1,2 +1,3 @@
+-import org.jsoup.helper.Validate;
+-import org.jsoup.parser.TokenQueue;
++import org.jsoup.helper.Validate;
++import org.jsoup.parser.Parser;
++import org.jsoup.parser.TokenQueue;
+@@ -1,2 +1,2 @@
+-        String searchText = TokenQueue.unescape(tq.chompBalanced('(', ')'));
+-        searchText = Entities.unescape(searchText);
++        String searchText = TokenQueue.unescape(tq.chompBalanced('(', ')'));
++        searchText = Parser.unescapeEntities(searchText, false);
+@@ -1,9 +1,21 @@
+-    // :not(selector)
+-    private void not() {
+-        tq.consume(":not");
+-        String subQuery = tq.chompBalanced('(', ')');
+-        Validate.notEmpty(subQuery, ":not(selector) subselect must not be empty");
+-
+-        evals.add(new StructuralEvaluator.Not(parse(subQuery)));
+-    }
+-}
++    // :not(selector)
++    private void not() {
++        tq.consume(":not");
++        String subQuery = tq.chompBalanced('(', ')');
++        Validate.notEmpty(subQuery, ":not(selector) subselect must not be empty");
++
++        evals.add(new StructuralEvaluator.Not(parse(subQuery)));
++    }
++
++    private boolean containsUnescapedQuotes(String text) {
++        for (int i = 0; i < text.length(); i++) {
++            char c = text.charAt(i);
++            if (c == ''' || c == '"') {
++                if (i == 0 || text.charAt(i - 1) != '\\') { // Check if not escaped by a backslash
++                    return true;
++                }
++            }
++        }
++        return false;
++    }
++}
+@@ -1,3 +1,6 @@
+-        String searchText = TokenQueue.unescape(tq.chompBalanced('(', ')'));
+-        searchText = Parser.unescapeEntities(searchText, false);
+-        Validate.notEmpty(searchText, ":contains(text) query must not be empty");
++        String searchText = TokenQueue.unescape(tq.chompBalanced('(', ')'));
++        searchText = Parser.unescapeEntities(searchText, false);
++        if (containsUnescapedQuotes(searchText)) {
++            throw new Selector.SelectorParseException("String in :contains(text) must be quoted when containing spaces or other tokens, or escape with \\", searchText);
++        }
++        Validate.notEmpty(searchText, ":contains(text) query must not be empty");
+@@ -1,1 +1,1 @@
+-            if (c == ''' || c == '"') {
++            if (c == '\'' || c == '"') {
+@@ -1,6 +1,3 @@
+-        String searchText = TokenQueue.unescape(tq.chompBalanced('(', ')'));
+-        searchText = Parser.unescapeEntities(searchText, false);
+-        if (containsUnescapedQuotes(searchText)) {
+-            throw new Selector.SelectorParseException("String in :contains(text) must be quoted when containing spaces or other tokens, or escape with \\", searchText);
+-        }
+-        Validate.notEmpty(searchText, ":contains(text) query must not be empty");
++        String searchText = TokenQueue.unescape(tq.chompBalanced('(', ')'));
++        searchText = Parser.unescapeEntities(searchText, false);
++        Validate.notEmpty(searchText, ":contains(text) query must not be empty");
+@@ -1,21 +1,9 @@
+-    // :not(selector)
+-    private void not() {
+-        tq.consume(":not");
+-        String subQuery = tq.chompBalanced('(', ')');
+-        Validate.notEmpty(subQuery, ":not(selector) subselect must not be empty");
+-
+-        evals.add(new StructuralEvaluator.Not(parse(subQuery)));
+-    }
+-
+-    private boolean containsUnescapedQuotes(String text) {
+-        for (int i = 0; i < text.length(); i++) {
+-            char c = text.charAt(i);
+-            if (c == '\'' || c == '"') {
+-                if (i == 0 || text.charAt(i - 1) != '\\') { // Check if not escaped by a backslash
+-                    return true;
+-                }
+-            }
+-        }
+-        return false;
+-    }
+-}
++    // :not(selector)
++    private void not() {
++        tq.consume(":not");
++        String subQuery = tq.chompBalanced('(', ')');
++        Validate.notEmpty(subQuery, ":not(selector) subselect must not be empty");
++
++        evals.add(new StructuralEvaluator.Not(parse(subQuery)));
++    }
++}
+@@ -1,3 +1,2 @@
+-import org.jsoup.helper.Validate;
+-import org.jsoup.parser.Parser;
+-import org.jsoup.parser.TokenQueue;
++import org.jsoup.helper.Validate;
++import org.jsoup.parser.TokenQueue;
+@@ -1,2 +1,3 @@
+-import org.jsoup.helper.Validate;
+-import org.jsoup.parser.TokenQueue;
++import org.jsoup.helper.Validate;
++import org.jsoup.nodes.Entities;
++import org.jsoup.parser.TokenQueue;
+@@ -1,3 +1,3 @@
+-        String searchText = TokenQueue.unescape(tq.chompBalanced('(', ')'));
+-        searchText = Parser.unescapeEntities(searchText, false);
+-        Validate.notEmpty(searchText, ":contains(text) query must not be empty");
++        String searchText = TokenQueue.unescape(tq.chompBalanced('(', ')'));
++        searchText = Entities.unescape(searchText);
++        Validate.notEmpty(searchText, ":contains(text) query must not be empty");
+@@ -1,3 +1,2 @@
+-import org.jsoup.helper.Validate;
+-import org.jsoup.nodes.Entities;
+-import org.jsoup.parser.TokenQueue;
++import org.jsoup.helper.Validate;
++import org.jsoup.parser.TokenQueue;
+@@ -1,2 +1,3 @@
+-import org.jsoup.helper.Validate;
+-import org.jsoup.parser.TokenQueue;
++import org.jsoup.helper.Validate;
++import org.jsoup.parser.Parser;
++import org.jsoup.parser.TokenQueue;
+@@ -1,3 +1,3 @@
+-        String searchText = TokenQueue.unescape(tq.chompBalanced('(', ')'));
+-        searchText = Entities.unescape(searchText);
+-        Validate.notEmpty(searchText, ":contains(text) query must not be empty");
++        String searchText = TokenQueue.unescape(tq.chompBalanced('(', ')'));
++        searchText = Parser.unescapeEntities(searchText, false);
++        Validate.notEmpty(searchText, ":contains(text) query must not be empty");
+@@ -1,9 +1,21 @@
+-    // :not(selector)
+-    private void not() {
+-        tq.consume(":not");
+-        String subQuery = tq.chompBalanced('(', ')');
+-        Validate.notEmpty(subQuery, ":not(selector) subselect must not be empty");
+-
+-        evals.add(new StructuralEvaluator.Not(parse(subQuery)));
+-    }
+-}
++    // :not(selector)
++    private void not() {
++        tq.consume(":not");
++        String subQuery = tq.chompBalanced('(', ')');
++        Validate.notEmpty(subQuery, ":not(selector) subselect must not be empty");
++
++        evals.add(new StructuralEvaluator.Not(parse(subQuery)));
++    }
++
++    private boolean containsUnescapedQuotes(String text) {
++        for (int i = 0; i < text.length(); i++) {
++            char c = text.charAt(i);
++            if (c == '\'' || c == '"') {
++                if (i == 0 || text.charAt(i - 1) != '\\') { // Check if not escaped by a backslash
++                    return true;
++                }
++            }
++        }
++        return false;
++    }
++}
+@@ -1,3 +1,6 @@
+-        String searchText = TokenQueue.unescape(tq.chompBalanced('(', ')'));
+-        searchText = Parser.unescapeEntities(searchText, false);
+-        Validate.notEmpty(searchText, ":contains(text) query must not be empty");
++        String searchText = TokenQueue.unescape(tq.chompBalanced('(', ')'));
++        searchText = Parser.unescapeEntities(searchText, false);
++        if (containsUnescapedQuotes(searchText)) {
++            throw new Selector.SelectorParseException("String in :contains(text) must be quoted when containing spaces or other tokens, or escape with \\", searchText);
++        }
++        Validate.notEmpty(searchText, ":contains(text) query must not be empty");
+@@ -1,6 +1,3 @@
+-        String searchText = TokenQueue.unescape(tq.chompBalanced('(', ')'));
+-        searchText = Parser.unescapeEntities(searchText, false);
+-        if (containsUnescapedQuotes(searchText)) {
+-            throw new Selector.SelectorParseException("String in :contains(text) must be quoted when containing spaces or other tokens, or escape with \\", searchText);
+-        }
+-        Validate.notEmpty(searchText, ":contains(text) query must not be empty");
++        String searchText = TokenQueue.unescape(tq.chompBalanced('(', ')'));
++        searchText = Parser.unescapeEntities(searchText, false);
++        Validate.notEmpty(searchText, ":contains(text) query must not be empty");
+@@ -1,21 +1,9 @@
+-    // :not(selector)
+-    private void not() {
+-        tq.consume(":not");
+-        String subQuery = tq.chompBalanced('(', ')');
+-        Validate.notEmpty(subQuery, ":not(selector) subselect must not be empty");
+-
+-        evals.add(new StructuralEvaluator.Not(parse(subQuery)));
+-    }
+-
+-    private boolean containsUnescapedQuotes(String text) {
+-        for (int i = 0; i < text.length(); i++) {
+-            char c = text.charAt(i);
+-            if (c == '\'' || c == '"') {
+-                if (i == 0 || text.charAt(i - 1) != '\\') { // Check if not escaped by a backslash
+-                    return true;
+-                }
+-            }
+-        }
+-        return false;
+-    }
+-}
++    // :not(selector)
++    private void not() {
++        tq.consume(":not");
++        String subQuery = tq.chompBalanced('(', ')');
++        Validate.notEmpty(subQuery, ":not(selector) subselect must not be empty");
++
++        evals.add(new StructuralEvaluator.Not(parse(subQuery)));
++    }
++}

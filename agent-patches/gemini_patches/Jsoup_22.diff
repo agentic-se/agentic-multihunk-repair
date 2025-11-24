@@ -1,0 +1,393 @@
+--- a/src/main/java/org/jsoup/nodes/Element.java
++++ b/src/main/java/org/jsoup/nodes/Element.java
+@@ -1,4 +1,5 @@
+-    public Elements siblingElements() {
+-
+-        return parent().children();
+-    }
++    public Elements siblingElements() {
++        if (parentNode == null)
++            return new Elements();
++        return parent().children();
++    }
+@@ -1,5 +1,5 @@
+-    public Elements siblingElements() {
+-        if (parentNode == null)
+-            return new Elements();
+-        return parent().children();
+-    }
++    public Elements siblingElements() {
++        if (parentNode == null)
++            return null;
++        return parent().children();
++    }
+@@ -1,5 +1,7 @@
+-    public Elements siblingElements() {
+-        if (parentNode == null)
+-            return null;
+-        return parent().children();
+-    }
++    public Elements siblingElements() {
++        if (parentNode == null)
++            return new Elements();
++        Elements siblings = parent().children();
++        siblings.remove(this);
++        return siblings;
++    }
+@@ -1,7 +1,7 @@
+-    public Elements siblingElements() {
+-        if (parentNode == null)
+-            return new Elements();
+-        Elements siblings = parent().children();
+-        siblings.remove(this);
+-        return siblings;
+-    }
++    public Elements siblingElements() {
++        if (parentNode == null)
++            return null;
++        Elements siblings = parent().children();
++        siblings.remove(this);
++        return siblings;
++    }
+@@ -1,7 +1,7 @@
+-    public Elements siblingElements() {
+-        if (parentNode == null)
+-            return null;
+-        Elements siblings = parent().children();
+-        siblings.remove(this);
+-        return siblings;
+-    }
++    public Elements siblingElements() {
++        if (parentNode == null)
++            return new Elements();
++        Elements siblings = parent().children();
++        siblings.remove(this);
++        return siblings;
++    }
+@@ -1,7 +1,7 @@
+-    public Elements siblingElements() {
+-        if (parentNode == null)
+-            return new Elements();
+-        Elements siblings = parent().children();
+-        siblings.remove(this);
+-        return siblings;
+-    }
++    public Elements siblingElements() {
++        if (parentNode == null)
++            return null;
++        Elements siblings = parent().children();
++        siblings.remove(this);
++        return siblings;
++    }
+@@ -1,7 +1,7 @@
+-    public Elements siblingElements() {
+-        if (parentNode == null)
+-            return null;
+-        Elements siblings = parent().children();
+-        siblings.remove(this);
+-        return siblings;
+-    }
++    public Elements siblingElements() {
++        if (parentNode == null)
++            return new Elements();
++        Elements siblings = parent().children();
++        siblings.remove(this);
++        return siblings;
++    }
+@@ -1,9 +1,10 @@
+-    public Element nextElementSibling() {
+-        List<Element> siblings = parent().children();
+-        Integer index = indexInList(this, siblings);
+-        Validate.notNull(index);
+-        if (siblings.size() > index+1)
+-            return siblings.get(index+1);
+-        else
+-            return null;
+-    }
++    public Element nextElementSibling() {
++        if (parent() == null) return null;
++        List<Element> siblings = parent().children();
++        Integer index = indexInList(this, siblings);
++        Validate.notNull(index);
++        if (siblings.size() > index+1)
++            return siblings.get(index+1);
++        else
++            return null;
++    }
+@@ -1,9 +1,10 @@
+-    public Element previousElementSibling() {
+-        List<Element> siblings = parent().children();
+-        Integer index = indexInList(this, siblings);
+-        Validate.notNull(index);
+-        if (index > 0)
+-            return siblings.get(index-1);
+-        else
+-            return null;
+-    }
++    public Element previousElementSibling() {
++        if (parent() == null) return null;
++        List<Element> siblings = parent().children();
++        Integer index = indexInList(this, siblings);
++        Validate.notNull(index);
++        if (index > 0)
++            return siblings.get(index-1);
++        else
++            return null;
++    }
+
+--- a/src/main/java/org/jsoup/nodes/Node.java
++++ b/src/main/java/org/jsoup/nodes/Node.java
+@@ -1,4 +1,5 @@
+-    public List<Node> siblingNodes() {
+-
+-        return parent().childNodes();
+-    }
++    public List<Node> siblingNodes() {
++        if (parentNode == null)
++            return Collections.emptyList();
++        return parent().childNodes();
++    }
+@@ -1,5 +1,5 @@
+-    public List<Node> siblingNodes() {
+-        if (parentNode == null)
+-            return Collections.emptyList();
+-        return parent().childNodes();
+-    }
++    public List<Node> siblingNodes() {
++        if (parentNode == null)
++            return null;
++        return parent().childNodes();
++    }
+@@ -1,5 +1,5 @@
+-    public List<Node> siblingNodes() {
+-        if (parentNode == null)
+-            return null;
+-        return parent().childNodes();
+-    }
++    public List<Node> siblingNodes() {
++        if (parentNode == null)
++            return Collections.emptyList();
++        return parent().childNodes();
++    }
+@@ -1,5 +1,7 @@
+-    public List<Node> siblingNodes() {
+-        if (parentNode == null)
+-            return Collections.emptyList();
+-        return parent().childNodes();
+-    }
++    public List<Node> siblingNodes() {
++        if (parentNode == null)
++            return Collections.emptyList();
++        List<Node> siblings = new ArrayList<Node>(parentNode.childNodes);
++        siblings.remove(this);
++        return Collections.unmodifiableList(siblings);
++    }
+@@ -1,7 +1,7 @@
+-    public List<Node> siblingNodes() {
+-        if (parentNode == null)
+-            return Collections.emptyList();
+-        List<Node> siblings = new ArrayList<Node>(parentNode.childNodes);
+-        siblings.remove(this);
+-        return Collections.unmodifiableList(siblings);
+-    }
++    public List<Node> siblingNodes() {
++        if (parentNode == null)
++            return null;
++        List<Node> siblings = new ArrayList<Node>(parentNode.childNodes);
++        siblings.remove(this);
++        return Collections.unmodifiableList(siblings);
++    }
+@@ -1,7 +1,7 @@
+-    public List<Node> siblingNodes() {
+-        if (parentNode == null)
+-            return null;
+-        List<Node> siblings = new ArrayList<Node>(parentNode.childNodes);
+-        siblings.remove(this);
+-        return Collections.unmodifiableList(siblings);
+-    }
++    public List<Node> siblingNodes() {
++        if (parentNode == null)
++            return Collections.emptyList();
++        List<Node> siblings = new ArrayList<Node>(parentNode.childNodes);
++        siblings.remove(this);
++        return Collections.unmodifiableList(siblings);
++    }
+@@ -1,7 +1,10 @@
+-    public List<Node> siblingNodes() {
+-        if (parentNode == null)
+-            return Collections.emptyList();
+-        List<Node> siblings = new ArrayList<Node>(parentNode.childNodes);
+-        siblings.remove(this);
+-        return Collections.unmodifiableList(siblings);
+-    }
++    public List<Node> siblingNodes() {
++        if (parentNode == null) {
++            System.out.println("DEBUG: parentNode is null, returning empty list.");
++            return Collections.emptyList();
++        }
++        System.out.println("DEBUG: parentNode is NOT null, processing siblings.");
++        List<Node> siblings = new ArrayList<Node>(parentNode.childNodes);
++        siblings.remove(this);
++        return Collections.unmodifiableList(siblings);
++    }
+@@ -1,10 +1,7 @@
+-    public List<Node> siblingNodes() {
+-        if (parentNode == null) {
+-            System.out.println("DEBUG: parentNode is null, returning empty list.");
+-            return Collections.emptyList();
+-        }
+-        System.out.println("DEBUG: parentNode is NOT null, processing siblings.");
+-        List<Node> siblings = new ArrayList<Node>(parentNode.childNodes);
+-        siblings.remove(this);
+-        return Collections.unmodifiableList(siblings);
+-    }
++    public List<Node> siblingNodes() {
++        if (parentNode == null)
++            return Collections.emptyList();
++        List<Node> siblings = new ArrayList<Node>(parentNode.childNodes);
++        siblings.remove(this);
++        return Collections.unmodifiableList(siblings);
++    }
+@@ -1,10 +1,11 @@
+-    public Node previousSibling() {
+-
+-        List<Node> siblings = parentNode.childNodes;
+-        Integer index = siblingIndex();
+-        Validate.notNull(index);
+-        if (index > 0)
+-            return siblings.get(index-1);
+-        else
+-            return null;
+-    }
++    public Node previousSibling() {
++        if (parentNode == null) return null; // root
++
++        List<Node> siblings = parentNode.childNodes;
++        Integer index = siblingIndex();
++        Validate.notNull(index);
++        if (index > 0)
++            return siblings.get(index-1);
++        else
++            return null;
++    }
+@@ -1,12 +1,11 @@
+-    public Node nextSibling() {
+-        if (parentNode == null)
+-            return null; // root
+-        
+-        List<Node> siblings = parentNode.childNodes;
+-        Integer index = siblingIndex();
+-        Validate.notNull(index);
+-        if (siblings.size() > index+1)
+-            return siblings.get(index+1);
+-        else
+-            return null;
+-    }
++    public Node nextSibling() {
++        if (parentNode == null) return null; // root
++
++        List<Node> siblings = parentNode.childNodes;
++        Integer index = siblingIndex();
++        Validate.notNull(index);
++        if (siblings.size() > index+1)
++            return siblings.get(index+1);
++        else
++            return null;
++    }
+@@ -1,11 +1,10 @@
+-    public Node previousSibling() {
+-        if (parentNode == null) return null; // root
+-
+-        List<Node> siblings = parentNode.childNodes;
+-        Integer index = siblingIndex();
+-        Validate.notNull(index);
+-        if (index > 0)
+-            return siblings.get(index-1);
+-        else
+-            return null;
+-    }
++    public Node previousSibling() {
++        if (parentNode == null) return null; // root
++
++        List<Node> siblings = parentNode.childNodes;
++        int index = siblingIndex();
++        if (index > 0)
++            return siblings.get(index-1);
++        else
++            return null;
++    }
+@@ -1,11 +1,10 @@
+-    public Node nextSibling() {
+-        if (parentNode == null) return null; // root
+-
+-        List<Node> siblings = parentNode.childNodes;
+-        Integer index = siblingIndex();
+-        Validate.notNull(index);
+-        if (siblings.size() > index+1)
+-            return siblings.get(index+1);
+-        else
+-            return null;
+-    }
++    public Node nextSibling() {
++        if (parentNode == null) return null; // root
++
++        List<Node> siblings = parentNode.childNodes;
++        int index = siblingIndex();
++        if (siblings.size() > index+1)
++            return siblings.get(index+1);
++        else
++            return null;
++    }
+@@ -1,10 +1,12 @@
+-    public Node previousSibling() {
+-        if (parentNode == null) return null; // root
+-
+-        List<Node> siblings = parentNode.childNodes;
+-        int index = siblingIndex();
+-        if (index > 0)
+-            return siblings.get(index-1);
+-        else
+-            return null;
+-    }
++    public Node previousSibling() {
++        Node parent = parent();
++        if (parent == null)
++            return null;
++
++        List<Node> siblings = parent.childNodes;
++        int index = siblingIndex();
++        if (index > 0)
++            return siblings.get(index-1);
++        else
++            return null;
++    }
+@@ -1,7 +1,7 @@
+-    public List<Node> siblingNodes() {
+-        if (parentNode == null)
+-            return Collections.emptyList();
+-        List<Node> siblings = new ArrayList<Node>(parentNode.childNodes);
+-        siblings.remove(this);
+-        return Collections.unmodifiableList(siblings);
+-    }
++    public List<Node> siblingNodes() {
++        if (parentNode == null)
++            return null;
++        List<Node> siblings = new ArrayList<Node>(parentNode.childNodes);
++        siblings.remove(this);
++        return Collections.unmodifiableList(siblings);
++    }
+@@ -1,7 +1,7 @@
+-    public List<Node> siblingNodes() {
+-        if (parentNode == null)
+-            return null;
+-        List<Node> siblings = new ArrayList<Node>(parentNode.childNodes);
+-        siblings.remove(this);
+-        return Collections.unmodifiableList(siblings);
+-    }
++    public List<Node> siblingNodes() {
++        if (parentNode == null)
++            return Collections.emptyList();
++        List<Node> siblings = new ArrayList<Node>(parentNode.childNodes);
++        siblings.remove(this);
++        return Collections.unmodifiableList(siblings);
++    }

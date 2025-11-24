@@ -1,0 +1,19 @@
+diff --git a/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java b/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java
+index 26a56a7a..4a9b6b01 100644
+--- a/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java
++++ b/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java
+@@ -1698,7 +1698,13 @@ public final class JsDocInfoParser {
+       String string = stream.getString();
+       if ("function".equals(string)) {
+         skipEOLs();
+-        return parseFunctionType(next());
++        JsDocToken nextToken = next();
++        // If there's no opening parenthesis after "function", we need to handle this gracefully
++        if (nextToken != JsDocToken.LP) {
++          restoreLookAhead(nextToken);
++          return reportTypeSyntaxWarning("msg.jsdoc.missing.lp");
++        }
++        return parseFunctionType(nextToken);
+       } else if ("null".equals(string) || "undefined".equals(string)) {
+         return newStringNode(string);
+       } else {

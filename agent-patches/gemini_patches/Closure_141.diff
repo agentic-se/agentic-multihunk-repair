@@ -1,0 +1,310 @@
+--- a/src/com/google/javascript/jscomp/ExpressionDecomposer.java
++++ b/src/com/google/javascript/jscomp/ExpressionDecomposer.java
+@@ -1,7 +1,21 @@
+-      if (isConditionalOp(parent)) {
+-        // Only the first child is always executed, otherwise it must be
+-        // decomposed.
+-        if (child != parent.getFirstChild()) {
+-          requiresDecomposition = true;
+-        }
+-      } else {
++      if (isConditionalOp(parent)) {
++        if (parent.getType() == Token.HOOK) {
++          // The condition is always executed, the true and false branches
++          // are conditionally executed. If the condition has side-effects
++          // then the whole expression is not movable.
++          if (child == parent.getFirstChild()) {
++            // Condition is always executed, so no decomposition needed due to
++            // conditional execution.
++          } else if (NodeUtil.mayHaveSideEffects(parent.getFirstChild())) {
++            // If the condition has side-effects, then the true/false branches
++            // are not movable.
++            requiresDecomposition = true;
++          }
++        } else {
++          // Only the first child is always executed, otherwise it must be
++          // decomposed.
++          if (child != parent.getFirstChild()) {
++            requiresDecomposition = true;
++          }
++        }
++      } else {
+@@ -1,21 +1,7 @@
+-      if (isConditionalOp(parent)) {
+-        if (parent.getType() == Token.HOOK) {
+-          // The condition is always executed, the true and false branches
+-          // are conditionally executed. If the condition has side-effects
+-          // then the whole expression is not movable.
+-          if (child == parent.getFirstChild()) {
+-            // Condition is always executed, so no decomposition needed due to
+-            // conditional execution.
+-          } else if (NodeUtil.mayHaveSideEffects(parent.getFirstChild())) {
+-            // If the condition has side-effects, then the true/false branches
+-            // are not movable.
+-            requiresDecomposition = true;
+-          }
+-        } else {
+-          // Only the first child is always executed, otherwise it must be
+-          // decomposed.
+-          if (child != parent.getFirstChild()) {
+-            requiresDecomposition = true;
+-          }
+-        }
+-      } else {
++      if (isConditionalOp(parent)) {
++        // Only the first child is always executed, otherwise it must be
++        // decomposed.
++        if (child != parent.getFirstChild()) {
++          requiresDecomposition = true;
++        }
++      } else {
+@@ -1,7 +1,21 @@
+-      if (isConditionalOp(parent)) {
+-        // Only the first child is always executed, otherwise it must be
+-        // decomposed.
+-        if (child != parent.getFirstChild()) {
+-          requiresDecomposition = true;
+-        }
+-      } else {
++      if (isConditionalOp(parent)) {
++        if (parent.getType() == Token.HOOK) {
++          // The condition is always executed, the true and false branches
++          // are conditionally executed. If the condition has side-effects
++          // then the whole expression is not movable.
++          if (child == parent.getFirstChild()) {
++            // Condition is always executed, so no decomposition needed due to
++            // conditional execution.
++          } else if (NodeUtil.mayHaveSideEffects(parent.getFirstChild())) {
++            // If the condition has side-effects, then the true/false branches
++            // are not movable.
++            requiresDecomposition = true;
++          }
++        } else {
++          // Only the first child is always executed, otherwise it must be
++          // decomposed.
++          if (child != parent.getFirstChild()) {
++            requiresDecomposition = true;
++          }
++        }
++      } else {
+@@ -1,21 +1,7 @@
+-      if (isConditionalOp(parent)) {
+-        if (parent.getType() == Token.HOOK) {
+-          // The condition is always executed, the true and false branches
+-          // are conditionally executed. If the condition has side-effects
+-          // then the whole expression is not movable.
+-          if (child == parent.getFirstChild()) {
+-            // Condition is always executed, so no decomposition needed due to
+-            // conditional execution.
+-          } else if (NodeUtil.mayHaveSideEffects(parent.getFirstChild())) {
+-            // If the condition has side-effects, then the true/false branches
+-            // are not movable.
+-            requiresDecomposition = true;
+-          }
+-        } else {
+-          // Only the first child is always executed, otherwise it must be
+-          // decomposed.
+-          if (child != parent.getFirstChild()) {
+-            requiresDecomposition = true;
+-          }
+-        }
+-      } else {
++      if (isConditionalOp(parent)) {
++        // Only the first child is always executed, otherwise it must be
++        // decomposed.
++        if (child != parent.getFirstChild()) {
++          requiresDecomposition = true;
++        }
++      } else {
+
+--- a/src/com/google/javascript/jscomp/PureFunctionIdentifier.java
++++ b/src/com/google/javascript/jscomp/PureFunctionIdentifier.java
+@@ -1,17 +1,30 @@
+-      if (!NodeUtil.isGetProp(name) && !NodeUtil.isName(name)) {
+-        return null;
+-      }
+-      Collection<Definition> decls =
+-          definitionProvider.getDefinitionsReferencedAt(name);
+-      if (decls == null) {
+-        return null;
+-      }
+-
+-      for (Definition current : decls) {
+-        Node rValue = current.getRValue();
+-        if ((rValue != null) && NodeUtil.isFunction(rValue)) {
+-          result.add(current);
+-        } else {
+-          return null;
+-        }
+-      }
++      if (NodeUtil.isGetProp(name) || NodeUtil.isName(name)) {
++        Collection<Definition> decls =
++            definitionProvider.getDefinitionsReferencedAt(name);
++        if (decls == null) {
++          return null;
++        }
++
++        for (Definition current : decls) {
++          Node rValue = current.getRValue();
++          if ((rValue != null) && NodeUtil.isFunction(rValue)) {
++            result.add(current);
++          } else {
++            return null;
++          }
++        }
++      } else if (name.getType() == Token.OR || name.getType() == Token.HOOK) {
++        Collection<Definition> first =
++            getCallableDefinitions(definitionProvider, name.getFirstChild());
++        Collection<Definition> second =
++            getCallableDefinitions(definitionProvider, name.getLastChild());
++
++        if (first == null || second == null) {
++          return null;
++        }
++
++        result.addAll(first);
++        result.addAll(second);
++      } else {
++        return null;
++      }
+@@ -1,3 +1,3 @@
+-          } else {
+-            return null;
+-          }
++          } else {
++            return Lists.newArrayList(); // Return empty list for uncallable definition
++          }
+@@ -1,2 +1,2 @@
+-          getCallableDefinitions(definitionProvider, callee);
+-        if (defs == null) {
++          getCallableDefinitions(definitionProvider, callee);
++        if (defs == null || defs.isEmpty()) {
+@@ -1,2 +1,2 @@
+-          getCallableDefinitions(definitionProvider, callee);
+-        if (defs == null || defs.isEmpty()) {
++          getCallableDefinitions(definitionProvider, callee);
++        if (defs == null) {
+@@ -1,37 +1,24 @@
+-  private static Collection<Definition> getCallableDefinitions(
+-      DefinitionProvider definitionProvider, Node name) {
+-      List<Definition> result = Lists.newArrayList();
+-
+-      if (NodeUtil.isGetProp(name) || NodeUtil.isName(name)) {
+-        Collection<Definition> decls =
+-            definitionProvider.getDefinitionsReferencedAt(name);
+-        if (decls == null) {
+-          return null;
+-        }
+-
+-        for (Definition current : decls) {
+-          Node rValue = current.getRValue();
+-          if ((rValue != null) && NodeUtil.isFunction(rValue)) {
+-            result.add(current);
+-          } else {
+-            return Lists.newArrayList(); // Return empty list for uncallable definition
+-          }
+-        }
+-      } else if (name.getType() == Token.OR || name.getType() == Token.HOOK) {
+-        Collection<Definition> first =
+-            getCallableDefinitions(definitionProvider, name.getFirstChild());
+-        Collection<Definition> second =
+-            getCallableDefinitions(definitionProvider, name.getLastChild());
+-
+-        if (first == null || second == null) {
+-          return null;
+-        }
+-
+-        result.addAll(first);
+-        result.addAll(second);
+-      } else {
+-        return null;
+-      }
+-
+-      return result;
+-  }
++  private static Collection<Definition> getCallableDefinitions(
++      DefinitionProvider definitionProvider, Node name) {
++      List<Definition> result = Lists.newArrayList();
++
++      if (!NodeUtil.isGetProp(name) && !NodeUtil.isName(name)) {
++        return null;
++      }
++      Collection<Definition> decls =
++          definitionProvider.getDefinitionsReferencedAt(name);
++      if (decls == null) {
++        return null;
++      }
++
++      for (Definition current : decls) {
++        Node rValue = current.getRValue();
++        if ((rValue != null) && NodeUtil.isFunction(rValue)) {
++          result.add(current);
++        } else {
++          return null;
++        }
++      }
++
++      return result;
++  }
+@@ -1,19 +1,42 @@
+-      if (!NodeUtil.isGetProp(name) && !NodeUtil.isName(name)) {
+-        return null;
+-      }
+-      Collection<Definition> decls =
+-          definitionProvider.getDefinitionsReferencedAt(name);
+-      if (decls == null) {
+-        return null;
+-      }
+-
+-      for (Definition current : decls) {
+-        Node rValue = current.getRValue();
+-        if ((rValue != null) && NodeUtil.isFunction(rValue)) {
+-          result.add(current);
+-        } else {
+-          return null;
+-        }
+-      }
+-
+-      return result;
++      if (NodeUtil.isGetProp(name) || NodeUtil.isName(name)) {
++        Collection<Definition> decls =
++            definitionProvider.getDefinitionsReferencedAt(name);
++        if (decls == null) {
++          return null;
++        }
++
++        for (Definition current : decls) {
++          Node rValue = current.getRValue();
++          if ((rValue != null) && NodeUtil.isFunction(rValue)) {
++            result.add(current);
++          } else {
++            return null;
++          }
++        }
++      } else if (name.getType() == Token.OR) {
++        Collection<Definition> first = getCallableDefinitions(definitionProvider, name.getFirstChild());
++        Collection<Definition> second = getCallableDefinitions(definitionProvider, name.getLastChild());
++
++        if (first == null || second == null) {
++          return null;
++        }
++
++        result.addAll(first);
++        result.addAll(second);
++      } else if (name.getType() == Token.HOOK) {
++        // The HOOK operator has three children: condition, true_case, false_case.
++        // We are interested in the true_case and false_case for callable definitions.
++        Collection<Definition> trueCase = getCallableDefinitions(definitionProvider, name.getFirstChild().getNext());
++        Collection<Definition> falseCase = getCallableDefinitions(definitionProvider, name.getLastChild());
++
++        if (trueCase == null || falseCase == null) {
++          return null;
++        }
++
++        result.addAll(trueCase);
++        result.addAll(falseCase);
++      } else {
++        return null;
++      }
++
++      return result;

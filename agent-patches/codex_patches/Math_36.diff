@@ -1,0 +1,50 @@
+diff --git a/src/main/java/org/apache/commons/math/fraction/BigFraction.java b/src/main/java/org/apache/commons/math/fraction/BigFraction.java
+index 6181ec329..d6ca1f244 100644
+--- a/src/main/java/org/apache/commons/math/fraction/BigFraction.java
++++ b/src/main/java/org/apache/commons/math/fraction/BigFraction.java
+@@ -18,6 +18,7 @@ package org.apache.commons.math.fraction;
+ 
+ import java.io.Serializable;
+ import java.math.BigDecimal;
++import java.math.MathContext;
+ import java.math.BigInteger;
+ 
+ import org.apache.commons.math.FieldElement;
+@@ -682,9 +683,15 @@ public class BigFraction
+      */
+     @Override
+     public double doubleValue() {
+-        double result = numerator.doubleValue() / denominator.doubleValue();
+-            // Numerator and/or denominator must be out of range:
+-            // Calculate how far to shift them to put them in range.
++        final double numD = numerator.doubleValue();
++        final double denD = denominator.doubleValue();
++        final double result = numD / denD;
++        if (Double.isNaN(result)) {
++            // Fallback for Infinity/Infinity due to huge integers
++            final BigDecimal num = new BigDecimal(numerator);
++            final BigDecimal den = new BigDecimal(denominator);
++            return num.divide(den, MathContext.DECIMAL64).doubleValue();
++        }
+         return result;
+     }
+ 
+@@ -729,9 +736,15 @@ public class BigFraction
+      */
+     @Override
+     public float floatValue() {
+-        float result = numerator.floatValue() / denominator.floatValue();
+-            // Numerator and/or denominator must be out of range:
+-            // Calculate how far to shift them to put them in range.
++        final float numF = numerator.floatValue();
++        final float denF = denominator.floatValue();
++        final float result = numF / denF;
++        if (Float.isNaN(result)) {
++            // Fallback for Infinity/Infinity due to huge integers
++            final BigDecimal num = new BigDecimal(numerator);
++            final BigDecimal den = new BigDecimal(denominator);
++            return num.divide(den, MathContext.DECIMAL32).floatValue();
++        }
+         return result;
+     }
+ 

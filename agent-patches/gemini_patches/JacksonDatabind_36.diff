@@ -1,0 +1,938 @@
+--- a/src/main/java/com/fasterxml/jackson/databind/util/StdDateFormat.java
++++ b/src/main/java/com/fasterxml/jackson/databind/util/StdDateFormat.java
+@@ -1,8 +1,17 @@
+-    @Override // since 2.7
+-    public boolean isLenient() {
+-        if (_lenient == null) {
+-            // default is, I believe, true
+-            return true;
+-        }
+-        return _lenient.booleanValue();
+-    }
++    @Override // since 2.7
++    public boolean isLenient() {
++        if (_lenient == null) {
++            // default is, I believe, true
++            return true;
++        }
++        return _lenient.booleanValue();
++    }
++
++    @Override // since 2.7
++    public void setLenient(boolean lenient) {
++        Boolean old = _lenient;
++        _lenient = lenient;
++        if (old != lenient) { // if changed, need to clear formats
++            _clearFormats();
++        }
++    }
+@@ -1,14 +1,17 @@
+-    private final static DateFormat _cloneFormat(DateFormat df, String format,
+-            TimeZone tz, Locale loc, Boolean lenient)
+-    {
+-        if (!loc.equals(DEFAULT_LOCALE)) {
+-            df = new SimpleDateFormat(format, loc);
+-            df.setTimeZone((tz == null) ? DEFAULT_TIMEZONE : tz);
+-        } else {
+-            df = (DateFormat) df.clone();
+-            if (tz != null) {
+-                df.setTimeZone(tz);
+-            }
+-        }
+-        return df;
+-    }
++    private final static DateFormat _cloneFormat(DateFormat df, String format,
++            TimeZone tz, Locale loc, Boolean lenient)
++    {
++        if (!loc.equals(DEFAULT_LOCALE)) {
++            df = new SimpleDateFormat(format, loc);
++            df.setTimeZone((tz == null) ? DEFAULT_TIMEZONE : tz);
++        } else {
++            df = (DateFormat) df.clone();
++            if (tz != null) {
++                df.setTimeZone(tz);
++            }
++        }
++        if (lenient != null) {
++            df.setLenient(lenient.booleanValue());
++        }
++        return df;
++    }
+@@ -1,17 +1,12 @@
+-    private final static DateFormat _cloneFormat(DateFormat df, String format,
+-            TimeZone tz, Locale loc, Boolean lenient)
+-    {
+-        if (!loc.equals(DEFAULT_LOCALE)) {
+-            df = new SimpleDateFormat(format, loc);
+-            df.setTimeZone((tz == null) ? DEFAULT_TIMEZONE : tz);
+-        } else {
+-            df = (DateFormat) df.clone();
+-            if (tz != null) {
+-                df.setTimeZone(tz);
+-            }
+-        }
+-        if (lenient != null) {
+-            df.setLenient(lenient.booleanValue());
+-        }
+-        return df;
+-    }
++    private final static DateFormat _cloneFormat(DateFormat df, String format,
++            TimeZone tz, Locale loc, Boolean lenient)
++    {
++        // 17-Jun-2016, tatu: New way to create, to ensure leniency is applied
++        //   (unlike with clone() which may or may not pass it to Calendar)
++        DateFormat newDf = new SimpleDateFormat(format, loc);
++        newDf.setTimeZone((tz == null) ? DEFAULT_TIMEZONE : tz);
++        if (lenient != null) {
++            newDf.setLenient(lenient.booleanValue());
++        }
++        return newDf;
++    }
+@@ -1,12 +1,10 @@
+-    private final static DateFormat _cloneFormat(DateFormat df, String format,
+-            TimeZone tz, Locale loc, Boolean lenient)
+-    {
+-        // 17-Jun-2016, tatu: New way to create, to ensure leniency is applied
+-        //   (unlike with clone() which may or may not pass it to Calendar)
+-        DateFormat newDf = new SimpleDateFormat(format, loc);
+-        newDf.setTimeZone((tz == null) ? DEFAULT_TIMEZONE : tz);
+-        if (lenient != null) {
+-            newDf.setLenient(lenient.booleanValue());
+-        }
+-        return newDf;
+-    }
++    private final static DateFormat _cloneFormat(String format,
++            TimeZone tz, Locale loc, Boolean lenient)
++    {
++        DateFormat newDf = new SimpleDateFormat(format, loc);
++        newDf.setTimeZone((tz == null) ? DEFAULT_TIMEZONE : tz);
++        if (lenient != null) {
++            newDf.setLenient(lenient.booleanValue());
++        }
++        return newDf;
++    }
+@@ -1,1 +1,1 @@
+-        return _cloneFormat(DATE_FORMAT_ISO8601, DATE_FORMAT_STR_ISO8601, tz, loc, null);
++        return _cloneFormat(DATE_FORMAT_STR_ISO8601, tz, loc, null);
+@@ -1,2 +1,2 @@
+-        return _cloneFormat(DATE_FORMAT_RFC1123, DATE_FORMAT_STR_RFC1123,
+-                tz, loc, null);
++        return _cloneFormat(DATE_FORMAT_STR_RFC1123,
++                tz, loc, null);
+@@ -1,2 +1,2 @@
+-                df = _formatPlain = _cloneFormat(DATE_FORMAT_PLAIN, formatStr,
+-                        _timezone, _locale, _lenient);
++                df = _formatPlain = _cloneFormat(formatStr,
++                        _timezone, _locale, _lenient);
+@@ -1,2 +1,2 @@
+-                df = _formatISO8601_z = _cloneFormat(DATE_FORMAT_ISO8601_Z, formatStr,
+-                        _timezone, _locale, _lenient);
++                df = _formatISO8601_z = _cloneFormat(formatStr,
++                        _timezone, _locale, _lenient);
+@@ -1,2 +1,2 @@
+-                    df = _formatISO8601 = _cloneFormat(DATE_FORMAT_ISO8601, formatStr,
+-                            _timezone, _locale, _lenient);
++                    df = _formatISO8601 = _cloneFormat(formatStr,
++                            _timezone, _locale, _lenient);
+@@ -1,2 +1,2 @@
+-                    df = _formatISO8601_z = _cloneFormat(DATE_FORMAT_ISO8601_Z, formatStr,
+-                            _timezone, _locale, _lenient);
++                    df = _formatISO8601_z = _cloneFormat(formatStr,
++                            _timezone, _locale, _lenient);
+@@ -1,2 +1,2 @@
+-            _formatRFC1123 = _cloneFormat(DATE_FORMAT_RFC1123, DATE_FORMAT_STR_RFC1123,
+-                    _timezone, _locale, _lenient);
++            _formatRFC1123 = _cloneFormat(DATE_FORMAT_STR_RFC1123,
++                    _timezone, _locale, _lenient);
+@@ -1,2 +1,2 @@
+-            _formatISO8601 = _cloneFormat(DATE_FORMAT_ISO8601, DATE_FORMAT_STR_ISO8601,
+-                    _timezone, _locale, _lenient);
++            _formatISO8601 = _cloneFormat(DATE_FORMAT_STR_ISO8601,
++                    _timezone, _locale, _lenient);
+@@ -1,4 +1,5 @@
+-        if (lenient != null) {
+-            newDf.setLenient(lenient.booleanValue());
+-        }
+-        return newDf;
++        if (lenient != null) {
++            newDf.setLenient(lenient.booleanValue());
++            newDf.getCalendar().setLenient(lenient.booleanValue());
++        }
++        return newDf;
+@@ -1,6 +1,6 @@
+-        DateFormat newDf = new SimpleDateFormat(format, loc);
+-        newDf.setTimeZone((tz == null) ? DEFAULT_TIMEZONE : tz);
+-        if (lenient != null) {
+-            newDf.setLenient(lenient.booleanValue());
+-            newDf.getCalendar().setLenient(lenient.booleanValue());
+-        }
++        DateFormat newDf = new SimpleDateFormat(format, loc);
++        if (lenient != null) {
++            newDf.setLenient(lenient.booleanValue());
++            newDf.getCalendar().setLenient(lenient.booleanValue());
++        }
++        newDf.setTimeZone((tz == null) ? DEFAULT_TIMEZONE : tz);
+@@ -1,5 +1,4 @@
+-        if (lenient != null) {
+-            newDf.setLenient(lenient.booleanValue());
+-            newDf.getCalendar().setLenient(lenient.booleanValue());
+-        }
+-        newDf.setTimeZone((tz == null) ? DEFAULT_TIMEZONE : tz);
++        if (lenient != null) {
++            newDf.setLenient(lenient.booleanValue());
++        }
++        newDf.setTimeZone((tz == null) ? DEFAULT_TIMEZONE : tz);
+@@ -1,5 +1,10 @@
+-        DateFormat newDf = new SimpleDateFormat(format, loc);
+-        if (lenient != null) {
+-            newDf.setLenient(lenient.booleanValue());
+-        }
+-        newDf.setTimeZone((tz == null) ? DEFAULT_TIMEZONE : tz);
++        SimpleDateFormat newDf = new SimpleDateFormat(format, loc);
++        if (lenient != null) {
++            newDf.setLenient(lenient.booleanValue());
++        }
++        Calendar calendar = Calendar.getInstance(tz == null ? DEFAULT_TIMEZONE : tz, loc);
++        if (lenient != null) {
++            calendar.setLenient(lenient.booleanValue());
++        }
++        newDf.setCalendar(calendar);
++        return newDf;
+@@ -1,15 +1,10 @@
+-    private final static DateFormat _cloneFormat(String format,
+-            TimeZone tz, Locale loc, Boolean lenient)
+-    {
+-        SimpleDateFormat newDf = new SimpleDateFormat(format, loc);
+-        if (lenient != null) {
+-            newDf.setLenient(lenient.booleanValue());
+-        }
+-        Calendar calendar = Calendar.getInstance(tz == null ? DEFAULT_TIMEZONE : tz, loc);
+-        if (lenient != null) {
+-            calendar.setLenient(lenient.booleanValue());
+-        }
+-        newDf.setCalendar(calendar);
+-        return newDf;
+-        return newDf;
+-    }
++    private final static DateFormat _cloneFormat(String format,
++            TimeZone tz, Locale loc, Boolean lenient)
++    {
++        SimpleDateFormat newDf = new SimpleDateFormat(format, loc);
++        if (lenient != null) {
++            newDf.setLenient(lenient.booleanValue());
++        }
++        newDf.setTimeZone((tz == null) ? DEFAULT_TIMEZONE : tz);
++        return newDf;
++    }
+@@ -1,6 +1,8 @@
+-        SimpleDateFormat newDf = new SimpleDateFormat(format, loc);
+-        if (lenient != null) {
+-            newDf.setLenient(lenient.booleanValue());
+-        }
+-        newDf.setTimeZone((tz == null) ? DEFAULT_TIMEZONE : tz);
+-        return newDf;
++        SimpleDateFormat newDf = new SimpleDateFormat(format, loc);
++        newDf.setTimeZone((tz == null) ? DEFAULT_TIMEZONE : tz);
++        if (lenient != null) {
++            newDf.setLenient(lenient.booleanValue());
++            // Explicitly set calendar leniency after setting timezone
++            newDf.getCalendar().setLenient(lenient.booleanValue());
++        }
++        return newDf;
+@@ -1,9 +1,24 @@
+-        Date dt = df.parse(dateStr, pos);
+-        // 22-Dec-2015, tatu: With non-lenient, may get null
+-        if (dt == null) {
+-            throw new ParseException
+-            (String.format("Can not parse date \"%s\": while it seems to fit format '%s', parsing fails (leniency? %s)",
+-                           dateStr, formatStr, _lenient),
+-               pos.getErrorIndex());
+-        }
+-        return dt;
++        Date dt = df.parse(dateStr, pos);
++        // 22-Dec-2015, tatu: With non-lenient, may get null
++        if (dt == null) {
++            if (throwErrors) {
++                throw new ParseException
++                (String.format("Can not parse date \"%s\": while it seems to fit format '%s', parsing fails (leniency? %s)",
++                               dateStr, formatStr, _lenient),
++                   pos.getErrorIndex());
++            }
++            return null;
++        }
++        // [databind#36]: with non-lenient, need to ensure that we did not get a rollover
++        if (_lenient != null && !_lenient.booleanValue()) {
++            if (dateStr.length() != 0) { // 0-length is special, not really a date
++                String orig = df.format(dt);
++                if (!orig.equals(dateStr)) {
++                    throw new ParseException
++                    (String.format("Can not parse date \"%s\": while it seems to fit format '%s', parsing fails (leniency? %s)",
++                                   dateStr, formatStr, _lenient),
++                       pos.getErrorIndex());
++                }
++            }
++        }
++        return dt;
+@@ -1,12 +1,10 @@
+-    private final static DateFormat _cloneFormat(String format,
+-            TimeZone tz, Locale loc, Boolean lenient)
+-    {
+-        SimpleDateFormat newDf = new SimpleDateFormat(format, loc);
+-        newDf.setTimeZone((tz == null) ? DEFAULT_TIMEZONE : tz);
+-        if (lenient != null) {
+-            newDf.setLenient(lenient.booleanValue());
+-            // Explicitly set calendar leniency after setting timezone
+-            newDf.getCalendar().setLenient(lenient.booleanValue());
+-        }
+-        return newDf;
+-    }
++    private final static DateFormat _cloneFormat(String format,
++            TimeZone tz, Locale loc, Boolean lenient)
++    {
++        SimpleDateFormat newDf = new SimpleDateFormat(format, loc);
++        if (lenient != null) {
++            newDf.setLenient(lenient.booleanValue());
++        }
++        newDf.setTimeZone((tz == null) ? DEFAULT_TIMEZONE : tz);
++        return newDf;
++    }
+@@ -1,8 +1,17 @@
+-    @Override // since 2.7
+-    public boolean isLenient() {
+-        if (_lenient == null) {
+-            // default is, I believe, true
+-            return true;
+-        }
+-        return _lenient.booleanValue();
+-    }
++    @Override // since 2.7
++    public boolean isLenient() {
++        if (_lenient == null) {
++            // default is, I believe, true
++            return true;
++        }
++        return _lenient.booleanValue();
++    }
++
++    @Override // since 2.7
++    public void setLenient(boolean lenient) {
++        Boolean old = _lenient;
++        _lenient = lenient;
++        if (old != lenient) { // if changed, need to clear formats
++            _clearFormats();
++        }
++    }
+@@ -1,14 +1,10 @@
+-    private final static DateFormat _cloneFormat(DateFormat df, String format,
+-            TimeZone tz, Locale loc, Boolean lenient)
+-    {
+-        if (!loc.equals(DEFAULT_LOCALE)) {
+-            df = new SimpleDateFormat(format, loc);
+-            df.setTimeZone((tz == null) ? DEFAULT_TIMEZONE : tz);
+-        } else {
+-            df = (DateFormat) df.clone();
+-            if (tz != null) {
+-                df.setTimeZone(tz);
+-            }
+-        }
+-        return df;
+-    }
++    private final static DateFormat _cloneFormat(String format,
++            TimeZone tz, Locale loc, Boolean lenient)
++    {
++        SimpleDateFormat newDf = new SimpleDateFormat(format, loc);
++        if (lenient != null) {
++            newDf.setLenient(lenient.booleanValue());
++        }
++        newDf.setTimeZone((tz == null) ? DEFAULT_TIMEZONE : tz);
++        return newDf;
++    }
+@@ -1,1 +1,1 @@
+-        return _cloneFormat(DATE_FORMAT_ISO8601, DATE_FORMAT_STR_ISO8601, tz, loc, null);
++        return _cloneFormat(DATE_FORMAT_STR_ISO8601, tz, loc, null);
+@@ -1,2 +1,2 @@
+-        return _cloneFormat(DATE_FORMAT_RFC1123, DATE_FORMAT_STR_RFC1123,
+-                tz, loc, null);
++        return _cloneFormat(DATE_FORMAT_STR_RFC1123,
++                tz, loc, null);
+@@ -1,2 +1,2 @@
+-                df = _formatPlain = _cloneFormat(DATE_FORMAT_PLAIN, formatStr,
+-                        _timezone, _locale, _lenient);
++                df = _formatPlain = _cloneFormat(formatStr,
++                        _timezone, _locale, _lenient);
+@@ -1,2 +1,2 @@
+-                df = _formatISO8601_z = _cloneFormat(DATE_FORMAT_ISO8601_Z, formatStr,
+-                        _timezone, _locale, _lenient);
++                df = _formatISO8601_z = _cloneFormat(formatStr,
++                        _timezone, _locale, _lenient);
+@@ -1,2 +1,2 @@
+-                    df = _formatISO8601 = _cloneFormat(DATE_FORMAT_ISO8601, formatStr,
+-                            _timezone, _locale, _lenient);
++                    df = _formatISO8601 = _cloneFormat(formatStr,
++                            _timezone, _locale, _lenient);
+@@ -1,2 +1,2 @@
+-                    df = _formatISO8601_z = _cloneFormat(DATE_FORMAT_ISO8601_Z, formatStr,
+-                            _timezone, _locale, _lenient);
++                    df = _formatISO8601_z = _cloneFormat(formatStr,
++                            _timezone, _locale, _lenient);
+@@ -1,2 +1,2 @@
+-            _formatRFC1123 = _cloneFormat(DATE_FORMAT_RFC1123, DATE_FORMAT_STR_RFC1123,
+-                    _timezone, _locale, _lenient);
++            _formatRFC1123 = _cloneFormat(DATE_FORMAT_STR_RFC1123,
++                    _timezone, _locale, _lenient);
+@@ -1,2 +1,2 @@
+-            _formatISO8601 = _cloneFormat(DATE_FORMAT_ISO8601, DATE_FORMAT_STR_ISO8601,
+-                    _timezone, _locale, _lenient);
++            _formatISO8601 = _cloneFormat(DATE_FORMAT_STR_ISO8601,
++                    _timezone, _locale, _lenient);
+@@ -1,10 +1,17 @@
+-            // and since leniency settings may have been used:
+-
+-    @Override // since 2.7
+-    public boolean isLenient() {
+-        if (_lenient == null) {
+-            // default is, I believe, true
+-            return true;
+-        }
+-        return _lenient.booleanValue();
+-    }
++    @Override // since 2.7
++    public boolean isLenient() {
++        if (_lenient == null) {
++            // default is, I believe, true
++            return true;
++        }
++        return _lenient.booleanValue();
++    }
++
++    @Override // since 2.7
++    public void setLenient(boolean lenient) {
++        Boolean old = _lenient;
++        _lenient = lenient;
++        if (old != lenient) { // if changed, need to clear formats
++            _clearFormats();
++        }
++    }
+@@ -1,14 +1,10 @@
+-    private final static DateFormat _cloneFormat(DateFormat df, String format,
+-            TimeZone tz, Locale loc, Boolean lenient)
+-    {
+-        if (!loc.equals(DEFAULT_LOCALE)) {
+-            df = new SimpleDateFormat(format, loc);
+-            df.setTimeZone((tz == null) ? DEFAULT_TIMEZONE : tz);
+-        } else {
+-            df = (DateFormat) df.clone();
+-            if (tz != null) {
+-                df.setTimeZone(tz);
+-            }
+-        }
+-        return df;
+-    }
++    private final static DateFormat _cloneFormat(String format,
++            TimeZone tz, Locale loc, Boolean lenient)
++    {
++        SimpleDateFormat newDf = new SimpleDateFormat(format, loc);
++        if (lenient != null) {
++            newDf.setLenient(lenient.booleanValue());
++        }
++        newDf.setTimeZone((tz == null) ? DEFAULT_TIMEZONE : tz);
++        return newDf;
++    }
+@@ -1,3 +1,3 @@
+-    public static DateFormat getISO8601Format(TimeZone tz, Locale loc) {
+-        return _cloneFormat(DATE_FORMAT_ISO8601, DATE_FORMAT_STR_ISO8601, tz, loc, null);
+-    }
++    public static DateFormat getISO8601Format(TimeZone tz, Locale loc) {
++        return _cloneFormat(DATE_FORMAT_STR_ISO8601, tz, loc, null);
++    }
+@@ -1,4 +1,4 @@
+-    public static DateFormat getRFC1123Format(TimeZone tz, Locale loc) {
+-        return _cloneFormat(DATE_FORMAT_RFC1123, DATE_FORMAT_STR_RFC1123,
+-                tz, loc, null);
+-    }
++    public static DateFormat getRFC1123Format(TimeZone tz, Locale loc) {
++        return _cloneFormat(DATE_FORMAT_STR_RFC1123,
++                tz, loc, null);
++    }
+@@ -1,2 +1,2 @@
+-                df = _formatPlain = _cloneFormat(DATE_FORMAT_PLAIN, formatStr,
+-                        _timezone, _locale, _lenient);
++                df = _formatPlain = _cloneFormat(formatStr,
++                        _timezone, _locale, _lenient);
+@@ -1,2 +1,2 @@
+-                df = _formatISO8601_z = _cloneFormat(DATE_FORMAT_ISO8601_Z, formatStr,
+-                        _timezone, _locale, _lenient);
++                df = _formatISO8601_z = _cloneFormat(formatStr,
++                        _timezone, _locale, _lenient);
+@@ -1,2 +1,2 @@
+-                    df = _formatISO8601 = _cloneFormat(DATE_FORMAT_ISO8601, formatStr,
+-                            _timezone, _locale, _lenient);
++                    df = _formatISO8601 = _cloneFormat(formatStr,
++                            _timezone, _locale, _lenient);
+@@ -1,2 +1,2 @@
+-                    df = _formatISO8601_z = _cloneFormat(DATE_FORMAT_ISO8601_Z, formatStr,
+-                            _timezone, _locale, _lenient);
++                    df = _formatISO8601_z = _cloneFormat(formatStr,
++                            _timezone, _locale, _lenient);
+@@ -1,4 +1,4 @@
+-        if (_formatRFC1123 == null) {
+-            _formatRFC1123 = _cloneFormat(DATE_FORMAT_RFC1123, DATE_FORMAT_STR_RFC1123,
+-                    _timezone, _locale, _lenient);
+-        }
++        if (_formatRFC1123 == null) {
++            _formatRFC1123 = _cloneFormat(DATE_FORMAT_STR_RFC1123,
++                    _timezone, _locale, _lenient);
++        }
+@@ -1,4 +1,4 @@
+-        if (_formatISO8601 == null) {
+-            _formatISO8601 = _cloneFormat(DATE_FORMAT_ISO8601, DATE_FORMAT_STR_ISO8601,
+-                    _timezone, _locale, _lenient);
+-        }
++        if (_formatISO8601 == null) {
++            _formatISO8601 = _cloneFormat(DATE_FORMAT_STR_ISO8601,
++                    _timezone, _locale, _lenient);
++        }
+@@ -1,10 +1,17 @@
+-            // and since leniency settings may have been used:
+-
+-    @Override // since 2.7
+-    public boolean isLenient() {
+-        if (_lenient == null) {
+-            // default is, I believe, true
+-            return true;
+-        }
+-        return _lenient.booleanValue();
+-    }
++    @Override // since 2.7
++    public boolean isLenient() {
++        if (_lenient == null) {
++            // default is, I believe, true
++            return true;
++        }
++        return _lenient.booleanValue();
++    }
++
++    @Override // since 2.7
++    public void setLenient(boolean lenient) {
++        Boolean old = _lenient;
++        _lenient = lenient;
++        if (old != lenient) { // if changed, need to clear formats
++            _clearFormats();
++        }
++    }
+@@ -1,14 +1,10 @@
+-    private final static DateFormat _cloneFormat(DateFormat df, String format,
+-            TimeZone tz, Locale loc, Boolean lenient)
+-    {
+-        if (!loc.equals(DEFAULT_LOCALE)) {
+-            df = new SimpleDateFormat(format, loc);
+-            df.setTimeZone((tz == null) ? DEFAULT_TIMEZONE : tz);
+-        } else {
+-            df = (DateFormat) df.clone();
+-            if (tz != null) {
+-                df.setTimeZone(tz);
+-            }
+-        }
+-        return df;
+-    }
++    private final static DateFormat _cloneFormat(String format,
++            TimeZone tz, Locale loc, Boolean lenient)
++    {
++        SimpleDateFormat newDf = new SimpleDateFormat(format, loc);
++        if (lenient != null) {
++            newDf.setLenient(lenient.booleanValue());
++        }
++        newDf.setTimeZone((tz == null) ? DEFAULT_TIMEZONE : tz);
++        return newDf;
++    }
+@@ -1,3 +1,3 @@
+-    public static DateFormat getISO8601Format(TimeZone tz, Locale loc) {
+-        return _cloneFormat(DATE_FORMAT_ISO8601, DATE_FORMAT_STR_ISO8601, tz, loc, null);
+-    }
++    public static DateFormat getISO8601Format(TimeZone tz, Locale loc) {
++        return _cloneFormat(DATE_FORMAT_STR_ISO8601, tz, loc, null);
++    }
+@@ -1,4 +1,4 @@
+-    public static DateFormat getRFC1123Format(TimeZone tz, Locale loc) {
+-        return _cloneFormat(DATE_FORMAT_RFC1123, DATE_FORMAT_STR_RFC1123,
+-                tz, loc, null);
+-    }
++    public static DateFormat getRFC1123Format(TimeZone tz, Locale loc) {
++        return _cloneFormat(DATE_FORMAT_STR_RFC1123,
++                tz, loc, null);
++    }
+@@ -1,2 +1,2 @@
+-                df = _formatPlain = _cloneFormat(DATE_FORMAT_PLAIN, formatStr,
+-                        _timezone, _locale, _lenient);
++                df = _formatPlain = _cloneFormat(formatStr,
++                        _timezone, _locale, _lenient);
+@@ -1,2 +1,2 @@
+-                df = _formatISO8601_z = _cloneFormat(DATE_FORMAT_ISO8601_Z, formatStr,
+-                        _timezone, _locale, _lenient);
++                df = _formatISO8601_z = _cloneFormat(formatStr,
++                        _timezone, _locale, _lenient);
+@@ -1,2 +1,2 @@
+-                    df = _formatISO8601 = _cloneFormat(DATE_FORMAT_ISO8601, formatStr,
+-                            _timezone, _locale, _lenient);
++                    df = _formatISO8601 = _cloneFormat(formatStr,
++                            _timezone, _locale, _lenient);
+@@ -1,2 +1,2 @@
+-                    df = _formatISO8601_z = _cloneFormat(DATE_FORMAT_ISO8601_Z, formatStr,
+-                            _timezone, _locale, _lenient);
++                    df = _formatISO8601_z = _cloneFormat(formatStr,
++                            _timezone, _locale, _lenient);
+@@ -1,4 +1,4 @@
+-        if (_formatRFC1123 == null) {
+-            _formatRFC1123 = _cloneFormat(DATE_FORMAT_RFC1123, DATE_FORMAT_STR_RFC1123,
+-                    _timezone, _locale, _lenient);
+-        }
++        if (_formatRFC1123 == null) {
++            _formatRFC1123 = _cloneFormat(DATE_FORMAT_STR_RFC1123,
++                    _timezone, _locale, _lenient);
++        }
+@@ -1,4 +1,4 @@
+-        if (_formatISO8601 == null) {
+-            _formatISO8601 = _cloneFormat(DATE_FORMAT_ISO8601, DATE_FORMAT_STR_ISO8601,
+-                    _timezone, _locale, _lenient);
+-        }
++        if (_formatISO8601 == null) {
++            _formatISO8601 = _cloneFormat(DATE_FORMAT_STR_ISO8601,
++                    _timezone, _locale, _lenient);
++        }
+@@ -1,9 +1,24 @@
+-        Date dt = df.parse(dateStr, pos);
+-        // 22-Dec-2015, tatu: With non-lenient, may get null
+-        if (dt == null) {
+-            throw new ParseException
+-            (String.format("Can not parse date \"%s\": while it seems to fit format '%s', parsing fails (leniency? %s)",
+-                           dateStr, formatStr, _lenient),
+-               pos.getErrorIndex());
+-        }
+-        return dt;
++        Date dt = df.parse(dateStr, pos);
++
++        // If parsing failed (e.g., due to non-lenient mode and invalid date components)
++        if (pos.getErrorIndex() != -1) {
++            if (throwErrors) {
++                throw new ParseException
++                (String.format("Can not parse date \"%s\": not compatible with format '%s' (leniency? %s)",
++                               dateStr, formatStr, _lenient),
++                   pos.getErrorIndex());
++            }
++            return null;
++        }
++
++        // If dt is null, it means SimpleDateFormat couldn't parse it at all
++        if (dt == null) {
++            if (throwErrors) {
++                throw new ParseException
++                (String.format("Can not parse date \"%s\": parsing failed (leniency? %s)",
++                               dateStr, _lenient),
++                   pos.getErrorIndex());
++            }
++            return null;
++        }
++        return dt;
+@@ -1,10 +1,17 @@
+-            // and since leniency settings may have been used:
+-
+-    @Override // since 2.7
+-    public boolean isLenient() {
+-        if (_lenient == null) {
+-            // default is, I believe, true
+-            return true;
+-        }
+-        return _lenient.booleanValue();
+-    }
++    @Override // since 2.7
++    public boolean isLenient() {
++        if (_lenient == null) {
++            // default is, I believe, true
++            return true;
++        }
++        return _lenient.booleanValue();
++    }
++
++    @Override // since 2.7
++    public void setLenient(boolean lenient) {
++        Boolean old = _lenient;
++        _lenient = lenient;
++        if (old != lenient) { // if changed, need to clear formats
++            _clearFormats();
++        }
++    }
+@@ -1,14 +1,10 @@
+-    private final static DateFormat _cloneFormat(DateFormat df, String format,
+-            TimeZone tz, Locale loc, Boolean lenient)
+-    {
+-        if (!loc.equals(DEFAULT_LOCALE)) {
+-            df = new SimpleDateFormat(format, loc);
+-            df.setTimeZone((tz == null) ? DEFAULT_TIMEZONE : tz);
+-        } else {
+-            df = (DateFormat) df.clone();
+-            if (tz != null) {
+-                df.setTimeZone(tz);
+-            }
+-        }
+-        return df;
+-    }
++    private final static DateFormat _cloneFormat(String format,
++            TimeZone tz, Locale loc, Boolean lenient)
++    {
++        SimpleDateFormat newDf = new SimpleDateFormat(format, loc);
++        if (lenient != null) {
++            newDf.setLenient(lenient.booleanValue());
++        }
++        newDf.setTimeZone((tz == null) ? DEFAULT_TIMEZONE : tz);
++        return newDf;
++    }
+@@ -1,3 +1,3 @@
+-    public static DateFormat getISO8601Format(TimeZone tz, Locale loc) {
+-        return _cloneFormat(DATE_FORMAT_ISO8601, DATE_FORMAT_STR_ISO8601, tz, loc, null);
+-    }
++    public static DateFormat getISO8601Format(TimeZone tz, Locale loc) {
++        return _cloneFormat(DATE_FORMAT_STR_ISO8601, tz, loc, null);
++    }
+@@ -1,4 +1,4 @@
+-    public static DateFormat getRFC1123Format(TimeZone tz, Locale loc) {
+-        return _cloneFormat(DATE_FORMAT_RFC1123, DATE_FORMAT_STR_RFC1123,
+-                tz, loc, null);
+-    }
++    public static DateFormat getRFC1123Format(TimeZone tz, Locale loc) {
++        return _cloneFormat(DATE_FORMAT_STR_RFC1123,
++                tz, loc, null);
++    }
+@@ -1,2 +1,2 @@
+-                df = _formatPlain = _cloneFormat(DATE_FORMAT_PLAIN, formatStr,
+-                        _timezone, _locale, _lenient);
++                df = _formatPlain = _cloneFormat(formatStr,
++                        _timezone, _locale, _lenient);
+@@ -1,2 +1,2 @@
+-                df = _formatISO8601_z = _cloneFormat(DATE_FORMAT_ISO8601_Z, formatStr,
+-                        _timezone, _locale, _lenient);
++                df = _formatISO8601_z = _cloneFormat(formatStr,
++                        _timezone, _locale, _lenient);
+@@ -1,2 +1,2 @@
+-                    df = _formatISO8601 = _cloneFormat(DATE_FORMAT_ISO8601, formatStr,
+-                            _timezone, _locale, _lenient);
++                    df = _formatISO8601 = _cloneFormat(formatStr,
++                            _timezone, _locale, _lenient);
+@@ -1,2 +1,2 @@
+-                    df = _formatISO8601_z = _cloneFormat(DATE_FORMAT_ISO8601_Z, formatStr,
+-                            _timezone, _locale, _lenient);
++                    df = _formatISO8601_z = _cloneFormat(formatStr,
++                            _timezone, _locale, _lenient);
+@@ -1,4 +1,4 @@
+-        if (_formatRFC1123 == null) {
+-            _formatRFC1123 = _cloneFormat(DATE_FORMAT_RFC1123, DATE_FORMAT_STR_RFC1123,
+-                    _timezone, _locale, _lenient);
+-        }
++        if (_formatRFC1123 == null) {
++            _formatRFC1123 = _cloneFormat(DATE_FORMAT_STR_RFC1123,
++                    _timezone, _locale, _lenient);
++        }
+@@ -1,4 +1,4 @@
+-        if (_formatISO8601 == null) {
+-            _formatISO8601 = _cloneFormat(DATE_FORMAT_ISO8601, DATE_FORMAT_STR_ISO8601,
+-                    _timezone, _locale, _lenient);
+-        }
++        if (_formatISO8601 == null) {
++            _formatISO8601 = _cloneFormat(DATE_FORMAT_STR_ISO8601,
++                    _timezone, _locale, _lenient);
++        }
+@@ -1,10 +1,17 @@
+-            // and since leniency settings may have been used:
+-
+-    @Override // since 2.7
+-    public boolean isLenient() {
+-        if (_lenient == null) {
+-            // default is, I believe, true
+-            return true;
+-        }
+-        return _lenient.booleanValue();
+-    }
++    @Override // since 2.7
++    public boolean isLenient() {
++        if (_lenient == null) {
++            // default is, I believe, true
++            return true;
++        }
++        return _lenient.booleanValue();
++    }
++
++    @Override // since 2.7
++    public void setLenient(boolean lenient) {
++        Boolean old = _lenient;
++        _lenient = lenient;
++        if (old != lenient) { // if changed, need to clear formats
++            _clearFormats();
++        }
++    }
+@@ -1,14 +1,10 @@
+-    private final static DateFormat _cloneFormat(DateFormat df, String format,
+-            TimeZone tz, Locale loc, Boolean lenient)
+-    {
+-        if (!loc.equals(DEFAULT_LOCALE)) {
+-            df = new SimpleDateFormat(format, loc);
+-            df.setTimeZone((tz == null) ? DEFAULT_TIMEZONE : tz);
+-        } else {
+-            df = (DateFormat) df.clone();
+-            if (tz != null) {
+-                df.setTimeZone(tz);
+-            }
+-        }
+-        return df;
+-    }
++    private final static DateFormat _cloneFormat(String format,
++            TimeZone tz, Locale loc, Boolean lenient)
++    {
++        SimpleDateFormat newDf = new SimpleDateFormat(format, loc);
++        if (lenient != null) {
++            newDf.setLenient(lenient.booleanValue());
++        }
++        newDf.setTimeZone((tz == null) ? DEFAULT_TIMEZONE : tz);
++        return newDf;
++    }
+@@ -1,3 +1,3 @@
+-    public static DateFormat getISO8601Format(TimeZone tz, Locale loc) {
+-        return _cloneFormat(DATE_FORMAT_ISO8601, DATE_FORMAT_STR_ISO8601, tz, loc, null);
+-    }
++    public static DateFormat getISO8601Format(TimeZone tz, Locale loc) {
++        return _cloneFormat(DATE_FORMAT_STR_ISO8601, tz, loc, null);
++    }
+@@ -1,4 +1,4 @@
+-    public static DateFormat getRFC1123Format(TimeZone tz, Locale loc) {
+-        return _cloneFormat(DATE_FORMAT_RFC1123, DATE_FORMAT_STR_RFC1123,
+-                tz, loc, null);
+-    }
++    public static DateFormat getRFC1123Format(TimeZone tz, Locale loc) {
++        return _cloneFormat(DATE_FORMAT_STR_RFC1123,
++                tz, loc, null);
++    }
+@@ -1,2 +1,2 @@
+-                df = _formatPlain = _cloneFormat(DATE_FORMAT_PLAIN, formatStr,
+-                        _timezone, _locale, _lenient);
++                df = _formatPlain = _cloneFormat(formatStr,
++                        _timezone, _locale, _lenient);
+@@ -1,2 +1,2 @@
+-                df = _formatISO8601_z = _cloneFormat(DATE_FORMAT_ISO8601_Z, formatStr,
+-                        _timezone, _locale, _lenient);
++                df = _formatISO8601_z = _cloneFormat(formatStr,
++                        _timezone, _locale, _lenient);
+@@ -1,2 +1,2 @@
+-                    df = _formatISO8601 = _cloneFormat(DATE_FORMAT_ISO8601, formatStr,
+-                            _timezone, _locale, _lenient);
++                    df = _formatISO8601 = _cloneFormat(formatStr,
++                            _timezone, _locale, _lenient);
+@@ -1,2 +1,2 @@
+-                    df = _formatISO8601_z = _cloneFormat(DATE_FORMAT_ISO8601_Z, formatStr,
+-                            _timezone, _locale, _lenient);
++                    df = _formatISO8601_z = _cloneFormat(formatStr,
++                            _timezone, _locale, _lenient);
+@@ -1,4 +1,4 @@
+-        if (_formatRFC1123 == null) {
+-            _formatRFC1123 = _cloneFormat(DATE_FORMAT_RFC1123, DATE_FORMAT_STR_RFC1123,
+-                    _timezone, _locale, _lenient);
+-        }
++        if (_formatRFC1123 == null) {
++            _formatRFC1123 = _cloneFormat(DATE_FORMAT_STR_RFC1123,
++                    _timezone, _locale, _lenient);
++        }
+@@ -1,4 +1,4 @@
+-        if (_formatISO8601 == null) {
+-            _formatISO8601 = _cloneFormat(DATE_FORMAT_ISO8601, DATE_FORMAT_STR_ISO8601,
+-                    _timezone, _locale, _lenient);
+-        }
++        if (_formatISO8601 == null) {
++            _formatISO8601 = _cloneFormat(DATE_FORMAT_STR_ISO8601,
++                    _timezone, _locale, _lenient);
++        }
+@@ -1,10 +1,17 @@
+-            // and since leniency settings may have been used:
+-
+-    @Override // since 2.7
+-    public boolean isLenient() {
+-        if (_lenient == null) {
+-            // default is, I believe, true
+-            return true;
+-        }
+-        return _lenient.booleanValue();
+-    }
++    @Override // since 2.7
++    public boolean isLenient() {
++        if (_lenient == null) {
++            // default is, I believe, true
++            return true;
++        }
++        return _lenient.booleanValue();
++    }
++
++    @Override // since 2.7
++    public void setLenient(boolean lenient) {
++        Boolean old = _lenient;
++        _lenient = lenient;
++        if (old != lenient) { // if changed, need to clear formats
++            _clearFormats();
++        }
++    }
+@@ -1,14 +1,10 @@
+-    private final static DateFormat _cloneFormat(DateFormat df, String format,
+-            TimeZone tz, Locale loc, Boolean lenient)
+-    {
+-        if (!loc.equals(DEFAULT_LOCALE)) {
+-            df = new SimpleDateFormat(format, loc);
+-            df.setTimeZone((tz == null) ? DEFAULT_TIMEZONE : tz);
+-        } else {
+-            df = (DateFormat) df.clone();
+-            if (tz != null) {
+-                df.setTimeZone(tz);
+-            }
+-        }
+-        return df;
+-    }
++    private final static DateFormat _cloneFormat(String format,
++            TimeZone tz, Locale loc, Boolean lenient)
++    {
++        SimpleDateFormat newDf = new SimpleDateFormat(format, loc);
++        if (lenient != null) {
++            newDf.setLenient(lenient.booleanValue());
++        }
++        newDf.setTimeZone((tz == null) ? DEFAULT_TIMEZONE : tz);
++        return newDf;
++    }
+@@ -1,3 +1,3 @@
+-    public static DateFormat getISO8601Format(TimeZone tz, Locale loc) {
+-        return _cloneFormat(DATE_FORMAT_ISO8601, DATE_FORMAT_STR_ISO8601, tz, loc, null);
+-    }
++    public static DateFormat getISO8601Format(TimeZone tz, Locale loc) {
++        return _cloneFormat(DATE_FORMAT_STR_ISO8601, tz, loc, null);
++    }
+@@ -1,4 +1,4 @@
+-    public static DateFormat getRFC1123Format(TimeZone tz, Locale loc) {
+-        return _cloneFormat(DATE_FORMAT_RFC1123, DATE_FORMAT_STR_RFC1123,
+-                tz, loc, null);
+-    }
++    public static DateFormat getRFC1123Format(TimeZone tz, Locale loc) {
++        return _cloneFormat(DATE_FORMAT_STR_RFC1123,
++                tz, loc, null);
++    }
+@@ -1,2 +1,2 @@
+-                df = _formatPlain = _cloneFormat(DATE_FORMAT_PLAIN, formatStr,
+-                        _timezone, _locale, _lenient);
++                df = _formatPlain = _cloneFormat(formatStr,
++                        _timezone, _locale, _lenient);
+@@ -1,2 +1,2 @@
+-                df = _formatISO8601_z = _cloneFormat(DATE_FORMAT_ISO8601_Z, formatStr,
+-                        _timezone, _locale, _lenient);
++                df = _formatISO8601_z = _cloneFormat(formatStr,
++                        _timezone, _locale, _lenient);
+@@ -1,2 +1,2 @@
+-                    df = _formatISO8601 = _cloneFormat(DATE_FORMAT_ISO8601, formatStr,
+-                            _timezone, _locale, _lenient);
++                    df = _formatISO8601 = _cloneFormat(formatStr,
++                            _timezone, _locale, _lenient);
+@@ -1,2 +1,2 @@
+-                    df = _formatISO8601_z = _cloneFormat(DATE_FORMAT_ISO8601_Z, formatStr,
+-                            _timezone, _locale, _lenient);
++                    df = _formatISO8601_z = _cloneFormat(formatStr,
++                            _timezone, _locale, _lenient);

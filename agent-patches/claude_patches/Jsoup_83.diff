@@ -1,0 +1,94 @@
+diff --git a/src/main/java/org/jsoup/parser/CharacterReader.java b/src/main/java/org/jsoup/parser/CharacterReader.java
+index 80dffcd..42c69e6 100644
+--- a/src/main/java/org/jsoup/parser/CharacterReader.java
++++ b/src/main/java/org/jsoup/parser/CharacterReader.java
+@@ -251,7 +251,7 @@ public final class CharacterReader {
+ 
+         while (bufPos < remaining) {
+             final char c = val[bufPos];
+-            if (c == '\t'|| c ==  '\n'|| c ==  '\r'|| c ==  '\f'|| c ==  ' '|| c ==  '/'|| c ==  '>'|| c ==  TokeniserState.nullChar)
++            if (c == '\t'|| c ==  '\n'|| c ==  '\r'|| c ==  '\f'|| c ==  ' '|| c ==  '/'|| c ==  '>'|| c ==  '<'|| c ==  TokeniserState.nullChar)
+                 break;
+             bufPos++;
+         }
+diff --git a/src/main/java/org/jsoup/parser/TokeniserState.java b/src/main/java/org/jsoup/parser/TokeniserState.java
+index 4980f15..f530c00 100644
+--- a/src/main/java/org/jsoup/parser/TokeniserState.java
++++ b/src/main/java/org/jsoup/parser/TokeniserState.java
+@@ -170,6 +170,13 @@ enum TokeniserState {
+                     t.eofError(this);
+                     t.transition(Data);
+                     break;
++                case '<':
++                    t.error(this);
++                    // Emit the current tag and start a new tag
++                    t.emitTagPending();
++                    r.unconsume();
++                    t.transition(Data);
++                    break;
+                 default: // buffer underrun
+                     t.tagPending.appendTagName(c);
+             }
+@@ -578,13 +585,19 @@ enum TokeniserState {
+                     break;
+                 case '"':
+                 case '\'':
+-                case '<':
+                 case '=':
+                     t.error(this);
+                     t.tagPending.newAttribute();
+                     t.tagPending.appendAttributeName(c);
+                     t.transition(AttributeName);
+                     break;
++                case '<':
++                    t.error(this);
++                    // Emit the current tag and start a new tag
++                    t.emitTagPending();
++                    r.unconsume();
++                    t.transition(Data);
++                    break;
+                 default: // A-Z, anything else
+                     t.tagPending.newAttribute();
+                     r.unconsume();
+@@ -627,10 +640,16 @@ enum TokeniserState {
+                     break;
+                 case '"':
+                 case '\'':
+-                case '<':
+                     t.error(this);
+                     t.tagPending.appendAttributeName(c);
+                     break;
++                case '<':
++                    t.error(this);
++                    // Emit the current tag and start a new tag
++                    t.emitTagPending();
++                    r.unconsume();
++                    t.transition(Data);
++                    break;
+                 default: // buffer underrun
+                     t.tagPending.appendAttributeName(c);
+             }
+@@ -668,12 +687,18 @@ enum TokeniserState {
+                     break;
+                 case '"':
+                 case '\'':
+-                case '<':
+                     t.error(this);
+                     t.tagPending.newAttribute();
+                     t.tagPending.appendAttributeName(c);
+                     t.transition(AttributeName);
+                     break;
++                case '<':
++                    t.error(this);
++                    // Emit the current tag and start a new tag
++                    t.emitTagPending();
++                    r.unconsume();
++                    t.transition(Data);
++                    break;
+                 default: // A-Z, anything else
+                     t.tagPending.newAttribute();
+                     r.unconsume();
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

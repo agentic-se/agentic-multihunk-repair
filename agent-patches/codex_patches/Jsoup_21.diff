@@ -1,0 +1,44 @@
+diff --git a/src/main/java/org/jsoup/select/QueryParser.java b/src/main/java/org/jsoup/select/QueryParser.java
+index 9ff43ba..61120fa 100644
+--- a/src/main/java/org/jsoup/select/QueryParser.java
++++ b/src/main/java/org/jsoup/select/QueryParser.java
+@@ -59,9 +59,14 @@ class QueryParser {
+                 CombiningEvaluator.Or or = new CombiningEvaluator.Or(evals);
+                 evals.clear();
+                 evals.add(or);
++                // Parse subsequent selectors in the group up to the next combinator.
++                // This allows trailing combinators (e.g., "> li + li") to apply to the whole group.
+                 while (!tq.isEmpty()) {
+-                    String subQuery = tq.chompTo(",");
++                    tq.consumeWhitespace();
++                    String subQuery = consumeSubQuery();
+                     or.add(parse(subQuery));
++                    if (!tq.matchChomp(","))
++                        break; // no more grouped selectors
+                 }
+             } else if (tq.matchesAny(combinators)) {
+                 combinator(tq.consume());
+@@ -117,6 +122,23 @@ class QueryParser {
+         return sq.toString();
+     }
+ 
++    // Consume a subquery up to the next top-level comma, correctly handling nested () and []
++    private String consumeSubQueryToComma() {
++        StringBuilder sq = new StringBuilder();
++        while (!tq.isEmpty()) {
++            if (tq.matches("(")) {
++                sq.append("(").append(tq.chompBalanced('(', ')')).append(")");
++            } else if (tq.matches("[")) {
++                sq.append("[").append(tq.chompBalanced('[', ']')).append("]");
++            } else if (tq.matches(",")) {
++                break; // reached a top-level comma separating grouped selectors
++            } else {
++                sq.append(tq.consume());
++            }
++        }
++        return sq.toString();
++    }
++
+     private void findElements() {
+         if (tq.matchChomp("#"))
+             byId();

@@ -1,0 +1,21 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
+index e273c3b5e..ab0a1f5fe 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
+@@ -105,12 +105,15 @@ public class ExternalTypeHandler
+         if (prop.hasTypePropertyName(propName)) {
+             _typeIds[index] = p.getText();
+             p.skipChildren();
+-            canDeserialize = (bean != null) && (_tokens[index] != null);
++            // With EXTERNAL_PROPERTY and visible=true, we don't immediately deserialize
++            // since we might not have the payload token yet. This is handled in complete().
++            canDeserialize = false;
+         } else {
+             @SuppressWarnings("resource")
+             TokenBuffer tokens = new TokenBuffer(p, ctxt);
+             tokens.copyCurrentStructure(p);
+             _tokens[index] = tokens;
++            // If we have type ID now, we can deserialize
+             canDeserialize = (bean != null) && (_typeIds[index] != null);
+         }
+         /* Minor optimization: let's deserialize properties as soon as

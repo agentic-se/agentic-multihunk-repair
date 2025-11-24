@@ -1,0 +1,18 @@
+diff --git a/src/java/org/apache/commons/lang/StringEscapeUtils.java b/src/java/org/apache/commons/lang/StringEscapeUtils.java
+index 7b22e214..6bae3f96 100644
+--- a/src/java/org/apache/commons/lang/StringEscapeUtils.java
++++ b/src/java/org/apache/commons/lang/StringEscapeUtils.java
+@@ -241,7 +241,9 @@ public class StringEscapeUtils {
+                         out.write('\\');
+                         break;
+                     case '/' :
++                        if (escapeSingleQuote) {
+                             out.write('\\');
++                        }
+                         out.write('/');
+                         break;
+                     default :
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

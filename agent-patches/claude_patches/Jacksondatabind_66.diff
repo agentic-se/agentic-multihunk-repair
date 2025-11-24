@@ -1,0 +1,30 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
+index f827c318d..990de18d4 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
+@@ -312,10 +312,21 @@ public class StdKeyDeserializer extends KeyDeserializer
+                 return null;
+             }
+             try {
+-                // Ugh... should not have to give parser which may or may not be correct one...
+-                Object result = _delegate.deserialize(ctxt.getParser(), ctxt);
+-                if (result != null) {
+-                    return result;
++                // [databind#1441]: Need to use a parser created from 'key', not parser from context
++                // (which may be stale, positioned at wrong location after polymorphic type scanning)
++                com.fasterxml.jackson.core.JsonParser p = ctxt.getParser();
++                com.fasterxml.jackson.core.ObjectCodec codec = p.getCodec();
++                com.fasterxml.jackson.core.JsonFactory f = codec.getFactory();
++                // Need to wrap the key as a JSON string for the parser
++                com.fasterxml.jackson.core.JsonParser keyParser = f.createParser("\"" + key + "\"");
++                try {
++                    keyParser.nextToken(); // to point to the value
++                    Object result = _delegate.deserialize(keyParser, ctxt);
++                    if (result != null) {
++                        return result;
++                    }
++                } finally {
++                    keyParser.close();
+                 }
+                 return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation");
+             } catch (Exception re) {

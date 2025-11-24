@@ -1,0 +1,65 @@
+diff --git a/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java b/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java
+index f6a64007..8b1c91c5 100644
+--- a/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java
++++ b/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java
+@@ -1351,6 +1351,12 @@ public final class JsDocInfoParser {
+     token = next();
+ 
+     boolean ignoreStar = false;
++    // Track indentation at the start of a new line so we can
++    // preserve whitespace that the tokenizer skips.
++    // When a line starts with a '*', we mark the position just after
++    // the star, so we can preserve only the spaces following it.
++    int lineStartCharPosition = 0;
++    boolean sawStarAtLineStart = false;
+ 
+     // Track the start of the line to count whitespace that
+     // the tokenizer skipped. Because this case is rare, it's easier
+@@ -1361,6 +1367,10 @@ public final class JsDocInfoParser {
+         case STAR:
+           if (ignoreStar) {
+             // Mark the position after the star as the new start of the line.
++            // The tokenizer skips leading spaces, so use the current
++            // character offset to record indentation relative to the '*'.
++            sawStarAtLineStart = true;
++            lineStartCharPosition = stream.getCharno() + 1; // position after '*'
+           } else {
+             // The star is part of the comment.
+             if (builder.length() > 0) {
+@@ -1379,6 +1389,9 @@ public final class JsDocInfoParser {
+           }
+ 
+           ignoreStar = true;
++          // Reset indentation tracking for the new line.
++          sawStarAtLineStart = false;
++          lineStartCharPosition = 0;
+           token = next();
+           continue;
+ 
+@@ -1411,8 +1424,24 @@ public final class JsDocInfoParser {
+             return new ExtractionInfo(multilineText, token);
+           }
+ 
+-          if (builder.length() > 0) {
+-            builder.append(' ');
++          // If preserving whitespace and we are at the start of a line,
++          // reconstruct the indentation that the tokenizer skipped.
++          if (option == WhitespaceOption.PRESERVE && (sawStarAtLineStart || lineStartCharPosition == 0)) {
++            int currentTokenCharno = stream.getCharno();
++            int indent;
++            if (sawStarAtLineStart) {
++              indent = Math.max(0, currentTokenCharno - lineStartCharPosition);
++            } else {
++              // No leading * on this line; preserve all leading spaces.
++              indent = Math.max(0, currentTokenCharno);
++            }
++            for (int i = 0; i < indent; i++) {
++              builder.append(' ');
++            }
++          } else {
++            if (builder.length() > 0) {
++              builder.append(' ');
++            }
+           }
+           builder.append(toString(token));
+ 

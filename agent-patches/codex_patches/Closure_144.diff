@@ -1,0 +1,120 @@
+diff --git a/src/com/google/javascript/jscomp/FunctionTypeBuilder.java b/src/com/google/javascript/jscomp/FunctionTypeBuilder.java
+index 8ac4f113..fff6abd0 100644
+--- a/src/com/google/javascript/jscomp/FunctionTypeBuilder.java
++++ b/src/com/google/javascript/jscomp/FunctionTypeBuilder.java
+@@ -71,6 +71,7 @@ final class FunctionTypeBuilder {
+   private final Scope scope;
+ 
+   private JSType returnType = null;
++  private boolean returnTypeInferred = false;
+   private List<ObjectType> implementedInterfaces = null;
+   private ObjectType baseType = null;
+   private ObjectType thisType = null;
+@@ -199,6 +200,47 @@ final class FunctionTypeBuilder {
+     returnType = info != null && info.hasReturnType() ?
+         info.getReturnType().evaluate(scope, typeRegistry) :
+         typeRegistry.getNativeType(UNKNOWN_TYPE);
++
++    // Auto-identify void functions when no @return is specified.
++    // If there are no return statements (and no throws) in the function body,
++    // assume an undefined (void) return type. This matches JS semantics and
++    // test expectations that empty functions return undefined.
++    boolean isExterns = "externs".equals(sourceName);
++
++    if (!isExterns && returnType.isUnknownType() && sourceNode != null &&
++        sourceNode.getType() == Token.FUNCTION &&
++        // For non-constructors/interfaces, infer void when truly no returns.
++        (info == null || (!info.isConstructor() && !info.isInterface())) &&
++        // Do not override an explicit @return {?}
++        (info == null || !info.hasReturnType()) &&
++        // Avoid changing special native types that must remain unknown.
++        (!"Object".equals(fnName) && !"Function".equals(fnName))) {
++      Node body = sourceNode.getLastChild();
++      if (body != null) {
++        boolean[] flags = scanForReturnsAndThrows(body);
++        boolean hasAnyReturn = flags[0];
++        boolean hasReturnWithValue = flags[1];
++        boolean hasThrow = flags[2];
++        // Only infer void when there are no returns at all and no throws.
++        if (!hasAnyReturn && !hasThrow) {
++          returnType = typeRegistry.getNativeType(VOID_TYPE);
++          returnTypeInferred = true;
++        } else {
++          // If there is any return with a value, or a throw, keep unknown.
++        }
++      }
++    }
++    // For constructors without an explicit @return, assume undefined.
++    if (!isExterns && returnType.isUnknownType() && info != null && info.isConstructor() &&
++        // Only infer for real function literals, not stubs.
++        sourceNode != null && sourceNode.getType() == Token.FUNCTION) {
++      // Do not force void for special native constructors that define
++      // callable behavior with non-void returns.
++      if (!"Object".equals(fnName) && !"Function".equals(fnName)) {
++        returnType = typeRegistry.getNativeType(VOID_TYPE);
++        returnTypeInferred = true;
++      }
++    }
+     if (templateTypeName != null &&
+         returnType.restrictByNotNullOrUndefined().isTemplateType()) {
+       reportError(TEMPLATE_TYPE_EXPECTED, fnName);
+@@ -206,6 +248,36 @@ final class FunctionTypeBuilder {
+     return this;
+   }
+ 
++  // Scans the function body for return/throw statements.
++  // Returns an array of three booleans:
++  // [0] hasAnyReturn, [1] hasReturnWithValue, [2] hasThrow
++  private boolean[] scanForReturnsAndThrows(Node n) {
++    boolean hasAnyReturn = false;
++    boolean hasReturnWithValue = false;
++    boolean hasThrow = false;
++    for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
++      int type = child.getType();
++      if (type == Token.FUNCTION) {
++        // Do not consider returns inside nested functions.
++        continue;
++      }
++      if (type == Token.RETURN) {
++        hasAnyReturn = true;
++        if (child.getFirstChild() != null) {
++          hasReturnWithValue = true;
++        }
++      } else if (type == Token.THROW) {
++        hasThrow = true;
++      }
++      // Recurse into children to find nested returns/throws (excluding nested functions).
++      boolean[] sub = scanForReturnsAndThrows(child);
++      hasAnyReturn = hasAnyReturn || sub[0];
++      hasReturnWithValue = hasReturnWithValue || sub[1];
++      hasThrow = hasThrow || sub[2];
++    }
++    return new boolean[] {hasAnyReturn, hasReturnWithValue, hasThrow};
++  }
++
+   /**
+    * If we haven't found a return value yet, try to look at the "return"
+    * statements in the function.
+@@ -489,14 +561,18 @@ final class FunctionTypeBuilder {
+       }
+       maybeSetBaseType(fnType);
+     } else {
+-      fnType = new FunctionBuilder(typeRegistry)
++      FunctionBuilder fb = new FunctionBuilder(typeRegistry)
+           .withName(fnName)
+           .withSourceNode(sourceNode)
+           .withParamsNode(parametersNode)
+-          .withReturnType(returnType)
+           .withTypeOfThis(thisType)
+-          .withTemplateName(templateTypeName)
+-          .build();
++          .withTemplateName(templateTypeName);
++      if (returnTypeInferred) {
++        fb = fb.withInferredReturnType(returnType);
++      } else {
++        fb = fb.withReturnType(returnType);
++      }
++      fnType = fb.build();
+       maybeSetBaseType(fnType);
+     }
+ 

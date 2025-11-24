@@ -1,0 +1,63 @@
+diff --git a/src/java/org/apache/commons/math/estimation/AbstractEstimator.java b/src/java/org/apache/commons/math/estimation/AbstractEstimator.java
+index ea5083d3c..1616ce0a5 100644
+--- a/src/java/org/apache/commons/math/estimation/AbstractEstimator.java
++++ b/src/java/org/apache/commons/math/estimation/AbstractEstimator.java
+@@ -161,15 +161,20 @@ public abstract class AbstractEstimator implements Estimator {
+         // set up the jacobian
+         updateJacobian();
+ 
+-        // compute transpose(J).J, avoiding building big intermediate matrices
++        // compute transpose(J).J for unbound parameters only, avoiding
++        // building big intermediate matrices
+         final int rows = problem.getMeasurements().length;
+-        final int cols = problem.getAllParameters().length;
+-        final int max  = cols * rows;
+-        double[][] jTj = new double[cols][cols];
+-        for (int i = 0; i < cols; ++i) {
+-            for (int j = i; j < cols; ++j) {
++        final EstimatedParameter[] unbound = problem.getUnboundParameters();
++        final EstimatedParameter[] all     = problem.getAllParameters();
++        final int uCols = unbound.length;
++        final int aCols = all.length;
++
++        final int max  = uCols * rows;
++        double[][] jTj = new double[uCols][uCols];
++        for (int i = 0; i < uCols; ++i) {
++            for (int j = i; j < uCols; ++j) {
+                 double sum = 0;
+-                for (int k = 0; k < max; k += cols) {
++                for (int k = 0; k < max; k += uCols) {
+                     sum += jacobian[k + i] * jacobian[k + j];
+                 }
+                 jTj[i][j] = sum;
+@@ -178,7 +183,7 @@ public abstract class AbstractEstimator implements Estimator {
+         }
+ 
+         try {
+-            // compute the covariances matrix
++            // compute the covariances matrix for unbound parameters only
+             return new RealMatrixImpl(jTj).inverse().getData();
+         } catch (InvalidMatrixException ime) {
+             throw new EstimationException("unable to compute covariances: singular problem",
+@@ -199,12 +204,12 @@ public abstract class AbstractEstimator implements Estimator {
+     public double[] guessParametersErrors(EstimationProblem problem)
+       throws EstimationException {
+         int m = problem.getMeasurements().length;
+-        int p = problem.getAllParameters().length;
++        int p = problem.getUnboundParameters().length;
+         if (m <= p) {
+             throw new EstimationException("no degrees of freedom ({0} measurements, {1} parameters)",
+                                           new Object[] { new Integer(m), new Integer(p)});
+         }
+-        double[] errors = new double[problem.getAllParameters().length];
++        double[] errors = new double[problem.getUnboundParameters().length];
+         final double c = Math.sqrt(getChiSquare(problem) / (m - p));
+         double[][] covar = getCovariances(problem);
+         for (int i = 0; i < errors.length; ++i) {
+@@ -298,4 +303,4 @@ public abstract class AbstractEstimator implements Estimator {
+     /** Number of jacobian evaluations. */
+     private int jacobianEvaluations;
+ 
+-}
+\ No newline at end of file
++}

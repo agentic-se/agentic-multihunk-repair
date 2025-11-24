@@ -1,0 +1,65 @@
+diff --git a/src/com/google/javascript/jscomp/ScopedAliases.java b/src/com/google/javascript/jscomp/ScopedAliases.java
+index 7e9c8b89..84728dac 100644
+--- a/src/com/google/javascript/jscomp/ScopedAliases.java
++++ b/src/com/google/javascript/jscomp/ScopedAliases.java
+@@ -413,6 +413,60 @@ class ScopedAliases implements HotSwapCompilerPass {
+               NodeUtil.newQualifiedNameNode(
+                   compiler.getCodingConvention(), globalName, n, name));
+ 
++          recordAlias(v);
++        } else if (parent.isFunction()) {
++          // Handle function declarations in goog.scope by converting them
++          // into assignments to $jscomp.scope.<name> and creating a local
++          // alias variable initialized to that qualified name. This preserves
++          // hoisting semantics by inserting the assignment at the start of
++          // the containing block/script.
++
++          Node functionNode = parent;
++          Node containingBlock = functionNode.getParent();
++
++          String name = n.getString();
++          int nameCount = scopedAliasNames.count(name);
++          scopedAliasNames.add(name);
++          String globalName =
++              "$jscomp.scope." + name + (nameCount == 0 ? "" : ("$" + nameCount));
++
++          compiler.ensureLibraryInjected("base");
++
++          // Create an anonymous function expression cloned from the original
++          // declaration to avoid leaking the local name.
++          Node fnExpr = functionNode.cloneTree();
++          // Clear the function name.
++          fnExpr.getFirstChild().setString("");
++
++          // Build "$jscomp.scope.name = function() { ... }" and insert it
++          // at the beginning of the containing block/script to mimic
++          // declaration hoisting.
++          Node newDecl = NodeUtil.newQualifiedNameNodeDeclaration(
++              compiler.getCodingConvention(),
++              globalName,
++              fnExpr,
++              functionNode.getJSDocInfo())
++              .useSourceInfoIfMissingFromForTree(n);
++          NodeUtil.setDebugInformation(
++              newDecl.getFirstChild().getFirstChild(), n, name);
++
++          if (containingBlock.hasChildren()) {
++            containingBlock.addChildBefore(newDecl, containingBlock.getFirstChild());
++          } else {
++            containingBlock.addChildToFront(newDecl);
++          }
++
++          // Replace the function declaration with a variable declaration so
++          // we can attach the local alias initializer "$jscomp.scope.name".
++          n.detachFromParent();
++          Node newVar = IR.var(n).useSourceInfoIfMissingFromForTree(n);
++          containingBlock.replaceChild(functionNode, newVar);
++
++          // Initialize the local alias to reference $jscomp.scope.name.
++          v.getNameNode().addChildToFront(
++              NodeUtil.newQualifiedNameNode(
++                  compiler.getCodingConvention(), globalName, n, name));
++
+           recordAlias(v);
+         } else {
+           // Do not other kinds of local symbols, like catch params.

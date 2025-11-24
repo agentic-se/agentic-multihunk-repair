@@ -1,0 +1,49 @@
+diff --git a/src/com/google/javascript/jscomp/ExpressionDecomposer.java b/src/com/google/javascript/jscomp/ExpressionDecomposer.java
+index 3a646cd9..f475759e 100644
+--- a/src/com/google/javascript/jscomp/ExpressionDecomposer.java
++++ b/src/com/google/javascript/jscomp/ExpressionDecomposer.java
+@@ -800,6 +800,8 @@ class ExpressionDecomposer {
+             }
+           }
+ 
++          
++
+           // In Internet Explorer, DOM objects and other external objects
+           // methods can not be called indirectly, as is required when the
+           // object or its property can be side-effected.  For example,
+diff --git a/src/com/google/javascript/jscomp/FunctionInjector.java b/src/com/google/javascript/jscomp/FunctionInjector.java
+index c3fc14b2..fb4f3425 100644
+--- a/src/com/google/javascript/jscomp/FunctionInjector.java
++++ b/src/com/google/javascript/jscomp/FunctionInjector.java
+@@ -692,8 +692,31 @@ class FunctionInjector {
+       return CanInlineResult.NO;
+     }
+ 
++    // Direct inlining is only about replacing the call with the return value.
++    // Any necessary expression decomposition will be handled by the caller
++    // when using block inlining.
++
+     Node block = fnNode.getLastChild();
+ 
++    // If any argument would require a temporary during block inlining
++    // (e.g., because the corresponding parameter is referenced after a
++    // side-effect in the function body, or the argument is evaluated
++    // multiple times), then direct inlining is unsafe as it cannot
++    // introduce temporaries. In that case, fall back to block inlining.
++    {
++      Map<String, Node> argMap =
++          FunctionArgumentInjector.getFunctionCallParameterMap(
++              fnNode, callNode, this.safeNameIdSupplier);
++      if (!argMap.isEmpty()) {
++        Set<String> namesNeedingTemps = Sets.newHashSet();
++        FunctionArgumentInjector.maybeAddTempsForCallArguments(
++            fnNode, argMap, namesNeedingTemps, compiler.getCodingConvention());
++        if (!namesNeedingTemps.isEmpty()) {
++          return CanInlineResult.NO;
++        }
++      }
++    }
++
+ 
+     // CALL NODE: [ NAME, ARG1, ARG2, ... ]
+     Node cArg = callNode.getFirstChild().getNext();

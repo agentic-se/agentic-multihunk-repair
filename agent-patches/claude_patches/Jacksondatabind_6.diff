@@ -1,0 +1,132 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/util/ISO8601Utils.java b/src/main/java/com/fasterxml/jackson/databind/util/ISO8601Utils.java
+index 5fce78e02..c3d8186d3 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/util/ISO8601Utils.java
++++ b/src/main/java/com/fasterxml/jackson/databind/util/ISO8601Utils.java
+@@ -144,14 +144,41 @@ public class ISO8601Utils {
+             checkOffset(date, offset, ':');
+ 
+             int minutes = parseInt(date, offset += 1, offset += 2);
+-            checkOffset(date, offset, ':');
+ 
+-            int seconds = parseInt(date, offset += 1, offset += 2);
+-            // milliseconds can be optional in the format
++            int seconds = 0;
+             int milliseconds = 0; // always use 0 otherwise returned date will include millis of current time
+-            if (date.charAt(offset) == '.') {
+-                checkOffset(date, offset, '.');
+-                milliseconds = parseInt(date, offset += 1, offset += 3);
++
++            // seconds are optional in the format (e.g., 1997-07-16T19:20+01:00)
++            if (offset < date.length() && date.charAt(offset) == ':') {
++                checkOffset(date, offset, ':');
++                seconds = parseInt(date, offset += 1, offset += 2);
++
++                // milliseconds can be optional in the format
++                if (offset < date.length() && date.charAt(offset) == '.') {
++                    checkOffset(date, offset, '.');
++                    offset += 1;
++
++                    // Find the end of the millisecond segment (up to 3 digits)
++                    int millisecondStart = offset;
++                    int millisecondEnd = millisecondStart;
++                    while (millisecondEnd < date.length() &&
++                           millisecondEnd < millisecondStart + 3 &&
++                           Character.isDigit(date.charAt(millisecondEnd))) {
++                        millisecondEnd++;
++                    }
++
++                    int millisecondDigits = millisecondEnd - millisecondStart;
++                    if (millisecondDigits > 0) {
++                        milliseconds = parseInt(date, millisecondStart, millisecondEnd);
++                        // Pad to 3 digits (e.g., .6 -> 600, .61 -> 610, .612 -> 612)
++                        if (millisecondDigits == 1) {
++                            milliseconds *= 100;
++                        } else if (millisecondDigits == 2) {
++                            milliseconds *= 10;
++                        }
++                        offset = millisecondEnd;
++                    }
++                }
+             }
+ 
+             // extract timezone
+diff --git a/src/main/java/com/fasterxml/jackson/databind/util/StdDateFormat.java b/src/main/java/com/fasterxml/jackson/databind/util/StdDateFormat.java
+index e04380c51..61446b086 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/util/StdDateFormat.java
++++ b/src/main/java/com/fasterxml/jackson/databind/util/StdDateFormat.java
+@@ -396,19 +396,64 @@ public class StdDateFormat
+                     StringBuilder sb = new StringBuilder(dateStr);
+                     sb.delete(len-3, len-2);
+                     dateStr = sb.toString();
++                    len--;
+                 } else if (c == '+' || c == '-') { // missing minutes
+                     // let's just append '00'
+                     dateStr += "00";
++                    len += 2;
+                 }
+-                // Milliseconds partial or missing; and even seconds are optional
+-                len = dateStr.length();
+-                // remove 'T', '+'/'-' and 4-digit timezone-offset
+-                c = dateStr.charAt(len-9);
+-                if (Character.isDigit(c)) {
+-                    StringBuilder sb = new StringBuilder(dateStr);
+-                    sb.insert(len-5, ".000");
++
++                // Need to handle missing seconds and/or milliseconds
++                // Format: yyyy-MM-ddTHH:mm:ss.SSSZ or yyyy-MM-ddTHH:mmZ
++                // Find the 'T' to locate the time portion
++                int tIndex = dateStr.indexOf('T');
++                if (tIndex >= 0) {
++                    // Time portion is between 'T' and timezone offset (last 5 chars)
++                    String timePart = dateStr.substring(tIndex + 1, len - 5);
++                    StringBuilder sb = new StringBuilder();
++                    sb.append(dateStr.substring(0, tIndex + 1)); // date + 'T'
++
++                    // Check if we have seconds
++                    int dotIndex = timePart.indexOf('.');
++                    int firstColon = timePart.indexOf(':');
++                    int secondColon = timePart.indexOf(':', firstColon + 1);
++
++                    if (secondColon < 0 && dotIndex < 0) {
++                        // No seconds and no milliseconds (e.g., "19:20")
++                        sb.append(timePart).append(":00.000");
++                    } else if (secondColon < 0) {
++                        // Has milliseconds but no seconds - this is invalid, but let's handle it
++                        // e.g., "19:20.123" - should be "19:20:00.123"
++                        int dotPos = timePart.indexOf('.');
++                        sb.append(timePart.substring(0, dotPos)).append(":00");
++                        sb.append(timePart.substring(dotPos));
++                        // Now handle partial milliseconds
++                        String millisPart = timePart.substring(dotPos + 1);
++                        if (millisPart.length() < 3) {
++                            for (int j = millisPart.length(); j < 3; j++) {
++                                sb.append('0');
++                            }
++                        }
++                    } else if (dotIndex < 0) {
++                        // Has seconds but no milliseconds
++                        sb.append(timePart).append(".000");
++                    } else {
++                        // Has both seconds and milliseconds
++                        String millisPart = timePart.substring(dotIndex + 1);
++                        sb.append(timePart);
++                        if (millisPart.length() < 3) {
++                            // Pad with zeros (e.g., .6 becomes .600, .61 becomes .610)
++                            for (int j = millisPart.length(); j < 3; j++) {
++                                sb.append('0');
++                            }
++                        }
++                    }
++
++                    // Append timezone offset
++                    sb.append(dateStr.substring(len - 5));
+                     dateStr = sb.toString();
+                 }
++
+                 df = _formatISO8601;
+                 if (_formatISO8601 == null) {
+                     df = _formatISO8601 = _cloneFormat(DATE_FORMAT_ISO8601, DATE_FORMAT_STR_ISO8601, _timezone, _locale);
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

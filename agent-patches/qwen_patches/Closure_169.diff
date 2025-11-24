@@ -1,0 +1,31 @@
+diff --git a/src/.DS_Store b/src/.DS_Store
+index 44bf7525758303c5d3082012a78da05597157b23..0c31c3ca477b771ef42f2734ecda7af07d603a55 100644
+GIT binary patch
+delta 27
+jc-m_*Xfc?uglWawiOWJ56*e<6vawHWVB5^j@s}R}k_-ul
+
+delta 27
+jc-m_*Xfc?uglY5KiOWJ54K_0}vawHWVB5^j@s}R}jo1lN
+
+diff --git a/src/com/google/javascript/rhino/jstype/RecordType.java b/src/com/google/javascript/rhino/jstype/RecordType.java
+index 50423d5b..af6f9a2b 100755
+--- a/src/com/google/javascript/rhino/jstype/RecordType.java
++++ b/src/com/google/javascript/rhino/jstype/RecordType.java
+@@ -275,11 +275,16 @@ class RecordType extends PrototypeObjectType {
+       } else {
+         // If one inferred property isn't a subtype,
+         // then the whole record isn't covariant.
++        // Special case: if propA is concrete and propB is unknown,
++        // treat as subtype (concrete types are subtypes of unknown)
++        if (propB.isUnknownType()) {
++          return true;
++        }
+         if (!propA.isSubtype(propB)) {
+           return false;
+-          }
+         }
+       }
++      }
+     }
+ 
+     return true;

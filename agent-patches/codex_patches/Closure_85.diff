@@ -1,0 +1,112 @@
+diff --git a/src/com/google/javascript/jscomp/NodeUtil.java b/src/com/google/javascript/jscomp/NodeUtil.java
+index 8425cd06..f05be302 100644
+--- a/src/com/google/javascript/jscomp/NodeUtil.java
++++ b/src/com/google/javascript/jscomp/NodeUtil.java
+@@ -1379,6 +1379,10 @@ public final class NodeUtil {
+ 
+   /** Safely remove children while maintaining a valid node structure. */
+   static void removeChild(Node parent, Node node) {
++    if (parent == null) {
++      // Node already detached or no valid parent; nothing to remove.
++      return;
++    }
+     if (isTryFinallyNode(parent, node)) {
+       if (NodeUtil.hasCatchHandler(getCatchBlock(parent))) {
+         // A finally can only be removed if there is a catch.
+diff --git a/src/com/google/javascript/jscomp/UnreachableCodeElimination.java b/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
+index c2150b14..f4b24fd4 100644
+--- a/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
++++ b/src/com/google/javascript/jscomp/UnreachableCodeElimination.java
+@@ -176,12 +176,78 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
+         // branches to that same node. It is safe to remove it.
+         List<DiGraphEdge<Node,Branch>> outEdges = gNode.getOutEdges();
+         if (outEdges.size() == 1 &&
+-            // If there is a next node, there is no chance this jump is useless.
+-            (n.getNext() == null || n.getNext().getType() == Token.FUNCTION)) {
++            // If there is a next node, there is no chance this jump is useless,
++            // except for RETURN which may still be redundant.
++            (n.getType() == Token.RETURN ||
++             n.getNext() == null || n.getNext().getType() == Token.FUNCTION)) {
+ 
+           Preconditions.checkState(outEdges.get(0).getValue() == Branch.UNCOND);
+-          Node fallThrough = tryRemoveUnconditionalBranching(computeFollowing(n));
++          // Only consider the immediate following node. Avoid cascading
++          // removal of multiple unconditional jumps in a single pass.
++          Node fallThrough = computeFollowing(n);
+           Node nextCfgNode = outEdges.get(0).getDestination().getValue();
++
++          // Heuristic to avoid removing the first BREAK in a run of trivial
++          // switch cases (empty or BREAK-only) in a single pass, while still
++          // allowing other safe removals like merging into a computed case.
++          if (n.getType() == Token.BREAK) {
++            Node block = n.getParent();
++            if (block != null && block.getType() == Token.BLOCK) {
++              Node caseNode = block.getParent();
++              if (caseNode != null &&
++                  (caseNode.getType() == Token.CASE || caseNode.getType() == Token.DEFAULT)) {
++                // Allow removal for DEFAULT unconditionally.
++                if (caseNode.getType() == Token.CASE) {
++                  boolean firstInRun = true;
++                  Node prevCase = caseNode.getPrevious();
++                  if (prevCase != null &&
++                      (prevCase.getType() == Token.CASE || prevCase.getType() == Token.DEFAULT)) {
++                    Node prevBlock = prevCase.getLastChild();
++                    if (prevBlock != null && prevBlock.hasChildren()) {
++                      Node lastStmt = prevBlock.getLastChild();
++                      if (lastStmt.getType() == Token.BREAK) {
++                        firstInRun = false;
++                      }
++                    }
++                  }
++                  if (firstInRun) {
++                    boolean hasFollowingTrivialCases = false;
++                    Node nextCase = caseNode.getNext();
++                    while (nextCase != null &&
++                        (nextCase.getType() == Token.CASE || nextCase.getType() == Token.DEFAULT)) {
++                      Node nextBlock = nextCase.getLastChild();
++                      if (nextBlock != null && nextBlock.hasChildren()) {
++                        if (nextBlock.getChildCount() == 1 &&
++                            nextBlock.getFirstChild().getType() == Token.BREAK) {
++                          hasFollowingTrivialCases = true;
++                          nextCase = nextCase.getNext();
++                          continue;
++                        }
++                        break; // non-trivial, end of run
++                      } else {
++                        hasFollowingTrivialCases = true;
++                        nextCase = nextCase.getNext();
++                      }
++                    }
++                    if (hasFollowingTrivialCases) {
++                      Node immediateNext = caseNode.getNext();
++                      boolean nextIsSimpleLiteralCase = false;
++                      if (immediateNext != null && immediateNext.getType() == Token.CASE) {
++                        int exprType = immediateNext.getFirstChild().getType();
++                        nextIsSimpleLiteralCase = (exprType == Token.STRING || exprType == Token.NUMBER);
++                      }
++                      if (nextIsSimpleLiteralCase) {
++                        // Defer removal of the first break in a run of trivial
++                        // literal cases to a subsequent pass.
++                        return n;
++                      }
++                    }
++                  }
++                }
++              }
++            }
++          }
++
+           if (nextCfgNode == fallThrough) {
+             removeDeadExprStatementSafely(n);
+             return fallThrough;
+@@ -198,6 +264,10 @@ class UnreachableCodeElimination extends AbstractPostOrderCallback
+ 
+   private void removeDeadExprStatementSafely(Node n) {
+     Node parent = n.getParent();
++    if (parent == null) {
++      // Node already detached; nothing to remove safely.
++      return;
++    }
+     if (n.getType() == Token.EMPTY ||
+         (n.getType() == Token.BLOCK && !n.hasChildren())) {
+       // Not always trivial to remove, let FoldContants work its magic later.

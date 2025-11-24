@@ -1,0 +1,156 @@
+diff --git a/src/com/google/javascript/jscomp/CollapseProperties.java b/src/com/google/javascript/jscomp/CollapseProperties.java
+index 01295cd8..d5d79698 100644
+--- a/src/com/google/javascript/jscomp/CollapseProperties.java
++++ b/src/com/google/javascript/jscomp/CollapseProperties.java
+@@ -452,7 +452,11 @@ class CollapseProperties implements CompilerPass {
+     boolean canCollapseChildNames = n.canCollapseUnannotatedChildNames();
+ 
+     // Handle this name first so that nested object literals get unrolled.
+-    if (n.canCollapse() && canCollapseChildNames) {
++    // Allow collapsing of nested classes/enums even if child names cannot
++    // otherwise be collapsed (e.g., multiple assignments), so that we still
++    // generate a var declaration for the class/enum itself.
++    if (n.canCollapse() && (canCollapseChildNames ||
++        (n.isClassOrEnum() && !n.isSimpleName()))) {
+       updateObjLitOrFunctionDeclaration(n, alias);
+     }
+ 
+@@ -766,6 +770,16 @@ class CollapseProperties implements CompilerPass {
+     int numVars = 0;
+     int arbitraryNameCounter = 0;
+     boolean discardKeys = !objlitName.shouldKeepKeys();
++    // Determine if keys are being kept due to an ancestor alias on a class/enum.
++    boolean ancestorAliased = false;
++    if (!discardKeys && objlitName.isClassOrEnum() && objlitName.aliasingGets == 0) {
++      for (Name anc = objlitName.parent; anc != null; anc = anc.parent) {
++        if (anc.aliasingGets > 0) {
++          ancestorAliased = true;
++          break;
++        }
++      }
++    }
+ 
+     for (Node key = objlit.getFirstChild(), nextKey; key != null;
+          key = nextKey) {
+@@ -794,30 +808,35 @@ class CollapseProperties implements CompilerPass {
+         objlit.removeChild(key);
+         value.detachFromParent();
+       } else {
+-        // Substitute a reference for the value.
+-        refNode = Node.newString(Token.NAME, propAlias);
+-        if (key.getBooleanProp(Node.IS_CONSTANT_NAME)) {
+-          refNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
++        // Substitute a reference for the value unless we are keeping keys due
++        // to ancestor aliasing of an enum, in which case leave the literal.
++        if (!(ancestorAliased)) {
++          refNode = Node.newString(Token.NAME, propAlias);
++          if (key.getBooleanProp(Node.IS_CONSTANT_NAME)) {
++            refNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
++          }
++          key.replaceChild(value, refNode);
+         }
+-
+-        key.replaceChild(value, refNode);
+       }
+ 
+-      // Declare the collapsed name as a variable with the original value.
+-      Node nameNode = Node.newString(Token.NAME, propAlias);
+-      nameNode.addChildToFront(value);
+-      if (key.getBooleanProp(Node.IS_CONSTANT_NAME)) {
+-        nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+-      }
+-      Node newVar = new Node(Token.VAR, nameNode)
+-          .copyInformationFromForTree(key);
+-      if (nameToAddAfter != null) {
+-        varParent.addChildAfter(newVar, nameToAddAfter);
+-      } else {
+-        varParent.addChildBefore(newVar, varNode);
++      // Declare the collapsed name as a variable with the original value,
++      // unless we are keeping keys due to ancestor aliasing of an enum.
++      if (!ancestorAliased) {
++        Node nameNode = Node.newString(Token.NAME, propAlias);
++        nameNode.addChildToFront(value);
++        if (key.getBooleanProp(Node.IS_CONSTANT_NAME)) {
++          nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
++        }
++        Node newVar = new Node(Token.VAR, nameNode)
++            .copyInformationFromForTree(key);
++        if (nameToAddAfter != null) {
++          varParent.addChildAfter(newVar, nameToAddAfter);
++        } else {
++          varParent.addChildBefore(newVar, varNode);
++        }
++        compiler.reportCodeChange();
++        nameToAddAfter = newVar;
+       }
+-      compiler.reportCodeChange();
+-      nameToAddAfter = newVar;
+ 
+       if (isJsIdentifier) {
+         // Update the global name's node ancestry if it hasn't already been
+@@ -825,7 +844,7 @@ class CollapseProperties implements CompilerPass {
+         // for the same global name.)
+         Name p = nameMap.get(qName);
+         if (p != null) {
+-          if (!discardKeys) {
++          if (!discardKeys && !ancestorAliased) {
+             Ref newAlias =
+                 p.declaration.cloneAndReclassify(Ref.Type.ALIASING_GET);
+             newAlias.node = refNode;
+diff --git a/src/com/google/javascript/jscomp/GlobalNamespace.java b/src/com/google/javascript/jscomp/GlobalNamespace.java
+index e7f72fed..7843de61 100644
+--- a/src/com/google/javascript/jscomp/GlobalNamespace.java
++++ b/src/com/google/javascript/jscomp/GlobalNamespace.java
+@@ -914,6 +914,12 @@ class GlobalNamespace {
+     }
+ 
+     boolean canCollapseUnannotatedChildNames() {
++      // Allow collapsing on classes and enums regardless of the number
++      // of assignments, since their declarations are safe to collapse.
++      if (isClassOrEnum) {
++        return true;
++      }
++
+       if (type == Type.OTHER || isGetOrSetDefinition()
+           || globalSets != 1 || localSets != 0) {
+         return false;
+@@ -927,10 +933,6 @@ class GlobalNamespace {
+         return false;
+       }
+ 
+-      if (isClassOrEnum) {
+-        return true;
+-      }
+-
+       // If this is a key of an aliased object literal, then it will be aliased
+       // later. So we won't be able to collapse its properties.
+       if (parent != null && parent.shouldKeepKeys()) {
+@@ -945,9 +947,27 @@ class GlobalNamespace {
+       return (parent == null || parent.canCollapseUnannotatedChildNames());
+     }
+ 
++    /** Returns whether this name represents a class or enum. */
++    boolean isClassOrEnum() {
++      return isClassOrEnum;
++    }
++
+     /** Whether this is an object literal that needs to keep its keys. */
+     boolean shouldKeepKeys() {
+-      return type == Type.OBJECTLIT && aliasingGets > 0;
++      if (type != Type.OBJECTLIT) {
++        return false;
++      }
++      if (aliasingGets > 0) {
++        return true;
++      }
++      // If any ancestor namespace is aliased, then keep keys to avoid
++      // changing object shapes under aliasing.
++      for (Name anc = parent; anc != null; anc = anc.parent) {
++        if (anc.aliasingGets > 0) {
++          return true;
++        }
++      }
++      return false;
+     }
+ 
+     boolean needsToBeStubbed() {

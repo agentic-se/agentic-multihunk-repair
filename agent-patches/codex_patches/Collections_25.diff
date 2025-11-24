@@ -1,0 +1,43 @@
+diff --git a/src/main/java/org/apache/commons/collections4/IteratorUtils.java b/src/main/java/org/apache/commons/collections4/IteratorUtils.java
+index 40f99898..ffee20f0 100644
+--- a/src/main/java/org/apache/commons/collections4/IteratorUtils.java
++++ b/src/main/java/org/apache/commons/collections4/IteratorUtils.java
+@@ -602,7 +602,11 @@ public class IteratorUtils {
+     public static <E> Iterator<E> collatedIterator(final Comparator<? super E> comparator,
+                                                    final Iterator<? extends E> iterator1,
+                                                    final Iterator<? extends E> iterator2) {
+-        return new CollatingIterator<E>(comparator, iterator1, iterator2);
++        @SuppressWarnings("unchecked")
++        final Comparator<? super E> comp = comparator != null
++                ? comparator
++                : ComparatorUtils.NATURAL_COMPARATOR;
++        return new CollatingIterator<E>(comp, iterator1, iterator2);
+     }
+ 
+     /**
+@@ -623,7 +627,11 @@ public class IteratorUtils {
+      */
+     public static <E> Iterator<E> collatedIterator(final Comparator<? super E> comparator,
+                                                    final Iterator<? extends E>... iterators) {
+-        return new CollatingIterator<E>(comparator, iterators);
++        @SuppressWarnings("unchecked")
++        final Comparator<? super E> comp = comparator != null
++                ? comparator
++                : ComparatorUtils.NATURAL_COMPARATOR;
++        return new CollatingIterator<E>(comp, iterators);
+     }
+ 
+     /**
+@@ -645,7 +653,11 @@ public class IteratorUtils {
+      */
+     public static <E> Iterator<E> collatedIterator(final Comparator<? super E> comparator,
+                                                    final Collection<Iterator<? extends E>> iterators) {
+-        return new CollatingIterator<E>(comparator, iterators);
++        @SuppressWarnings("unchecked")
++        final Comparator<? super E> comp = comparator != null
++                ? comparator
++                : ComparatorUtils.NATURAL_COMPARATOR;
++        return new CollatingIterator<E>(comp, iterators);
+     }
+ 
+     // Object Graph

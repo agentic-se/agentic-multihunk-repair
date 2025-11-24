@@ -1,0 +1,45 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java b/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
+index 9dadc51f..f0c3a5c2 100644
+--- a/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
++++ b/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
+@@ -32,7 +32,8 @@ public class JsonParserSequence extends JsonParserDelegate
+      *
+      * @since 2.8
+      */
+-    
++    protected boolean _checkForExistingToken;
++
+     /*
+      *******************************************************
+      * Construction
+@@ -44,6 +45,7 @@ public class JsonParserSequence extends JsonParserDelegate
+         super(parsers[0]);
+         _parsers = parsers;
+         _nextParser = 1;
++        _checkForExistingToken = true;
+     }
+ 
+     /**
+@@ -103,9 +105,17 @@ public class JsonParserSequence extends JsonParserDelegate
+     @Override
+     public JsonToken nextToken() throws IOException, JsonParseException
+     {
+-        JsonToken t = delegate.nextToken();
++        JsonToken t;
++        if (_checkForExistingToken) {
++            _checkForExistingToken = false;
++            t = delegate.getCurrentToken();
++            if (t != null) return t;
++        }
++        t = delegate.nextToken();
+         if (t != null) return t;
+         while (switchToNext()) {
++            t = delegate.getCurrentToken();
++            if (t != null) return t;
+             t = delegate.nextToken();
+             if (t != null) return t;
+         }
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

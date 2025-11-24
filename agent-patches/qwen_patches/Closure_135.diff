@@ -1,0 +1,28 @@
+diff --git a/src/.DS_Store b/src/.DS_Store
+index 8d24b6a52d12fdb196022037c6be7c029be10f3d..505d73b758c5857ea99f3e97c7084f439870cb61 100644
+GIT binary patch
+delta 12
+Tc-m_*Xfc?ulreMTvN&-7AHxLH
+
+delta 12
+Tc-m_*Xfc?ul(A&vvN&-7ANmB}
+
+diff --git a/src/com/google/javascript/jscomp/DevirtualizePrototypeMethods.java b/src/com/google/javascript/jscomp/DevirtualizePrototypeMethods.java
+index a42dc347..edf8a972 100644
+--- a/src/com/google/javascript/jscomp/DevirtualizePrototypeMethods.java
++++ b/src/com/google/javascript/jscomp/DevirtualizePrototypeMethods.java
+@@ -337,8 +337,12 @@ class DevirtualizePrototypeMethods implements CompilerPass {
+         parameterTypes.add(param.getJSType());
+       }
+ 
+-      ObjectType thisType =
+-          typeRegistry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE);
++      // Use the original 'this' type to preserve type information for self parameter
++      ObjectType thisType = (ObjectType) type.getTypeOfThis();
++      // Fallback to UNKNOWN_TYPE if we can't extract the correct type
++      if (thisType == null) {
++        thisType = typeRegistry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE);
++      }
+       JSType returnType = type.getReturnType();
+ 
+       JSType newType = typeRegistry.createFunctionType(

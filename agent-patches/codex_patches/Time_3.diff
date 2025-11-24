@@ -1,0 +1,58 @@
+diff --git a/src/main/java/org/joda/time/MutableDateTime.java b/src/main/java/org/joda/time/MutableDateTime.java
+index 310f55d2..cbe399c9 100644
+--- a/src/main/java/org/joda/time/MutableDateTime.java
++++ b/src/main/java/org/joda/time/MutableDateTime.java
+@@ -636,7 +636,12 @@ public class MutableDateTime
+         if (type == null) {
+             throw new IllegalArgumentException("Field must not be null");
+         }
+-            setMillis(type.getField(getChronology()).add(getMillis(), amount));
++        // Adding zero should be a no-op to avoid altering the
++        // instant during DST overlap/transition handling.
++        if (amount == 0) {
++            return;
++        }
++        setMillis(type.getField(getChronology()).add(getMillis(), amount));
+     }
+ 
+     //-----------------------------------------------------------------------
+@@ -657,6 +662,9 @@ public class MutableDateTime
+      * @throws IllegalArgumentException if the value is invalid
+      */
+     public void addYears(final int years) {
++            if (years == 0) {
++                return;
++            }
+             setMillis(getChronology().years().add(getMillis(), years));
+     }
+ 
+@@ -699,6 +707,9 @@ public class MutableDateTime
+      * @throws IllegalArgumentException if the value is invalid
+      */
+     public void addMonths(final int months) {
++            if (months == 0) {
++                return;
++            }
+             setMillis(getChronology().months().add(getMillis(), months));
+     }
+ 
+@@ -720,6 +731,9 @@ public class MutableDateTime
+      * @throws IllegalArgumentException if the value is invalid
+      */
+     public void addWeeks(final int weeks) {
++            if (weeks == 0) {
++                return;
++            }
+             setMillis(getChronology().weeks().add(getMillis(), weeks));
+     }
+ 
+@@ -761,6 +775,9 @@ public class MutableDateTime
+      * @throws IllegalArgumentException if the value is invalid
+      */
+     public void addDays(final int days) {
++            if (days == 0) {
++                return;
++            }
+             setMillis(getChronology().days().add(getMillis(), days));
+     }
+ 

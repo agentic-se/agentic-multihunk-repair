@@ -1,0 +1,24 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index 0d52d38..a284ad6 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -138,6 +138,19 @@ public final class DataUtil {
+                         foundCharset = decl.attr("encoding");
+                 }
+             }
++            // If parsing with the provided parser didn't surface an XML declaration, try with the XML parser
++            // to catch XHTML documents where the HTML parser treats the declaration as a comment.
++            if (foundCharset == null) {
++                Document xmlGuess = Parser.xmlParser().parseInput(docData, baseUri);
++                if (xmlGuess.childNodeSize() > 0) {
++                    Node first = xmlGuess.childNode(0);
++                    if (first instanceof XmlDeclaration) {
++                        XmlDeclaration decl = (XmlDeclaration) first;
++                        if (decl.name().equalsIgnoreCase("xml"))
++                            foundCharset = decl.attr("encoding");
++                    }
++                }
++            }
+             foundCharset = validateCharset(foundCharset);
+             if (foundCharset != null && !foundCharset.equalsIgnoreCase(defaultCharset)) { // need to re-decode. (case insensitive check here to match how validate works)
+                 foundCharset = foundCharset.trim().replaceAll("[\"']", "");

@@ -1,0 +1,47 @@
+diff --git a/src/main/java/org/jsoup/helper/W3CDom.java b/src/main/java/org/jsoup/helper/W3CDom.java
+index f58a925..6ede432 100644
+--- a/src/main/java/org/jsoup/helper/W3CDom.java
++++ b/src/main/java/org/jsoup/helper/W3CDom.java
+@@ -19,6 +19,7 @@ import javax.xml.transform.dom.DOMSource;
+ import javax.xml.transform.stream.StreamResult;
+ import java.io.StringWriter;
+ import java.util.HashMap;
++import java.util.Stack;
+ 
+ /**
+  * Helper class to transform a {@link org.jsoup.nodes.Document} to a {@link org.w3c.dom.Document org.w3c.dom.Document},
+@@ -71,6 +72,7 @@ public class W3CDom {
+ 
+         private final Document doc;
+         private final HashMap<String, String> namespaces = new HashMap<>();
++        private final Stack<HashMap<String, String>> namespaceStack = new Stack<>();
+         private Element dest;
+ 
+         public W3CBuilder(Document doc) {
+@@ -81,6 +83,10 @@ public class W3CDom {
+             if (source instanceof org.jsoup.nodes.Element) {
+                 org.jsoup.nodes.Element sourceEl = (org.jsoup.nodes.Element) source;
+ 
++                // Save current namespace state before updating
++                HashMap<String, String> previousNamespaces = new HashMap<>(namespaces);
++                namespaceStack.push(previousNamespaces);
++
+                 String prefix = updateNamespaces(sourceEl);
+                 String namespace = namespaces.get(prefix);
+ 
+@@ -112,6 +118,11 @@ public class W3CDom {
+         public void tail(org.jsoup.nodes.Node source, int depth) {
+             if (source instanceof org.jsoup.nodes.Element && dest.getParentNode() instanceof Element) {
+                 dest = (Element) dest.getParentNode(); // undescend. cromulent.
++                // Restore previous namespace state
++                if (!namespaceStack.isEmpty()) {
++                    namespaces.clear();
++                    namespaces.putAll(namespaceStack.pop());
++                }
+             }
+         }
+ 
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

@@ -1,0 +1,34 @@
+diff --git a/src/main/java/org/apache/commons/math3/ode/AbstractIntegrator.java b/src/main/java/org/apache/commons/math3/ode/AbstractIntegrator.java
+index f24f87c39..fab8cc006 100644
+--- a/src/main/java/org/apache/commons/math3/ode/AbstractIntegrator.java
++++ b/src/main/java/org/apache/commons/math3/ode/AbstractIntegrator.java
+@@ -354,8 +354,12 @@ public abstract class AbstractIntegrator implements FirstOrderIntegrator {
+                 if (isLastStep) {
+                     // the event asked to stop integration
+                     System.arraycopy(eventY, 0, y, 0, y.length);
+-                    for (final EventState remaining : occuringEvents) {
+-                        remaining.stepAccepted(eventT, eventY);
++                    // advance all other event states to the current time,
++                    // even if they did not trigger during this step
++                    for (final EventState state : eventsStates) {
++                        if (state != currentEvent) {
++                            state.stepAccepted(eventT, eventY);
++                        }
+                     }
+                     return eventT;
+                 }
+@@ -367,8 +371,12 @@ public abstract class AbstractIntegrator implements FirstOrderIntegrator {
+                     System.arraycopy(eventY, 0, y, 0, y.length);
+                     computeDerivatives(eventT, y, yDot);
+                     resetOccurred = true;
+-                    for (final EventState remaining : occuringEvents) {
+-                        remaining.stepAccepted(eventT, eventY);
++                    // advance all other event states to the current time,
++                    // even if they did not trigger during this step
++                    for (final EventState state : eventsStates) {
++                        if (state != currentEvent) {
++                            state.stepAccepted(eventT, eventY);
++                        }
+                     }
+                     return eventT;
+                 }

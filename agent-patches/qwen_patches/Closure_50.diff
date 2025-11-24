@@ -1,0 +1,24 @@
+diff --git a/src/com/google/javascript/jscomp/PeepholeReplaceKnownMethods.java b/src/com/google/javascript/jscomp/PeepholeReplaceKnownMethods.java
+index ffe47d3d..a9a2361f 100644
+--- a/src/com/google/javascript/jscomp/PeepholeReplaceKnownMethods.java
++++ b/src/com/google/javascript/jscomp/PeepholeReplaceKnownMethods.java
+@@ -387,8 +387,18 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
+     }
+ 
+       // "," is the default, it doesn't need to be explicit
+-
++    // However, we should not convert join(",") to join() because that changes behavior
++    // Specifically, we should avoid converting join(",") to join() for non-empty arrays
+     String joinString = (right == null) ? "," : NodeUtil.getStringValue(right);
++    
++    // For join(",") specifically, avoid optimization to prevent changing behavior
++    if (right != null && joinString != null && joinString.equals(",")) {
++      // Check if this is a no-op conversion that would change behavior
++      // For arrays with constants, we can still optimize, but we need to be careful
++      // about join(",") to join() conversion which would be a behavioral change
++      // Let's ensure we don't optimize away the explicit comma argument
++      return n;
++    }
+     List<Node> arrayFoldedChildren = Lists.newLinkedList();
+     StringBuilder sb = null;
+     int foldedSize = 0;

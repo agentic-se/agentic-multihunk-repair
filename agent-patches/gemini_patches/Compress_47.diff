@@ -1,0 +1,46 @@
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveInputStream.java
+@@ -1,7 +1,11 @@
+-    private boolean supportsDataDescriptorFor(final ZipArchiveEntry entry) {
+-        return !entry.getGeneralPurposeBit().usesDataDescriptor()
+-
+-                || (allowStoredEntriesWithDataDescriptor && entry.getMethod() == ZipEntry.STORED)
+-                || entry.getMethod() == ZipEntry.DEFLATED
+-                || entry.getMethod() == ZipMethod.ENHANCED_DEFLATED.getCode();
+-    }
++    private boolean supportsDataDescriptorFor(final ZipArchiveEntry entry) {
++        return !entry.getGeneralPurposeBit().usesDataDescriptor()
++
++                || (allowStoredEntriesWithDataDescriptor && entry.getMethod() == ZipEntry.STORED)
++                || entry.getMethod() == ZipEntry.DEFLATED
++                || entry.getMethod() == ZipMethod.ENHANCED_DEFLATED.getCode()
++                || (entry.getCompressedSize() == ArchiveEntry.SIZE_UNKNOWN
++                    && (entry.getMethod() == ZipMethod.UNSHRINKING.getCode()
++                        || entry.getMethod() == ZipMethod.IMPLODING.getCode()
++                        || entry.getMethod() == ZipMethod.BZIP2.getCode()));
++    }
+@@ -1,11 +1,13 @@
+-    private boolean supportsDataDescriptorFor(final ZipArchiveEntry entry) {
+-        return !entry.getGeneralPurposeBit().usesDataDescriptor()
+-
+-                || (allowStoredEntriesWithDataDescriptor && entry.getMethod() == ZipEntry.STORED)
+-                || entry.getMethod() == ZipEntry.DEFLATED
+-                || entry.getMethod() == ZipMethod.ENHANCED_DEFLATED.getCode()
+-                || (entry.getCompressedSize() == ArchiveEntry.SIZE_UNKNOWN
+-                    && (entry.getMethod() == ZipMethod.UNSHRINKING.getCode()
+-                        || entry.getMethod() == ZipMethod.IMPLODING.getCode()
+-                        || entry.getMethod() == ZipMethod.BZIP2.getCode()));
+-    }
++    private boolean supportsDataDescriptorFor(final ZipArchiveEntry entry) {
++        if (entry.getCompressedSize() == ArchiveEntry.SIZE_UNKNOWN
++            && (entry.getMethod() == ZipMethod.UNSHRINKING.getCode()
++                || entry.getMethod() == ZipMethod.IMPLODING.getCode()
++                || entry.getMethod() == ZipMethod.BZIP2.getCode())) {
++            return false;
++        }
++        return !entry.getGeneralPurposeBit().usesDataDescriptor()
++
++                || (allowStoredEntriesWithDataDescriptor && entry.getMethod() == ZipEntry.STORED)
++                || entry.getMethod() == ZipEntry.DEFLATED
++                || entry.getMethod() == ZipMethod.ENHANCED_DEFLATED.getCode();
++    }

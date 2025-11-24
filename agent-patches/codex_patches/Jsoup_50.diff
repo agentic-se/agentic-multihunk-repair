@@ -1,0 +1,76 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index 34880d8..680ee9f 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -89,8 +89,61 @@ public final class DataUtil {
+         String docData;
+         Document doc = null;
+ 
+-        // look for BOM - overrides any other header or input
++        // Look for byte-order marks (BOM) before any decoding. If present, they define the charset and
++        // should be used over meta or headers. We must inspect raw bytes as the BOM is ambiguous after decoding.
++        if (charsetName == null) {
++            // Detect BOM: UTF-8, UTF-16 (LE/BE), UTF-32 (LE/BE)
++            ByteBuffer bomBuf = byteData.duplicate();
++            int remaining = bomBuf.remaining();
++            String bomCharset = null;
++            int bomLength = 0;
++            if (remaining >= 4) {
++                int b0 = bomBuf.get(0) & 0xFF;
++                int b1 = bomBuf.get(1) & 0xFF;
++                int b2 = bomBuf.get(2) & 0xFF;
++                int b3 = bomBuf.get(3) & 0xFF;
++                // UTF-32 Big Endian
++                if (b0 == 0x00 && b1 == 0x00 && b2 == 0xFE && b3 == 0xFF) {
++                    bomCharset = "UTF-32BE";
++                    bomLength = 4;
++                // UTF-32 Little Endian
++                } else if (b0 == 0xFF && b1 == 0xFE && b2 == 0x00 && b3 == 0x00) {
++                    bomCharset = "UTF-32LE";
++                    bomLength = 4;
++                }
++            }
++            if (bomCharset == null && remaining >= 3) {
++                int b0 = bomBuf.get(0) & 0xFF;
++                int b1 = bomBuf.get(1) & 0xFF;
++                int b2 = bomBuf.get(2) & 0xFF;
++                // UTF-8
++                if (b0 == 0xEF && b1 == 0xBB && b2 == 0xBF) {
++                    bomCharset = "UTF-8";
++                    bomLength = 3;
++                }
++            }
++            if (bomCharset == null && remaining >= 2) {
++                int b0 = bomBuf.get(0) & 0xFF;
++                int b1 = bomBuf.get(1) & 0xFF;
++                // UTF-16 Big Endian
++                if (b0 == 0xFE && b1 == 0xFF) {
++                    bomCharset = "UTF-16BE";
++                    bomLength = 2;
++                // UTF-16 Little Endian
++                } else if (b0 == 0xFF && b1 == 0xFE) {
++                    bomCharset = "UTF-16LE";
++                    bomLength = 2;
++                }
++            }
++
++            if (bomCharset != null) {
++                // Skip the BOM bytes and use detected charset
++                byteData.position(byteData.position() + bomLength);
++                charsetName = bomCharset;
++            }
++        }
+ 
++        // If charset still unknown, determine from meta using a safe UTF-8 parse first
+         if (charsetName == null) { // determine from meta. safe parse as UTF-8
+             // look for <meta http-equiv="Content-Type" content="text/html;charset=gb2312"> or HTML5 <meta charset="gb2312">
+             docData = Charset.forName(defaultCharset).decode(byteData).toString();
+@@ -119,7 +172,7 @@ public final class DataUtil {
+                     doc = null;
+                 }
+             }
+-        } else { // specified by content type header (or by user on file load)
++        } else { // specified by content type header, BOM, or by user on file load
+             Validate.notEmpty(charsetName, "Must set charset arg to character set of file to parse. Set to null to attempt to detect from HTML");
+             docData = Charset.forName(charsetName).decode(byteData).toString();
+         }

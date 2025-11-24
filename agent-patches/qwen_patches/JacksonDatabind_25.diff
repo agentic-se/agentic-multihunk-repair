@@ -1,0 +1,41 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java
+index 03e8f45b4..0bb4c5beb 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerFactory.java
+@@ -134,6 +134,11 @@ public class BeanDeserializerFactory
+             return deser;
+         }
+ 
++        // Early check for array types to avoid trying to create bean deserializer for arrays
++        if (type.getRawClass().isArray()) {
++            return null;
++        }
++        
+         // Otherwise: could the class be a Bean class? If not, bail out
+         if (!isPotentialBeanType(type.getRawClass())) {
+             return null;
+@@ -805,17 +810,22 @@ public class BeanDeserializerFactory
+     {
+         String typeStr = ClassUtil.canBeABeanType(type);
+         if (typeStr != null) {
++            // For array types, we don't want to throw an exception, but simply return false
++            // to indicate it's not a potential bean type - arrays are not beans
++            if ("array".equals(typeStr)) {
++                return false;
++            }
+             throw new IllegalArgumentException("Can not deserialize Class "+type.getName()+" (of type "+typeStr+") as a Bean");
+         }
+         if (ClassUtil.isProxyType(type)) {
+-            throw new IllegalArgumentException("Can not deserialize Proxy class "+type.getName()+" as a Bean");
++            return false;
+         }
+         /* also: can't deserialize some local classes: static are ok; in-method not;
+          * and with [JACKSON-594], other non-static inner classes are ok
+          */
+         typeStr = ClassUtil.isLocalType(type, true);
+         if (typeStr != null) {
+-            throw new IllegalArgumentException("Can not deserialize Class "+type.getName()+" (of type "+typeStr+") as a Bean");
++            return false;
+         }
+         return true;
+     }

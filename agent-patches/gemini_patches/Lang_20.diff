@@ -1,0 +1,111 @@
+--- a/src/main/java/org/apache/commons/lang3/StringUtils.java
++++ b/src/main/java/org/apache/commons/lang3/StringUtils.java
+@@ -1,1 +1,1 @@
+-        StringBuilder buf = new StringBuilder((array[startIndex] == null ? 16 : array[startIndex].toString().length()) + 1);
++        StringBuilder buf = new StringBuilder((array[startIndex] == null ? 16 : ObjectUtils.toString(array[startIndex]).length()) + 1);
+@@ -1,1 +1,1 @@
+-        StringBuilder buf = new StringBuilder((array[startIndex] == null ? 16 : ObjectUtils.toString(array[startIndex]).length()) + 1);
++        StringBuilder buf = new StringBuilder((array[startIndex] == null ? 16 : array[startIndex].toString().length()) + 1);
+@@ -1,1 +1,1 @@
+-        StringBuilder buf = new StringBuilder((array[startIndex] == null ? 16 : array[startIndex].toString().length()) + 1);
++        StringBuilder buf = new StringBuilder((array[startIndex] == null ? 16 : String.valueOf(array[startIndex]).length()) + 1);
+@@ -1,1 +1,1 @@
+-        StringBuilder buf = new StringBuilder((array[startIndex] == null ? 16 : String.valueOf(array[startIndex]).length()) + 1);
++        StringBuilder buf = new StringBuilder((array[startIndex] == null ? 16 : array[startIndex].toString().length()) + 1);
+@@ -1,3 +1,3 @@
+-            if (array[i] != null) {
+-                buf.append(array[i]);
+-            }
++            if (array[i] != null) {
++                buf.append(ObjectUtils.toString(array[i], ""));
++            }
+@@ -1,1 +1,1 @@
+-        StringBuilder buf = new StringBuilder((array[startIndex] == null ? 16 : array[startIndex].toString().length()) + 1);
++        StringBuilder buf = new StringBuilder((array[startIndex] == null ? 16 : ObjectUtils.toString(array[startIndex], "").length()) + 1);
+@@ -1,1 +1,1 @@
+-        StringBuilder buf = new StringBuilder((array[startIndex] == null ? 16 : ObjectUtils.toString(array[startIndex], "").length()) + 1);
++        StringBuilder buf = new StringBuilder((array[startIndex] == null ? 16 : array[startIndex].toString().length()) + 1);
+@@ -1,3 +1,3 @@
+-            if (array[i] != null) {
+-                buf.append(ObjectUtils.toString(array[i], ""));
+-            }
++            if (array[i] != null) {
++                buf.append(array[i]);
++            }
+@@ -1,1 +1,1 @@
+-        StringBuilder buf = new StringBuilder((array[startIndex] == null ? 16 : array[startIndex].toString().length()) + 1);
++        StringBuilder buf = new StringBuilder((array[startIndex] == null ? 16 : StringUtils.defaultString(ObjectUtils.toString(array[startIndex])).length()) + 1);
+@@ -1,3 +1,3 @@
+-            if (array[i] != null) {
+-                buf.append(array[i]);
+-            }
++            if (array[i] != null) {
++                buf.append(StringUtils.defaultString(ObjectUtils.toString(array[i])));
++            }
+@@ -1,1 +1,1 @@
+-                buf.append(obj);
++                buf.append(StringUtils.defaultString(ObjectUtils.toString(obj)));
+@@ -1,1 +1,1 @@
+-        StringBuilder buf = new StringBuilder((array[startIndex] == null ? 16 : StringUtils.defaultString(ObjectUtils.toString(array[startIndex])).length()) + 1);
++        StringBuilder buf = new StringBuilder((array[startIndex] == null ? 16 : array[startIndex].toString().length()) + 1);
+@@ -1,3 +1,3 @@
+-            if (array[i] != null) {
+-                buf.append(StringUtils.defaultString(ObjectUtils.toString(array[i])));
+-            }
++            if (array[i] != null) {
++                buf.append(array[i]);
++            }
+@@ -1,1 +1,1 @@
+-                buf.append(StringUtils.defaultString(ObjectUtils.toString(obj)));
++                buf.append(obj);
+@@ -1,1 +1,1 @@
+-        StringBuilder buf = new StringBuilder((array[startIndex] == null ? 16 : array[startIndex].toString().length()) + 1);
++        StringBuilder buf = new StringBuilder((startIndex < endIndex ? (array[startIndex] == null ? 16 : (array[startIndex].toString() == null ? "null" : array[startIndex].toString()).length()) : 0) + 1);
+@@ -1,3 +1,3 @@
+-            if (array[i] != null) {
+-                buf.append(array[i]);
+-            }
++            if (array[i] != null) {
++                buf.append(array[i].toString() == null ? "null" : array[i].toString());
++            }
+@@ -1,1 +1,1 @@
+-                buf.append(obj);
++                buf.append(obj.toString() == null ? "null" : obj.toString());
+@@ -1,3 +1,3 @@
+-            if (array[i] != null) {
+-                buf.append(array[i].toString() == null ? "null" : array[i].toString());
+-            }
++            if (array[i] != null) {
++                buf.append(array[i]);
++            }
+@@ -1,1 +1,1 @@
+-                buf.append(obj.toString() == null ? "null" : obj.toString());
++                buf.append(obj);
+@@ -1,3 +1,4 @@
+-            if (array[i] != null) {
+-                buf.append(array[i]);
+-            }
++            if (array[i] != null) {
++                String str = array[i].toString();
++                buf.append(str == null ? "null" : str);
++            }
+@@ -1,1 +1,2 @@
+-                buf.append(obj);
++                String str = obj.toString();
++                buf.append(str == null ? "null" : str);
+@@ -1,1 +1,1 @@
+-        StringBuilder buf = new StringBuilder(noOfItems * 16); // conservative estimate
++        StringBuilder buf = new StringBuilder((startIndex < endIndex ? (array[startIndex] == null ? 16 : (array[startIndex].toString() == null ? 4 : array[startIndex].toString().length())) : 0) + 1);
+
+--- a/src/test/java/org/apache/commons/lang3/StringUtilsTest.java
++++ b/src/test/java/org/apache/commons/lang3/StringUtilsTest.java
+@@ -1,1 +1,3 @@
+-        assertEquals("null", StringUtils.join(NULL_TO_STRING_LIST));
++        String actual = StringUtils.join(NULL_TO_STRING_LIST);
++        System.out.println("Actual value for NULL_TO_STRING_LIST: [" + actual + "]");
++        assertEquals("null", actual);
+@@ -1,3 +1,1 @@
+-        String actual = StringUtils.join(NULL_TO_STRING_LIST);
+-        System.out.println("Actual value for NULL_TO_STRING_LIST: [" + actual + "]");
+-        assertEquals("null", actual);
++        assertEquals("null", StringUtils.join(NULL_TO_STRING_LIST));

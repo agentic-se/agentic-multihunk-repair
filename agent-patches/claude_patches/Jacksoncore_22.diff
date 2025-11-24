@@ -1,0 +1,175 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/filter/FilteringParserDelegate.java b/src/main/java/com/fasterxml/jackson/core/filter/FilteringParserDelegate.java
+index 4dc7c9ac..28c72ba9 100644
+--- a/src/main/java/com/fasterxml/jackson/core/filter/FilteringParserDelegate.java
++++ b/src/main/java/com/fasterxml/jackson/core/filter/FilteringParserDelegate.java
+@@ -298,6 +298,9 @@ public class FilteringParserDelegate extends JsonParserDelegate
+         case ID_START_ARRAY:
+             f = _itemFilter;
+             if (f == TokenFilter.INCLUDE_ALL) {
++                if (_headContext.getFilter() != TokenFilter.INCLUDE_ALL) {
++                    if (_allowMultipleMatches || _matchCount == 0) ++_matchCount;
++                }
+                 _headContext = _headContext.createChildArrayContext(f, true);
+                 return (_currToken = t);
+             }
+@@ -316,6 +319,9 @@ public class FilteringParserDelegate extends JsonParserDelegate
+             }
+             _itemFilter = f;
+             if (f == TokenFilter.INCLUDE_ALL) {
++                if (_headContext.getFilter() != TokenFilter.INCLUDE_ALL) {
++                    if (_allowMultipleMatches || _matchCount == 0) ++_matchCount;
++                }
+                 _headContext = _headContext.createChildArrayContext(f, true);
+                 return (_currToken = t);
+             }
+@@ -334,6 +340,9 @@ public class FilteringParserDelegate extends JsonParserDelegate
+         case ID_START_OBJECT:
+             f = _itemFilter;
+             if (f == TokenFilter.INCLUDE_ALL) {
++                if (_headContext.getFilter() != TokenFilter.INCLUDE_ALL) {
++                    if (_allowMultipleMatches || _matchCount == 0) ++_matchCount;
++                }
+                 _headContext = _headContext.createChildObjectContext(f, true);
+                 return (_currToken = t);
+             }
+@@ -352,6 +361,9 @@ public class FilteringParserDelegate extends JsonParserDelegate
+             }
+             _itemFilter = f;
+             if (f == TokenFilter.INCLUDE_ALL) {
++                if (_headContext.getFilter() != TokenFilter.INCLUDE_ALL) {
++                    if (_allowMultipleMatches || _matchCount == 0) ++_matchCount;
++                }
+                 _headContext = _headContext.createChildObjectContext(f, true);
+                 return (_currToken = t);
+             }
+@@ -431,12 +443,18 @@ public class FilteringParserDelegate extends JsonParserDelegate
+         default: // scalar value
+             f = _itemFilter;
+             if (f == TokenFilter.INCLUDE_ALL) {
++                if (_headContext.getFilter() != TokenFilter.INCLUDE_ALL) {
++                    if (_allowMultipleMatches || _matchCount == 0) ++_matchCount;
++                }
+                 return (_currToken = t);
+             }
+             if (f != null) {
+                 f = _headContext.checkValue(f);
+                 if ((f == TokenFilter.INCLUDE_ALL)
+                         || ((f != null) && f.includeValue(delegate))) {
++                        if (_headContext.getFilter() != TokenFilter.INCLUDE_ALL) {
++                            if (_allowMultipleMatches || _matchCount == 0) ++_matchCount;
++                        }
+                         return (_currToken = t);
+                 }
+             }
+@@ -469,6 +487,9 @@ public class FilteringParserDelegate extends JsonParserDelegate
+             case ID_START_ARRAY:
+                 f = _itemFilter;
+                 if (f == TokenFilter.INCLUDE_ALL) {
++                    if (_headContext.getFilter() != TokenFilter.INCLUDE_ALL) {
++                        if (_allowMultipleMatches || _matchCount == 0) ++_matchCount;
++                    }
+                     _headContext = _headContext.createChildArrayContext(f, true);
+                     return (_currToken = t);
+                 }
+@@ -487,6 +508,9 @@ public class FilteringParserDelegate extends JsonParserDelegate
+                 }
+                 _itemFilter = f;
+                 if (f == TokenFilter.INCLUDE_ALL) {
++                    if (_headContext.getFilter() != TokenFilter.INCLUDE_ALL) {
++                        if (_allowMultipleMatches || _matchCount == 0) ++_matchCount;
++                    }
+                     _headContext = _headContext.createChildArrayContext(f, true);
+                     return (_currToken = t);
+                 }
+@@ -504,6 +528,9 @@ public class FilteringParserDelegate extends JsonParserDelegate
+             case ID_START_OBJECT:
+                 f = _itemFilter;
+                 if (f == TokenFilter.INCLUDE_ALL) {
++                    if (_headContext.getFilter() != TokenFilter.INCLUDE_ALL) {
++                        if (_allowMultipleMatches || _matchCount == 0) ++_matchCount;
++                    }
+                     _headContext = _headContext.createChildObjectContext(f, true);
+                     return (_currToken = t);
+                 }
+@@ -522,6 +549,9 @@ public class FilteringParserDelegate extends JsonParserDelegate
+                 }
+                 _itemFilter = f;
+                 if (f == TokenFilter.INCLUDE_ALL) {
++                    if (_headContext.getFilter() != TokenFilter.INCLUDE_ALL) {
++                        if (_allowMultipleMatches || _matchCount == 0) ++_matchCount;
++                    }
+                     _headContext = _headContext.createChildObjectContext(f, true);
+                     return (_currToken = t);
+                 }
+@@ -591,12 +621,18 @@ public class FilteringParserDelegate extends JsonParserDelegate
+             default: // scalar value
+                 f = _itemFilter;
+                 if (f == TokenFilter.INCLUDE_ALL) {
++                    if (_headContext.getFilter() != TokenFilter.INCLUDE_ALL) {
++                        if (_allowMultipleMatches || _matchCount == 0) ++_matchCount;
++                    }
+                     return (_currToken = t);
+                 }
+                 if (f != null) {
+                     f = _headContext.checkValue(f);
+                     if ((f == TokenFilter.INCLUDE_ALL)
+                             || ((f != null) && f.includeValue(delegate))) {
++                            if (_headContext.getFilter() != TokenFilter.INCLUDE_ALL) {
++                                if (_allowMultipleMatches || _matchCount == 0) ++_matchCount;
++                            }
+                             return (_currToken = t);
+                     }
+                 }
+@@ -636,6 +672,9 @@ public class FilteringParserDelegate extends JsonParserDelegate
+                 }
+                 _itemFilter = f;
+                 if (f == TokenFilter.INCLUDE_ALL) {
++                    if (_headContext.getFilter() != TokenFilter.INCLUDE_ALL) {
++                        if (_allowMultipleMatches || _matchCount == 0) ++_matchCount;
++                    }
+                     _headContext = _headContext.createChildArrayContext(f, true);
+                     return _nextBuffered(buffRoot);
+                 }
+@@ -645,6 +684,9 @@ public class FilteringParserDelegate extends JsonParserDelegate
+             case ID_START_OBJECT:
+                 f = _itemFilter;
+                 if (f == TokenFilter.INCLUDE_ALL) {
++                    if (_headContext.getFilter() != TokenFilter.INCLUDE_ALL) {
++                        if (_allowMultipleMatches || _matchCount == 0) ++_matchCount;
++                    }
+                     _headContext = _headContext.createChildObjectContext(f, true);
+                     return t;
+                 }
+@@ -663,6 +705,9 @@ public class FilteringParserDelegate extends JsonParserDelegate
+                 }
+                 _itemFilter = f;
+                 if (f == TokenFilter.INCLUDE_ALL) {
++                    if (_headContext.getFilter() != TokenFilter.INCLUDE_ALL) {
++                        if (_allowMultipleMatches || _matchCount == 0) ++_matchCount;
++                    }
+                     _headContext = _headContext.createChildObjectContext(f, true);
+                     return _nextBuffered(buffRoot);
+                 }
+@@ -723,12 +768,18 @@ public class FilteringParserDelegate extends JsonParserDelegate
+             default: // scalar value
+                 f = _itemFilter;
+                 if (f == TokenFilter.INCLUDE_ALL) {
++                    if (_headContext.getFilter() != TokenFilter.INCLUDE_ALL) {
++                        if (_allowMultipleMatches || _matchCount == 0) ++_matchCount;
++                    }
+                     return _nextBuffered(buffRoot);
+                 }
+                 if (f != null) {
+                     f = _headContext.checkValue(f);
+                     if ((f == TokenFilter.INCLUDE_ALL)
+                             || ((f != null) && f.includeValue(delegate))) {
++                            if (_headContext.getFilter() != TokenFilter.INCLUDE_ALL) {
++                                if (_allowMultipleMatches || _matchCount == 0) ++_matchCount;
++                            }
+                             return _nextBuffered(buffRoot);
+                     }
+                 }
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

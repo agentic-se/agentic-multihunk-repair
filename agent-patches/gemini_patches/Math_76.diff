@@ -1,0 +1,1581 @@
+--- a/src/main/java/org/apache/commons/math/linear/SingularValueDecompositionImpl.java
++++ b/src/main/java/org/apache/commons/math/linear/SingularValueDecompositionImpl.java
+@@ -1,3 +1,3 @@
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(eigenValues[i]);
+-        }
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,4 +1,4 @@
+-    public DecompositionSolver getSolver() {
+-        return new Solver(singularValues, getUT(), getV(),
+-                          getRank() == Math.max(m, n));
+-    }
++    public DecompositionSolver getSolver() {
++        return new Solver(singularValues, getUT(), getV(),
++                          getRank() == Math.max(m, n), Math.max(m, n) * Math.ulp(singularValues[0]));
++    }
+@@ -1,13 +1,13 @@
+-        private Solver(final double[] singularValues, final RealMatrix uT, final RealMatrix v,
+-                       final boolean nonSingular) {
+-            double[][] suT      = uT.getData();
+-            for (int i = 0; i < singularValues.length; ++i) {
+-                final double a      = 1.0 / singularValues[i];
+-                final double[] suTi = suT[i];
+-                for (int j = 0; j < suTi.length; ++j) {
+-                    suTi[j] *= a;
+-                }
+-            }
+-            pseudoInverse    = v.multiply(new Array2DRowRealMatrix(suT, false));
+-            this.nonSingular = nonSingular;
+-        }
++        private Solver(final double[] singularValues, final RealMatrix uT, final RealMatrix v,
++                       final boolean nonSingular, final double threshold) {
++            double[][] suT      = uT.getData();
++            for (int i = 0; i < singularValues.length; ++i) {
++                final double a      = (singularValues[i] <= threshold) ? 0.0 : 1.0 / singularValues[i];
++                final double[] suTi = suT[i];
++                for (int j = 0; j < suTi.length; ++j) {
++                    suTi[j] *= a;
++                }
++            }
++            pseudoInverse    = v.multiply(new Array2DRowRealMatrix(suT, false));
++            this.nonSingular = nonSingular;
++        }
+@@ -1,3 +1,5 @@
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
++        // DEBUG: Print singular values
++        System.out.println("Singular Values: " + Arrays.toString(singularValues));
+@@ -1,5 +1,3 @@
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
+-        // DEBUG: Print singular values
+-        System.out.println("Singular Values: " + Arrays.toString(singularValues));
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,2 +1,3 @@
+-import org.apache.commons.math.MathRuntimeException;
+-import org.apache.commons.math.util.MathUtils;
++import org.apache.commons.math.MathRuntimeException;
++import org.apache.commons.math.util.MathUtils;
++import java.util.Arrays;
+@@ -1,3 +1,5 @@
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
++        // DEBUG: Print singular values
++        System.out.println("Singular Values: " + Arrays.toString(singularValues));
+@@ -1,5 +1,3 @@
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
+-        // DEBUG: Print singular values
+-        System.out.println("Singular Values: " + Arrays.toString(singularValues));
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,3 +1,2 @@
+-import org.apache.commons.math.MathRuntimeException;
+-import org.apache.commons.math.util.MathUtils;
+-import java.util.Arrays;
++import org.apache.commons.math.MathRuntimeException;
++import org.apache.commons.math.util.MathUtils;
+@@ -1,9 +1,6 @@
+-        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
+-        int p = Math.min(max, eigenValues.length);
+-        while ((p > 0) && (eigenValues[p - 1] <= 0)) {
+-            --p;
+-        }
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
++        int p = Math.min(m, n); // Ensure we have min(m,n) singular values
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,6 +1,9 @@
+-        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
+-        int p = Math.min(m, n); // Ensure we have min(m,n) singular values
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
++        int p = Math.min(max, eigenValues.length);
++        while ((p > 0) && (eigenValues[p - 1] <= 0)) {
++            --p;
++        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,4 +1,4 @@
+-    public DecompositionSolver getSolver() {
+-        return new Solver(singularValues, getUT(), getV(),
+-                          getRank() == Math.max(m, n), Math.max(m, n) * Math.ulp(singularValues[0]));
+-    }
++    public DecompositionSolver getSolver() {
++        return new Solver(singularValues, getUT(), getV(),
++                          getRank() == Math.max(m, n), MathUtils.SAFE_MIN);
++    }
+@@ -1,4 +1,4 @@
+-    public DecompositionSolver getSolver() {
+-        return new Solver(singularValues, getUT(), getV(),
+-                          getRank() == Math.max(m, n), MathUtils.SAFE_MIN);
+-    }
++    public DecompositionSolver getSolver() {
++        return new Solver(singularValues, getUT(), getV(),
++                          getRank() == Math.max(m, n), getRank());
++    }
+@@ -1,13 +1,13 @@
+-        private Solver(final double[] singularValues, final RealMatrix uT, final RealMatrix v,
+-                       final boolean nonSingular, final double threshold) {
+-            double[][] suT      = uT.getData();
+-            for (int i = 0; i < singularValues.length; ++i) {
+-                final double a      = (singularValues[i] <= threshold) ? 0.0 : 1.0 / singularValues[i];
+-                final double[] suTi = suT[i];
+-                for (int j = 0; j < suTi.length; ++j) {
+-                    suTi[j] *= a;
+-                }
+-            }
+-            pseudoInverse    = v.multiply(new Array2DRowRealMatrix(suT, false));
+-            this.nonSingular = nonSingular;
+-        }
++        private Solver(final double[] singularValues, final RealMatrix uT, final RealMatrix v,
++                       final boolean nonSingular, final int rank) {
++            double[][] suT      = uT.getData();
++            for (int i = 0; i < singularValues.length; ++i) {
++                final double a      = (i < rank) ? 1.0 / singularValues[i] : 0.0;
++                final double[] suTi = suT[i];
++                for (int j = 0; j < suTi.length; ++j) {
++                    suTi[j] *= a;
++                }
++            }
++            pseudoInverse    = v.multiply(new Array2DRowRealMatrix(suT, false));
++            this.nonSingular = nonSingular;
++        }
+@@ -1,4 +1,4 @@
+-    public DecompositionSolver getSolver() {
+-        return new Solver(singularValues, getUT(), getV(),
+-                          getRank() == Math.max(m, n), getRank());
+-    }
++    public DecompositionSolver getSolver() {
++        return new Solver(singularValues, getUT(), getV(),
++                          getRank() == Math.max(m, n));
++    }
+@@ -1,13 +1,13 @@
+-        private Solver(final double[] singularValues, final RealMatrix uT, final RealMatrix v,
+-                       final boolean nonSingular, final int rank) {
+-            double[][] suT      = uT.getData();
+-            for (int i = 0; i < singularValues.length; ++i) {
+-                final double a      = (i < rank) ? 1.0 / singularValues[i] : 0.0;
+-                final double[] suTi = suT[i];
+-                for (int j = 0; j < suTi.length; ++j) {
+-                    suTi[j] *= a;
+-                }
+-            }
+-            pseudoInverse    = v.multiply(new Array2DRowRealMatrix(suT, false));
+-            this.nonSingular = nonSingular;
+-        }
++        private Solver(final double[] singularValues, final RealMatrix uT, final RealMatrix v,
++                       final boolean nonSingular) {
++            double[][] suT      = uT.getData();
++            for (int i = 0; i < singularValues.length; ++i) {
++                final double a      = 1.0 / singularValues[i];
++                final double[] suTi = suT[i];
++                for (int j = 0; j < suTi.length; ++j) {
++                    suTi[j] *= a;
++                }
++            }
++            pseudoInverse    = v.multiply(new Array2DRowRealMatrix(suT, false));
++            this.nonSingular = nonSingular;
++        }
+@@ -1,9 +1,17 @@
+-        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
+-        int p = Math.min(max, eigenValues.length);
+-        while ((p > 0) && (eigenValues[p - 1] <= 0)) {
+-            --p;
+-        }
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
++        // Determine the effective rank based on a threshold
++        final double threshold = Math.max(m, n) * Math.ulp(eigenValues[0]);
++        int rank = 0;
++        for (int i = 0; i < eigenValues.length; ++i) {
++            if (eigenValues[i] > threshold) {
++                rank = i + 1;
++            } else {
++                break; // Eigenvalues are sorted in decreasing order
++            }
++        }
++        int p = rank; // Set p to the calculated rank
++
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,17 +1,9 @@
+-        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
+-        // Determine the effective rank based on a threshold
+-        final double threshold = Math.max(m, n) * Math.ulp(eigenValues[0]);
+-        int rank = 0;
+-        for (int i = 0; i < eigenValues.length; ++i) {
+-            if (eigenValues[i] > threshold) {
+-                rank = i + 1;
+-            } else {
+-                break; // Eigenvalues are sorted in decreasing order
+-            }
+-        }
+-        int p = rank; // Set p to the calculated rank
+-
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
++        int p = Math.min(max, eigenValues.length);
++        while ((p > 0) && (eigenValues[p - 1] <= 0)) {
++            --p;
++        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,9 +1,11 @@
+-        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
+-        int p = Math.min(max, eigenValues.length);
+-        while ((p > 0) && (eigenValues[p - 1] <= 0)) {
+-            --p;
+-        }
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
++        // Calculate a threshold for effectively zero eigenvalues
++        final double rankThreshold = Math.max(m, n) * Math.ulp(eigenValues[0]); // Using eigenValues[0] as a reference
++        int p = Math.min(max, eigenValues.length);
++        while ((p > 0) && (eigenValues[p - 1] <= rankThreshold)) { // Use threshold here
++            --p;
++        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,11 +1,11 @@
+-        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
+-        // Calculate a threshold for effectively zero eigenvalues
+-        final double rankThreshold = Math.max(m, n) * Math.ulp(eigenValues[0]); // Using eigenValues[0] as a reference
+-        int p = Math.min(max, eigenValues.length);
+-        while ((p > 0) && (eigenValues[p - 1] <= rankThreshold)) { // Use threshold here
+-            --p;
+-        }
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
++        // Calculate a threshold for effectively zero eigenvalues
++        final double rankThreshold = MathUtils.EPSILON * eigenValues[0]; // Using a relative tolerance
++        int p = Math.min(max, eigenValues.length);
++        while ((p > 0) && (eigenValues[p - 1] <= rankThreshold)) { // Use threshold here
++            --p;
++        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,11 +1,9 @@
+-        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
+-        // Calculate a threshold for effectively zero eigenvalues
+-        final double rankThreshold = MathUtils.EPSILON * eigenValues[0]; // Using a relative tolerance
+-        int p = Math.min(max, eigenValues.length);
+-        while ((p > 0) && (eigenValues[p - 1] <= rankThreshold)) { // Use threshold here
+-            --p;
+-        }
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
++        int p = Math.min(max, eigenValues.length);
++        while ((p > 0) && (eigenValues[p - 1] <= 0)) {
++            --p;
++        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,1 +1,1 @@
+-        final double threshold = Math.max(m, n) * Math.ulp(singularValues[0]);
++        final double threshold = MathUtils.EPSILON * singularValues[0]; // Use a relative tolerance
+@@ -1,1 +1,1 @@
+-        final double threshold = MathUtils.EPSILON * singularValues[0]; // Use a relative tolerance
++        final double threshold = Math.max(m, n) * Math.ulp(singularValues[0]);
+@@ -1,9 +1,11 @@
+-        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
+-        int p = Math.min(max, eigenValues.length);
+-        while ((p > 0) && (eigenValues[p - 1] <= 0)) {
+-            --p;
+-        }
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
++        // Calculate a threshold for effectively zero eigenvalues
++        final double rankThreshold = Math.max(m, n) * MathUtils.EPSILON * eigenValues[0]; // Robust relative tolerance
++        int p = Math.min(max, eigenValues.length);
++        while ((p > 0) && (eigenValues[p - 1] <= rankThreshold)) { // Use threshold here
++            --p;
++        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,11 +1,9 @@
+-        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
+-        // Calculate a threshold for effectively zero eigenvalues
+-        final double rankThreshold = Math.max(m, n) * MathUtils.EPSILON * eigenValues[0]; // Robust relative tolerance
+-        int p = Math.min(max, eigenValues.length);
+-        while ((p > 0) && (eigenValues[p - 1] <= rankThreshold)) { // Use threshold here
+-            --p;
+-        }
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
++        int p = Math.min(max, eigenValues.length);
++        while ((p > 0) && (eigenValues[p - 1] <= 0)) {
++            --p;
++        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,13 +1,15 @@
+-        private Solver(final double[] singularValues, final RealMatrix uT, final RealMatrix v,
+-                       final boolean nonSingular) {
+-            double[][] suT      = uT.getData();
+-            for (int i = 0; i < singularValues.length; ++i) {
+-                final double a      = 1.0 / singularValues[i];
+-                final double[] suTi = suT[i];
+-                for (int j = 0; j < suTi.length; ++j) {
+-                    suTi[j] *= a;
+-                }
+-            }
+-            pseudoInverse    = v.multiply(new Array2DRowRealMatrix(suT, false));
+-            this.nonSingular = nonSingular;
+-        }
++        private Solver(final double[] singularValues, final RealMatrix uT, final RealMatrix v,
++                       final boolean nonSingular) {
++            double[][] suT      = uT.getData();
++            // Calculate a threshold for effectively zero singular values
++            final double threshold = Math.max(uT.getRowDimension(), v.getColumnDimension()) * Math.ulp(singularValues[0]);
++            for (int i = 0; i < singularValues.length; ++i) {
++                final double a      = (singularValues[i] <= threshold) ? 0.0 : 1.0 / singularValues[i];
++                final double[] suTi = suT[i];
++                for (int j = 0; j < suTi.length; ++j) {
++                    suTi[j] *= a;
++                }
++            }
++            pseudoInverse    = v.multiply(new Array2DRowRealMatrix(suT, false));
++            this.nonSingular = nonSingular;
++        }
+@@ -1,15 +1,13 @@
+-        private Solver(final double[] singularValues, final RealMatrix uT, final RealMatrix v,
+-                       final boolean nonSingular) {
+-            double[][] suT      = uT.getData();
+-            // Calculate a threshold for effectively zero singular values
+-            final double threshold = Math.max(uT.getRowDimension(), v.getColumnDimension()) * Math.ulp(singularValues[0]);
+-            for (int i = 0; i < singularValues.length; ++i) {
+-                final double a      = (singularValues[i] <= threshold) ? 0.0 : 1.0 / singularValues[i];
+-                final double[] suTi = suT[i];
+-                for (int j = 0; j < suTi.length; ++j) {
+-                    suTi[j] *= a;
+-                }
+-            }
+-            pseudoInverse    = v.multiply(new Array2DRowRealMatrix(suT, false));
+-            this.nonSingular = nonSingular;
+-        }
++        private Solver(final double[] singularValues, final RealMatrix uT, final RealMatrix v,
++                       final boolean nonSingular) {
++            double[][] suT      = uT.getData();
++            for (int i = 0; i < singularValues.length; ++i) {
++                final double a      = 1.0 / singularValues[i];
++                final double[] suTi = suT[i];
++                for (int j = 0; j < suTi.length; ++j) {
++                    suTi[j] *= a;
++                }
++            }
++            pseudoInverse    = v.multiply(new Array2DRowRealMatrix(suT, false));
++            this.nonSingular = nonSingular;
++        }
+@@ -1,4 +1,11 @@
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
++        // Set singular values below rank threshold to 0.0 for numerical stability
++        final double threshold = Math.max(m, n) * Math.ulp(singularValues[0]);
++        for (int i = 0; i < p; ++i) {
++            if (singularValues[i] <= threshold) {
++                singularValues[i] = 0.0;
++            }
++        }
+@@ -1,11 +1,4 @@
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
+-        // Set singular values below rank threshold to 0.0 for numerical stability
+-        final double threshold = Math.max(m, n) * Math.ulp(singularValues[0]);
+-        for (int i = 0; i < p; ++i) {
+-            if (singularValues[i] <= threshold) {
+-                singularValues[i] = 0.0;
+-            }
+-        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,9 +1,17 @@
+-        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
+-        int p = Math.min(max, eigenValues.length);
+-        while ((p > 0) && (eigenValues[p - 1] <= 0)) {
+-            --p;
+-        }
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
++        // Calculate numerical rank based on a robust threshold
++        final double rankThreshold = Math.max(m, n) * MathUtils.EPSILON * eigenValues[0];
++        int numericalRank = 0;
++        for (int i = 0; i < eigenValues.length; ++i) {
++            if (eigenValues[i] > rankThreshold) {
++                numericalRank = i + 1;
++            } else {
++                break; // Eigenvalues are sorted in decreasing order
++            }
++        }
++        int p = numericalRank; // Set p to the numerical rank
++
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,17 +1,9 @@
+-        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
+-        // Calculate numerical rank based on a robust threshold
+-        final double rankThreshold = Math.max(m, n) * MathUtils.EPSILON * eigenValues[0];
+-        int numericalRank = 0;
+-        for (int i = 0; i < eigenValues.length; ++i) {
+-            if (eigenValues[i] > rankThreshold) {
+-                numericalRank = i + 1;
+-            } else {
+-                break; // Eigenvalues are sorted in decreasing order
+-            }
+-        }
+-        int p = numericalRank; // Set p to the numerical rank
+-
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
++        int p = Math.min(max, eigenValues.length);
++        while ((p > 0) && (eigenValues[p - 1] <= 0)) {
++            --p;
++        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,4 +1,11 @@
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
++        // Set singular values below rank threshold to 0.0 for numerical stability
++        final double threshold = Math.max(m, n) * Math.ulp(singularValues[0]);
++        for (int i = 0; i < p; ++i) {
++            if (singularValues[i] <= threshold) {
++                singularValues[i] = 0.0;
++            }
++        }
+@@ -1,11 +1,4 @@
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
+-        // Set singular values below rank threshold to 0.0 for numerical stability
+-        final double threshold = Math.max(m, n) * Math.ulp(singularValues[0]);
+-        for (int i = 0; i < p; ++i) {
+-            if (singularValues[i] <= threshold) {
+-                singularValues[i] = 0.0;
+-            }
+-        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,9 +1,17 @@
+-        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
+-        int p = Math.min(max, eigenValues.length);
+-        while ((p > 0) && (eigenValues[p - 1] <= 0)) {
+-            --p;
+-        }
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
++        // Calculate numerical rank based on a robust threshold
++        final double rankThreshold = Math.max(m, n) * MathUtils.EPSILON * eigenValues[0];
++        int numericalRank = 0;
++        for (int i = 0; i < eigenValues.length; ++i) {
++            if (eigenValues[i] > rankThreshold) {
++                numericalRank = i + 1;
++            } else {
++                break; // Eigenvalues are sorted in decreasing order
++            }
++        }
++        int p = numericalRank; // Set p to the numerical rank
++
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,17 +1,9 @@
+-        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
+-        // Calculate numerical rank based on a robust threshold
+-        final double rankThreshold = Math.max(m, n) * MathUtils.EPSILON * eigenValues[0];
+-        int numericalRank = 0;
+-        for (int i = 0; i < eigenValues.length; ++i) {
+-            if (eigenValues[i] > rankThreshold) {
+-                numericalRank = i + 1;
+-            } else {
+-                break; // Eigenvalues are sorted in decreasing order
+-            }
+-        }
+-        int p = numericalRank; // Set p to the numerical rank
+-
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
++        int p = Math.min(max, eigenValues.length);
++        while ((p > 0) && (eigenValues[p - 1] <= 0)) {
++            --p;
++        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,4 +1,11 @@
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
++        // Set singular values below rank threshold to 0.0 for numerical stability
++        final double threshold = Math.max(m, n) * Math.ulp(singularValues[0]);
++        for (int i = 0; i < p; ++i) {
++            if (singularValues[i] <= threshold) {
++                singularValues[i] = 0.0;
++            }
++        }
+@@ -1,11 +1,4 @@
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
+-        // Set singular values below rank threshold to 0.0 for numerical stability
+-        final double threshold = Math.max(m, n) * Math.ulp(singularValues[0]);
+-        for (int i = 0; i < p; ++i) {
+-            if (singularValues[i] <= threshold) {
+-                singularValues[i] = 0.0;
+-            }
+-        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,9 +1,17 @@
+-        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
+-        int p = Math.min(max, eigenValues.length);
+-        while ((p > 0) && (eigenValues[p - 1] <= 0)) {
+-            --p;
+-        }
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
++        // Calculate numerical rank based on a robust threshold
++        final double rankThreshold = Math.max(m, n) * MathUtils.EPSILON * eigenValues[0];
++        int numericalRank = 0;
++        for (int i = 0; i < eigenValues.length; ++i) {
++            if (eigenValues[i] > rankThreshold) {
++                numericalRank = i + 1;
++            } else {
++                break; // Eigenvalues are sorted in decreasing order
++            }
++        }
++        int p = numericalRank; // Set p to the numerical rank
++
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,17 +1,9 @@
+-        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
+-        // Calculate numerical rank based on a robust threshold
+-        final double rankThreshold = Math.max(m, n) * MathUtils.EPSILON * eigenValues[0];
+-        int numericalRank = 0;
+-        for (int i = 0; i < eigenValues.length; ++i) {
+-            if (eigenValues[i] > rankThreshold) {
+-                numericalRank = i + 1;
+-            } else {
+-                break; // Eigenvalues are sorted in decreasing order
+-            }
+-        }
+-        int p = numericalRank; // Set p to the numerical rank
+-
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
++        int p = Math.min(max, eigenValues.length);
++        while ((p > 0) && (eigenValues[p - 1] <= 0)) {
++            --p;
++        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,4 +1,11 @@
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
++        // Set singular values below rank threshold to 0.0 for numerical stability
++        final double threshold = Math.max(m, n) * Math.ulp(singularValues[0]);
++        for (int i = 0; i < p; ++i) {
++            if (singularValues[i] <= threshold) {
++                singularValues[i] = 0.0;
++            }
++        }
+@@ -1,11 +1,4 @@
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
+-        // Set singular values below rank threshold to 0.0 for numerical stability
+-        final double threshold = Math.max(m, n) * Math.ulp(singularValues[0]);
+-        for (int i = 0; i < p; ++i) {
+-            if (singularValues[i] <= threshold) {
+-                singularValues[i] = 0.0;
+-            }
+-        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,9 +1,17 @@
+-        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
+-        int p = Math.min(max, eigenValues.length);
+-        while ((p > 0) && (eigenValues[p - 1] <= 0)) {
+-            --p;
+-        }
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
++        // Calculate numerical rank based on a robust threshold
++        final double rankThreshold = Math.max(m, n) * MathUtils.EPSILON * eigenValues[0];
++        int numericalRank = 0;
++        for (int i = 0; i < eigenValues.length; ++i) {
++            if (eigenValues[i] > rankThreshold) {
++                numericalRank = i + 1;
++            } else {
++                break; // Eigenvalues are sorted in decreasing order
++            }
++        }
++        int p = numericalRank; // Set p to the numerical rank
++
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,17 +1,9 @@
+-        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
+-        // Calculate numerical rank based on a robust threshold
+-        final double rankThreshold = Math.max(m, n) * MathUtils.EPSILON * eigenValues[0];
+-        int numericalRank = 0;
+-        for (int i = 0; i < eigenValues.length; ++i) {
+-            if (eigenValues[i] > rankThreshold) {
+-                numericalRank = i + 1;
+-            } else {
+-                break; // Eigenvalues are sorted in decreasing order
+-            }
+-        }
+-        int p = numericalRank; // Set p to the numerical rank
+-
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
++        int p = Math.min(max, eigenValues.length);
++        while ((p > 0) && (eigenValues[p - 1] <= 0)) {
++            --p;
++        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,4 +1,11 @@
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
++        // Set singular values below rank threshold to 0.0 for numerical stability
++        final double threshold = Math.max(m, n) * Math.ulp(singularValues[0]);
++        for (int i = 0; i < p; ++i) {
++            if (singularValues[i] <= threshold) {
++                singularValues[i] = 0.0;
++            }
++        }
+@@ -1,11 +1,4 @@
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
+-        // Set singular values below rank threshold to 0.0 for numerical stability
+-        final double threshold = Math.max(m, n) * Math.ulp(singularValues[0]);
+-        for (int i = 0; i < p; ++i) {
+-            if (singularValues[i] <= threshold) {
+-                singularValues[i] = 0.0;
+-            }
+-        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,9 +1,17 @@
+-        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
+-        int p = Math.min(max, eigenValues.length);
+-        while ((p > 0) && (eigenValues[p - 1] <= 0)) {
+-            --p;
+-        }
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
++        // Calculate numerical rank based on a robust threshold
++        final double rankThreshold = Math.max(m, n) * MathUtils.EPSILON * eigenValues[0];
++        int numericalRank = 0;
++        for (int i = 0; i < eigenValues.length; ++i) {
++            if (eigenValues[i] > rankThreshold) {
++                numericalRank = i + 1;
++            } else {
++                break; // Eigenvalues are sorted in decreasing order
++            }
++        }
++        int p = numericalRank; // Set p to the numerical rank
++
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,17 +1,9 @@
+-        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
+-        // Calculate numerical rank based on a robust threshold
+-        final double rankThreshold = Math.max(m, n) * MathUtils.EPSILON * eigenValues[0];
+-        int numericalRank = 0;
+-        for (int i = 0; i < eigenValues.length; ++i) {
+-            if (eigenValues[i] > rankThreshold) {
+-                numericalRank = i + 1;
+-            } else {
+-                break; // Eigenvalues are sorted in decreasing order
+-            }
+-        }
+-        int p = numericalRank; // Set p to the numerical rank
+-
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
++        int p = Math.min(max, eigenValues.length);
++        while ((p > 0) && (eigenValues[p - 1] <= 0)) {
++            --p;
++        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,4 +1,11 @@
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
++        // Set singular values below rank threshold to 0.0 for numerical stability
++        final double threshold = Math.max(m, n) * Math.ulp(singularValues[0]);
++        for (int i = 0; i < p; ++i) {
++            if (singularValues[i] <= threshold) {
++                singularValues[i] = 0.0;
++            }
++        }
+@@ -1,11 +1,4 @@
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
+-        // Set singular values below rank threshold to 0.0 for numerical stability
+-        final double threshold = Math.max(m, n) * Math.ulp(singularValues[0]);
+-        for (int i = 0; i < p; ++i) {
+-            if (singularValues[i] <= threshold) {
+-                singularValues[i] = 0.0;
+-            }
+-        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,9 +1,17 @@
+-        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
+-        int p = Math.min(max, eigenValues.length);
+-        while ((p > 0) && (eigenValues[p - 1] <= 0)) {
+-            --p;
+-        }
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
++        // Calculate numerical rank based on a robust threshold
++        final double rankThreshold = Math.max(m, n) * MathUtils.EPSILON * eigenValues[0];
++        int numericalRank = 0;
++        for (int i = 0; i < eigenValues.length; ++i) {
++            if (eigenValues[i] > rankThreshold) {
++                numericalRank = i + 1;
++            } else {
++                break; // Eigenvalues are sorted in decreasing order
++            }
++        }
++        int p = numericalRank; // Set p to the numerical rank
++
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,17 +1,9 @@
+-        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
+-        // Calculate numerical rank based on a robust threshold
+-        final double rankThreshold = Math.max(m, n) * MathUtils.EPSILON * eigenValues[0];
+-        int numericalRank = 0;
+-        for (int i = 0; i < eigenValues.length; ++i) {
+-            if (eigenValues[i] > rankThreshold) {
+-                numericalRank = i + 1;
+-            } else {
+-                break; // Eigenvalues are sorted in decreasing order
+-            }
+-        }
+-        int p = numericalRank; // Set p to the numerical rank
+-
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
++        int p = Math.min(max, eigenValues.length);
++        while ((p > 0) && (eigenValues[p - 1] <= 0)) {
++            --p;
++        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,4 +1,11 @@
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
++        // Set singular values below rank threshold to 0.0 for numerical stability
++        final double threshold = Math.max(m, n) * Math.ulp(singularValues[0]);
++        for (int i = 0; i < p; ++i) {
++            if (singularValues[i] <= threshold) {
++                singularValues[i] = 0.0;
++            }
++        }
+@@ -1,11 +1,4 @@
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
+-        // Set singular values below rank threshold to 0.0 for numerical stability
+-        final double threshold = Math.max(m, n) * Math.ulp(singularValues[0]);
+-        for (int i = 0; i < p; ++i) {
+-            if (singularValues[i] <= threshold) {
+-                singularValues[i] = 0.0;
+-            }
+-        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,9 +1,17 @@
+-        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
+-        int p = Math.min(max, eigenValues.length);
+-        while ((p > 0) && (eigenValues[p - 1] <= 0)) {
+-            --p;
+-        }
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
++        // Calculate numerical rank based on a robust threshold
++        final double rankThreshold = Math.max(m, n) * MathUtils.EPSILON * eigenValues[0];
++        int numericalRank = 0;
++        for (int i = 0; i < eigenValues.length; ++i) {
++            if (eigenValues[i] > rankThreshold) {
++                numericalRank = i + 1;
++            } else {
++                break; // Eigenvalues are sorted in decreasing order
++            }
++        }
++        int p = numericalRank; // Set p to the numerical rank
++
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,17 +1,9 @@
+-        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
+-        // Calculate numerical rank based on a robust threshold
+-        final double rankThreshold = Math.max(m, n) * MathUtils.EPSILON * eigenValues[0];
+-        int numericalRank = 0;
+-        for (int i = 0; i < eigenValues.length; ++i) {
+-            if (eigenValues[i] > rankThreshold) {
+-                numericalRank = i + 1;
+-            } else {
+-                break; // Eigenvalues are sorted in decreasing order
+-            }
+-        }
+-        int p = numericalRank; // Set p to the numerical rank
+-
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
++        int p = Math.min(max, eigenValues.length);
++        while ((p > 0) && (eigenValues[p - 1] <= 0)) {
++            --p;
++        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,4 +1,11 @@
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
++        // Set singular values below rank threshold to 0.0 for numerical stability
++        final double threshold = Math.max(m, n) * Math.ulp(singularValues[0]);
++        for (int i = 0; i < p; ++i) {
++            if (singularValues[i] <= threshold) {
++                singularValues[i] = 0.0;
++            }
++        }
+@@ -1,11 +1,4 @@
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
+-        // Set singular values below rank threshold to 0.0 for numerical stability
+-        final double threshold = Math.max(m, n) * Math.ulp(singularValues[0]);
+-        for (int i = 0; i < p; ++i) {
+-            if (singularValues[i] <= threshold) {
+-                singularValues[i] = 0.0;
+-            }
+-        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,9 +1,17 @@
+-        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
+-        int p = Math.min(max, eigenValues.length);
+-        while ((p > 0) && (eigenValues[p - 1] <= 0)) {
+-            --p;
+-        }
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
++        // Calculate numerical rank based on a robust threshold
++        final double rankThreshold = Math.max(m, n) * MathUtils.EPSILON * eigenValues[0];
++        int numericalRank = 0;
++        for (int i = 0; i < eigenValues.length; ++i) {
++            if (eigenValues[i] > rankThreshold) {
++                numericalRank = i + 1;
++            } else {
++                break; // Eigenvalues are sorted in decreasing order
++            }
++        }
++        int p = numericalRank; // Set p to the numerical rank
++
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,17 +1,9 @@
+-        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
+-        // Calculate numerical rank based on a robust threshold
+-        final double rankThreshold = Math.max(m, n) * MathUtils.EPSILON * eigenValues[0];
+-        int numericalRank = 0;
+-        for (int i = 0; i < eigenValues.length; ++i) {
+-            if (eigenValues[i] > rankThreshold) {
+-                numericalRank = i + 1;
+-            } else {
+-                break; // Eigenvalues are sorted in decreasing order
+-            }
+-        }
+-        int p = numericalRank; // Set p to the numerical rank
+-
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
++        int p = Math.min(max, eigenValues.length);
++        while ((p > 0) && (eigenValues[p - 1] <= 0)) {
++            --p;
++        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,4 +1,11 @@
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
++        // Set singular values below rank threshold to 0.0 for numerical stability
++        final double threshold = Math.max(m, n) * Math.ulp(singularValues[0]);
++        for (int i = 0; i < p; ++i) {
++            if (singularValues[i] <= threshold) {
++                singularValues[i] = 0.0;
++            }
++        }
+@@ -1,11 +1,4 @@
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
+-        // Set singular values below rank threshold to 0.0 for numerical stability
+-        final double threshold = Math.max(m, n) * Math.ulp(singularValues[0]);
+-        for (int i = 0; i < p; ++i) {
+-            if (singularValues[i] <= threshold) {
+-                singularValues[i] = 0.0;
+-            }
+-        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,9 +1,17 @@
+-        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
+-        int p = Math.min(max, eigenValues.length);
+-        while ((p > 0) && (eigenValues[p - 1] <= 0)) {
+-            --p;
+-        }
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
++        // Calculate numerical rank based on a robust threshold
++        final double rankThreshold = Math.max(m, n) * MathUtils.EPSILON * eigenValues[0];
++        int numericalRank = 0;
++        for (int i = 0; i < eigenValues.length; ++i) {
++            if (eigenValues[i] > rankThreshold) {
++                numericalRank = i + 1;
++            } else {
++                break; // Eigenvalues are sorted in decreasing order
++            }
++        }
++        int p = numericalRank; // Set p to the numerical rank
++
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,17 +1,9 @@
+-        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
+-        // Calculate numerical rank based on a robust threshold
+-        final double rankThreshold = Math.max(m, n) * MathUtils.EPSILON * eigenValues[0];
+-        int numericalRank = 0;
+-        for (int i = 0; i < eigenValues.length; ++i) {
+-            if (eigenValues[i] > rankThreshold) {
+-                numericalRank = i + 1;
+-            } else {
+-                break; // Eigenvalues are sorted in decreasing order
+-            }
+-        }
+-        int p = numericalRank; // Set p to the numerical rank
+-
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
++        int p = Math.min(max, eigenValues.length);
++        while ((p > 0) && (eigenValues[p - 1] <= 0)) {
++            --p;
++        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,4 +1,11 @@
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
++        // Set singular values below rank threshold to 0.0 for numerical stability
++        final double threshold = Math.max(m, n) * Math.ulp(singularValues[0]);
++        for (int i = 0; i < p; ++i) {
++            if (singularValues[i] <= threshold) {
++                singularValues[i] = 0.0;
++            }
++        }
+@@ -1,11 +1,4 @@
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
+-        // Set singular values below rank threshold to 0.0 for numerical stability
+-        final double threshold = Math.max(m, n) * Math.ulp(singularValues[0]);
+-        for (int i = 0; i < p; ++i) {
+-            if (singularValues[i] <= threshold) {
+-                singularValues[i] = 0.0;
+-            }
+-        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,9 +1,17 @@
+-        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
+-        int p = Math.min(max, eigenValues.length);
+-        while ((p > 0) && (eigenValues[p - 1] <= 0)) {
+-            --p;
+-        }
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
++        // Calculate numerical rank based on a robust threshold
++        final double rankThreshold = Math.max(m, n) * MathUtils.EPSILON * eigenValues[0];
++        int numericalRank = 0;
++        for (int i = 0; i < eigenValues.length; ++i) {
++            if (eigenValues[i] > rankThreshold) {
++                numericalRank = i + 1;
++            } else {
++                break; // Eigenvalues are sorted in decreasing order
++            }
++        }
++        int p = numericalRank; // Set p to the numerical rank
++
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,17 +1,9 @@
+-        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
+-        // Calculate numerical rank based on a robust threshold
+-        final double rankThreshold = Math.max(m, n) * MathUtils.EPSILON * eigenValues[0];
+-        int numericalRank = 0;
+-        for (int i = 0; i < eigenValues.length; ++i) {
+-            if (eigenValues[i] > rankThreshold) {
+-                numericalRank = i + 1;
+-            } else {
+-                break; // Eigenvalues are sorted in decreasing order
+-            }
+-        }
+-        int p = numericalRank; // Set p to the numerical rank
+-
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
++        int p = Math.min(max, eigenValues.length);
++        while ((p > 0) && (eigenValues[p - 1] <= 0)) {
++            --p;
++        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,4 +1,11 @@
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
++        // Set singular values below rank threshold to 0.0 for numerical stability
++        final double threshold = Math.max(m, n) * Math.ulp(singularValues[0]);
++        for (int i = 0; i < p; ++i) {
++            if (singularValues[i] <= threshold) {
++                singularValues[i] = 0.0;
++            }
++        }
+@@ -1,11 +1,4 @@
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
+-        // Set singular values below rank threshold to 0.0 for numerical stability
+-        final double threshold = Math.max(m, n) * Math.ulp(singularValues[0]);
+-        for (int i = 0; i < p; ++i) {
+-            if (singularValues[i] <= threshold) {
+-                singularValues[i] = 0.0;
+-            }
+-        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,9 +1,17 @@
+-        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
+-        int p = Math.min(max, eigenValues.length);
+-        while ((p > 0) && (eigenValues[p - 1] <= 0)) {
+-            --p;
+-        }
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
++        // Calculate numerical rank based on a robust threshold
++        final double rankThreshold = Math.max(m, n) * MathUtils.EPSILON * eigenValues[0];
++        int numericalRank = 0;
++        for (int i = 0; i < eigenValues.length; ++i) {
++            if (eigenValues[i] > rankThreshold) {
++                numericalRank = i + 1;
++            } else {
++                break; // Eigenvalues are sorted in decreasing order
++            }
++        }
++        int p = numericalRank; // Set p to the numerical rank
++
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,17 +1,9 @@
+-        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
+-        // Calculate numerical rank based on a robust threshold
+-        final double rankThreshold = Math.max(m, n) * MathUtils.EPSILON * eigenValues[0];
+-        int numericalRank = 0;
+-        for (int i = 0; i < eigenValues.length; ++i) {
+-            if (eigenValues[i] > rankThreshold) {
+-                numericalRank = i + 1;
+-            } else {
+-                break; // Eigenvalues are sorted in decreasing order
+-            }
+-        }
+-        int p = numericalRank; // Set p to the numerical rank
+-
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
++        int p = Math.min(max, eigenValues.length);
++        while ((p > 0) && (eigenValues[p - 1] <= 0)) {
++            --p;
++        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,4 +1,11 @@
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
++        // Set singular values below rank threshold to 0.0 for numerical stability
++        final double threshold = Math.max(m, n) * Math.ulp(singularValues[0]);
++        for (int i = 0; i < p; ++i) {
++            if (singularValues[i] <= threshold) {
++                singularValues[i] = 0.0;
++            }
++        }
+@@ -1,11 +1,4 @@
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
+-        // Set singular values below rank threshold to 0.0 for numerical stability
+-        final double threshold = Math.max(m, n) * Math.ulp(singularValues[0]);
+-        for (int i = 0; i < p; ++i) {
+-            if (singularValues[i] <= threshold) {
+-                singularValues[i] = 0.0;
+-            }
+-        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,9 +1,17 @@
+-        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
+-        int p = Math.min(max, eigenValues.length);
+-        while ((p > 0) && (eigenValues[p - 1] <= 0)) {
+-            --p;
+-        }
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
++        // Calculate numerical rank based on a robust threshold
++        final double rankThreshold = Math.max(m, n) * MathUtils.EPSILON * eigenValues[0];
++        int numericalRank = 0;
++        for (int i = 0; i < eigenValues.length; ++i) {
++            if (eigenValues[i] > rankThreshold) {
++                numericalRank = i + 1;
++            } else {
++                break; // Eigenvalues are sorted in decreasing order
++            }
++        }
++        int p = numericalRank; // Set p to the numerical rank
++
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,17 +1,9 @@
+-        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
+-        // Calculate numerical rank based on a robust threshold
+-        final double rankThreshold = Math.max(m, n) * MathUtils.EPSILON * eigenValues[0];
+-        int numericalRank = 0;
+-        for (int i = 0; i < eigenValues.length; ++i) {
+-            if (eigenValues[i] > rankThreshold) {
+-                numericalRank = i + 1;
+-            } else {
+-                break; // Eigenvalues are sorted in decreasing order
+-            }
+-        }
+-        int p = numericalRank; // Set p to the numerical rank
+-
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
++        int p = Math.min(max, eigenValues.length);
++        while ((p > 0) && (eigenValues[p - 1] <= 0)) {
++            --p;
++        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,4 +1,11 @@
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
++        // Set singular values below rank threshold to 0.0 for numerical stability
++        final double threshold = Math.max(m, n) * Math.ulp(singularValues[0]);
++        for (int i = 0; i < p; ++i) {
++            if (singularValues[i] <= threshold) {
++                singularValues[i] = 0.0;
++            }
++        }
+@@ -1,11 +1,4 @@
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
+-        // Set singular values below rank threshold to 0.0 for numerical stability
+-        final double threshold = Math.max(m, n) * Math.ulp(singularValues[0]);
+-        for (int i = 0; i < p; ++i) {
+-            if (singularValues[i] <= threshold) {
+-                singularValues[i] = 0.0;
+-            }
+-        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,9 +1,17 @@
+-        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
+-        int p = Math.min(max, eigenValues.length);
+-        while ((p > 0) && (eigenValues[p - 1] <= 0)) {
+-            --p;
+-        }
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
++        // Calculate numerical rank based on a robust threshold
++        final double rankThreshold = Math.max(m, n) * MathUtils.EPSILON * eigenValues[0];
++        int numericalRank = 0;
++        for (int i = 0; i < eigenValues.length; ++i) {
++            if (eigenValues[i] > rankThreshold) {
++                numericalRank = i + 1;
++            } else {
++                break; // Eigenvalues are sorted in decreasing order
++            }
++        }
++        int p = numericalRank; // Set p to the numerical rank
++
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,17 +1,9 @@
+-        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
+-        // Calculate numerical rank based on a robust threshold
+-        final double rankThreshold = Math.max(m, n) * MathUtils.EPSILON * eigenValues[0];
+-        int numericalRank = 0;
+-        for (int i = 0; i < eigenValues.length; ++i) {
+-            if (eigenValues[i] > rankThreshold) {
+-                numericalRank = i + 1;
+-            } else {
+-                break; // Eigenvalues are sorted in decreasing order
+-            }
+-        }
+-        int p = numericalRank; // Set p to the numerical rank
+-
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
++        int p = Math.min(max, eigenValues.length);
++        while ((p > 0) && (eigenValues[p - 1] <= 0)) {
++            --p;
++        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
+@@ -1,4 +1,11 @@
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }
++        // Set singular values below rank threshold to 0.0 for numerical stability
++        final double threshold = Math.max(m, n) * Math.ulp(singularValues[0]);
++        for (int i = 0; i < p; ++i) {
++            if (singularValues[i] <= threshold) {
++                singularValues[i] = 0.0;
++            }
++        }
+@@ -1,11 +1,4 @@
+-        singularValues = new double[p];
+-        for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
+-        }
+-        // Set singular values below rank threshold to 0.0 for numerical stability
+-        final double threshold = Math.max(m, n) * Math.ulp(singularValues[0]);
+-        for (int i = 0; i < p; ++i) {
+-            if (singularValues[i] <= threshold) {
+-                singularValues[i] = 0.0;
+-            }
+-        }
++        singularValues = new double[p];
++        for (int i = 0; i < p; ++i) {
++            singularValues[i] = Math.sqrt(Math.max(0.0, eigenValues[i]));
++        }

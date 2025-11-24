@@ -1,0 +1,58 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java
+index d4a0b0562..7d124929a 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java
+@@ -56,6 +56,7 @@ public final class StringArrayDeserializer
+         int ix = 0;
+         JsonToken t;
+ 
++        try {
+             while ((t = jp.nextToken()) != JsonToken.END_ARRAY) {
+                 // Ok: no need to convert Strings, but must recognize nulls
+                 String value;
+@@ -72,7 +73,11 @@ public final class StringArrayDeserializer
+                 }
+                 chunk[ix++] = value;
+             }
++        } catch (Exception e) {
+             // note: pass String.class, not String[].class, as we need element type for error info
++            throw JsonMappingException.wrapWithPath(e, String.class, ix);
++        }
++        // note: pass String.class, not String[].class, as we need element type for error info
+         String[] result = buffer.completeAndClearBuffer(chunk, ix, String.class);
+         ctxt.returnObjectBuffer(buffer);
+         return result;
+@@ -90,6 +95,7 @@ public final class StringArrayDeserializer
+         int ix = 0;
+         JsonToken t;
+ 
++        try {
+             while ((t = jp.nextToken()) != JsonToken.END_ARRAY) {
+                 // Ok: no need to convert Strings, but must recognize nulls
+                 String value = (t == JsonToken.VALUE_NULL) ? deser.getNullValue() : deser.deserialize(jp, ctxt);
+@@ -99,7 +105,11 @@ public final class StringArrayDeserializer
+                 }
+                 chunk[ix++] = value;
+             }
++        } catch (Exception e) {
+             // note: pass String.class, not String[].class, as we need element type for error info
++            throw JsonMappingException.wrapWithPath(e, String.class, ix);
++        }
++        // note: pass String.class, not String[].class, as we need element type for error info
+         String[] result = buffer.completeAndClearBuffer(chunk, ix, String.class);
+         ctxt.returnObjectBuffer(buffer);
+         return result;
+@@ -124,7 +134,12 @@ public final class StringArrayDeserializer
+             }
+             throw ctxt.mappingException(_valueClass);
+         }
+-        return new String[] { (jp.getCurrentToken() == JsonToken.VALUE_NULL) ? null : _parseString(jp, ctxt) };
++        try {
++            return new String[] { (jp.getCurrentToken() == JsonToken.VALUE_NULL) ? null : _parseString(jp, ctxt) };
++        } catch (Exception e) {
++            // Single-value as array: index is 0
++            throw JsonMappingException.wrapWithPath(e, String.class, 0);
++        }
+     }
+ 
+     /**

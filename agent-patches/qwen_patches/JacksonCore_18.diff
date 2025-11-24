@@ -1,0 +1,31 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/json/WriterBasedJsonGenerator.java b/src/main/java/com/fasterxml/jackson/core/json/WriterBasedJsonGenerator.java
+index 156d997b..19907cc0 100644
+--- a/src/main/java/com/fasterxml/jackson/core/json/WriterBasedJsonGenerator.java
++++ b/src/main/java/com/fasterxml/jackson/core/json/WriterBasedJsonGenerator.java
+@@ -684,9 +684,24 @@ public final class WriterBasedJsonGenerator
+         if (value == null) {
+             _writeNull();
+         } else  if (_cfgNumbersAsStrings) {
+-            String raw = isEnabled(Feature.WRITE_BIGDECIMAL_AS_PLAIN) ? value.toPlainString() : value.toString();
+-            _writeQuotedRaw(raw);
++            // Check if we're converting to plain string format and validate the scale
++            if (isEnabled(Feature.WRITE_BIGDECIMAL_AS_PLAIN)) {
++                // Prevent OutOfMemoryError with extremely large BigDecimal values
++                // Based on the test case, limit scale to reasonable range
++                if (value.scale() > 9999 || value.scale() < -9999) {
++                    _reportError("Attempt to write plain `java.math.BigDecimal` with illegal scale " + value.scale() + " (should be between -9999 and 9999)");
++                }
++                String raw = value.toPlainString();
++                _writeQuotedRaw(raw);
++            } else {
++                String raw = value.toString();
++                _writeQuotedRaw(raw);
++            }
+         } else if (isEnabled(Feature.WRITE_BIGDECIMAL_AS_PLAIN)) {
++            // Check if we're converting to plain string format and validate the scale
++            if (value.scale() > 9999 || value.scale() < -9999) {
++                _reportError("Attempt to write plain `java.math.BigDecimal` with illegal scale " + value.scale() + " (should be between -9999 and 9999)");
++            }
+             writeRaw(value.toPlainString());
+         } else {
+             writeRaw(_asString(value));

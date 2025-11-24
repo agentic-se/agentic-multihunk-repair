@@ -1,0 +1,34 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/axes/UnionContext.java b/src/java/org/apache/commons/jxpath/ri/axes/UnionContext.java
+index 04adadf..97fbe3c 100644
+--- a/src/java/org/apache/commons/jxpath/ri/axes/UnionContext.java
++++ b/src/java/org/apache/commons/jxpath/ri/axes/UnionContext.java
+@@ -17,6 +17,7 @@
+ package org.apache.commons.jxpath.ri.axes;
+ 
+ import java.util.ArrayList;
++import java.util.Collections;
+ 
+ import org.apache.commons.jxpath.BasicNodeSet;
+ import org.apache.commons.jxpath.ri.EvalContext;
+@@ -53,12 +54,16 @@ public class UnionContext extends NodeSetContext {
+                     while (ctx.nextNode()) {
+                         NodePointer ptr = ctx.getCurrentNodePointer();
+                         if (!pointers.contains(ptr)) {
+-                            nodeSet.add(ptr);
+                             pointers.add(ptr);
+                         }
+                     }
+                 }
+             }
++            // Sort pointers according to document order
++            Collections.sort(pointers);
++            for (int i = 0; i < pointers.size(); i++) {
++                nodeSet.add((NodePointer) pointers.get(i));
++            }
+         }
+         return super.setPosition(position);
+     }
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

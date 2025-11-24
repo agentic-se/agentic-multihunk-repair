@@ -1,0 +1,22 @@
+diff --git a/src/.DS_Store b/src/.DS_Store
+index 341d14676fe968aeebd76a012be396281821594e..e3c9aacb228250d343b42e5fed1adfa846c099f2 100644
+GIT binary patch
+delta 12
+Tc-m_*Xfc?ul=0TaWpUyFA@~JF
+
+delta 12
+Tc-m_*Xfc?ul#yfOvN&-79o__U
+
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index e9e8486f..8aa51b69 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -1579,6 +1579,8 @@ final class TypedScopeCreator implements ScopeCreator {
+             return;
+           }
+ 
++          // Ensure we properly process prototype assignments in closure contexts
++          // by removing the variable from scope to allow redeclaration
+           qVar.getScope().undeclare(qVar);
+         }
+       }

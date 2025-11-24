@@ -1,0 +1,30 @@
+--- a/pom.xml
++++ b/pom.xml
+@@ -1,7 +1,20 @@
+-    <dependency> <!--  from core we just test for repackaged cglib, not hibernate proper -->
+-      <groupId>org.hibernate</groupId>
+-      <artifactId>hibernate-cglib-repack</artifactId>
+-      <version>2.1_3</version>
+-      <scope>test</scope>
+-    </dependency>
+-  </dependencies>
++    <dependency> <!--  from core we just test for repackaged cglib, not hibernate proper -->
++      <groupId>org.hibernate</groupId>
++      <artifactId>hibernate-cglib-repack</artifactId>
++      <version>2.1_3</version>
++      <scope>test</scope>
++    </dependency>
++    <!-- Dependencies for IntegerListXmlAdapterTest -->
++    <dependency>
++      <groupId>com.google.guava</groupId>
++      <artifactId>guava</artifactId>
++      <version>18.0</version>
++      <scope>test</scope>
++    </dependency>
++    <dependency>
++      <groupId>com.fasterxml.jackson.module</groupId>
++      <artifactId>jackson-module-jaxb-annotations</artifactId>
++      <version>2.5.0</version>
++      <scope>test</scope>
++    </dependency>
++  </dependencies>

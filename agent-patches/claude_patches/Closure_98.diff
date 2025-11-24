@@ -1,0 +1,63 @@
+diff --git a/src/com/google/javascript/jscomp/ReferenceCollectingCallback.java b/src/com/google/javascript/jscomp/ReferenceCollectingCallback.java
+index f053321d..1f8143a5 100644
+--- a/src/com/google/javascript/jscomp/ReferenceCollectingCallback.java
++++ b/src/com/google/javascript/jscomp/ReferenceCollectingCallback.java
+@@ -358,6 +358,10 @@ class ReferenceCollectingCallback implements ScopedCallback, CompilerPass {
+       }
+ 
+       // Make sure this assignment is not in a loop.
++      BasicBlock basicBlock = ref.getBasicBlock();
++      if (basicBlock != null && basicBlock.isInLoop()) {
++        return false;
++      }
+ 
+       return true;
+     }
+@@ -542,10 +546,12 @@ class ReferenceCollectingCallback implements ScopedCallback, CompilerPass {
+     /**
+      * Whether this block denotes a function scope.
+      */
++    private final boolean isFunction;
+ 
+     /**
+      * Whether this block denotes a loop.
+      */
++    private final boolean isLoop;
+ 
+     /**
+      * Creates a new block.
+@@ -558,7 +564,12 @@ class ReferenceCollectingCallback implements ScopedCallback, CompilerPass {
+       // only named functions may be hoisted.
+       this.isHoisted = NodeUtil.isHoistedFunctionDeclaration(root);
+ 
++      // Check if this is a function scope
++      this.isFunction = root.getType() == Token.FUNCTION;
+ 
++      // Check if this block is a loop structure, or if its parent node is a loop
++      this.isLoop = NodeUtil.isLoopStructure(root) ||
++          (root.getParent() != null && NodeUtil.isLoopStructure(root.getParent()));
+     }
+ 
+     BasicBlock getParent() {
+@@ -583,5 +594,21 @@ class ReferenceCollectingCallback implements ScopedCallback, CompilerPass {
+ 
+       return currentBlock == this;
+     }
++
++    /**
++     * Determines whether this block is contained within a loop.
++     * This does not traverse past function boundaries, since functions
++     * create new execution contexts.
++     */
++    boolean isInLoop() {
++      if (isLoop) {
++        return true;
++      }
++      // Don't traverse past function boundaries
++      if (parent != null && !isFunction) {
++        return parent.isInLoop();
++      }
++      return false;
++    }
+   }
+ }

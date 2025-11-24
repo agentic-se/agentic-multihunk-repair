@@ -1,0 +1,60 @@
+diff --git a/src/main/java/org/apache/commons/lang3/text/ExtendedMessageFormat.java b/src/main/java/org/apache/commons/lang3/text/ExtendedMessageFormat.java
+index a2cc1699..5e33cbc4 100644
+--- a/src/main/java/org/apache/commons/lang3/text/ExtendedMessageFormat.java
++++ b/src/main/java/org/apache/commons/lang3/text/ExtendedMessageFormat.java
+@@ -260,12 +260,51 @@ public class ExtendedMessageFormat extends MessageFormat {
+      * @param obj the object to compare to
+      * @return true if this object equals the other, otherwise false
+      */
++    @Override
++    public boolean equals(Object obj) {
++        if (this == obj) {
++            return true;
++        }
++        if (obj == null) {
++            return false;
++        }
++        if (getClass() != obj.getClass()) {
++            return false;
++        }
++        if (!super.equals(obj)) {
++            return false;
++        }
++        ExtendedMessageFormat other = (ExtendedMessageFormat) obj;
++        if (toPattern == null) {
++            if (other.toPattern != null) {
++                return false;
++            }
++        } else if (!toPattern.equals(other.toPattern)) {
++            return false;
++        }
++        if (registry == null) {
++            if (other.registry != null) {
++                return false;
++            }
++        } else if (!registry.equals(other.registry)) {
++            return false;
++        }
++        return true;
++    }
+ 
+     /**
+      * Return the hashcode.
+      *
+      * @return the hashcode
+      */
++    @Override
++    public int hashCode() {
++        final int prime = 31;
++        int result = super.hashCode();
++        result = prime * result + ((toPattern == null) ? 0 : toPattern.hashCode());
++        result = prime * result + ((registry == null) ? 0 : registry.hashCode());
++        return result;
++    }
+ 
+     /**
+      * Get a custom format from a format description.
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

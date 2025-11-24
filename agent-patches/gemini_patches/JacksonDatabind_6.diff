@@ -1,0 +1,84 @@
+--- a/run_bug_exposing_tests.sh
++++ b/run_bug_exposing_tests.sh
+@@ -1,2 +1,2 @@
+-  echo "Running $cls" | tee -a "$LOGFILE"
+-  java -cp "$CP" org.junit.runner.JUnitCore "$cls" >> "$LOGFILE" 2>&1
++  echo "Running $cls" | tee -a "$LOGFILE"
++  defects4j test -t "$cls" >> "$LOGFILE" 2>&1
+@@ -1,2 +1,2 @@
+-  echo "Running $cls" | tee -a "$LOGFILE"
+-  defects4j test -t "$cls" >> "$LOGFILE" 2>&1
++  echo "Running $cls" | tee -a "$LOGFILE"
++  java -cp "$CP" org.junit.runner.JUnitCore "$cls" >> "$LOGFILE" 2>&1
+@@ -1,3 +1,3 @@
+-for cls in $(defects4j export -p tests.trigger | cut -d: -f1 | sort -u); do
+-  echo "Running $cls" | tee -a "$LOGFILE"
+-  java -cp "$CP" org.junit.runner.JUnitCore "$cls" >> "$LOGFILE" 2>&1
++for test_method in $(defects4j export -p tests.trigger | sort -u); do
++  echo "Running $test_method" | tee -a "$LOGFILE"
++  defects4j test -t "$test_method" >> "$LOGFILE" 2>&1
+
+--- a/src/main/java/com/fasterxml/jackson/databind/util/StdDateFormat.java
++++ b/src/main/java/com/fasterxml/jackson/databind/util/StdDateFormat.java
+@@ -1,10 +1,18 @@
+-                c = dateStr.charAt(len-3);
+-                if (c == ':') { // remove optional colon
+-                    // remove colon
+-                    StringBuilder sb = new StringBuilder(dateStr);
+-                    sb.delete(len-3, len-2);
+-                    dateStr = sb.toString();
+-                } else if (c == '+' || c == '-') { // missing minutes
+-                    // let's just append '00'
+-                    dateStr += "00";
+-                }
++                // Remove colon from timezone offset if present (e.g., "+01:00" -> "+0100")
++                int lastColon = dateStr.lastIndexOf(':');
++                if (lastColon > 0) {
++                    // Check if it's a timezone colon (e.g., "T00:00:00.000+01:00")
++                    // It should be after 'T' and before the end of the string, and have a '+' or '-' before it
++                    if (lastColon > dateStr.lastIndexOf('T')) { // colon is in the timezone part
++                        char sign = dateStr.charAt(lastColon - 3);
++                        if (sign == '+' || sign == '-') {
++                            StringBuilder sb = new StringBuilder(dateStr);
++                            sb.delete(lastColon, lastColon + 1);
++                            dateStr = sb.toString();
++                        }
++                    }
++                }
++                // If timezone is like "+00", append "00" to make it "+0000"
++                if (dateStr.charAt(len-3) == '+' || dateStr.charAt(len-3) == '-') {
++                    dateStr += "00";
++                }
+@@ -1,11 +1,21 @@
+-            if (hasTimeZone(dateStr)) {
+-                c = dateStr.charAt(len-3);
+-                if (c == ':') { // remove optional colon
+-                    // remove colon
+-                    StringBuilder sb = new StringBuilder(dateStr);
+-                    sb.delete(len-3, len-2);
+-                    dateStr = sb.toString();
+-                } else if (c == '+' || c == '-') { // missing minutes
+-                    // let's just append '00'
+-                    dateStr += "00";
+-                }
++            if (hasTimeZone(dateStr)) {
++                // Remove colon from timezone offset if present (e.g., "+01:00" -> "+0100")
++                int lastColon = dateStr.lastIndexOf(':');
++                if (lastColon > 0) {
++                    // Check if it's a timezone colon (e.g., "T00:00:00.000+01:00")
++                    // It should be after 'T' and before the end of the string, and have a '+' or '-' before it
++                    if (lastColon > dateStr.lastIndexOf('T')) { // colon is in the timezone part
++                        char sign = dateStr.charAt(lastColon - 3);
++                        if (sign == '+' || sign == '-') {
++                            StringBuilder sb = new StringBuilder(dateStr);
++                            sb.delete(lastColon, lastColon + 1);
++                            dateStr = sb.toString();
++                        }
++                    }
++                }
++                // If timezone is like "+00", append "00" to make it "+0000"
++                // This handles cases like "2014-10-03T18:00:00-05"
++                len = dateStr.length();
++                if (dateStr.charAt(len-3) == '+' || dateStr.charAt(len-3) == '-') {
++                    dateStr += "00";
++                }

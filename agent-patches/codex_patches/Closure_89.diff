@@ -1,0 +1,83 @@
+diff --git a/src/com/google/javascript/jscomp/CollapseProperties.java b/src/com/google/javascript/jscomp/CollapseProperties.java
+index 16d533d5..7084cf8a 100644
+--- a/src/com/google/javascript/jscomp/CollapseProperties.java
++++ b/src/com/google/javascript/jscomp/CollapseProperties.java
+@@ -442,8 +442,33 @@ class CollapseProperties implements CompilerPass {
+     boolean canCollapseChildNames = n.canCollapseUnannotatedChildNames();
+ 
+     // Handle this name first so that nested object literals get unrolled.
+-    if (n.canCollapse() && canCollapseChildNames) {
+-      updateObjLitOrFunctionDeclaration(n, alias);
++    if (n.canCollapse()) {
++      // Even if child names can't be collapsed (e.g. the name is aliased),
++      // it's still safe and desirable to collapse a function assigned via
++      // an ASSIGN into a flattened variable (e.g. a.b = function(){} ->
++      // var a$b = function(){}). However, for object literals or named
++      // function declarations, we must respect canCollapseChildNames to avoid
++      // incorrectly collapsing or creating stubs.
++      boolean canUpdateDecl = canCollapseChildNames;
++      if (!canUpdateDecl && n.type == Name.Type.FUNCTION &&
++          n.declaration != null && n.declaration.node != null) {
++        Node assign = n.declaration.node.getParent();
++        if (assign != null && assign.getType() == Token.ASSIGN) {
++          Node maybeExpr = assign.getParent();
++          // Only collapse function declarations when they are simple
++          // expression statements (e.g., a.b = function(){};). For nested
++          // assignments (e.g., if (a.b = function(){}) ...), rely on the
++          // simple-declaration update logic for children to insert a stub
++          // instead of converting the assignment into a var initialization.
++          if (maybeExpr != null && maybeExpr.getType() == Token.EXPR_RESULT) {
++            canUpdateDecl = true;
++          }
++        }
++      }
++
++      if (canUpdateDecl) {
++        updateObjLitOrFunctionDeclaration(n, alias);
++      }
+     }
+ 
+     if (n.props != null) {
+@@ -583,6 +608,7 @@ class CollapseProperties implements CompilerPass {
+     Node varParent = ref.node.getAncestor(3);
+     Node gramps = ref.node.getAncestor(2);
+     boolean isObjLit = rvalue.getType() == Token.OBJECTLIT;
++    boolean canCollapseChildNames = n.canCollapseUnannotatedChildNames();
+ 
+     if (isObjLit && n.canEliminate()) {
+       // Eliminate the object literal altogether.
+@@ -612,13 +638,15 @@ class CollapseProperties implements CompilerPass {
+       ref.node = nameNode;
+     }
+ 
+-    if (isObjLit) {
++    if (isObjLit && canCollapseChildNames) {
+       declareVarsForObjLitValues(
+           n, alias, rvalue,
+           varNode, varParent.getChildBefore(varNode), varParent);
+     }
+ 
+-    addStubsForUndeclaredProperties(n, alias, varParent, varNode);
++    if (canCollapseChildNames) {
++      addStubsForUndeclaredProperties(n, alias, varParent, varNode);
++    }
+ 
+     if (!varNode.hasChildren()) {
+       varParent.removeChild(varNode);
+diff --git a/src/com/google/javascript/jscomp/GlobalNamespace.java b/src/com/google/javascript/jscomp/GlobalNamespace.java
+index 311e3439..3490773e 100644
+--- a/src/com/google/javascript/jscomp/GlobalNamespace.java
++++ b/src/com/google/javascript/jscomp/GlobalNamespace.java
+@@ -917,7 +917,11 @@ class GlobalNamespace {
+       }
+ 
+       // If this is aliased, then its properties can't be collapsed either.
+-      if (type != Type.FUNCTION && aliasingGets > 0) {
++      // Previously, functions were exempt from this rule, which caused
++      // properties of aliased functions to be collapsed incorrectly. We now
++      // treat functions the same as other names unless they are marked as
++      // classes/enums (handled by the isClassOrEnum check above).
++      if (aliasingGets > 0) {
+         return false;
+       }
+ 

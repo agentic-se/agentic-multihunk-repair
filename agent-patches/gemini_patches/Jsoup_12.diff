@@ -1,0 +1,417 @@
+--- a/src/main/java/org/jsoup/select/Selector.java
++++ b/src/main/java/org/jsoup/select/Selector.java
+@@ -1,1 +1,2 @@
+-        TokenQueue cq = new TokenQueue(tq.chompBalanced('[', ']')); // content queue
++        TokenQueue cq = new TokenQueue(tq.chompBalanced('[', ']')); // content queue
++        tq.consume(']'); // consume the closing bracket
+@@ -1,2 +1,2 @@
+-        TokenQueue cq = new TokenQueue(tq.chompBalanced('[', ']')); // content queue
+-        tq.consume(']'); // consume the closing bracket
++        TokenQueue cq = new TokenQueue(tq.chompBalanced('[', ']')); // content queue
++        tq.consume("]"); // consume the closing bracket
+@@ -1,2 +1,1 @@
+-        TokenQueue cq = new TokenQueue(tq.chompBalanced('[', ']')); // content queue
+-        tq.consume("]"); // consume the closing bracket
++        TokenQueue cq = new TokenQueue(tq.chompBalanced('[', ']')); // content queue
+@@ -1,1 +1,2 @@
+-        TokenQueue cq = new TokenQueue(tq.chompBalanced('[', ']')); // content queue
++        TokenQueue cq = new TokenQueue(tq.chompBalanced('[', ']')); // content queue
++        tq.consume(); // consume the closing bracket
+@@ -1,2 +1,1 @@
+-        TokenQueue cq = new TokenQueue(tq.chompBalanced('[', ']')); // content queue
+-        tq.consume(); // consume the closing bracket
++        TokenQueue cq = new TokenQueue(tq.chompBalanced('[', ']')); // content queue
+@@ -1,5 +1,7 @@
+-    private Elements byAttribute() {
+-        TokenQueue cq = new TokenQueue(tq.chompBalanced('[', ']')); // content queue
+-        String key = cq.consumeToAny("=", "!=", "^=", "$=", "*=", "~="); // eq, not, start, end, contain, match, (no val)
+-        Validate.notEmpty(key);
+-        cq.consumeWhitespace();
++    private Elements byAttribute() {
++        System.out.println("Before chompBalanced: " + tq.toString());
++        TokenQueue cq = new TokenQueue(tq.chompBalanced('[', ']')); // content queue
++        System.out.println("After chompBalanced (main tq): " + tq.toString());
++        String key = cq.consumeToAny("=", "!=", "^=", "$=", "*=", "~="); // eq, not, start, end, contain, match, (no val)
++        Validate.notEmpty(key);
++        cq.consumeWhitespace();
+@@ -1,7 +1,5 @@
+-    private Elements byAttribute() {
+-        System.out.println("Before chompBalanced: " + tq.toString());
+-        TokenQueue cq = new TokenQueue(tq.chompBalanced('[', ']')); // content queue
+-        System.out.println("After chompBalanced (main tq): " + tq.toString());
+-        String key = cq.consumeToAny("=", "!=", "^=", "$=", "*=", "~="); // eq, not, start, end, contain, match, (no val)
+-        Validate.notEmpty(key);
+-        cq.consumeWhitespace();
++    private Elements byAttribute() {
++        TokenQueue cq = new TokenQueue(tq.chompBalanced('[', ']')); // content queue
++        String key = cq.consumeToAny("=", "!=", "^=", "$=", "*=", "~="); // eq, not, start, end, contain, match, (no val)
++        Validate.notEmpty(key);
++        cq.consumeWhitespace();
+@@ -1,1 +1,1 @@
+-        String key = cq.consumeToAny("=", "!=", "^=", "$=", "*=", "~="); // eq, not, start, end, contain, match, (no val)
++        String key = cq.consumeAttributeKey(); // Consume the attribute key
+@@ -1,1 +1,1 @@
+-        String key = cq.consumeAttributeKey(); // Consume the attribute key
++        String key = cq.consumeToAny("=", "!=", "^=", "$=", "*=", "~="); // eq, not, start, end, contain, match, (no val)
+@@ -1,7 +1,8 @@
+-        String key = cq.consumeToAny("=", "!=", "^=", "$=", "*=", "~="); // eq, not, start, end, contain, match, (no val)
+-        Validate.notEmpty(key);
+-        cq.consumeWhitespace();
+-
+-        if (cq.isEmpty()) {
+-            return key.startsWith("^") ? root.getElementsByAttributeStarting(key.substring(1)) : root.getElementsByAttribute(key);
+-        } else {
++        boolean attributeStarting = cq.matchChomp("^"); // Check for '^'
++        String key = cq.consumeAttributeKey(); // Consume the attribute key
++        Validate.notEmpty(key);
++        cq.consumeWhitespace();
++
++        if (cq.isEmpty()) {
++            return attributeStarting ? root.getElementsByAttributeStarting(key) : root.getElementsByAttribute(key);
++        } else {
+@@ -1,8 +1,12 @@
+-            else if (cq.matchChomp("*="))
+-                return root.getElementsByAttributeValueContaining(key, cq.remainder());
+-            
+-            else if (cq.matchChomp("~="))
+-                return root.getElementsByAttributeValueMatching(key, cq.remainder());
+-            
+-            else
+-                throw new SelectorParseException("Could not parse attribute query '%s': unexpected token at '%s'", query, cq.remainder());
++            else if (cq.matchChomp("*="))
++                return root.getElementsByAttributeValueContaining(key, cq.remainder());
++            
++            else if (cq.matches("~=")) {
++                System.out.println("Before matchChomp(\"~=\"): " + cq.toString());
++                boolean matched = cq.matchChomp("~=");
++                System.out.println("After matchChomp(\"~=\"): " + cq.toString() + ", Matched: " + matched);
++                return root.getElementsByAttributeValueMatching(key, cq.remainder());
++            }
++            
++            else
++                throw new SelectorParseException("Could not parse attribute query '%s': unexpected token at '%s'", query, cq.remainder());
+@@ -1,12 +1,8 @@
+-            else if (cq.matchChomp("*="))
+-                return root.getElementsByAttributeValueContaining(key, cq.remainder());
+-            
+-            else if (cq.matches("~=")) {
+-                System.out.println("Before matchChomp(\"~=\"): " + cq.toString());
+-                boolean matched = cq.matchChomp("~=");
+-                System.out.println("After matchChomp(\"~=\"): " + cq.toString() + ", Matched: " + matched);
+-                return root.getElementsByAttributeValueMatching(key, cq.remainder());
+-            }
+-            
+-            else
+-                throw new SelectorParseException("Could not parse attribute query '%s': unexpected token at '%s'", query, cq.remainder());
++            else if (cq.matchChomp("*="))
++                return root.getElementsByAttributeValueContaining(key, cq.remainder());
++            
++            else if (cq.matchChomp("~="))
++                return root.getElementsByAttributeValueMatching(key, cq.remainder());
++            
++            else
++                throw new SelectorParseException("Could not parse attribute query '%s': unexpected token at '%s'", query, cq.remainder());
+@@ -1,5 +1,6 @@
+-    private void combinator(char combinator) {
+-        tq.consumeWhitespace();
+-        String subQuery = tq.consumeToAny(combinators);
+-        
+-        Elements output;
++    private void combinator(char combinator) {
++        tq.consumeWhitespace();
++        String subQuery = tq.consumeToAny(combinators);
++        System.out.println("Combinator subQuery: " + subQuery);
++        
++        Elements output;
+@@ -1,6 +1,5 @@
+-    private void combinator(char combinator) {
+-        tq.consumeWhitespace();
+-        String subQuery = tq.consumeToAny(combinators);
+-        System.out.println("Combinator subQuery: " + subQuery);
+-        
+-        Elements output;
++    private void combinator(char combinator) {
++        tq.consumeWhitespace();
++        String subQuery = tq.consumeToAny(combinators);
++        
++        Elements output;
+@@ -1,18 +1,18 @@
+-    private void combinator(char combinator) {
+-        tq.consumeWhitespace();
+-        String subQuery = tq.consumeToAny(combinators);
+-        
+-        Elements output;
+-        if (combinator == '>')
+-            output = filterForChildren(elements, select(subQuery, elements));
+-        else if (combinator == ' ')
+-            output = filterForDescendants(elements, select(subQuery, elements));
+-        else if (combinator == '+')
+-            output = filterForAdjacentSiblings(elements, select(subQuery, root));
+-        else if (combinator == '~')
+-            output = filterForGeneralSiblings(elements, select(subQuery, root));
+-        else
+-            throw new IllegalStateException("Unknown combinator: " + combinator);
+-        
+-        elements.clear(); elements.addAll(output);
+-    }
++    private void combinator(char combinator) {
++        tq.consumeWhitespace();
++        Elements candidates = findElements(); // Get the next simple selector
++
++        Elements output;
++        if (combinator == '>')
++            output = filterForChildren(elements, candidates); // Use candidates directly
++        else if (combinator == ' ')
++            output = filterForDescendants(elements, candidates); // Use candidates directly
++        else if (combinator == '+')
++            output = filterForAdjacentSiblings(elements, candidates); // Use candidates directly
++        else if (combinator == '~')
++            output = filterForGeneralSiblings(elements, candidates); // Use candidates directly
++        else
++            throw new IllegalStateException("Unknown combinator: " + combinator);
++        
++        elements.clear(); elements.addAll(output);
++    }
+@@ -1,5 +1,5 @@
+-        if (cq.isEmpty()) {
+-            return attributeStarting ? root.getElementsByAttributeStarting(key) : root.getElementsByAttribute(key);
+-        } else {
+-            if (cq.matchChomp("="))
+-                return root.getElementsByAttributeValue(key, cq.remainder());
++        if (cq.isEmpty()) {
++            return attributeStarting ? root.getElementsByAttributeStarting(key) : root.getElementsByAttribute(key);
++        } 
++        else if (cq.matchChomp("="))
++            return root.getElementsByAttributeValue(key, cq.remainder());
+@@ -1,12 +1,23 @@
+-        if (cq.isEmpty()) {
+-            return attributeStarting ? root.getElementsByAttributeStarting(key) : root.getElementsByAttribute(key);
+-        } else {
+-                    if (cq.isEmpty()) {
+-            return attributeStarting ? root.getElementsByAttributeStarting(key) : root.getElementsByAttribute(key);
+-        } 
+-        else if (cq.matchChomp("="))
+-            return root.getElementsByAttributeValue(key, cq.remainder());
+-            
+-            else
+-                throw new SelectorParseException("Could not parse attribute query '%s': unexpected token at '%s'", query, cq.remainder());
+-        }
++        if (cq.isEmpty()) {
++            return attributeStarting ? root.getElementsByAttributeStarting(key) : root.getElementsByAttribute(key);
++        } 
++        else if (cq.matchChomp("="))
++            return root.getElementsByAttributeValue(key, cq.remainder());
++
++        else if (cq.matchChomp("!="))
++            return root.getElementsByAttributeValueNot(key, cq.remainder());
++
++        else if (cq.matchChomp("^="))
++            return root.getElementsByAttributeValueStarting(key, cq.remainder());
++
++        else if (cq.matchChomp("$="))
++            return root.getElementsByAttributeValueEnding(key, cq.remainder());
++
++        else if (cq.matchChomp("*="))
++            return root.getElementsByAttributeValueContaining(key, cq.remainder());
++        
++        else if (cq.matchChomp("~="))
++            return root.getElementsByAttributeValueMatching(key, cq.remainder());
++        
++        else
++            throw new SelectorParseException("Could not parse attribute query '%s': unexpected token at '%s'", query, cq.remainder());
+@@ -1,18 +1,18 @@
+-    private void combinator(char combinator) {
+-        tq.consumeWhitespace();
+-        Elements candidates = findElements(); // Get the next simple selector
+-
+-        Elements output;
+-        if (combinator == '>')
+-            output = filterForChildren(elements, candidates); // Use candidates directly
+-        else if (combinator == ' ')
+-            output = filterForDescendants(elements, candidates); // Use candidates directly
+-        else if (combinator == '+')
+-            output = filterForAdjacentSiblings(elements, candidates); // Use candidates directly
+-        else if (combinator == '~')
+-            output = filterForGeneralSiblings(elements, candidates); // Use candidates directly
+-        else
+-            throw new IllegalStateException("Unknown combinator: " + combinator);
+-        
+-        elements.clear(); elements.addAll(output);
+-    }
++    private void combinator(char combinator) {
++        tq.consumeWhitespace();
++        String subQuery = tq.consumeToAny(combinators);
++        
++        Elements output;
++        if (combinator == '>')
++            output = filterForChildren(elements, select(subQuery, elements));
++        else if (combinator == ' ')
++            output = filterForDescendants(elements, select(subQuery, elements));
++        else if (combinator == '+')
++            output = filterForAdjacentSiblings(elements, select(subQuery, root));
++        else if (combinator == '~')
++            output = filterForGeneralSiblings(elements, select(subQuery, root));
++        else
++            throw new IllegalStateException("Unknown combinator: " + combinator);
++        
++        elements.clear(); elements.addAll(output);
++    }
+@@ -1,5 +1,15 @@
+-    private void combinator(char combinator) {
+-        tq.consumeWhitespace();
+-        String subQuery = tq.consumeToAny(combinators);
+-        
+-        Elements output;
++    private void combinator(char combinator) {
++        tq.consumeWhitespace();
++        String subQuery;
++        if (combinator == '~' && tq.matches("=")) { // Check for '~=' operator
++            // If it's '~=', consume the entire attribute selector as a single unit
++            // This means consuming up to the closing ']' of the attribute selector
++            int startPos = tq.pos;
++            tq.consumeTo("]"); // Consume up to ']' (inclusive)
++            tq.consume(); // Consume the ']' itself
++            subQuery = tq.queue.substring(startPos, tq.pos);
++        } else {
++            subQuery = tq.consumeToAny(combinators);
++        }
++        
++        Elements output;
+@@ -1,15 +1,5 @@
+-    private void combinator(char combinator) {
+-        tq.consumeWhitespace();
+-        String subQuery;
+-        if (combinator == '~' && tq.matches("=")) { // Check for '~=' operator
+-            // If it's '~=', consume the entire attribute selector as a single unit
+-            // This means consuming up to the closing ']' of the attribute selector
+-            int startPos = tq.pos;
+-            tq.consumeTo("]"); // Consume up to ']' (inclusive)
+-            tq.consume(); // Consume the ']' itself
+-            subQuery = tq.queue.substring(startPos, tq.pos);
+-        } else {
+-            subQuery = tq.consumeToAny(combinators);
+-        }
+-        
+-        Elements output;
++    private void combinator(char combinator) {
++        tq.consumeWhitespace();
++        String subQuery = tq.consumeToAny(combinators);
++        
++        Elements output;
+@@ -1,1 +1,1 @@
+-    private final static String[] combinators = {",", ">", "+", "~", " "};
++    private final static String[] combinators = {",", ">", "+", " "};
+@@ -1,4 +1,11 @@
+-            } else if (tq.matchesAny(combinators)) {
+-                combinator(tq.consume());
+-            } else if (seenWhite) {
+-                combinator(' ');
++            } else if (tq.matchesAny(combinators)) {
++                combinator(tq.consume());
++            } else if (tq.matches("~")) { // Explicitly check for '~'
++                if (tq.matches("~=")) { // If it's '~=', it's an attribute operator
++                    // Do nothing here, let findElements() handle it in the next iteration
++                    // The 'tq' will still have '~=' at its head, and findElements() will pick it up.
++                } else { // It's a general sibling combinator '~'
++                    combinator(tq.consume()); // Consume '~' and call combinator
++                }
++            } else if (seenWhite) {
++                combinator(' ');
+
+--- a/src/test/java/org/jsoup/select/SelectorTest.java
++++ b/src/test/java/org/jsoup/select/SelectorTest.java
+@@ -1,2 +1,20 @@
+-        assertEquals("Hello", els.text());
+-    }
++        assertEquals("Hello", els.text());
++    }
++
++    @Test(expected = SelectorParseException.class)
++    public void testCombinedWithAttributeRegexChild() {
++        Document doc = Jsoup.parse("<div><table class=x><td>Hello</td></table></div>");
++        doc.select("div > table[class~=x|y]");
++    }
++
++    @Test(expected = SelectorParseException.class)
++    public void testCombinedWithAttributeRegexAdjacentSibling() {
++        Document doc = Jsoup.parse("<div></div><table class=x><td>Hello</td></table>");
++        doc.select("div + table[class~=x|y]");
++    }
++
++    @Test(expected = SelectorParseException.class)
++    public void testCombinedWithAttributeRegexGeneralSibling() {
++        Document doc = Jsoup.parse("<div></div><p></p><table class=x><td>Hello</td></table>");
++        doc.select("div ~ table[class~=x|y]");
++    }
+@@ -1,4 +1,5 @@
+-import org.jsoup.nodes.Document;
+-import org.jsoup.nodes.Element;
+-import org.junit.Test;
+-import static org.junit.Assert.*;
++import org.jsoup.nodes.Document;
++import org.jsoup.nodes.Element;
++import org.jsoup.select.Selector.SelectorParseException;
++import org.junit.Test;
++import static org.junit.Assert.*;
+@@ -1,20 +1,2 @@
+-        assertEquals("Hello", els.text());
+-    }
+-
+-    @Test(expected = SelectorParseException.class)
+-    public void testCombinedWithAttributeRegexChild() {
+-        Document doc = Jsoup.parse("<div><table class=x><td>Hello</td></table></div>");
+-        doc.select("div > table[class~=x|y]");
+-    }
+-
+-    @Test(expected = SelectorParseException.class)
+-    public void testCombinedWithAttributeRegexAdjacentSibling() {
+-        Document doc = Jsoup.parse("<div></div><table class=x><td>Hello</td></table>");
+-        doc.select("div + table[class~=x|y]");
+-    }
+-
+-    @Test(expected = SelectorParseException.class)
+-    public void testCombinedWithAttributeRegexGeneralSibling() {
+-        Document doc = Jsoup.parse("<div></div><p></p><table class=x><td>Hello</td></table>");
+-        doc.select("div ~ table[class~=x|y]");
+-    }
++        assertEquals("Hello", els.text());
++    }
+@@ -1,5 +1,4 @@
+-import org.jsoup.nodes.Document;
+-import org.jsoup.nodes.Element;
+-import org.jsoup.select.Selector.SelectorParseException;
+-import org.junit.Test;
+-import static org.junit.Assert.*;
++import org.jsoup.nodes.Document;
++import org.jsoup.nodes.Element;
++import org.junit.Test;
++import static org.junit.Assert.*;
+@@ -1,2 +1,26 @@
+-        assertEquals("Hello", els.text());
+-    }
++        assertEquals("Hello", els.text());
++    }
++
++    @Test
++    public void testCombinedWithAttributeRegexChild() {
++        Document doc = Jsoup.parse("<div><table class=x><td>Hello</td></table></div>");
++        Elements els = doc.select("div > table[class~=x|y]");
++        assertEquals(1, els.size());
++        assertEquals("Hello", els.text());
++    }
++
++    @Test
++    public void testCombinedWithAttributeRegexAdjacentSibling() {
++        Document doc = Jsoup.parse("<div></div><table class=x><td>Hello</td></table>");
++        Elements els = doc.select("div + table[class~=x|y]");
++        assertEquals(1, els.size());
++        assertEquals("Hello", els.text());
++    }
++
++    @Test
++    public void testCombinedWithAttributeRegexGeneralSibling() {
++        Document doc = Jsoup.parse("<div></div><p></p><table class=x><td>Hello</td></table>");
++        Elements els = doc.select("div ~ table[class~=x|y]");
++        assertEquals(1, els.size());
++        assertEquals("Hello", els.text());
++    }

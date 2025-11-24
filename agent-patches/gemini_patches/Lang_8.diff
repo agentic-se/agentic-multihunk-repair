@@ -1,0 +1,16 @@
+--- a/src/main/java/org/apache/commons/lang3/time/FastDatePrinter.java
++++ b/src/main/java/org/apache/commons/lang3/time/FastDatePrinter.java
+@@ -1,6 +1,7 @@
+-            if (zone.useDaylightTime()
+-                    && calendar.get(Calendar.DST_OFFSET) != 0) {
+-                buffer.append(getTimeZoneDisplay(zone, true, mStyle, mLocale));
+-            } else {
+-                buffer.append(getTimeZoneDisplay(zone, false, mStyle, mLocale));
+-            }
++            TimeZone calendarTimeZone = calendar.getTimeZone();
++            if (calendarTimeZone.useDaylightTime()
++                    && calendar.get(Calendar.DST_OFFSET) != 0) {
++                buffer.append(getTimeZoneDisplay(calendarTimeZone, true, mStyle, mLocale));
++            } else {
++                buffer.append(getTimeZoneDisplay(calendarTimeZone, false, mStyle, mLocale));
++            }

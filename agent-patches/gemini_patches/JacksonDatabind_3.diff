@@ -1,0 +1,25 @@
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/StringArrayDeserializer.java
+@@ -1,8 +1,14 @@
+-            String value;
+-            if (t == JsonToken.VALUE_STRING) {
+-                value = jp.getText();
+-            } else if (t == JsonToken.VALUE_NULL) {
+-                value = _elementDeserializer.getNullValue();
+-            } else {
+-                value = _parseString(jp, ctxt);
+-            }
++            String value;
++            if (t == JsonToken.VALUE_STRING) {
++                value = jp.getText();
++            } else if (t == JsonToken.VALUE_NULL) {
++                // [databind#479]: null handling was busted in 2.4.0
++                // When no custom deserializer, plain null is fine
++                if (_elementDeserializer == null) {
++                    value = null;
++                } else {
++                    value = _elementDeserializer.getNullValue();
++                }
++            } else {
++                value = _parseString(jp, ctxt);
++            }

@@ -1,0 +1,43 @@
+diff --git a/src/main/java/org/jsoup/Jsoup.java b/src/main/java/org/jsoup/Jsoup.java
+index d25c186..24bc4c4 100644
+--- a/src/main/java/org/jsoup/Jsoup.java
++++ b/src/main/java/org/jsoup/Jsoup.java
+@@ -247,7 +247,23 @@ public class Jsoup {
+      @see #clean(String, org.jsoup.safety.Whitelist) 
+      */
+     public static boolean isValid(String bodyHtml, Whitelist whitelist) {
+-        return new Cleaner(whitelist).isValid(parseBodyFragment(bodyHtml, ""));
++        // Parse as a full document to avoid destructive body-fragment parsing
++        // which can hide disallowed tags like <html>, <head>, etc.
++        // If structural tags are present, this is not a body fragment
++        String lower = bodyHtml == null ? "" : bodyHtml.toLowerCase();
++        if (lower.contains("<html") || lower.contains("<head") || lower.contains("<body"))
++            return false;
++
++        // parse with error tracking to detect malformed input (e.g., unclosed tags)
++        Parser p = Parser.htmlParser();
++        p.setTrackErrors(1);
++        Document doc = p.parseInput(bodyHtml, "");
++        if (!p.getErrors().isEmpty())
++            return false;
++        // if there is any content outside the root <html> element (e.g., comments), not valid for body HTML
++        if (doc.childNodeSize() > 1)
++            return false;
++        return new Cleaner(whitelist).isValid(doc);
+     }
+     
+ }
+diff --git a/src/main/java/org/jsoup/safety/Cleaner.java b/src/main/java/org/jsoup/safety/Cleaner.java
+index 7e0eb28..4d39e9b 100644
+--- a/src/main/java/org/jsoup/safety/Cleaner.java
++++ b/src/main/java/org/jsoup/safety/Cleaner.java
+@@ -72,6 +72,9 @@ public class Cleaner {
+      */
+     public boolean isValid(Document dirtyDocument) {
+         Validate.notNull(dirtyDocument);
++        // consider any content in the head as invalid for body HTML validation
++        if (dirtyDocument.head() != null && dirtyDocument.head().childNodeSize() > 0)
++            return false;
+ 
+         Document clean = Document.createShell(dirtyDocument.baseUri());
+         int numDiscarded = copySafeNodes(dirtyDocument.body(), clean.body());

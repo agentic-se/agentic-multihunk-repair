@@ -1,0 +1,58 @@
+diff --git a/src/com/google/javascript/jscomp/InlineGetters.java b/src/com/google/javascript/jscomp/InlineGetters.java
+index ab63d286..76ff1fd7 100644
+--- a/src/com/google/javascript/jscomp/InlineGetters.java
++++ b/src/com/google/javascript/jscomp/InlineGetters.java
+@@ -93,12 +93,14 @@ class InlineGetters extends MethodCompilerPass {
+               logger.fine("Inlining property accessor: " + callName);
+               inlinePropertyReturn(parent, callNode, returned);
+             } else if (NodeUtil.isLiteralValue(returned) &&
+-              !NodeUtil.mayHaveSideEffects(callNode.getFirstChild())) {
++              !NodeUtil.mayHaveSideEffects(
++                  callNode.getFirstChild().getFirstChild())) {
+               logger.fine("Inlining constant accessor: " + callName);
+               inlineConstReturn(parent, callNode, returned);
+             }
+           } else if (isEmptyMethod(firstDefinition) &&
+-              !NodeUtil.mayHaveSideEffects(callNode.getFirstChild())) {
++              !NodeUtil.mayHaveSideEffects(
++                  callNode.getFirstChild().getFirstChild())) {
+             logger.fine("Inlining empty method: " + callName);
+             inlineEmptyMethod(t, parent, callNode);
+           }
+@@ -255,7 +257,17 @@ class InlineGetters extends MethodCompilerPass {
+     if (NodeUtil.isExprCall(parent)) {
+       parent.getParent().replaceChild(parent, new Node(Token.EMPTY));
+     } else {
+-      parent.replaceChild(call, new Node(Token.VOID, Node.newNumber(0)));
++      // Try to remove the entire expression statement containing this call,
++      // even if the call is wrapped in parentheses.
++      Node ancestor = parent;
++      while (ancestor != null && ancestor.getType() != Token.EXPR_RESULT) {
++        ancestor = ancestor.getParent();
++      }
++      if (ancestor != null) {
++        ancestor.getParent().replaceChild(ancestor, new Node(Token.EMPTY));
++      } else {
++        parent.replaceChild(call, new Node(Token.VOID, Node.newNumber(0)));
++      }
+     }
+     compiler.reportCodeChange();
+   }
+diff --git a/src/com/google/javascript/jscomp/MethodCompilerPass.java b/src/com/google/javascript/jscomp/MethodCompilerPass.java
+index cd39b6ee..2966d0a1 100644
+--- a/src/com/google/javascript/jscomp/MethodCompilerPass.java
++++ b/src/com/google/javascript/jscomp/MethodCompilerPass.java
+@@ -115,6 +115,13 @@ abstract class MethodCompilerPass implements CompilerPass {
+               "VarCheck should have caught this undefined function");
+         }
+       }
++      // If the referenced function is defined in externs, treat the
++      // property as an extern method as well. This prevents downstream
++      // passes (e.g. InlineGetters) from inlining or otherwise rewriting
++      // calls to this method, which could change program semantics.
++      if (v.isExtern()) {
++        externMethods.add(name);
++      }
+       Node function = v.getInitialValue();
+       if (function != null &&
+           function.getType() == Token.FUNCTION) {

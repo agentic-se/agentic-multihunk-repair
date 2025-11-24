@@ -1,0 +1,81 @@
+--- a/src/java/org/apache/commons/lang/ClassUtils.java
++++ b/src/java/org/apache/commons/lang/ClassUtils.java
+@@ -1,22 +1,22 @@
+-    public static String getShortClassName(String className) {
+-        if (className == null) {
+-            return StringUtils.EMPTY;
+-        }
+-        if (className.length() == 0) {
+-            return StringUtils.EMPTY;
+-        }
+-
+-
+-        // Handle array encoding
+-            // Strip Object type encoding
+-
+-
+-        int lastDotIdx = className.lastIndexOf(PACKAGE_SEPARATOR_CHAR);
+-        int innerIdx = className.indexOf(
+-                INNER_CLASS_SEPARATOR_CHAR, lastDotIdx == -1 ? 0 : lastDotIdx + 1);
+-        String out = className.substring(lastDotIdx + 1);
+-        if (innerIdx != -1) {
+-            out = out.replace(INNER_CLASS_SEPARATOR_CHAR, PACKAGE_SEPARATOR_CHAR);
+-        }
+-        return out;
+-    }
++    public static String getShortClassName(String className) {
++        if (className == null || className.length() == 0) {
++            return StringUtils.EMPTY;
++        }
++
++        // Handle array encoding (JVM format like [Ljava.lang.String;)
++        // The Class.getName() will return a String that starts with '[' for arrays
++        // e.g. [Ljava.lang.String; for String[]
++        // or [I for int[]
++        if (className.startsWith("[")) {
++            className = getCanonicalName(className);
++        }
++
++        int lastDotIdx = className.lastIndexOf(PACKAGE_SEPARATOR_CHAR);
++        int innerIdx = className.indexOf(
++                INNER_CLASS_SEPARATOR_CHAR, lastDotIdx == -1 ? 0 : lastDotIdx + 1);
++        String out = className.substring(lastDotIdx + 1);
++        if (innerIdx != -1) {
++            out = out.replace(INNER_CLASS_SEPARATOR_CHAR, PACKAGE_SEPARATOR_CHAR);
++        }
++        return out;
++    }
+@@ -1,14 +1,19 @@
+-    public static String getPackageName(String className) {
+-        if (className == null) {
+-            return StringUtils.EMPTY;
+-        }
+-
+-        // Strip array encoding
+-        // Strip Object type encoding
+-
+-        int i = className.lastIndexOf(PACKAGE_SEPARATOR_CHAR);
+-        if (i == -1) {
+-            return StringUtils.EMPTY;
+-        }
+-        return className.substring(0, i);
+-    }
++    public static String getPackageName(String className) {
++        if (className == null) {
++            return StringUtils.EMPTY;
++        }
++
++        // Handle array encoding (JVM format like [Ljava.lang.String;)
++        // The Class.getName() will return a String that starts with '[' for arrays
++        // e.g. [Ljava.lang.String; for String[]
++        // or [I for int[]
++        if (className.startsWith("[")) {
++            className = getCanonicalName(className);
++        }
++
++        int i = className.lastIndexOf(PACKAGE_SEPARATOR_CHAR);
++        if (i == -1) {
++            return StringUtils.EMPTY;
++        }
++        return className.substring(0, i);
++    }

@@ -1,0 +1,45 @@
+diff --git a/src/com/google/javascript/jscomp/ScopedAliases.java b/src/com/google/javascript/jscomp/ScopedAliases.java
+index 5acf25a1..354faee3 100644
+--- a/src/com/google/javascript/jscomp/ScopedAliases.java
++++ b/src/com/google/javascript/jscomp/ScopedAliases.java
+@@ -196,6 +196,9 @@ class ScopedAliases implements HotSwapCompilerPass {
+ 
+     private AliasTransformation transformation = null;
+ 
++    // List of nodes with JSDoc to process in a second pass
++    private final List<Node> nodesToProcessForJsDoc = Lists.newArrayList();
++
+     Collection<Node> getAliasDefinitionsInOrder() {
+       return aliasDefinitionsInOrder;
+     }
+@@ -229,6 +232,16 @@ class ScopedAliases implements HotSwapCompilerPass {
+     @Override
+     public void exitScope(NodeTraversal t) {
+       if (t.getScopeDepth() == 2) {
++        // Process JSDoc nodes after all aliases have been collected
++        for (Node node : nodesToProcessForJsDoc) {
++          JSDocInfo info = node.getJSDocInfo();
++          if (info != null) {
++            for (Node typeNode : info.getTypeNodes()) {
++              fixTypeNode(typeNode);
++            }
++          }
++        }
++        nodesToProcessForJsDoc.clear();
+         aliases.clear();
+         transformation = null;
+       }
+@@ -355,11 +368,10 @@ class ScopedAliases implements HotSwapCompilerPass {
+           }
+         }
+ 
++        // Collect nodes with JSDoc to process later, after all aliases are collected
+         JSDocInfo info = n.getJSDocInfo();
+         if (info != null) {
+-          for (Node node : info.getTypeNodes()) {
+-            fixTypeNode(node);
+-          }
++          nodesToProcessForJsDoc.add(n);
+         }
+ 
+         // TODO(robbyw): Error for goog.scope not at root.

@@ -1,0 +1,26 @@
+diff --git a/src/java/org/apache/commons/cli2/builder/PatternBuilder.java b/src/java/org/apache/commons/cli2/builder/PatternBuilder.java
+index 6910017..740c32d 100644
+--- a/src/java/org/apache/commons/cli2/builder/PatternBuilder.java
++++ b/src/java/org/apache/commons/cli2/builder/PatternBuilder.java
+@@ -16,8 +16,8 @@
+  */
+ package org.apache.commons.cli2.builder;
+ 
+-import java.util.HashSet;
+ import java.util.Iterator;
++import java.util.LinkedHashSet;
+ import java.util.Set;
+ 
+ import org.apache.commons.cli2.Argument;
+@@ -64,7 +64,10 @@ public class PatternBuilder {
+         this.abuilder = abuilder;
+     }
+ 
+-    private final Set options = new HashSet();
++    // Use LinkedHashSet to preserve insertion order of options defined by the pattern.
++    // A plain HashSet does not guarantee iteration order, which can lead to
++    // nondeterministic behavior (e.g., tests expecting a specific order).
++    private final Set options = new LinkedHashSet();
+ 
+     /**
+      * Creates a new Option instance.

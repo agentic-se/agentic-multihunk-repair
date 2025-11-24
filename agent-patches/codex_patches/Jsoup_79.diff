@@ -1,0 +1,23 @@
+diff --git a/src/main/java/org/jsoup/nodes/LeafNode.java b/src/main/java/org/jsoup/nodes/LeafNode.java
+index 0e068b5..9793260 100644
+--- a/src/main/java/org/jsoup/nodes/LeafNode.java
++++ b/src/main/java/org/jsoup/nodes/LeafNode.java
+@@ -3,6 +3,7 @@ package org.jsoup.nodes;
+ import org.jsoup.helper.Validate;
+ 
+ import java.util.List;
++import java.util.Collections;
+ 
+ abstract class LeafNode extends Node {
+ 
+@@ -91,6 +92,9 @@ abstract class LeafNode extends Node {
+ 
+     @Override
+     protected List<Node> ensureChildNodes() {
+-        throw new UnsupportedOperationException("Leaf Nodes do not have child nodes.");
++        // Leaf nodes never have children; return an immutable empty list
++        // so callers like childNodes(), unwrap(), etc. can operate safely
++        // without having to special-case LeafNode.
++        return Collections.emptyList();
+     }
+ }

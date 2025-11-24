@@ -1,0 +1,29 @@
+diff --git a/src/main/java/org/jsoup/parser/CharacterReader.java b/src/main/java/org/jsoup/parser/CharacterReader.java
+index a9a2683..5188e06 100644
+--- a/src/main/java/org/jsoup/parser/CharacterReader.java
++++ b/src/main/java/org/jsoup/parser/CharacterReader.java
+@@ -15,9 +15,13 @@ class CharacterReader {
+ 
+     CharacterReader(String input) {
+         Validate.notNull(input);
++        // Normalize newlines: treat carriage return (\r) as line feed (\n)
++        // and collapse Windows-style CRLF pairs to a single \n. This ensures
++        // consistent line handling across the tokeniser and reader utilities.
++        String normalised = input.replace("\r\n", "\n").replace('\r', '\n');
+ 
+-        this.input = input;
+-        this.length = input.length();
++        this.input = normalised;
++        this.length = normalised.length();
+     }
+ 
+     int pos() {
+@@ -96,7 +100,7 @@ class CharacterReader {
+     }
+ 
+     String consumeToEnd() {
+-        String data = input.substring(pos, input.length() - 1);
++        String data = input.substring(pos);
+         pos = input.length();
+         return data;
+     }

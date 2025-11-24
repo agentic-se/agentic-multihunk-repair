@@ -1,0 +1,73 @@
+diff --git a/src/main/java/org/apache/commons/math3/util/FastMath.java b/src/main/java/org/apache/commons/math3/util/FastMath.java
+index 377812006..fe9aadfdd 100644
+--- a/src/main/java/org/apache/commons/math3/util/FastMath.java
++++ b/src/main/java/org/apache/commons/math3/util/FastMath.java
+@@ -79,6 +79,7 @@ import java.io.PrintStream;
+  */
+ public class FastMath {
+     /** StrictMath.log(Double.MAX_VALUE): {@value} */
++    private static final double LOG_MAX_VALUE = StrictMath.log(Double.MAX_VALUE);
+ 
+     /** Archimede's constant PI, ratio of circle circumference to diameter. */
+     public static final double PI = 105414357.0 / 33554432.0 + 1.984187159361080883e-9;
+@@ -390,13 +391,22 @@ public class FastMath {
+       // for numbers with magnitude 20 or so,
+       // exp(-z) can be ignored in comparison with exp(z)
+ 
++      final double absX = x < 0 ? -x : x;
++
++      // Avoid overflow near exp overflow threshold (MATH-905).
++      if (absX >= LOG_MAX_VALUE) {
++          // cosh(x) ~ 0.5 * (exp(|x|/2))^2
++          final double t = exp(absX * 0.5);
++          return (0.5 * t) * t;
++      }
++
+       if (x > 20) {
+-              // Avoid overflow (MATH-905).
+-              return 0.5 * exp(x);
+-          }
++          // For moderately large x use 0.5*exp(x)
++          return 0.5 * exp(x);
++      }
+       if (x < -20) {
+-              // Avoid overflow (MATH-905).
+-              return 0.5 * exp(-x);
++          // Symmetry for negative x
++          return 0.5 * exp(-x);
+       }
+ 
+       final double hiPrec[] = new double[2];
+@@ -451,13 +461,27 @@ public class FastMath {
+       // for values of z larger than about 20,
+       // exp(-z) can be ignored in comparison with exp(z)
+ 
+-      if (x > 20) {
+-              // Avoid overflow (MATH-905).
+-              return 0.5 * exp(x);
++      final double absX = x < 0 ? -x : x;
++
++      // Avoid overflow near exp overflow threshold (MATH-905).
++      if (absX >= LOG_MAX_VALUE) {
++          if (x > 0) {
++              final double t = exp(x * 0.5);
++              return (0.5 * t) * t;
++          } else if (x < 0) {
++              final double t = exp(-x * 0.5);
++              return (-0.5 * t) * t;
++          } else {
++              return x; // x == 0
+           }
++      }
++
++      if (x > 20) {
++          // For moderately large x use 0.5*exp(x)
++          return 0.5 * exp(x);
++      }
+       if (x < -20) {
+-              // Avoid overflow (MATH-905).
+-              return -0.5 * exp(-x);
++          return -0.5 * exp(-x);
+       }
+ 
+       if (x == 0) {

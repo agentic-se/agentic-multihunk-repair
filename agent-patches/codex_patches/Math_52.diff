@@ -1,0 +1,161 @@
+diff --git a/src/main/java/org/apache/commons/math/geometry/euclidean/threed/Rotation.java b/src/main/java/org/apache/commons/math/geometry/euclidean/threed/Rotation.java
+index 20f5b3486..2d2a9074e 100644
+--- a/src/main/java/org/apache/commons/math/geometry/euclidean/threed/Rotation.java
++++ b/src/main/java/org/apache/commons/math/geometry/euclidean/threed/Rotation.java
+@@ -311,82 +311,83 @@ public class Rotation implements Serializable {
+    * @exception IllegalArgumentException if the norm of one of the vectors is zero
+    */
+   public Rotation(Vector3D u1, Vector3D u2, Vector3D v1, Vector3D v2) {
+-
+-  // norms computation
+-  double u1u1 = u1.getNormSq();
+-  double u2u2 = u2.getNormSq();
+-  double v1v1 = v1.getNormSq();
+-  double v2v2 = v2.getNormSq();
+-  if ((u1u1 == 0) || (u2u2 == 0) || (v1v1 == 0) || (v2v2 == 0)) {
+-    throw MathRuntimeException.createIllegalArgumentException(LocalizedFormats.ZERO_NORM_FOR_ROTATION_DEFINING_VECTOR);
+-  }
+-
+-  // normalize v1 in order to have (v1'|v1') = (u1|u1)
+-  v1 = new Vector3D(FastMath.sqrt(u1u1 / v1v1), v1);
+-
+-  // adjust v2 in order to have (u1|u2) = (v1'|v2') and (v2'|v2') = (u2|u2)
+-  double u1u2   = u1.dotProduct(u2);
+-  double v1v2   = v1.dotProduct(v2);
+-  double coeffU = u1u2 / u1u1;
+-  double coeffV = v1v2 / u1u1;
+-  double beta   = FastMath.sqrt((u2u2 - u1u2 * coeffU) / (v2v2 - v1v2 * coeffV));
+-  double alpha  = coeffU - beta * coeffV;
+-  v2 = new Vector3D(alpha, v1, beta, v2);
+-
+-  // preliminary computation
+-  Vector3D uRef  = u1;
+-  Vector3D vRef  = v1;
+-  Vector3D v1Su1 = v1.subtract(u1);
+-  Vector3D v2Su2 = v2.subtract(u2);
+-  Vector3D k     = v1Su1.crossProduct(v2Su2);
+-  Vector3D u3    = u1.crossProduct(u2);
+-  double c       = k.dotProduct(u3);
+-  if (c == 0) {
+-    // the (q1, q2, q3) vector is close to the (u1, u2) plane
+-    // we try other vectors
+-    Vector3D v3 = Vector3D.crossProduct(v1, v2);
+-    Vector3D v3Su3 = v3.subtract(u3);
+-    k = v1Su1.crossProduct(v3Su3);
+-    Vector3D u2Prime = u1.crossProduct(u3);
+-    c = k.dotProduct(u2Prime);
+-
+-    if (c == 0) {
+-      // the (q1, q2, q3) vector is also close to the (u1, u3) plane,
+-      // it is almost aligned with u1: we try (u2, u3) and (v2, v3)
+-      k = v2Su2.crossProduct(v3Su3);;
+-      c = k.dotProduct(u2.crossProduct(u3));;
+-
+-      if (c == 0) {
+-        // the (q1, q2, q3) vector is aligned with everything
+-        // this is really the identity rotation
+-        q0 = 1.0;
+-        q1 = 0.0;
+-        q2 = 0.0;
+-        q3 = 0.0;
+-        return;
+-      }
+-
+-      // we will have to use u2 and v2 to compute the scalar part
+-      uRef = u2;
+-      vRef = v2;
+-
++    // Build a numerically stable rotation by constructing
++    // orthonormal bases from each vector pair and mapping between them.
++
++    // norms check (reject zero vectors)
++    final double u1u1 = u1.getNormSq();
++    final double u2u2 = u2.getNormSq();
++    final double v1v1 = v1.getNormSq();
++    final double v2v2 = v2.getNormSq();
++    if ((u1u1 == 0) || (u2u2 == 0) || (v1v1 == 0) || (v2v2 == 0)) {
++      throw MathRuntimeException.createIllegalArgumentException(LocalizedFormats.ZERO_NORM_FOR_ROTATION_DEFINING_VECTOR);
+     }
+ 
+-  }
+-
+-  // compute the vectorial part
+-  c = FastMath.sqrt(c);
+-  double inv = 1.0 / (c + c);
+-  q1 = inv * k.getX();
+-  q2 = inv * k.getY();
+-  q3 = inv * k.getZ();
+-
+-  // compute the scalar part
+-   k = new Vector3D(uRef.getY() * q3 - uRef.getZ() * q2,
+-                    uRef.getZ() * q1 - uRef.getX() * q3,
+-                    uRef.getX() * q2 - uRef.getY() * q1);
+-  q0 = vRef.dotProduct(k) / (2 * k.getNormSq());
++    // Orthonormal basis from (u1, u2)
++    final Vector3D a1 = new Vector3D(1.0 / FastMath.sqrt(u1u1), u1);
++    final double u2AlongA1 = u2.dotProduct(a1);
++    Vector3D tmp = new Vector3D(1.0, u2, -u2AlongA1, a1);
++    final double tmpNormSq = tmp.getNormSq();
++    final Vector3D a2 = (tmpNormSq == 0) ? a1.orthogonal() : new Vector3D(1.0 / FastMath.sqrt(tmpNormSq), tmp);
++    final Vector3D a3 = a1.crossProduct(a2);
++
++    // Orthonormal basis from (v1, v2)
++    final Vector3D b1 = new Vector3D(1.0 / FastMath.sqrt(v1v1), v1);
++    final double v2AlongB1 = v2.dotProduct(b1);
++    tmp = new Vector3D(1.0, v2, -v2AlongB1, b1);
++    final double tmp2NormSq = tmp.getNormSq();
++    final Vector3D b2 = (tmp2NormSq == 0) ? b1.orthogonal() : new Vector3D(1.0 / FastMath.sqrt(tmp2NormSq), tmp);
++    final Vector3D b3 = b1.crossProduct(b2);
++
++    // Rotation matrix mapping A basis to B basis: R = B * A^T = sum_k (b_k * a_k^T)
++    final double a1x = a1.getX();
++    final double a1y = a1.getY();
++    final double a1z = a1.getZ();
++    final double a2x = a2.getX();
++    final double a2y = a2.getY();
++    final double a2z = a2.getZ();
++    final double a3x = a3.getX();
++    final double a3y = a3.getY();
++    final double a3z = a3.getZ();
++
++    final double b1x = b1.getX();
++    final double b1y = b1.getY();
++    final double b1z = b1.getZ();
++    final double b2x = b2.getX();
++    final double b2y = b2.getY();
++    final double b2z = b2.getZ();
++    final double b3x = b3.getX();
++    final double b3y = b3.getY();
++    final double b3z = b3.getZ();
++
++    final double[][] m = new double[3][3];
++    // first row
++    m[0][0] = b1x * a1x + b2x * a2x + b3x * a3x;
++    m[0][1] = b1x * a1y + b2x * a2y + b3x * a3y;
++    m[0][2] = b1x * a1z + b2x * a2z + b3x * a3z;
++    // second row
++    m[1][0] = b1y * a1x + b2y * a2x + b3y * a3x;
++    m[1][1] = b1y * a1y + b2y * a2y + b3y * a3y;
++    m[1][2] = b1y * a1z + b2y * a2z + b3y * a3z;
++    // third row
++    m[2][0] = b1z * a1x + b2z * a2x + b3z * a3x;
++    m[2][1] = b1z * a1y + b2z * a2y + b3z * a3y;
++    m[2][2] = b1z * a1z + b2z * a2z + b3z * a3z;
++
++    // Delegate to matrix-based constructor to extract quaternion
++    Rotation r;
++    try {
++      r = new Rotation(m, 1.0e-12);
++    } catch (NotARotationMatrixException nrme) {
++      // This should not happen since we built orthonormal bases,
++      // but fallback to identity to be safe.
++      r = Rotation.IDENTITY;
++    }
+ 
++    this.q0 = r.q0;
++    this.q1 = r.q1;
++    this.q2 = r.q2;
++    this.q3 = r.q3;
+   }
+ 
+   /** Build one of the rotations that transform one vector into another one.

@@ -1,0 +1,18 @@
+diff --git a/src/com/google/javascript/jscomp/CodeConsumer.java b/src/com/google/javascript/jscomp/CodeConsumer.java
+index 146d2f8b..09d47815 100644
+--- a/src/com/google/javascript/jscomp/CodeConsumer.java
++++ b/src/com/google/javascript/jscomp/CodeConsumer.java
+@@ -238,7 +238,12 @@ abstract class CodeConsumer {
+       add(" ");
+     }
+ 
+-    if ((long) x == x) {
++    // Preserve negative zero: String.valueOf(-0.0) -> "-0.0", but the
++    // integer fast-path below would incorrectly print it as "0".
++    boolean isNegativeZero = (x == 0.0) &&
++        (Double.doubleToRawLongBits(x) == Double.doubleToRawLongBits(-0.0d));
++
++    if ((long) x == x && !isNegativeZero) {
+       long value = (long) x;
+       long mantissa = value;
+       int exp = 0;

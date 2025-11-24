@@ -1,0 +1,68 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index f07173c..36a6ea9 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -7,6 +7,7 @@ import org.jsoup.parser.Parser;
+ import java.io.*;
+ import java.nio.ByteBuffer;
+ import java.nio.charset.Charset;
++import java.nio.charset.IllegalCharsetNameException;
+ import java.util.regex.Matcher;
+ import java.util.regex.Pattern;
+ import java.util.Locale;
+@@ -89,10 +90,20 @@ public class DataUtil {
+                 }
+ 
+                 if (foundCharset != null && foundCharset.length() != 0 && !foundCharset.equals(defaultCharset)) { // need to re-decode
+-                    charsetName = foundCharset;
+-                    byteData.rewind();
+-                    docData = Charset.forName(foundCharset).decode(byteData).toString();
+-                    doc = null;
++                    // Clean up the charset name (remove quotes, etc.)
++                    foundCharset = foundCharset.trim().replace("\"", "").replace("'", "");
++                    if (foundCharset.length() == 0) {
++                        foundCharset = null;
++                    } else {
++                        try {
++                            charsetName = foundCharset;
++                            byteData.rewind();
++                            docData = Charset.forName(foundCharset).decode(byteData).toString();
++                            doc = null;
++                        } catch (IllegalCharsetNameException e) {
++                            // illegal charset name, ignore and use default
++                        }
++                    }
+                 }
+             }
+         } else { // specified by content type header (or by user on file load)
+@@ -158,10 +169,25 @@ public class DataUtil {
+         Matcher m = charsetPattern.matcher(contentType);
+         if (m.find()) {
+             String charset = m.group(1).trim();
++            charset = charset.replace("\"", ""); // remove any double quotes
++            charset = charset.replace("'", ""); // remove any single quotes
++            if (charset.isEmpty()) return null;
++            // Handle duplicate charset= prefix (e.g., charset=charset=iso-8859-1)
++            if (charset.startsWith("charset="))
++                charset = charset.substring("charset=".length());
++            // Handle comma-separated values, take the first one
++            if (charset.contains(","))
++                charset = charset.substring(0, charset.indexOf(",")).trim();
++            if (charset.isEmpty()) return null;
++            try {
+                 if (Charset.isSupported(charset)) return charset;
+                 charset = charset.toUpperCase(Locale.ENGLISH);
+                 if (Charset.isSupported(charset)) return charset;
+-                // if our advanced charset matching fails.... we just take the default
++            } catch (IllegalCharsetNameException e) {
++                // Charset name is illegal, return null
++                return null;
++            }
++            // if our advanced charset matching fails.... we just take the default
+         }
+         return null;
+     }
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

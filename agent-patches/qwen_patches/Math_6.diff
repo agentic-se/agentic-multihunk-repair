@@ -1,0 +1,89 @@
+diff --git a/src/main/java/org/apache/commons/math3/optimization/general/LevenbergMarquardtOptimizer.java b/src/main/java/org/apache/commons/math3/optimization/general/LevenbergMarquardtOptimizer.java
+index 0c41d3eb9..bfe0d6b0f 100644
+--- a/src/main/java/org/apache/commons/math3/optimization/general/LevenbergMarquardtOptimizer.java
++++ b/src/main/java/org/apache/commons/math3/optimization/general/LevenbergMarquardtOptimizer.java
+@@ -1,5 +1,4 @@
+-/*
+- * Licensed to the Apache Software Foundation (ASF) under one or more
++/* Licensed to the Apache Software Foundation (ASF) under one or more
+  * contributor license agreements.  See the NOTICE file distributed with
+  * this work for additional information regarding copyright ownership.
+  * The ASF licenses this file to You under the Apache License, Version 2.0
+@@ -139,6 +138,8 @@ public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
+     private double[] weightedResidual;
+     /** Weighted Jacobian. */
+     private double[][] weightedJacobian;
++    /** Number of iterations performed. */
++    private int iterations;
+ 
+     /**
+      * Build an optimizer for least squares problems with default values
+@@ -310,6 +311,9 @@ public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
+         PointVectorValuePair current = new PointVectorValuePair(currentPoint, currentObjective);
+         double currentCost = computeCost(currentResiduals);
+ 
++        // Reset iterations count at start of optimization
++        iterations = 0;
++        
+         // Outer loop.
+         lmPar = 0;
+         boolean firstIteration = true;
+@@ -373,6 +377,7 @@ public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
+             }
+             if (maxCosine <= orthoTolerance) {
+                 // Convergence has been reached.
++                iterations = iter;
+                 setCost(currentCost);
+                 // Update (deprecated) "point" field.
+                 point = current.getPoint();
+@@ -483,6 +488,7 @@ public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
+                     if (checker != null) {
+                         // we use the vectorial convergence checker
+                         if (checker.converged(iter, previous, current)) {
++                            iterations = iter;
+                             setCost(currentCost);
+                             // Update (deprecated) "point" field.
+                             point = current.getPoint();
+@@ -511,6 +517,7 @@ public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
+                      preRed <= costRelativeTolerance &&
+                      ratio <= 2.0) ||
+                     delta <= parRelativeTolerance * xNorm) {
++                    iterations = iter;
+                     setCost(currentCost);
+                     // Update (deprecated) "point" field.
+                     point = current.getPoint();
+@@ -519,7 +526,8 @@ public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
+ 
+                 // tests for termination and stringent tolerances
+                 // (2.2204e-16 is the machine epsilon for IEEE754)
+-                if ((FastMath.abs(actRed) <= 2.2204e-16) && (preRed <= 2.2204e-16) && (ratio <= 2.0)) {
++                if ((FastMath.abs(actRed) <= 2.2204e-16 && preRed <= 2.2204e-16 && ratio <= 2.0) ||
++                    delta <= 2.2204e-16 * xNorm) {
+                     throw new ConvergenceException(LocalizedFormats.TOO_SMALL_COST_RELATIVE_TOLERANCE,
+                                                    costRelativeTolerance);
+                 } else if (delta <= 2.2204e-16 * xNorm) {
+@@ -805,7 +813,7 @@ public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
+             if ((lmDiag[j] == 0) && (nSing == solvedCols)) {
+                 nSing = j;
+             }
+-            if (nSing < solvedCols) {
++            if (nSing > solvedCols) {
+                 work[j] = 0;
+             }
+         }
+@@ -944,4 +952,13 @@ public class LevenbergMarquardtOptimizer extends AbstractLeastSquaresOptimizer {
+             }
+         }
+     }
+-}
++
++    /**
++     * Get the number of iterations performed by the optimizer.
++     *
++     * @return the number of iterations performed by the optimizer.
++     */
++    public int getIterations() {
++        return iterations;
++    }
++}
+\ No newline at end of file

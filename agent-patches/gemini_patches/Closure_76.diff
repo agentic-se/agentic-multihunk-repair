@@ -1,0 +1,124 @@
+--- a/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java
++++ b/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java
+@@ -1,14 +1,1 @@
+-      // Check if the assignment is part of a conditional expression.
+-      // If so, do not remove it, as its side effect might be crucial.
+-      Node current = n;
+-      while (current != null && current != exprRoot) {
+-        Node currentParent = current.getParent();
+-        if (currentParent != null &&
+-            (currentParent.getType() == Token.OR ||
+-             currentParent.getType() == Token.AND ||
+-             currentParent.getType() == Token.HOOK)) {
+-          return; // Do not remove this assignment.
+-        }
+-        current = currentParent;
+-      }
+-
++
+@@ -1,22 +1,37 @@
+-    switch (n.getType()) {
+-      // Conditionals
+-      case Token.OR:
+-      case Token.AND:
+-        // With a AND/OR the first branch always runs, but the second is
+-        // may not.
+-      case Token.HOOK:
+-        return checkHookBranchReadBeforeKill(
+-            n.getFirstChild().getNext(), n.getLastChild(), variable);
+-
+-      default:
+-        // Expressions are evaluated left-right, depth first.
+-        for (Node child = n.getFirstChild();
+-            child != null; child = child.getNext()) {
+-          if (!ControlFlowGraph.isEnteringNewCfgNode(child)) { // Not a FUNCTION
+-          VariableLiveness state = isVariableReadBeforeKill(child, variable);
+-          if (state != VariableLiveness.MAYBE_LIVE) {
+-            return state;
+-          }
+-        }
+-      }
+-    }
++    switch (n.getType()) {
++      // Conditionals
++      case Token.OR:
++      case Token.AND:
++        // For OR and AND, we need to check each child sequentially.
++        // If a read is found, return READ. If a kill is found, and it's
++        // the first child, then it's a KILL. Otherwise, continue.
++        for (Node child = n.getFirstChild();
++            child != null; child = child.getNext()) {
++          VariableLiveness state = isVariableReadBeforeKill(child, variable);
++          if (state == VariableLiveness.READ) {
++            return VariableLiveness.READ;
++          } else if (state == VariableLiveness.KILL) {
++            // If a kill happens in the first operand of OR/AND,
++            // the second operand might not be evaluated.
++            // So, if we find a KILL, we can return KILL.
++            return VariableLiveness.KILL;
++          }
++        }
++        return VariableLiveness.MAYBE_LIVE;
++
++      case Token.HOOK:
++        return checkHookBranchReadBeforeKill(
++            n.getFirstChild().getNext(), n.getLastChild(), variable);
++
++      default:
++        // Expressions are evaluated left-right, depth first.
++        for (Node child = n.getFirstChild();
++            child != null; child = child.getNext()) {
++          if (!ControlFlowGraph.isEnteringNewCfgNode(child)) { // Not a FUNCTION
++          VariableLiveness state = isVariableReadBeforeKill(child, variable);
++          if (state != VariableLiveness.MAYBE_LIVE) {
++            return state;
++          }
++        }
++      }
++    }
+@@ -1,16 +1,29 @@
+-    if (NodeUtil.isName(n) && variable.equals(n.getString())) {
+-      if (NodeUtil.isLhs(n, n.getParent())) {
+-        Preconditions.checkState(n.getParent().getType() == Token.ASSIGN);
+-        // The expression to which the assignment is made is evaluated before
+-        // the RHS is evaluated (normal left to right evaluation) but the KILL
+-        // occurs after the RHS is evaluated.
+-        Node rhs = n.getNext();
+-        VariableLiveness state = isVariableReadBeforeKill(rhs, variable);
+-        if (state == VariableLiveness.READ) {
+-          return state;
+-        }
+-        return VariableLiveness.KILL;
+-      } else {
+-        return VariableLiveness.READ;
+-      }
+-    }
++    if (NodeUtil.isName(n) && variable.equals(n.getString())) {
++      if (NodeUtil.isLhs(n, n.getParent())) {
++        Preconditions.checkState(n.getParent().getType() == Token.ASSIGN);
++        // The expression to which the assignment is made is evaluated before
++        // the RHS is evaluated (normal left to right evaluation) but the KILL
++        // occurs after the RHS is evaluated.
++        Node rhs = n.getNext();
++        VariableLiveness state = isVariableReadBeforeKill(rhs, variable);
++        if (state == VariableLiveness.READ) {
++          return state;
++        }
++
++        // If the assignment itself is used as a value (e.g., in a conditional
++        // or as a function argument), then the variable is considered READ.
++        Node assignNode = n.getParent();
++        Node parentOfAssign = assignNode.getParent();
++        if (parentOfAssign != null &&
++            (parentOfAssign.getType() == Token.CALL ||
++             parentOfAssign.getType() == Token.OR ||
++             parentOfAssign.getType() == Token.AND ||
++             parentOfAssign.getType() == Token.HOOK)) {
++          return VariableLiveness.READ;
++        }
++
++        return VariableLiveness.KILL;
++      } else {
++        return VariableLiveness.READ;
++      }
++    }

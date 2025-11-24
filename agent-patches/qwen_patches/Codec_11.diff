@@ -1,0 +1,26 @@
+diff --git a/src/main/java/org/apache/commons/codec/net/QuotedPrintableCodec.java b/src/main/java/org/apache/commons/codec/net/QuotedPrintableCodec.java
+index 13291cd5..be61d9ce 100644
+--- a/src/main/java/org/apache/commons/codec/net/QuotedPrintableCodec.java
++++ b/src/main/java/org/apache/commons/codec/net/QuotedPrintableCodec.java
+@@ -225,7 +225,16 @@ public class QuotedPrintableCodec implements BinaryEncoder, BinaryDecoder, Strin
+             final int b = bytes[i];
+             if (b == ESCAPE_CHAR) {
+                 try {
+-                    // if the next octet is a CR we have found a soft line break
++                    // Check if we have a soft line break (CR followed by LF)
++                    if (i + 1 < bytes.length && bytes[i + 1] == '\r') {
++                        // Skip the CR character and check for LF
++                        if (i + 2 < bytes.length && bytes[i + 2] == '\n') {
++                            // Soft line break - skip everything except the CR+LF
++                            i += 2; // advance past the CR and LF
++                            continue;
++                        }
++                    }
++                    // Handle regular quoted-printable encoding (a hex pair)
+                     int u = Utils.digit16(bytes[++i]);
+                     int l = Utils.digit16(bytes[++i]);
+                     buffer.write((char) ((u << 4) + l));
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

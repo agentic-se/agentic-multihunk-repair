@@ -1,0 +1,344 @@
+--- a/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
++++ b/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
+@@ -1,13 +1,6 @@
+-      case Token.NOT:
+-        // Don't fold !0 and !1 back to false.
+-        if (left.getType() == Token.NUMBER) {
+-          double numValue = left.getDouble();
+-          if (numValue == 0 || numValue == 1) {
+-            return n;
+-          }
+-        }
+-        int result = leftVal.toBoolean(true) ? Token.FALSE : Token.TRUE;
+-        Node replacementNode = new Node(result);
+-        parent.replaceChild(n, replacementNode);
+-        reportCodeChange();
+-        return replacementNode;
++      case Token.NOT:
++        int result = leftVal.toBoolean(true) ? Token.FALSE : Token.TRUE;
++        Node replacementNode = new Node(result);
++        parent.replaceChild(n, replacementNode);
++        reportCodeChange();
++        return replacementNode;
+@@ -1,6 +1,13 @@
+-      case Token.NOT:
+-        int result = leftVal.toBoolean(true) ? Token.FALSE : Token.TRUE;
+-        Node replacementNode = new Node(result);
+-        parent.replaceChild(n, replacementNode);
+-        reportCodeChange();
+-        return replacementNode;
++      case Token.NOT:
++        // Don't fold !0 and !1 back to false.
++        if (left.getType() == Token.NUMBER) {
++          double numValue = left.getDouble();
++          if (numValue == 0 || numValue == 1) {
++            return n;
++          }
++        }
++        int result = leftVal.toBoolean(true) ? Token.FALSE : Token.TRUE;
++        Node replacementNode = new Node(result);
++        parent.replaceChild(n, replacementNode);
++        reportCodeChange();
++        return replacementNode;
+@@ -1,9 +1,23 @@
+-        throw new IllegalStateException("unexpected.");
+-    }
+-  }
+-
+-  /**
+-   * Try to fold away unnecessary object instantiation.
+-   * e.g. this[new String('eval')] -> this.eval
+-   */
+-  private Node tryFoldCtorCall(Node n) {
++        throw new IllegalStateException("unexpected.");
++    }
++  }
++
++  // Helper method to fold NOT nodes to boolean literals
++  private Node foldNotToBooleanLiteral(Node n) {
++    if (n.getType() == Token.NOT) {
++      Node child = n.getFirstChild();
++      if (NodeUtil.isLiteralValue(child, false)) {
++        TernaryValue childVal = NodeUtil.getPureBooleanValue(child);
++        if (childVal != TernaryValue.UNKNOWN) {
++          return new Node(childVal.toBoolean(true) ? Token.FALSE : Token.TRUE);
++        }
++      }
++    }
++    return n;
++  }
++
++  /**
++   * Try to fold away unnecessary object instantiation.
++   * e.g. this[new String('eval')] -> this.eval
++   */
++  private Node tryFoldCtorCall(Node n) {
+@@ -1,9 +1,24 @@
+-  @SuppressWarnings("fallthrough")
+-  private Node tryFoldComparison(Node n, Node left, Node right) {
+-    if (!NodeUtil.isLiteralValue(left, false) ||
+-        !NodeUtil.isLiteralValue(right, false)) {
+-      // We only handle non-literal operands for LT and GT.
+-      if (n.getType() != Token.GT && n.getType() != Token.LT) {
+-        return n;
+-      }
+-    }
++  @SuppressWarnings("fallthrough")
++  private Node tryFoldComparison(Node n, Node left, Node right) {
++    // Try to fold NOT nodes to boolean literals
++    Node newLeft = foldNotToBooleanLiteral(left);
++    if (newLeft != left) {
++      n.replaceChild(left, newLeft);
++      left = newLeft;
++      reportCodeChange();
++    }
++
++    Node newRight = foldNotToBooleanLiteral(right);
++    if (newRight != right) {
++      n.replaceChild(right, newRight);
++      right = newRight;
++      reportCodeChange();
++    }
++
++    if (!NodeUtil.isLiteralValue(left, false) ||
++        !NodeUtil.isLiteralValue(right, false)) {
++      // We only handle non-literal operands for LT and GT.
++      if (n.getType() != Token.GT && n.getType() != Token.LT) {
++        return n;
++      }
++    }
+@@ -1,39 +1,40 @@
+-      case Token.NULL:
+-      case Token.TRUE:
+-      case Token.FALSE:
+-        if (undefinedRight) {
+-          result = compareToUndefined(left, op);
+-          break;
+-        }
+-        if (rhType != Token.TRUE &&
+-            rhType != Token.FALSE &&
+-            rhType != Token.NULL) {
+-          return n;
+-        }
+-        switch (op) {
+-          case Token.SHEQ:
+-          case Token.EQ:
+-            result = lhType == rhType;
+-            break;
+-
+-          case Token.SHNE:
+-          case Token.NE:
+-            result = lhType != rhType;
+-            break;
+-
+-          case Token.GE:
+-          case Token.LE:
+-          case Token.GT:
+-          case Token.LT:
+-            Boolean compareResult = compareAsNumbers(op, left, right);
+-            if (compareResult != null) {
+-              result = compareResult;
+-            } else {
+-              return n;
+-            }
+-            break;
+-
+-          default:
+-            return n;  // we only handle == and != here
+-        }
+-        break;
++      case Token.NULL:
++      case Token.TRUE:
++      case Token.FALSE:
++        if (undefinedRight) {
++          result = compareToUndefined(left, op);
++          break;
++        }
++        // Allow comparison with numbers and strings by converting to numbers.
++        Boolean compareResult = compareAsNumbers(op, left, right);
++        if (compareResult != null) {
++          result = compareResult;
++        } else {
++          if (rhType != Token.TRUE &&
++              rhType != Token.FALSE &&
++              rhType != Token.NULL) {
++            return n;
++          }
++          switch (op) {
++            case Token.SHEQ:
++            case Token.EQ:
++              result = lhType == rhType;
++              break;
++
++            case Token.SHNE:
++            case Token.NE:
++              result = lhType != rhType;
++              break;
++
++            case Token.GE:
++            case Token.LE:
++            case Token.GT:
++            case Token.LT:
++              // This case should already be handled by compareAsNumbers
++              return n;
++
++            default:
++              return n;  // we only handle == and != here
++          }
++        }
++        break;
+@@ -1,2 +1,3 @@
+-    int op = n.getType();
+-    boolean result;
++    int op = n.getType();
++    boolean result;
++    Boolean compareResult = null; // Declare here
+@@ -1,3 +1,2 @@
+-    boolean result;
+-    Boolean compareResult = null; // Declare here
+-    Boolean compareResult = null; // Declare here
++    boolean result;
++    Boolean compareResult = null; // Declare here
+@@ -1,4 +1,3 @@
+-    int op = n.getType();
+-    boolean result;
+-    Boolean compareResult = null; // Declare here
+-    Boolean compareResult = null; // Declare here
++    int op = n.getType();
++    boolean result;
++    Boolean compareResult = null; // Declare here
+@@ -1,5 +1,3 @@
+-    int op = n.getType();
+-    boolean result;
+-    int op = n.getType();
+-    boolean result;
+-    Boolean compareResult = null; // Declare here
++    int op = n.getType();
++    boolean result;
++    Boolean compareResult = null; // Declare here
+@@ -1,5 +1,3 @@
+-    int op = n.getType();
+-    boolean result;
+-    int op = n.getType();
+-    boolean result;
+-    Boolean compareResult = null; // Declare here
++    int op = n.getType();
++    boolean result;
++    Boolean compareResult = null; // Declare here
+@@ -1,5 +1,3 @@
+-    int op = n.getType();
+-    boolean result;
+-    int op = n.getType();
+-    boolean result;
+-    Boolean compareResult = null; // Declare here
++    int op = n.getType();
++    boolean result;
++    Boolean compareResult = null; // Declare here
+@@ -1,5 +1,3 @@
+-    int op = n.getType();
+-    boolean result;
+-    int op = n.getType();
+-    boolean result;
+-    Boolean compareResult = null; // Declare here
++    int op = n.getType();
++    boolean result;
++    Boolean compareResult = null; // Declare here
+@@ -1,5 +1,3 @@
+-    int op = n.getType();
+-    boolean result;
+-    int op = n.getType();
+-    boolean result;
+-    Boolean compareResult = null; // Declare here
++    int op = n.getType();
++    boolean result;
++    Boolean compareResult = null; // Declare here
+@@ -1,5 +1,3 @@
+-    int op = n.getType();
+-    boolean result;
+-    int op = n.getType();
+-    boolean result;
+-    Boolean compareResult = null; // Declare here
++    int op = n.getType();
++    boolean result;
++    Boolean compareResult = null; // Declare here
+@@ -1,5 +1,3 @@
+-    int op = n.getType();
+-    boolean result;
+-    int op = n.getType();
+-    boolean result;
+-    Boolean compareResult = null; // Declare here
++    int op = n.getType();
++    boolean result;
++    Boolean compareResult = null; // Declare here
+@@ -1,5 +1,3 @@
+-    int op = n.getType();
+-    boolean result;
+-    int op = n.getType();
+-    boolean result;
+-    Boolean compareResult = null; // Declare here
++    int op = n.getType();
++    boolean result;
++    Boolean compareResult = null; // Declare here
+@@ -1,5 +1,3 @@
+-    int op = n.getType();
+-    boolean result;
+-    int op = n.getType();
+-    boolean result;
+-    Boolean compareResult = null; // Declare here
++    int op = n.getType();
++    boolean result;
++    Boolean compareResult = null; // Declare here
+@@ -1,5 +1,3 @@
+-    int op = n.getType();
+-    boolean result;
+-    int op = n.getType();
+-    boolean result;
+-    Boolean compareResult = null; // Declare here
++    int op = n.getType();
++    boolean result;
++    Boolean compareResult = null; // Declare here
+@@ -1,5 +1,3 @@
+-    int op = n.getType();
+-    boolean result;
+-    int op = n.getType();
+-    boolean result;
+-    Boolean compareResult = null; // Declare here
++    int op = n.getType();
++    boolean result;
++    Boolean compareResult = null; // Declare here
+@@ -1,5 +1,3 @@
+-    int op = n.getType();
+-    boolean result;
+-    int op = n.getType();
+-    boolean result;
+-    Boolean compareResult = null; // Declare here
++    int op = n.getType();
++    boolean result;
++    Boolean compareResult = null; // Declare here
+@@ -1,5 +1,3 @@
+-    int op = n.getType();
+-    boolean result;
+-    int op = n.getType();
+-    boolean result;
+-    Boolean compareResult = null; // Declare here
++    int op = n.getType();
++    boolean result;
++    Boolean compareResult = null; // Declare here
+@@ -1,5 +1,3 @@
+-    int op = n.getType();
+-    boolean result;
+-    int op = n.getType();
+-    boolean result;
+-    Boolean compareResult = null; // Declare here
++    int op = n.getType();
++    boolean result;
++    Boolean compareResult = null; // Declare here
+@@ -1,5 +1,3 @@
+-    int op = n.getType();
+-    boolean result;
+-    int op = n.getType();
+-    boolean result;
+-    Boolean compareResult = null; // Declare here
++    int op = n.getType();
++    boolean result;
++    Boolean compareResult = null; // Declare here

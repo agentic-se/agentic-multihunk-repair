@@ -1,0 +1,51 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+index d60c4de3..4a3fe542 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarUtils.java
+@@ -595,20 +595,41 @@ public class TarUtils {
+         long unsignedSum = 0;
+         long signedSum = 0;
+ 
+-        int digits = 0;
++        // Collect octal digits found in the checksum field so we can
++        // support both left- and right-aligned representations. Some
++        // archives right-align the six-digit checksum and pad with
++        // leading zeros instead of using the expected NUL-SPACE
++        // terminator. In that case we must use the last six octal
++        // digits rather than the first six encountered.
++        int[] chkDigits = new int[CHKSUMLEN];
++        int chkCount = 0;
++
+         for (int i = 0; i < header.length; i++) {
+             byte b = header[i];
+             if (CHKSUM_OFFSET  <= i && i < CHKSUM_OFFSET + CHKSUMLEN) {
+-                if ('0' <= b && b <= '7' && digits++ < 6) {
+-                    storedSum = storedSum * 8 + b - '0';
+-                } else if (digits > 0) {
+-                    digits = 6;
++                if ('0' <= b && b <= '7') {
++                    if (chkCount < CHKSUMLEN) {
++                        chkDigits[chkCount++] = b - '0';
++                    }
++                } else if (chkCount > 0) {
++                    // Stop collecting once non-digit encountered after digits
++                    // to ignore trailing whitespace/nulls.
++                    // Continue loop to compute sums with space below.
+                 }
++                // Per spec, checksum field is treated as space characters
++                // when computing the header checksum.
+                 b = ' ';
+             }
+             unsignedSum += 0xff & b;
+             signedSum += b;
+         }
++
++        // Build stored checksum from the last up-to-six digits collected
++        int start = Math.max(0, chkCount - 6);
++        for (int i = start; i < chkCount; i++) {
++            storedSum = (storedSum << 3) + chkDigits[i];
++        }
++
+         return storedSum == unsignedSum || storedSum == signedSum;
+     }
+ 

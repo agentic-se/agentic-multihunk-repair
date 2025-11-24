@@ -1,0 +1,721 @@
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationCompare.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationCompare.java
+@@ -1,30 +1,36 @@
+-    protected boolean equal(Object l, Object r) {
+-        if (l instanceof Pointer && r instanceof Pointer) {
+-            if (l.equals(r)) {
+-                return true;
+-            }
+-        }
+-        if (l instanceof Pointer) {
+-            l = ((Pointer) l).getValue();
+-        }
+-
+-        if (r instanceof Pointer) {
+-            r = ((Pointer) r).getValue();
+-        }
+-
+-        if (l == r) {
+-            return true;
+-        }
+-        if (l instanceof Boolean || r instanceof Boolean) {
+-            return (InfoSetUtil.booleanValue(l) == InfoSetUtil.booleanValue(r));
+-            }
+-            //if either side is NaN, no comparison returns true:
+-        if (l instanceof Number || r instanceof Number) {
+-            return (InfoSetUtil.doubleValue(l) == InfoSetUtil.doubleValue(r));
+-            }
+-            if (l instanceof String || r instanceof String) {
+-            return (
+-                InfoSetUtil.stringValue(l).equals(InfoSetUtil.stringValue(r)));
+-        }
+-        return l != null && l.equals(r);
+-    }
++    protected boolean equal(Object l, Object r) {
++        // XPath: if either side is NaN, no comparison returns true.
++        if (l instanceof Double && ((Double) l).isNaN() ||
++            r instanceof Double && ((Double) r).isNaN()) {
++            return false;
++        }
++
++        if (l instanceof Pointer && r instanceof Pointer) {
++            if (l.equals(r)) {
++                return true;
++            }
++        }
++        if (l instanceof Pointer) {
++            l = ((Pointer) l).getValue();
++        }
++
++        if (r instanceof Pointer) {
++            r = ((Pointer) r).getValue();
++        }
++
++        if (l == r) {
++            return true;
++        }
++        if (l instanceof Boolean || r instanceof Boolean) {
++            return (InfoSetUtil.booleanValue(l) == InfoSetUtil.booleanValue(r));
++            }
++            //if either side is NaN, no comparison returns true:
++        if (l instanceof Number || r instanceof Number) {
++            return (InfoSetUtil.doubleValue(l) == InfoSetUtil.doubleValue(r));
++            }
++            if (l instanceof String || r instanceof String) {
++            return (
++                InfoSetUtil.stringValue(l).equals(InfoSetUtil.stringValue(r)));
++        }
++        return l != null && l.equals(r);
++    }
+@@ -1,36 +1,30 @@
+-    protected boolean equal(Object l, Object r) {
+-        // XPath: if either side is NaN, no comparison returns true.
+-        if (l instanceof Double && ((Double) l).isNaN() ||
+-            r instanceof Double && ((Double) r).isNaN()) {
+-            return false;
+-        }
+-
+-        if (l instanceof Pointer && r instanceof Pointer) {
+-            if (l.equals(r)) {
+-                return true;
+-            }
+-        }
+-        if (l instanceof Pointer) {
+-            l = ((Pointer) l).getValue();
+-        }
+-
+-        if (r instanceof Pointer) {
+-            r = ((Pointer) r).getValue();
+-        }
+-
+-        if (l == r) {
+-            return true;
+-        }
+-        if (l instanceof Boolean || r instanceof Boolean) {
+-            return (InfoSetUtil.booleanValue(l) == InfoSetUtil.booleanValue(r));
+-            }
+-            //if either side is NaN, no comparison returns true:
+-        if (l instanceof Number || r instanceof Number) {
+-            return (InfoSetUtil.doubleValue(l) == InfoSetUtil.doubleValue(r));
+-            }
+-            if (l instanceof String || r instanceof String) {
+-            return (
+-                InfoSetUtil.stringValue(l).equals(InfoSetUtil.stringValue(r)));
+-        }
+-        return l != null && l.equals(r);
+-    }
++    protected boolean equal(Object l, Object r) {
++        if (l instanceof Pointer && r instanceof Pointer) {
++            if (l.equals(r)) {
++                return true;
++            }
++        }
++        if (l instanceof Pointer) {
++            l = ((Pointer) l).getValue();
++        }
++
++        if (r instanceof Pointer) {
++            r = ((Pointer) r).getValue();
++        }
++
++        if (l == r) {
++            return true;
++        }
++        if (l instanceof Boolean || r instanceof Boolean) {
++            return (InfoSetUtil.booleanValue(l) == InfoSetUtil.booleanValue(r));
++            }
++            //if either side is NaN, no comparison returns true:
++        if (l instanceof Number || r instanceof Number) {
++            return (InfoSetUtil.doubleValue(l) == InfoSetUtil.doubleValue(r));
++            }
++            if (l instanceof String || r instanceof String) {
++            return (
++                InfoSetUtil.stringValue(l).equals(InfoSetUtil.stringValue(r)));
++        }
++        return l != null && l.equals(r);
++    }
+@@ -1,7 +1,13 @@
+-        if (r instanceof Pointer) {
+-            r = ((Pointer) r).getValue();
+-        }
+-
+-        if (l == r) {
+-            return true;
+-        }
++        if (r instanceof Pointer) {
++            r = ((Pointer) r).getValue();
++        }
++
++        // XPath: if either side is NaN, no comparison returns true.
++        if (l instanceof Double && ((Double) l).isNaN() ||
++            r instanceof Double && ((Double) r).isNaN()) {
++            return false;
++        }
++
++        if (l == r) {
++            return true;
++        }
+@@ -1,5 +1,6 @@
+-        // XPath: if either side is NaN, no comparison returns true.
+-        if (l instanceof Double && ((Double) l).isNaN() ||
+-            r instanceof Double && ((Double) r).isNaN()) {
+-            return false;
+-        }
++        // XPath: if either side is NaN, no comparison returns true.
++        if (l instanceof Double && ((Double) l).isNaN() ||
++            r instanceof Double && ((Double) r).isNaN()) {
++            System.out.println("NaN check hit in CoreOperationCompare.equal! l: " + l + ", r: " + r);
++            return false;
++        }
+@@ -1,6 +1,5 @@
+-        // XPath: if either side is NaN, no comparison returns true.
+-        if (l instanceof Double && ((Double) l).isNaN() ||
+-            r instanceof Double && ((Double) r).isNaN()) {
+-            System.out.println("NaN check hit in CoreOperationCompare.equal! l: " + l + ", r: " + r);
+-            return false;
+-        }
++        // XPath: if either side is NaN, no comparison returns true.
++        if (l instanceof Double && ((Double) l).isNaN() ||
++            r instanceof Double && ((Double) r).isNaN()) {
++            return false;
++        }
+@@ -1,7 +1,8 @@
+-    protected boolean equal(
+-        EvalContext context,
+-        Expression left,
+-        Expression right) 
+-    {
+-        Object l = left.compute(context);
+-        Object r = right.compute(context);
++    protected boolean equal(
++        EvalContext context,
++        Expression left,
++        Expression right) 
++    {
++        System.out.println("CoreOperationCompare.equal(EvalContext, Expression, Expression) called!");
++        Object l = left.compute(context);
++        Object r = right.compute(context);
+@@ -1,8 +1,7 @@
+-    protected boolean equal(
+-        EvalContext context,
+-        Expression left,
+-        Expression right) 
+-    {
+-        System.out.println("CoreOperationCompare.equal(EvalContext, Expression, Expression) called!");
+-        Object l = left.compute(context);
+-        Object r = right.compute(context);
++    protected boolean equal(
++        EvalContext context,
++        Expression left,
++        Expression right) 
++    {
++        Object l = left.compute(context);
++        Object r = right.compute(context);
+@@ -1,26 +1,20 @@
+-        if (r instanceof Pointer) {
+-            r = ((Pointer) r).getValue();
+-        }
+-
+-        // XPath: if either side is NaN, no comparison returns true.
+-        if (l instanceof Double && ((Double) l).isNaN() ||
+-            r instanceof Double && ((Double) r).isNaN()) {
+-            return false;
+-        }
+-
+-        if (l == r) {
+-            return true;
+-        }
+-        if (l instanceof Boolean || r instanceof Boolean) {
+-            return (InfoSetUtil.booleanValue(l) == InfoSetUtil.booleanValue(r));
+-            }
+-            //if either side is NaN, no comparison returns true:
+-        if (l instanceof Number || r instanceof Number) {
+-            return (InfoSetUtil.doubleValue(l) == InfoSetUtil.doubleValue(r));
+-            }
+-            if (l instanceof String || r instanceof String) {
+-            return (
+-                InfoSetUtil.stringValue(l).equals(InfoSetUtil.stringValue(r)));
+-        }
+-        return l != null && l.equals(r);
+-    }
++        if (r instanceof Pointer) {
++            r = ((Pointer) r).getValue();
++        }
++
++        if (l == r) {
++            return true;
++        }
++        if (l instanceof Boolean || r instanceof Boolean) {
++            return (InfoSetUtil.booleanValue(l) == InfoSetUtil.booleanValue(r));
++            }
++            //if either side is NaN, no comparison returns true:
++        if (l instanceof Number || r instanceof Number) {
++            return (InfoSetUtil.doubleValue(l) == InfoSetUtil.doubleValue(r));
++            }
++            if (l instanceof String || r instanceof String) {
++            return (
++                InfoSetUtil.stringValue(l).equals(InfoSetUtil.stringValue(r)));
++        }
++        return l != null && l.equals(r);
++    }
+@@ -1,16 +1,17 @@
+-        if (l instanceof Pointer && r instanceof Pointer) {
+-            if (l.equals(r)) {
+-                return true;
+-            }
+-        }
+-        if (l instanceof Pointer) {
+-            l = ((Pointer) l).getValue();
+-        }
+-
+-        if (r instanceof Pointer) {
+-            r = ((Pointer) r).getValue();
+-        }
+-
+-        if (l == r) {
+-            return true;
+-        }
++        if (l instanceof Pointer) {
++            l = ((Pointer) l).getValue();
++        }
++
++        if (r instanceof Pointer) {
++            r = ((Pointer) r).getValue();
++        }
++
++        // XPath: if either side is NaN, no comparison returns true.
++        if (l instanceof Double && ((Double) l).isNaN() ||
++            r instanceof Double && ((Double) r).isNaN()) {
++            return false;
++        }
++
++        if (l == r) {
++            return true;
++        }
+@@ -1,9 +1,11 @@
+-        if (r instanceof Pointer) {
+-            r = ((Pointer) r).getValue();
+-        }
+-
+-        // XPath: if either side is NaN, no comparison returns true.
+-        if (l instanceof Double && ((Double) l).isNaN() ||
+-            r instanceof Double && ((Double) r).isNaN()) {
+-            return false;
+-        }
++        if (r instanceof Pointer) {
++            r = ((Pointer) r).getValue();
++        }
++
++        System.out.println("After unwrapping - l type: " + l.getClass().getName() + ", l value: " + l + ", r type: " + r.getClass().getName() + ", r value: " + r);
++
++        // XPath: if either side is NaN, no comparison returns true.
++        if (l instanceof Double && ((Double) l).isNaN() ||
++            r instanceof Double && ((Double) r).isNaN()) {
++            return false;
++        }
+@@ -1,7 +1,5 @@
+-        System.out.println("After unwrapping - l type: " + l.getClass().getName() + ", l value: " + l + ", r type: " + r.getClass().getName() + ", r value: " + r);
+-
+-        // XPath: if either side is NaN, no comparison returns true.
+-        if (l instanceof Double && ((Double) l).isNaN() ||
+-            r instanceof Double && ((Double) r).isNaN()) {
+-            return false;
+-        }
++        // XPath: if either side is NaN, no comparison returns true.
++        if (l instanceof Double && ((Double) l).isNaN() ||
++            r instanceof Double && ((Double) r).isNaN()) {
++            return false;
++        }
+
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
+@@ -1,9 +1,6 @@
+-        double ld = InfoSetUtil.doubleValue(left);
+-        if (Double.isNaN(ld)) {
+-            return false;
+-        }
+-        double rd = InfoSetUtil.doubleValue(right);
+-        if (Double.isNaN(rd)) {
+-            return false;
+-        }
+-        return evaluateCompare(ld == rd ? 0 : ld < rd ? -1 : 1);
++        double ld = InfoSetUtil.doubleValue(left);
++        double rd = InfoSetUtil.doubleValue(right);
++        if (Double.isNaN(ld) || Double.isNaN(rd)) {
++            return false;
++        }
++        return evaluateCompare(ld == rd ? 0 : ld < rd ? -1 : 1);
+@@ -1,25 +1,25 @@
+-        left = reduce(left);
+-        right = reduce(right);
+-
+-        double ld = InfoSetUtil.doubleValue(left);
+-        double rd = InfoSetUtil.doubleValue(right);
+-        if (Double.isNaN(ld) || Double.isNaN(rd)) {
+-            return false;
+-        }
+-
+-        if (left instanceof InitialContext) {
+-            ((InitialContext) left).reset();
+-        }
+-        if (right instanceof InitialContext) {
+-            ((InitialContext) right).reset();
+-        }
+-        if (left instanceof Iterator && right instanceof Iterator) {
+-            return findMatch((Iterator) left, (Iterator) right);
+-        }
+-        if (left instanceof Iterator) {
+-            return containsMatch((Iterator) left, right);
+-        }
+-        if (right instanceof Iterator) {
+-            return containsMatch((Iterator) right, left);
+-        }
+-        return evaluateCompare(ld == rd ? 0 : ld < rd ? -1 : 1);
++        double ld = InfoSetUtil.doubleValue(left);
++        double rd = InfoSetUtil.doubleValue(right);
++        if (Double.isNaN(ld) || Double.isNaN(rd)) {
++            return false;
++        }
++
++        left = reduce(left);
++        right = reduce(right);
++
++        if (left instanceof InitialContext) {
++            ((InitialContext) left).reset();
++        }
++        if (right instanceof InitialContext) {
++            ((InitialContext) right).reset();
++        }
++        if (left instanceof Iterator && right instanceof Iterator) {
++            return findMatch((Iterator) left, (Iterator) right);
++        }
++        if (left instanceof Iterator) {
++            return containsMatch((Iterator) left, right);
++        }
++        if (right instanceof Iterator) {
++            return containsMatch((Iterator) right, left);
++        }
++        return evaluateCompare(ld == rd ? 0 : ld < rd ? -1 : 1);
+@@ -1,25 +1,27 @@
+-        double ld = InfoSetUtil.doubleValue(left);
+-        double rd = InfoSetUtil.doubleValue(right);
+-        if (Double.isNaN(ld) || Double.isNaN(rd)) {
+-            return false;
+-        }
+-
+-        left = reduce(left);
+-        right = reduce(right);
+-
+-        if (left instanceof InitialContext) {
+-            ((InitialContext) left).reset();
+-        }
+-        if (right instanceof InitialContext) {
+-            ((InitialContext) right).reset();
+-        }
+-        if (left instanceof Iterator && right instanceof Iterator) {
+-            return findMatch((Iterator) left, (Iterator) right);
+-        }
+-        if (left instanceof Iterator) {
+-            return containsMatch((Iterator) left, right);
+-        }
+-        if (right instanceof Iterator) {
+-            return containsMatch((Iterator) right, left);
+-        }
+-        return evaluateCompare(ld == rd ? 0 : ld < rd ? -1 : 1);
++        left = reduce(left);
++        right = reduce(right);
++
++        if (left instanceof InitialContext) {
++            ((InitialContext) left).reset();
++        }
++        if (right instanceof InitialContext) {
++            ((InitialContext) right).reset();
++        }
++        if (left instanceof Iterator && right instanceof Iterator) {
++            return findMatch((Iterator) left, (Iterator) right);
++        }
++        if (left instanceof Iterator) {
++            return containsMatch((Iterator) left, right);
++        }
++        if (right instanceof Iterator) {
++            return containsMatch((Iterator) right, left);
++        }
++        double ld = InfoSetUtil.doubleValue(left);
++        if (Double.isNaN(ld)) {
++            return false;
++        }
++        double rd = InfoSetUtil.doubleValue(right);
++        if (Double.isNaN(rd)) {
++            return false;
++        }
++        return evaluateCompare(ld == rd ? 0 : ld < rd ? -1 : 1);
+@@ -1,9 +1,6 @@
+-        double ld = InfoSetUtil.doubleValue(left);
+-        if (Double.isNaN(ld)) {
+-            return false;
+-        }
+-        double rd = InfoSetUtil.doubleValue(right);
+-        if (Double.isNaN(rd)) {
+-            return false;
+-        }
+-        return evaluateCompare(ld == rd ? 0 : ld < rd ? -1 : 1);
++        double ld = InfoSetUtil.doubleValue(left);
++        double rd = InfoSetUtil.doubleValue(right);
++        if (Double.isNaN(ld) || Double.isNaN(rd)) {
++            return false;
++        }
++        return evaluateCompare(ld == rd ? 0 : ld < rd ? -1 : 1);
+@@ -1,26 +1,32 @@
+-    private boolean compute(Object left, Object right) {
+-        left = reduce(left);
+-        right = reduce(right);
+-
+-        if (left instanceof InitialContext) {
+-            ((InitialContext) left).reset();
+-        }
+-        if (right instanceof InitialContext) {
+-            ((InitialContext) right).reset();
+-        }
+-        if (left instanceof Iterator && right instanceof Iterator) {
+-            return findMatch((Iterator) left, (Iterator) right);
+-        }
+-        if (left instanceof Iterator) {
+-            return containsMatch((Iterator) left, right);
+-        }
+-        if (right instanceof Iterator) {
+-            return containsMatch((Iterator) right, left);
+-        }
+-        double ld = InfoSetUtil.doubleValue(left);
+-        double rd = InfoSetUtil.doubleValue(right);
+-        if (Double.isNaN(ld) || Double.isNaN(rd)) {
+-            return false;
+-        }
+-        return evaluateCompare(ld == rd ? 0 : ld < rd ? -1 : 1);
+-    }
++    private boolean compute(Object left, Object right) {
++        // Explicitly handle NaN for relational comparisons at the very beginning
++        if (left instanceof Double && ((Double) left).isNaN() ||
++            right instanceof Double && ((Double) right).isNaN()) {
++            return false;
++        }
++
++        left = reduce(left);
++        right = reduce(right);
++
++        if (left instanceof InitialContext) {
++            ((InitialContext) left).reset();
++        }
++        if (right instanceof InitialContext) {
++            ((InitialContext) right).reset();
++        }
++        if (left instanceof Iterator && right instanceof Iterator) {
++            return findMatch((Iterator) left, (Iterator) right);
++        }
++        if (left instanceof Iterator) {
++            return containsMatch((Iterator) left, right);
++        }
++        if (right instanceof Iterator) {
++            return containsMatch((Iterator) right, left);
++        }
++        double ld = InfoSetUtil.doubleValue(left);
++        double rd = InfoSetUtil.doubleValue(right);
++        if (Double.isNaN(ld) || Double.isNaN(rd)) { // Combined NaN check
++            return false;
++        }
++        return evaluateCompare(ld == rd ? 0 : ld < rd ? -1 : 1);
++    }
+@@ -1,4 +1,13 @@
+-    public final Object computeValue(EvalContext context) {
+-        return compute(args[0].computeValue(context), args[1]
+-                .computeValue(context)) ? Boolean.TRUE : Boolean.FALSE;
+-    }
++    public final Object computeValue(EvalContext context) {
++        Object leftValue = args[0].computeValue(context);
++        Object rightValue = args[1].computeValue(context);
++
++        double ld = InfoSetUtil.doubleValue(leftValue);
++        double rd = InfoSetUtil.doubleValue(rightValue);
++
++        if (Double.isNaN(ld) || Double.isNaN(rd)) {
++            return Boolean.FALSE;
++        }
++
++        return compute(leftValue, rightValue) ? Boolean.TRUE : Boolean.FALSE;
++    }
+@@ -1,13 +1,4 @@
+-    public final Object computeValue(EvalContext context) {
+-        Object leftValue = args[0].computeValue(context);
+-        Object rightValue = args[1].computeValue(context);
+-
+-        double ld = InfoSetUtil.doubleValue(leftValue);
+-        double rd = InfoSetUtil.doubleValue(rightValue);
+-
+-        if (Double.isNaN(ld) || Double.isNaN(rd)) {
+-            return Boolean.FALSE;
+-        }
+-
+-        return compute(leftValue, rightValue) ? Boolean.TRUE : Boolean.FALSE;
+-    }
++    public final Object computeValue(EvalContext context) {
++        return compute(args[0].computeValue(context), args[1]
++                .computeValue(context)) ? Boolean.TRUE : Boolean.FALSE;
++    }
+@@ -1,32 +1,26 @@
+-    private boolean compute(Object left, Object right) {
+-        // Explicitly handle NaN for relational comparisons at the very beginning
+-        if (left instanceof Double && ((Double) left).isNaN() ||
+-            right instanceof Double && ((Double) right).isNaN()) {
+-            return false;
+-        }
+-
+-        left = reduce(left);
+-        right = reduce(right);
+-
+-        if (left instanceof InitialContext) {
+-            ((InitialContext) left).reset();
+-        }
+-        if (right instanceof InitialContext) {
+-            ((InitialContext) right).reset();
+-        }
+-        if (left instanceof Iterator && right instanceof Iterator) {
+-            return findMatch((Iterator) left, (Iterator) right);
+-        }
+-        if (left instanceof Iterator) {
+-            return containsMatch((Iterator) left, right);
+-        }
+-        if (right instanceof Iterator) {
+-            return containsMatch((Iterator) right, left);
+-        }
+-        double ld = InfoSetUtil.doubleValue(left);
+-        double rd = InfoSetUtil.doubleValue(right);
+-        if (Double.isNaN(ld) || Double.isNaN(rd)) { // Combined NaN check
+-            return false;
+-        }
+-        return evaluateCompare(ld == rd ? 0 : ld < rd ? -1 : 1);
+-    }
++    private boolean compute(Object left, Object right) {
++        left = reduce(left);
++        right = reduce(right);
++
++        if (left instanceof InitialContext) {
++            ((InitialContext) left).reset();
++        }
++        if (right instanceof InitialContext) {
++            ((InitialContext) right).reset();
++        }
++        if (left instanceof Iterator && right instanceof Iterator) {
++            return findMatch((Iterator) left, (Iterator) right);
++        }
++        if (left instanceof Iterator) {
++            return containsMatch((Iterator) left, right);
++        }
++        if (right instanceof Iterator) {
++            return containsMatch((Iterator) right, left);
++        }
++        double ld = InfoSetUtil.doubleValue(left);
++        double rd = InfoSetUtil.doubleValue(right);
++        if (Double.isNaN(ld) || Double.isNaN(rd)) { // Combined NaN check
++            return false;
++        }
++        return evaluateCompare(ld == rd ? 0 : ld < rd ? -1 : 1);
++    }
+@@ -1,26 +1,29 @@
+-    private boolean compute(Object left, Object right) {
+-        left = reduce(left);
+-        right = reduce(right);
+-
+-        if (left instanceof InitialContext) {
+-            ((InitialContext) left).reset();
+-        }
+-        if (right instanceof InitialContext) {
+-            ((InitialContext) right).reset();
+-        }
+-        if (left instanceof Iterator && right instanceof Iterator) {
+-            return findMatch((Iterator) left, (Iterator) right);
+-        }
+-        if (left instanceof Iterator) {
+-            return containsMatch((Iterator) left, right);
+-        }
+-        if (right instanceof Iterator) {
+-            return containsMatch((Iterator) right, left);
+-        }
+-        double ld = InfoSetUtil.doubleValue(left);
+-        double rd = InfoSetUtil.doubleValue(right);
+-        if (Double.isNaN(ld) || Double.isNaN(rd)) { // Combined NaN check
+-            return false;
+-        }
+-        return evaluateCompare(ld == rd ? 0 : ld < rd ? -1 : 1);
+-    }
++    private boolean compute(Object left, Object right) {
++        left = reduce(left);
++        right = reduce(right);
++
++        if (left instanceof InitialContext) {
++            ((InitialContext) left).reset();
++        }
++        if (right instanceof InitialContext) {
++            ((InitialContext) right).reset();
++        }
++        if (left instanceof Iterator && right instanceof Iterator) {
++            return findMatch((Iterator) left, (Iterator) right);
++        }
++        if (left instanceof Iterator) {
++            return containsMatch((Iterator) left, right);
++        }
++        if (right instanceof Iterator) {
++            return containsMatch((Iterator) right, left);
++        }
++        double ld = InfoSetUtil.doubleValue(left);
++        if (Double.isNaN(ld)) {
++            return false;
++        }
++        double rd = InfoSetUtil.doubleValue(right);
++        if (Double.isNaN(rd)) {
++            return false;
++        }
++        return evaluateCompare(ld == rd ? 0 : ld < rd ? -1 : 1);
++    }
+@@ -1,9 +1,6 @@
+-        double ld = InfoSetUtil.doubleValue(left);
+-        if (Double.isNaN(ld)) {
+-            return false;
+-        }
+-        double rd = InfoSetUtil.doubleValue(right);
+-        if (Double.isNaN(rd)) {
+-            return false;
+-        }
+-        return evaluateCompare(ld == rd ? 0 : ld < rd ? -1 : 1);
++        double ld = InfoSetUtil.doubleValue(left);
++        double rd = InfoSetUtil.doubleValue(right);
++        if (Double.isNaN(ld) || Double.isNaN(rd)) {
++            return false;
++        }
++        return evaluateCompare(ld == rd ? 0 : ld < rd ? -1 : 1);
+@@ -1,6 +1,7 @@
+-        double ld = InfoSetUtil.doubleValue(left);
+-        double rd = InfoSetUtil.doubleValue(right);
+-        if (Double.isNaN(ld) || Double.isNaN(rd)) {
+-            return false;
+-        }
+-        return evaluateCompare(ld == rd ? 0 : ld < rd ? -1 : 1);
++        double ld = InfoSetUtil.doubleValue(left);
++        double rd = InfoSetUtil.doubleValue(right);
++        System.out.println("ld: " + ld + ", rd: " + rd + ", isNaN: " + (Double.isNaN(ld) || Double.isNaN(rd)));
++        if (Double.isNaN(ld) || Double.isNaN(rd)) {
++            return false;
++        }
++        return evaluateCompare(ld == rd ? 0 : ld < rd ? -1 : 1);
+@@ -1,7 +1,6 @@
+-        double ld = InfoSetUtil.doubleValue(left);
+-        double rd = InfoSetUtil.doubleValue(right);
+-        System.out.println("ld: " + ld + ", rd: " + rd + ", isNaN: " + (Double.isNaN(ld) || Double.isNaN(rd)));
+-        if (Double.isNaN(ld) || Double.isNaN(rd)) {
+-            return false;
+-        }
+-        return evaluateCompare(ld == rd ? 0 : ld < rd ? -1 : 1);
++        double ld = InfoSetUtil.doubleValue(left);
++        double rd = InfoSetUtil.doubleValue(right);
++        if (Double.isNaN(ld) || Double.isNaN(rd)) {
++            return false;
++        }
++        return evaluateCompare(ld == rd ? 0 : ld < rd ? -1 : 1);

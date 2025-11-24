@@ -1,0 +1,23 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipFile.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipFile.java
+index 964c86db..4814783e 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipFile.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipFile.java
+@@ -840,6 +840,18 @@ public class ZipFile {
+                 }
+             }
+         }
++
++        // Rebuild the entries map so that any keys whose hash codes
++        // have changed (due to updated names from Unicode extra fields)
++        // are rehashed into the correct buckets. Keep insertion order.
++        if (!entries.isEmpty()) {
++            Map<ZipArchiveEntry, OffsetEntry> copy =
++                new LinkedHashMap<ZipArchiveEntry, OffsetEntry>(entries);
++            entries.clear();
++            for (Map.Entry<ZipArchiveEntry, OffsetEntry> e : copy.entrySet()) {
++                entries.put(e.getKey(), e.getValue());
++            }
++        }
+     }
+ 
+     /**

@@ -1,0 +1,97 @@
+diff --git a/src/com/google/javascript/jscomp/CheckGlobalThis.java b/src/com/google/javascript/jscomp/CheckGlobalThis.java
+index 25327afe..ed4dddd0 100644
+--- a/src/com/google/javascript/jscomp/CheckGlobalThis.java
++++ b/src/com/google/javascript/jscomp/CheckGlobalThis.java
+@@ -89,6 +89,7 @@ final class CheckGlobalThis implements Callback {
+       JSDocInfo jsDoc = getFunctionJsDocInfo(n);
+       if (jsDoc != null &&
+           (jsDoc.isConstructor() ||
++           jsDoc.isInterface() ||
+            jsDoc.hasThisType() ||
+            jsDoc.isOverride())) {
+         return false;
+@@ -122,13 +123,9 @@ final class CheckGlobalThis implements Callback {
+       } else {
+         // Only traverse the right side if it's not an assignment to a prototype
+         // property or subproperty.
+-          if (lhs.getType() == Token.GETPROP &&
+-              lhs.getLastChild().getString().equals("prototype")) {
+-            return false;
+-          }
+-          if (lhs.getQualifiedName() != null && lhs.getQualifiedName().contains(".prototype.")) {
+-            return false;
+-          }
++        if (isPrototypePropertyAssignment(lhs)) {
++          return false;
++        }
+       }
+     }
+ 
+@@ -181,4 +178,67 @@ final class CheckGlobalThis implements Callback {
+     }
+     return jsDoc;
+   }
++
++  /**
++   * Determines whether the given node is an assignment to a prototype
++   * property. This includes both dot notation (e.g., A.prototype.method)
++   * and bracket notation (e.g., A.prototype['method']).
++   *
++   * Returns true for:
++   * - A.prototype = ...
++   * - A.prototype.method = ...
++   * - A.prototype['method'] = ...
++   * - A.prototype.foo['bar'] = ...
++   *
++   * Returns false for:
++   * - A.prototype.method.property = ... (property of a method)
++   */
++  private boolean isPrototypePropertyAssignment(Node lhs) {
++    if (lhs.getType() == Token.GETPROP) {
++      Node child = lhs.getFirstChild();
++      // Check for A.prototype = ...
++      if (lhs.getLastChild().getString().equals("prototype")) {
++        return true;
++      }
++      // Check for A.prototype.method = ...
++      // The child should be accessing "prototype" directly
++      if (child.getType() == Token.GETPROP &&
++          child.getLastChild().getString().equals("prototype")) {
++        return true;
++      }
++      // Check if using qualified name (covers A.B.C.prototype.method)
++      String qname = lhs.getQualifiedName();
++      if (qname != null && qname.contains(".prototype.")) {
++        // Make sure it's not a deeper nesting like A.prototype.b.c
++        // by checking that there's exactly one property after .prototype.
++        int prototypeIdx = qname.lastIndexOf(".prototype.");
++        String afterPrototype = qname.substring(prototypeIdx + ".prototype.".length());
++        // If there's no additional dots, it's a valid prototype property
++        if (!afterPrototype.contains(".")) {
++          return true;
++        }
++      }
++    } else if (lhs.getType() == Token.GETELEM) {
++      // For bracket notation like A.prototype['method']
++      Node child = lhs.getFirstChild();
++      // Check if the child is accessing "prototype"
++      if (child.getType() == Token.GETPROP &&
++          child.getLastChild().getString().equals("prototype")) {
++        return true;
++      }
++      // Check for A.prototype.foo['bar'] - the child's parent should have prototype
++      String qname = child.getQualifiedName();
++      if (qname != null && qname.contains(".prototype.")) {
++        // Make sure there's at most one property access after .prototype.
++        int prototypeIdx = qname.lastIndexOf(".prototype.");
++        String afterPrototype = qname.substring(prototypeIdx + ".prototype.".length());
++        // If there's no additional dots, it's valid
++        if (!afterPrototype.contains(".")) {
++          return true;
++        }
++      }
++    }
++
++    return false;
++  }
+ }

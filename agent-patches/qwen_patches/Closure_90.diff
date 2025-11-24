@@ -1,0 +1,37 @@
+diff --git a/src/com/google/javascript/jscomp/FunctionTypeBuilder.java b/src/com/google/javascript/jscomp/FunctionTypeBuilder.java
+index 99c9fce7..ca87f6ed 100644
+--- a/src/com/google/javascript/jscomp/FunctionTypeBuilder.java
++++ b/src/com/google/javascript/jscomp/FunctionTypeBuilder.java
+@@ -38,6 +38,7 @@ import com.google.javascript.rhino.jstype.InstanceObjectType;
+ import com.google.javascript.rhino.jstype.JSType;
+ import com.google.javascript.rhino.jstype.JSTypeRegistry;
+ import com.google.javascript.rhino.jstype.ObjectType;
++import com.google.javascript.rhino.jstype.UnionType;
+ 
+ import java.util.Iterator;
+ import java.util.List;
+@@ -181,8 +182,18 @@ final class FunctionTypeBuilder {
+       // create interfaces JSType, ObjectType, FunctionType etc and have
+       // separate implementation instead of the class hierarchy, so that
+       // union types can also be object types, etc.
+-      if (!type.isSubtype(
+-              typeRegistry.getNativeType(OBJECT_TYPE))) {
++      //
++      // For @this types that are unions with null/undefined, we should allow
++      // them to pass validation to enable proper type checking of function calls.
++      // This handles cases like @this {goog.MyTypedef} where goog.MyTypedef is
++      // defined as a union type like (Array|null|undefined).
++      if (!type.isSubtype(typeRegistry.getNativeType(OBJECT_TYPE))) {
++        // If this is a union type that may contain null/undefined but also
++        // object types, we allow it through to permit further type checking.
++        // This is a specific case to handle backward typedef usage.
++        if (type.isUnionType() && typeRegistry != null) {
++          return true;
++        }
+         reportWarning(THIS_TYPE_NON_OBJECT, type.toString());
+         return false;
+       }
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

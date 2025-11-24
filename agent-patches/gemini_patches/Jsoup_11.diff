@@ -1,0 +1,490 @@
+--- a/src/main/java/org/jsoup/nodes/Evaluator.java
++++ b/src/main/java/org/jsoup/nodes/Evaluator.java
+@@ -1,6 +1,19 @@
+-        public boolean matches(Element element) {
+-            Matcher m = pattern.matcher(element.ownText());
+-            return m.find();
+-        }
+-    }
+-}
++        public boolean matches(Element element) {
++            Matcher m = pattern.matcher(element.ownText());
++            return m.find();
++        }
++    }
++
++    static final class Not extends Evaluator {
++        private Evaluator evaluator;
++
++        Not(Evaluator evaluator) {
++            this.evaluator = evaluator;
++        }
++
++        @Override
++        public boolean matches(Element element) {
++            return !evaluator.matches(element);
++        }
++    }
++}
+@@ -1,19 +1,6 @@
+-        public boolean matches(Element element) {
+-            Matcher m = pattern.matcher(element.ownText());
+-            return m.find();
+-        }
+-    }
+-
+-    static final class Not extends Evaluator {
+-        private Evaluator evaluator;
+-
+-        Not(Evaluator evaluator) {
+-            this.evaluator = evaluator;
+-        }
+-
+-        @Override
+-        public boolean matches(Element element) {
+-            return !evaluator.matches(element);
+-        }
+-    }
+-}
++        public boolean matches(Element element) {
++            Matcher m = pattern.matcher(element.ownText());
++            return m.find();
++        }
++    }
++}
+@@ -1,5 +1,2 @@
+-}
+-
+-
+-}
+-
++}
++
+@@ -1,13 +1,6 @@
+-        public boolean matches(Element element) {
+-            Matcher m = pattern.matcher(element.ownText());
+-            return m.find();
+-        }
+-    }
+-    
+-    public boolean matches(Element element) {
+-            Matcher m = pattern.matcher(element.ownText());
+-            return m.find();
+-        }
+-    }
+-}
+-
++        public boolean matches(Element element) {
++            Matcher m = pattern.matcher(element.ownText());
++            return m.find();
++        }
++    }
++}
+@@ -1,14 +1,18 @@
+-        public boolean matches(Element element) {
+-            Matcher m = pattern.matcher(element.text());
+-            return m.find();
+-        }
+-    }
+-    
+-    public boolean matches(Element element) {
+-            Matcher m = pattern.matcher(element.ownText());
+-            return m.find();
+-        }
+-    }
+-}
+-}
+-
++        public boolean matches(Element element) {
++            Matcher m = pattern.matcher(element.text());
++            return m.find();
++        }
++    }
++    
++    static final class MatchesOwn extends Evaluator {
++        private Pattern pattern;
++        MatchesOwn(Pattern pattern) {
++            this.pattern = pattern;
++        }
++
++        public boolean matches(Element element) {
++            Matcher m = pattern.matcher(element.ownText());
++            return m.find();
++        }
++    }
++}
+
+--- a/src/main/java/org/jsoup/select/Selector.java
++++ b/src/main/java/org/jsoup/select/Selector.java
+@@ -1,10 +1,12 @@
+-        } else if (tq.matches(":has(")) {
+-            return has();
+-        } else if (tq.matches(":contains(")) {
+-            return contains(false);
+-        } else if (tq.matches(":containsOwn(")) {
+-            return contains(true);
+-        } else if (tq.matches(":matches(")) {
+-            return matches(false);
+-        } else if (tq.matches(":matchesOwn(")) {
+-            return matches(true);
++        } else if (tq.matches(":has(")) {
++            return has();
++        } else if (tq.matches(":not(")) {
++            return not();
++        } else if (tq.matches(":contains(")) {
++            return contains(false);
++        } else if (tq.matches(":containsOwn(")) {
++            return contains(true);
++        } else if (tq.matches(":matches(")) {
++            return matches(false);
++        } else if (tq.matches(":matchesOwn(")) {
++            return matches(true);
+@@ -1,1 +1,15 @@
+-    // :not(selector)
++    // :not(selector)
++    private Elements not() {
++        tq.consume(":not");
++        String subQuery = tq.chompBalanced('(',')');
++        Validate.notEmpty(subQuery, ":not(selector) subselect must not be empty");
++
++        Elements notElements = select(subQuery, elements);
++        Elements filteredElements = new Elements();
++        for (Element el : elements) {
++            if (!notElements.contains(el)) {
++                filteredElements.add(el);
++            }
++        }
++        return filteredElements;
++    }
+@@ -1,15 +1,15 @@
+-    // :not(selector)
+-    private Elements not() {
+-        tq.consume(":not");
+-        String subQuery = tq.chompBalanced('(',')');
+-        Validate.notEmpty(subQuery, ":not(selector) subselect must not be empty");
+-
+-        Elements notElements = select(subQuery, elements);
+-        Elements filteredElements = new Elements();
+-        for (Element el : elements) {
+-            if (!notElements.contains(el)) {
+-                filteredElements.add(el);
+-            }
+-        }
+-        return filteredElements;
+-    }
++    // :not(selector)
++    private Elements not() {
++        tq.consume(":not");
++        String subQuery = tq.chompBalanced('(',')');
++        Validate.notEmpty(subQuery, ":not(selector) subselect must not be empty");
++
++        Elements notElements = select(subQuery, root);
++        Elements filteredElements = new Elements();
++        for (Element el : elements) {
++            if (!notElements.contains(el)) {
++                filteredElements.add(el);
++            }
++        }
++        return filteredElements;
++    }
+@@ -1,15 +1,14 @@
+-    // :not(selector)
+-    private Elements not() {
+-        tq.consume(":not");
+-        String subQuery = tq.chompBalanced('(',')');
+-        Validate.notEmpty(subQuery, ":not(selector) subselect must not be empty");
+-
+-        Elements notElements = select(subQuery, root);
+-        Elements filteredElements = new Elements();
+-        for (Element el : elements) {
+-            if (!notElements.contains(el)) {
+-                filteredElements.add(el);
+-            }
+-        }
+-        return filteredElements;
+-    }
++    // :not(selector)
++    private Elements not() {
++        tq.consume(":not");
++        String subQuery = tq.chompBalanced('(',')');
++        Validate.notEmpty(subQuery, ":not(selector) subselect must not be empty");
++
++        Elements filteredElements = new Elements();
++        for (Element el : elements) {
++            if (Selector.select(subQuery, el).isEmpty()) {
++                filteredElements.add(el);
++            }
++        }
++        return filteredElements;
++    }
+@@ -1,1 +1,1 @@
+-    private Elements findElements() {
++    private org.jsoup.nodes.Evaluator parseEvaluator() {
+@@ -1,1 +1,1 @@
+-    private org.jsoup.nodes.Evaluator parseEvaluator() {
++    private Elements findElements() {
+@@ -1,14 +1,1 @@
+-    // :not(selector)
+-    private Elements not() {
+-        tq.consume(":not");
+-        String subQuery = tq.chompBalanced('(',')');
+-        Validate.notEmpty(subQuery, ":not(selector) subselect must not be empty");
+-
+-        Elements filteredElements = new Elements();
+-        for (Element el : elements) {
+-            if (Selector.select(subQuery, el).isEmpty()) {
+-                filteredElements.add(el);
+-            }
+-        }
+-        return filteredElements;
+-    }
++    // :not(selector)
+@@ -1,8 +1,13 @@
+-        tq.consumeWhitespace();
+-        
+-        if (tq.matchesAny(combinators)) { // if starts with a combinator, use root as elements
+-            elements.add(root);
+-            combinator(tq.consume().toString());
+-        } else {
+-            addElements(findElements()); // chomp first element matcher off queue 
+-        }            
++        tq.consumeWhitespace();
++        
++        // if query starts with a pseudo-selector that acts as a filter, initialize elements with all elements under root
++        if (tq.matches(":not(") || tq.matches(":has(") || tq.matches(":contains(") || tq.matches(":matches(") || tq.matches(":containsOwn(") || tq.matches(":matchesOwn(")) {
++            elements.addAll(root.getAllElements());
++        }
++        
++        if (tq.matchesAny(combinators)) { // if starts with a combinator, use root as elements
++            elements.add(root);
++            combinator(tq.consume().toString());
++        } else {
++            addElements(findElements()); // chomp first element matcher off queue 
++        }            
+@@ -1,1 +1,15 @@
+-    // :not(selector)
++    // :not(selector)
++    private Elements not() {
++        tq.consume(":not");
++        String subQuery = tq.chompBalanced('(',')');
++        Validate.notEmpty(subQuery, ":not(selector) subselect must not be empty");
++
++        Elements notElements = select(subQuery, elements);
++        Elements filteredElements = new Elements();
++        for (Element el : elements) {
++            if (!notElements.contains(el)) {
++                filteredElements.add(el);
++            }
++        }
++        return filteredElements;
++    }
+@@ -1,12 +1,10 @@
+-        } else if (tq.matches(":has(")) {
+-            return has();
+-        } else if (tq.matches(":not(")) {
+-            return not();
+-        } else if (tq.matches(":contains(")) {
+-            return contains(false);
+-        } else if (tq.matches(":containsOwn(")) {
+-            return contains(true);
+-        } else if (tq.matches(":matches(")) {
+-            return matches(false);
+-        } else if (tq.matches(":matchesOwn(")) {
+-            return matches(true);
++        } else if (tq.matches(":has(")) {
++            return has();
++        } else if (tq.matches(":contains(")) {
++            return contains(false);
++        } else if (tq.matches(":containsOwn(")) {
++            return contains(true);
++        } else if (tq.matches(":matches(")) {
++            return matches(false);
++        } else if (tq.matches(":matchesOwn(")) {
++            return matches(true);
+@@ -1,6 +1,8 @@
+-            } else if (seenWhite) {
+-                combinator(" ");
+-            } else { // E.class, E#id, E[attr] etc. AND
+-                Elements candidates = findElements(); // take next el, #. etc off queue
+-                intersectElements(filterForSelf(elements, candidates));
+-            }
++            } else if (seenWhite) {
++                combinator(" ");
++            } else if (tq.matches(":not(")) {
++                intersectElements(not());
++            } else { // E.class, E#id, E[attr] etc. AND
++                Elements candidates = findElements(); // take next el, #. etc off queue
++                intersectElements(filterForSelf(elements, candidates));
++            }
+@@ -1,13 +1,25 @@
+-        tq.consumeWhitespace();
+-        
+-        // if query starts with a pseudo-selector that acts as a filter, initialize elements with all elements under root
+-        if (tq.matches(":not(") || tq.matches(":has(") || tq.matches(":contains(") || tq.matches(":matches(") || tq.matches(":containsOwn(") || tq.matches(":matchesOwn(")) {
+-            elements.addAll(root.getAllElements());
+-        }
+-        
+-        if (tq.matchesAny(combinators)) { // if starts with a combinator, use root as elements
+-            elements.add(root);
+-            combinator(tq.consume().toString());
+-        } else {
+-            addElements(findElements()); // chomp first element matcher off queue 
+-        }            
++        tq.consumeWhitespace();
++        
++        // if query starts with a pseudo-selector that acts as a filter, initialize elements with all elements under root
++        if (tq.matches(":not(") || tq.matches(":has(") || tq.matches(":contains(") || tq.matches(":matches(") || tq.matches(":containsOwn(") || tq.matches(":matchesOwn(")) {
++            elements.addAll(root.getAllElements());
++            // Directly apply the filter
++            if (tq.matches(":not(")) {
++                elements = not();
++            } else if (tq.matches(":has(")) {
++                elements = has();
++            } else if (tq.matches(":contains(")) {
++                elements = contains(false);
++            } else if (tq.matches(":containsOwn(")) {
++                elements = contains(true);
++            } else if (tq.matches(":matches(")) {
++                elements = matches(false);
++            } else if (tq.matches(":matchesOwn(")) {
++                elements = matches(true);
++            }
++        } else if (tq.matchesAny(combinators)) { // if starts with a combinator, use root as elements
++            elements.add(root);
++            combinator(tq.consume().toString());
++        } else {
++            addElements(findElements()); // chomp first element matcher off queue 
++        }            
+@@ -1,1 +1,1 @@
+-    private final LinkedHashSet<Element> elements; // LHS for unique and ordered elements
++    private Elements elements; // LHS for unique and ordered elements
+@@ -1,1 +1,1 @@
+-        this.elements = new LinkedHashSet<Element>();
++        this.elements = new Elements();
+@@ -1,25 +1,11 @@
+-        tq.consumeWhitespace();
+-        
+-        // if query starts with a pseudo-selector that acts as a filter, initialize elements with all elements under root
+-        if (tq.matches(":not(") || tq.matches(":has(") || tq.matches(":contains(") || tq.matches(":matches(") || tq.matches(":containsOwn(") || tq.matches(":matchesOwn(")) {
+-            elements.addAll(root.getAllElements());
+-            // Directly apply the filter
+-            if (tq.matches(":not(")) {
+-                elements = not();
+-            } else if (tq.matches(":has(")) {
+-                elements = has();
+-            } else if (tq.matches(":contains(")) {
+-                elements = contains(false);
+-            } else if (tq.matches(":containsOwn(")) {
+-                elements = contains(true);
+-            } else if (tq.matches(":matches(")) {
+-                elements = matches(false);
+-            } else if (tq.matches(":matchesOwn(")) {
+-                elements = matches(true);
+-            }
+-        } else if (tq.matchesAny(combinators)) { // if starts with a combinator, use root as elements
+-            elements.add(root);
+-            combinator(tq.consume().toString());
+-        } else {
+-            addElements(findElements()); // chomp first element matcher off queue 
+-        }            
++        tq.consumeWhitespace();
++        
++        if (tq.matches(":not(")) {
++            elements.addAll(root.getAllElements());
++            elements = not();
++        } else if (tq.matchesAny(combinators)) { // if starts with a combinator, use root as elements
++            elements.add(root);
++            combinator(tq.consume().toString());
++        } else {
++            addElements(findElements()); // chomp first element matcher off queue 
++        }            
+@@ -1,11 +1,25 @@
+-        tq.consumeWhitespace();
+-        
+-        if (tq.matches(":not(")) {
+-            elements.addAll(root.getAllElements());
+-            elements = not();
+-        } else if (tq.matchesAny(combinators)) { // if starts with a combinator, use root as elements
+-            elements.add(root);
+-            combinator(tq.consume().toString());
+-        } else {
+-            addElements(findElements()); // chomp first element matcher off queue 
+-        }            
++        tq.consumeWhitespace();
++        
++        // if query starts with a pseudo-selector that acts as a filter, initialize elements with all elements under root
++        if (tq.matches(":not(") || tq.matches(":has(") || tq.matches(":contains(") || tq.matches(":matches(") || tq.matches(":containsOwn(") || tq.matches(":matchesOwn(")) {
++            elements.addAll(root.getAllElements());
++            // Directly apply the filter
++            if (tq.matches(":not(")) {
++                elements = not();
++            } else if (tq.matches(":has(")) {
++                elements = has();
++            } else if (tq.matches(":contains(")) {
++                elements = contains(false);
++            } else if (tq.matches(":containsOwn(")) {
++                elements = contains(true);
++            } else if (tq.matches(":matches(")) {
++                elements = matches(false);
++            } else if (tq.matches(":matchesOwn(")) {
++                elements = matches(true);
++            }
++        } else if (tq.matchesAny(combinators)) { // if starts with a combinator, use root as elements
++            elements.add(root);
++            combinator(tq.consume().toString());
++        } else {
++            addElements(findElements()); // chomp first element matcher off queue 
++        }            
+@@ -1,23 +1,23 @@
+-        // if query starts with a pseudo-selector that acts as a filter, initialize elements with all elements under root
+-        if (tq.matches(":not(") || tq.matches(":has(") || tq.matches(":contains(") || tq.matches(":matches(") || tq.matches(":containsOwn(") || tq.matches(":matchesOwn(")) {
+-            elements.addAll(root.getAllElements());
+-            // Directly apply the filter
+-            if (tq.matches(":not(")) {
+-                elements = not();
+-            } else if (tq.matches(":has(")) {
+-                elements = has();
+-            } else if (tq.matches(":contains(")) {
+-                elements = contains(false);
+-            } else if (tq.matches(":containsOwn(")) {
+-                elements = contains(true);
+-            } else if (tq.matches(":matches(")) {
+-                elements = matches(false);
+-            } else if (tq.matches(":matchesOwn(")) {
+-                elements = matches(true);
+-            }
+-        } else if (tq.matchesAny(combinators)) { // if starts with a combinator, use root as elements
+-            elements.add(root);
+-            combinator(tq.consume().toString());
+-        } else {
+-            addElements(findElements()); // chomp first element matcher off queue 
+-        }            
++        // if query starts with a pseudo-selector that acts as a filter, initialize elements with all elements under root
++        if (tq.matches(":not(") || tq.matches(":has(") || tq.matches(":contains(") || tq.matches(":matches(") || tq.matches(":containsOwn(") || tq.matches(":matchesOwn(")) {
++            elements.addAll(root.getAllElements());
++            // Directly apply the filter
++            if (tq.matches(":not(")) {
++                intersectElements(not());
++            } else if (tq.matches(":has(")) {
++                intersectElements(has());
++            } else if (tq.matches(":contains(")) {
++                intersectElements(contains(false));
++            } else if (tq.matches(":containsOwn(")) {
++                intersectElements(contains(true));
++            } else if (tq.matches(":matches(")) {
++                intersectElements(matches(false));
++            } else if (tq.matches(":matchesOwn(")) {
++                intersectElements(matches(true));
++            }
++        } else if (tq.matchesAny(combinators)) { // if starts with a combinator, use root as elements
++            elements.add(root);
++            combinator(tq.consume().toString());
++        } else {
++            addElements(findElements()); // chomp first element matcher off queue 
++        }            
+@@ -1,1 +1,1 @@
+-    private Elements elements; // LHS for unique and ordered elements
++    private LinkedHashSet<Element> elements; // LHS for unique and ordered elements
+@@ -1,1 +1,1 @@
+-        this.elements = new Elements();
++        this.elements = new LinkedHashSet<Element>();

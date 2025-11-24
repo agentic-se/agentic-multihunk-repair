@@ -1,0 +1,235 @@
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializer.java
+@@ -1,18 +1,23 @@
+-    @Override
+-    public void acceptJsonFormatVisitor(JsonFormatVisitorWrapper visitor, JavaType typeHint) throws JsonMappingException
+-    {
+-        if (_isInt) {
+-            JsonIntegerFormatVisitor v2 = visitor.expectIntegerFormat(typeHint);
+-            if (v2 != null) {
+-                v2.numberType(JsonParser.NumberType.BIG_INTEGER);
+-            }
+-        } else {
+-            JsonNumberFormatVisitor v2 = visitor.expectNumberFormat(typeHint);
+-            if (v2 != null) {
+-                Class<?> h = handledType();
+-                if (h == BigDecimal.class) {
+-                    v2.numberType(JsonParser.NumberType.BIG_DECIMAL);
+-                } // otherwise it's for Number... anything we could do there?
+-            }
+-        }
+-    }
++    @Override
++    public boolean isEmpty(SerializerProvider prov, Number value) {
++        return value.intValue() == 0;
++    }
++
++    @Override
++    public void acceptJsonFormatVisitor(JsonFormatVisitorWrapper visitor, JavaType typeHint) throws JsonMappingException
++    {
++        if (_isInt) {
++            JsonIntegerFormatVisitor v2 = visitor.expectIntegerFormat(typeHint);
++            if (v2 != null) {
++                v2.numberType(JsonParser.NumberType.BIG_INTEGER);
++            }
++        } else {
++            JsonNumberFormatVisitor v2 = visitor.expectNumberFormat(typeHint);
++            if (v2 != null) {
++                Class<?> h = handledType();
++                if (h == BigDecimal.class) {
++                    v2.numberType(JsonParser.NumberType.BIG_DECIMAL);
++                } // otherwise it's for Number... anything we could do there?
++            }
++        }
++    }
+@@ -1,4 +1,27 @@
+-    @Override
+-    public boolean isEmpty(SerializerProvider prov, Number value) {
+-        return value.intValue() == 0;
+-    }
++    @Override
++    public boolean isEmpty(SerializerProvider prov, Number value) {
++        if (value == null) {
++            return true;
++        }
++        // For primitive number types, check for zero
++        if (value instanceof Integer) {
++            return ((Integer) value).intValue() == 0;
++        }
++        if (value instanceof Long) {
++            return ((Long) value).longValue() == 0L;
++        }
++        if (value instanceof Double) {
++            return ((Double) value).doubleValue() == 0.0;
++        }
++        if (value instanceof Float) {
++            return ((Float) value).floatValue() == 0.0F;
++        }
++        if (value instanceof BigDecimal) {
++            return BigDecimal.ZERO.compareTo((BigDecimal) value) == 0;
++        }
++        if (value instanceof BigInteger) {
++            return BigInteger.ZERO.compareTo((BigInteger) value) == 0;
++        }
++        // For other Number types, default to false (or a more complex check if needed)
++        return false;
++    }
+
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializers.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializers.java
+@@ -1,3 +1,9 @@
+-        public void serialize(Short value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+-            gen.writeNumber(value.shortValue());
+-        }
++        @Override
++        public boolean isEmpty(SerializerProvider prov, Short value) {
++            return value == null || value.shortValue() == 0;
++        }
++
++        @Override
++        public void serialize(Short value, JsonGenerator gen, SerializerProvider provider) throws IOException {
++            gen.writeNumber(value.shortValue());
++        }
+@@ -1,3 +1,9 @@
+-        public void serialize(Object value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+-            gen.writeNumber(((Integer) value).intValue());
+-        }
++        @Override
++        public boolean isEmpty(SerializerProvider prov, Object value) {
++            return value == null || ((Integer) value).intValue() == 0;
++        }
++
++        @Override
++        public void serialize(Object value, JsonGenerator gen, SerializerProvider provider) throws IOException {
++            gen.writeNumber(((Integer) value).intValue());
++        }
+@@ -1,3 +1,9 @@
+-        public void serialize(Number value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+-            gen.writeNumber(value.intValue());
+-        }
++        @Override
++        public boolean isEmpty(SerializerProvider prov, Number value) {
++            return value == null || value.intValue() == 0;
++        }
++
++        @Override
++        public void serialize(Number value, JsonGenerator gen, SerializerProvider provider) throws IOException {
++            gen.writeNumber(value.intValue());
++        }
+@@ -1,3 +1,9 @@
+-        public void serialize(Object value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+-            gen.writeNumber(((Long) value).longValue());
+-        }
++        @Override
++        public boolean isEmpty(SerializerProvider prov, Object value) {
++            return value == null || ((Long) value).longValue() == 0L;
++        }
++
++        @Override
++        public void serialize(Object value, JsonGenerator gen, SerializerProvider provider) throws IOException {
++            gen.writeNumber(((Long) value).longValue());
++        }
+@@ -1,3 +1,9 @@
+-        public void serialize(Object value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+-            gen.writeNumber(((Float) value).floatValue());
+-        }
++        @Override
++        public boolean isEmpty(SerializerProvider prov, Object value) {
++            return value == null || ((Float) value).floatValue() == 0.0F;
++        }
++
++        @Override
++        public void serialize(Object value, JsonGenerator gen, SerializerProvider provider) throws IOException {
++            gen.writeNumber(((Float) value).floatValue());
++        }
+@@ -1,3 +1,9 @@
+-        public void serialize(Object value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+-            gen.writeNumber(((Double) value).doubleValue());
+-        }
++        @Override
++        public boolean isEmpty(SerializerProvider prov, Object value) {
++            return value == null || ((Double) value).doubleValue() == 0.0;
++        }
++
++        @Override
++        public void serialize(Object value, JsonGenerator gen, SerializerProvider provider) throws IOException {
++            gen.writeNumber(((Double) value).doubleValue());
++        }
+@@ -1,9 +1,3 @@
+-        @Override
+-        public boolean isEmpty(SerializerProvider prov, Short value) {
+-            return value == null || value.shortValue() == 0;
+-        }
+-
+-        @Override
+-        public void serialize(Short value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+-            gen.writeNumber(value.shortValue());
+-        }
++        public void serialize(Short value, JsonGenerator gen, SerializerProvider provider) throws IOException {
++            gen.writeNumber(value.shortValue());
++        }
+@@ -1,9 +1,3 @@
+-        @Override
+-        public boolean isEmpty(SerializerProvider prov, Object value) {
+-            return value == null || ((Integer) value).intValue() == 0;
+-        }
+-
+-        @Override
+-        public void serialize(Object value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+-            gen.writeNumber(((Integer) value).intValue());
+-        }
++        public void serialize(Object value, JsonGenerator gen, SerializerProvider provider) throws IOException {
++            gen.writeNumber(((Integer) value).intValue());
++        }
+@@ -1,9 +1,3 @@
+-        @Override
+-        public boolean isEmpty(SerializerProvider prov, Number value) {
+-            return value == null || value.intValue() == 0;
+-        }
+-
+-        @Override
+-        public void serialize(Number value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+-            gen.writeNumber(value.intValue());
+-        }
++        public void serialize(Number value, JsonGenerator gen, SerializerProvider provider) throws IOException {
++            gen.writeNumber(value.intValue());
++        }
+@@ -1,9 +1,3 @@
+-        @Override
+-        public boolean isEmpty(SerializerProvider prov, Object value) {
+-            return value == null || ((Long) value).longValue() == 0L;
+-        }
+-
+-        @Override
+-        public void serialize(Object value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+-            gen.writeNumber(((Long) value).longValue());
+-        }
++        public void serialize(Object value, JsonGenerator gen, SerializerProvider provider) throws IOException {
++            gen.writeNumber(((Long) value).longValue());
++        }
+@@ -1,9 +1,3 @@
+-        @Override
+-        public boolean isEmpty(SerializerProvider prov, Object value) {
+-            return value == null || ((Float) value).floatValue() == 0.0F;
+-        }
+-
+-        @Override
+-        public void serialize(Object value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+-            gen.writeNumber(((Float) value).floatValue());
+-        }
++        public void serialize(Object value, JsonGenerator gen, SerializerProvider provider) throws IOException {
++            gen.writeNumber(((Float) value).floatValue());
++        }
+@@ -1,9 +1,3 @@
+-        @Override
+-        public boolean isEmpty(SerializerProvider prov, Object value) {
+-            return value == null || ((Double) value).doubleValue() == 0.0;
+-        }
+-
+-        @Override
+-        public void serialize(Object value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+-            gen.writeNumber(((Double) value).doubleValue());
+-        }
++        public void serialize(Object value, JsonGenerator gen, SerializerProvider provider) throws IOException {
++            gen.writeNumber(((Double) value).doubleValue());
++        }

@@ -1,0 +1,50 @@
+diff --git a/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java b/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
+index 16f81db..1df4578 100644
+--- a/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
++++ b/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
+@@ -224,7 +224,14 @@ public class HtmlTreeBuilder extends TreeBuilder {
+         insertNode(el);
+         if (startTag.isSelfClosing()) {
+             if (tag.isKnownTag()) {
+-                if (tag.isSelfClosing()) tokeniser.acknowledgeSelfClosingFlag();
++                if (tag.isEmpty() || tag.isSelfClosing()) {
++                    tokeniser.acknowledgeSelfClosingFlag(); // acknowledge for void tags
++                } else {
++                    // Known tag that is not empty/void but trying to self-close - parse error
++                    if (errors.canAddError())
++                        errors.add(new ParseError(reader.pos(), "Tag cannot be self closing; not a void tag"));
++                    tokeniser.acknowledgeSelfClosingFlag(); // still acknowledge to prevent double error
++                }
+             }
+             else {
+                 tag.setSelfClosing();
+diff --git a/src/main/java/org/jsoup/parser/Tokeniser.java b/src/main/java/org/jsoup/parser/Tokeniser.java
+index 29fe4cc..ddfdce0 100644
+--- a/src/main/java/org/jsoup/parser/Tokeniser.java
++++ b/src/main/java/org/jsoup/parser/Tokeniser.java
+@@ -73,8 +73,19 @@ final class Tokeniser {
+         if (token.type == Token.TokenType.StartTag) {
+             Token.StartTag startTag = (Token.StartTag) token;
+             lastStartTag = startTag.tagName;
+-            if (startTag.selfClosing)
+-                selfClosingFlagAcknowledged = false;
++            if (startTag.selfClosing) {
++                // Check if this is a known void/empty tag that can be self-closing
++                Tag tag = Tag.valueOf(startTag.tagName);
++                if (tag.isEmpty() || tag.isSelfClosing()) {
++                    selfClosingFlagAcknowledged = true; // void tags can self-close, acknowledge immediately
++                } else if (tag.isKnownTag()) {
++                    // Known non-void tag: don't set flag to false, let tree builder handle the error
++                    selfClosingFlagAcknowledged = true; // pre-acknowledge so generic error isn't generated
++                } else {
++                    // Unknown tag: set flag to false so tree builder must acknowledge
++                    selfClosingFlagAcknowledged = false;
++                }
++            }
+         } else if (token.type == Token.TokenType.EndTag) {
+             Token.EndTag endTag = (Token.EndTag) token;
+             if (endTag.attributes != null)
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

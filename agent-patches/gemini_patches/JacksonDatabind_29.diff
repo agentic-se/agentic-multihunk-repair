@@ -1,0 +1,626 @@
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
+@@ -1,5 +1,6 @@
+-            } else if (_tokens[i] == null) {
+-                SettableBeanProperty prop = _properties[i].getProperty();
+-                throw ctxt.mappingException("Missing property '%s' for external type id '%s'",
+-                        prop.getName(), _properties[i].getTypePropertyName());
+-            }
++            } else if (_tokens[i] == null) {
++                // [databind#942]: If we have type id, but no value, it means value is null
++                TokenBuffer tb = ctxt.bufferForInput(jp);
++                tb.writeNull();
++                _tokens[i] = tb;
++            }
+@@ -1,34 +1,6 @@
+-            String typeId = _typeIds[i];
+-            if (typeId == null) {
+-                TokenBuffer tokens = _tokens[i];
+-                // let's allow missing both type and property (may already have been set, too)
+-                // but not just one
+-                if (tokens == null) {
+-                    continue;
+-                }
+-                // [databind#118]: Need to mind natural types, for which no type id
+-                // will be included.
+-                JsonToken t = tokens.firstToken();
+-                if (t != null && t.isScalarValue()) {
+-                    JsonParser buffered = tokens.asParser(p);
+-                    buffered.nextToken();
+-                    SettableBeanProperty extProp = _properties[i].getProperty();
+-                    Object result = TypeDeserializer.deserializeIfNatural(buffered, ctxt, extProp.getType());
+-                    if (result != null) {
+-                        extProp.set(bean, result);
+-                        continue;
+-                    }
+-                    // 26-Oct-2012, tatu: As per [databind#94], must allow use of 'defaultImpl'
+-                    if (!_properties[i].hasDefaultType()) {
+-                        throw ctxt.mappingException("Missing external type id property '%s'",
+-                                _properties[i].getTypePropertyName());                                
+-                    }
+-                    typeId = _properties[i].getDefaultTypeId();
+-                }
+-            } else if (_tokens[i] == null) {
+-                // [databind#942]: If we have type id, but no value, it means value is null
+-                TokenBuffer tb = ctxt.bufferForInput(p);
+-                tb.writeNull();
+-                _tokens[i] = tb;
+-            }
+-            _deserializeAndSet(p, ctxt, bean, i, typeId);
++            } else if (_tokens[i] == null) {
++                SettableBeanProperty prop = _properties[i].getProperty();
++                throw ctxt.mappingException("Missing property '%s' for external type id '%s'",
++                        prop.getName(), _properties[i].getTypePropertyName());
++            }
++            _deserializeAndSet(p, ctxt, bean, i, typeId);
+@@ -1,6 +1,5 @@
+-            } else if (_tokens[i] == null) {
+-                // [databind#942]: If we have type id, but no value, it means value is null
+-                TokenBuffer tb = ctxt.bufferForInput(jp);
+-                tb.writeNull();
+-                _tokens[i] = tb;
+-            }
++            } else if (_tokens[i] == null) {
++                SettableBeanProperty prop = _properties[i].getProperty();
++                throw ctxt.mappingException("Missing property '%s' for external type id '%s'",
++                        prop.getName(), _properties[i].getTypePropertyName());
++            }
+@@ -1,8 +1,35 @@
+-        for (int i = 0, len = _properties.length; i < len; ++i) {
+-            } else if (_tokens[i] == null) {
+-                SettableBeanProperty prop = _properties[i].getProperty();
+-                throw ctxt.mappingException("Missing property '%s' for external type id '%s'",
+-                        prop.getName(), _properties[i].getTypePropertyName());
+-            }
+-            _deserializeAndSet(p, ctxt, bean, i, typeId);
+-        }
++        for (int i = 0, len = _properties.length; i < len; ++i) {
++            String typeId = _typeIds[i];
++            if (typeId == null) {
++                TokenBuffer tokens = _tokens[i];
++                // let's allow missing both type and property (may already have been set, too)
++                // but not just one
++                if (tokens == null) {
++                    continue;
++                }
++                // [databind#118]: Need to mind natural types, for which no type id
++                // will be included.
++                JsonToken t = tokens.firstToken();
++                if (t != null && t.isScalarValue()) {
++                    JsonParser buffered = tokens.asParser(p);
++                    buffered.nextToken();
++                    SettableBeanProperty extProp = _properties[i].getProperty();
++                    Object result = TypeDeserializer.deserializeIfNatural(buffered, ctxt, extProp.getType());
++                    if (result != null) {
++                        extProp.set(bean, result);
++                        continue;
++                    }
++                    // 26-Oct-2012, tatu: As per [databind#94], must allow use of 'defaultImpl'
++                    if (!_properties[i].hasDefaultType()) {
++                        throw ctxt.mappingException("Missing external type id property '%s'",
++                                _properties[i].getTypePropertyName());                                
++                    }
++                    typeId = _properties[i].getDefaultTypeId();
++                }
++            } else if (_tokens[i] == null) {
++                SettableBeanProperty prop = _properties[i].getProperty();
++                throw ctxt.mappingException("Missing property '%s' for external type id '%s'",
++                        prop.getName(), _properties[i].getTypePropertyName());
++            }
++            _deserializeAndSet(p, ctxt, bean, i, typeId);
++        }
+@@ -1,6 +1,7 @@
+-            } else if (_tokens[i] == null) {
+-                SettableBeanProperty prop = _properties[i].getProperty();
+-                throw ctxt.mappingException("Missing property '%s' for external type id '%s'",
+-                        prop.getName(), _properties[i].getTypePropertyName());
+-            }
+-            _deserializeAndSet(p, ctxt, bean, i, typeId);
++            } else if (_tokens[i] == null) {
++                // [databind#942]: If we have type id, but no value, it means value is null
++                TokenBuffer tb = new TokenBuffer(p);
++                tb.writeNull();
++                _tokens[i] = tb;
++            }
++            _deserializeAndSet(p, ctxt, bean, i, typeId);
+@@ -1,6 +1,7 @@
+-            } else if (_tokens[i] == null) {
+-                SettableBeanProperty prop = _properties[i].getProperty();
+-                throw ctxt.mappingException("Missing property '%s' for external type id '%s'",
+-                        prop.getName(), _properties[i].getTypePropertyName());
+-            }
+-            values[i] = _deserialize(jp, ctxt, i, typeId);
++            } else if (_tokens[i] == null) {
++                // [databind#942]: If we have type id, but no value, it means value is null
++                TokenBuffer tb = new TokenBuffer(jp);
++                tb.writeNull();
++                _tokens[i] = tb;
++            }
++            values[i] = _deserialize(jp, ctxt, i, typeId);
+@@ -1,7 +1,6 @@
+-            } else if (_tokens[i] == null) {
+-                // [databind#942]: If we have type id, but no value, it means value is null
+-                TokenBuffer tb = new TokenBuffer(p);
+-                tb.writeNull();
+-                _tokens[i] = tb;
+-            }
+-            _deserializeAndSet(p, ctxt, bean, i, typeId);
++            } else if (_tokens[i] == null) {
++                SettableBeanProperty prop = _properties[i].getProperty();
++                throw ctxt.mappingException("Missing property '%s' for external type id '%s'",
++                        prop.getName(), _properties[i].getTypePropertyName());
++            }
++            _deserializeAndSet(p, ctxt, bean, i, typeId);
+@@ -1,7 +1,6 @@
+-            } else if (_tokens[i] == null) {
+-                // [databind#942]: If we have type id, but no value, it means value is null
+-                TokenBuffer tb = new TokenBuffer(jp);
+-                tb.writeNull();
+-                _tokens[i] = tb;
+-            }
+-            values[i] = _deserialize(jp, ctxt, i, typeId);
++            } else if (_tokens[i] == null) {
++                SettableBeanProperty prop = _properties[i].getProperty();
++                throw ctxt.mappingException("Missing property '%s' for external type id '%s'",
++                        prop.getName(), _properties[i].getTypePropertyName());
++            }
++            values[i] = _deserialize(jp, ctxt, i, typeId);
+@@ -1,19 +1,20 @@
+-    @SuppressWarnings("resource")
+-    protected final Object _deserialize(JsonParser p, DeserializationContext ctxt,
+-            int index, String typeId) throws IOException
+-    {
+-        JsonParser p2 = _tokens[index].asParser(p);
+-        JsonToken t = p2.nextToken();
+-        // 29-Sep-2015, tatu: As per [databind#942], nulls need special support
+-
+-        TokenBuffer merged = new TokenBuffer(p);
+-        merged.writeStartArray();
+-        merged.writeString(typeId);
+-        merged.copyCurrentStructure(p2);
+-        merged.writeEndArray();
+-
+-        // needs to point to START_OBJECT (or whatever first token is)
+-        JsonParser mp = merged.asParser(p);
+-        mp.nextToken();
+-        return _properties[index].getProperty().deserialize(mp, ctxt);
+-    }
++    @SuppressWarnings("resource")
++    protected final Object _deserialize(JsonParser p, DeserializationContext ctxt,
++            int index, String typeId) throws IOException
++    {
++        TokenBuffer merged = new TokenBuffer(p);
++        merged.writeStartArray();
++        merged.writeString(typeId);
++        // 29-Sep-2015, tatu: As per [databind#942], nulls need special support
++        if (_tokens[index] == null) {
++            merged.writeNull();
++        } else {
++            merged.copyCurrentStructure(_tokens[index].asParser(p));
++        }
++        merged.writeEndArray();
++
++        // needs to point to START_OBJECT (or whatever first token is)
++        JsonParser mp = merged.asParser(p);
++        mp.nextToken();
++        return _properties[index].getProperty().deserialize(mp, ctxt);
++    }
+@@ -1,21 +1,22 @@
+-    @SuppressWarnings("resource")
+-    protected final void _deserializeAndSet(JsonParser p, DeserializationContext ctxt,
+-            Object bean, int index, String typeId) throws IOException
+-    {
+-        /* Ok: time to mix type id, value; and we will actually use "wrapper-array"
+-         * style to ensure we can handle all kinds of JSON constructs.
+-         */
+-        JsonParser p2 = _tokens[index].asParser(p);
+-        JsonToken t = p2.nextToken();
+-        // 29-Sep-2015, tatu: As per [databind#942], nulls need special support
+-        TokenBuffer merged = new TokenBuffer(p);
+-        merged.writeStartArray();
+-        merged.writeString(typeId);
+-        
+-        merged.copyCurrentStructure(p2);
+-        merged.writeEndArray();
+-        // needs to point to START_OBJECT (or whatever first token is)
+-        JsonParser mp = merged.asParser(p);
+-        mp.nextToken();
+-        _properties[index].getProperty().deserializeAndSet(mp, ctxt, bean);
+-    }
++    @SuppressWarnings("resource")
++    protected final void _deserializeAndSet(JsonParser p, DeserializationContext ctxt,
++            Object bean, int index, String typeId) throws IOException
++    {
++        /* Ok: time to mix type id, value; and we will actually use "wrapper-array"
++         * style to ensure we can handle all kinds of JSON constructs.
++         */
++        TokenBuffer merged = new TokenBuffer(p);
++        merged.writeStartArray();
++        merged.writeString(typeId);
++        // 29-Sep-2015, tatu: As per [databind#942], nulls need special support
++        if (_tokens[index] == null) {
++            merged.writeNull();
++        } else {
++            merged.copyCurrentStructure(_tokens[index].asParser(p));
++        }
++        merged.writeEndArray();
++        // needs to point to START_OBJECT (or whatever first token is)
++        JsonParser mp = merged.asParser(p);
++        mp.nextToken();
++        _properties[index].getProperty().deserializeAndSet(mp, ctxt, bean);
++    }
+@@ -1,7 +1,6 @@
+-                    typeId = _properties[i].getDefaultTypeId();
+-                }
+-            } else if (_tokens[i] == null) {
+-                SettableBeanProperty prop = _properties[i].getProperty();
+-                throw ctxt.mappingException("Missing property '%s' for external type id '%s'",
+-                        prop.getName(), _properties[i].getTypePropertyName());
+-            }
++                    typeId = _properties[i].getDefaultTypeId();
++                }
++            } else if (_tokens[i] == null) {
++                // [databind#942]: If we have type id, but no value, it means value is null
++                // so we should proceed and deserialize as null.
++            }
+@@ -1,6 +1,5 @@
+-                typeId = _properties[i].getDefaultTypeId();
+-            } else if (_tokens[i] == null) {
+-                SettableBeanProperty prop = _properties[i].getProperty();
+-                throw ctxt.mappingException("Missing property '%s' for external type id '%s'",
+-                        prop.getName(), _properties[i].getTypePropertyName());
+-            }
++                typeId = _properties[i].getDefaultTypeId();
++            } else if (_tokens[i] == null) {
++                // [databind#942]: If we have type id, but no value, it means value is null
++                // so we should proceed and deserialize as null.
++            }
+@@ -1,20 +1,19 @@
+-    @SuppressWarnings("resource")
+-    protected final Object _deserialize(JsonParser p, DeserializationContext ctxt,
+-            int index, String typeId) throws IOException
+-    {
+-        TokenBuffer merged = new TokenBuffer(p);
+-        merged.writeStartArray();
+-        merged.writeString(typeId);
+-        // 29-Sep-2015, tatu: As per [databind#942], nulls need special support
+-        if (_tokens[index] == null) {
+-            merged.writeNull();
+-        } else {
+-            merged.copyCurrentStructure(_tokens[index].asParser(p));
+-        }
+-        merged.writeEndArray();
+-
+-        // needs to point to START_OBJECT (or whatever first token is)
+-        JsonParser mp = merged.asParser(p);
+-        mp.nextToken();
+-        return _properties[index].getProperty().deserialize(mp, ctxt);
+-    }
++    @SuppressWarnings("resource")
++    protected final Object _deserialize(JsonParser p, DeserializationContext ctxt,
++            int index, String typeId) throws IOException
++    {
++        JsonParser p2 = _tokens[index].asParser(p);
++        JsonToken t = p2.nextToken();
++        // 29-Sep-2015, tatu: As per [databind#942], nulls need special support
++
++        TokenBuffer merged = new TokenBuffer(p);
++        merged.writeStartArray();
++        merged.writeString(typeId);
++        merged.copyCurrentStructure(p2);
++        merged.writeEndArray();
++
++        // needs to point to START_OBJECT (or whatever first token is)
++        JsonParser mp = merged.asParser(p);
++        mp.nextToken();
++        return _properties[index].getProperty().deserialize(mp, ctxt);
++    }
+@@ -1,22 +1,21 @@
+-    @SuppressWarnings("resource")
+-    protected final void _deserializeAndSet(JsonParser p, DeserializationContext ctxt,
+-            Object bean, int index, String typeId) throws IOException
+-    {
+-        /* Ok: time to mix type id, value; and we will actually use "wrapper-array"
+-         * style to ensure we can handle all kinds of JSON constructs.
+-         */
+-        TokenBuffer merged = new TokenBuffer(p);
+-        merged.writeStartArray();
+-        merged.writeString(typeId);
+-        // 29-Sep-2015, tatu: As per [databind#942], nulls need special support
+-        if (_tokens[index] == null) {
+-            merged.writeNull();
+-        } else {
+-            merged.copyCurrentStructure(_tokens[index].asParser(p));
+-        }
+-        merged.writeEndArray();
+-        // needs to point to START_OBJECT (or whatever first token is)
+-        JsonParser mp = merged.asParser(p);
+-        mp.nextToken();
+-        _properties[index].getProperty().deserializeAndSet(mp, ctxt, bean);
+-    }
++    @SuppressWarnings("resource")
++    protected final void _deserializeAndSet(JsonParser p, DeserializationContext ctxt,
++            Object bean, int index, String typeId) throws IOException
++    {
++        /* Ok: time to mix type id, value; and we will actually use "wrapper-array"
++         * style to ensure we can handle all kinds of JSON constructs.
++         */
++        JsonParser p2 = _tokens[index].asParser(p);
++        JsonToken t = p2.nextToken();
++        // 29-Sep-2015, tatu: As per [databind#942], nulls need special support
++        TokenBuffer merged = new TokenBuffer(p);
++        merged.writeStartArray();
++        merged.writeString(typeId);
++        
++        merged.copyCurrentStructure(p2);
++        merged.writeEndArray();
++        // needs to point to START_OBJECT (or whatever first token is)
++        JsonParser mp = merged.asParser(p);
++        mp.nextToken();
++        _properties[index].getProperty().deserializeAndSet(mp, ctxt, bean);
++    }
+@@ -1,19 +1,22 @@
+-    @SuppressWarnings("resource")
+-    protected final Object _deserialize(JsonParser p, DeserializationContext ctxt,
+-            int index, String typeId) throws IOException
+-    {
+-        JsonParser p2 = _tokens[index].asParser(p);
+-        JsonToken t = p2.nextToken();
+-        // 29-Sep-2015, tatu: As per [databind#942], nulls need special support
+-
+-        TokenBuffer merged = new TokenBuffer(p);
+-        merged.writeStartArray();
+-        merged.writeString(typeId);
+-        merged.copyCurrentStructure(p2);
+-        merged.writeEndArray();
+-
+-        // needs to point to START_OBJECT (or whatever first token is)
+-        JsonParser mp = merged.asParser(p);
+-        mp.nextToken();
+-        return _properties[index].getProperty().deserialize(mp, ctxt);
+-    }
++    @SuppressWarnings("resource")
++    protected final Object _deserialize(JsonParser p, DeserializationContext ctxt,
++            int index, String typeId) throws IOException
++    {
++        // 29-Sep-2015, tatu: As per [databind#942], nulls need special support
++        if (_tokens[index] == null) {
++            return null;
++        }
++        JsonParser p2 = _tokens[index].asParser(p);
++        JsonToken t = p2.nextToken();
++
++        TokenBuffer merged = new TokenBuffer(p);
++        merged.writeStartArray();
++        merged.writeString(typeId);
++        merged.copyCurrentStructure(p2);
++        merged.writeEndArray();
++
++        // needs to point to START_OBJECT (or whatever first token is)
++        JsonParser mp = merged.asParser(p);
++        mp.nextToken();
++        return _properties[index].getProperty().deserialize(mp, ctxt);
++    }
+@@ -1,21 +1,25 @@
+-    @SuppressWarnings("resource")
+-    protected final void _deserializeAndSet(JsonParser p, DeserializationContext ctxt,
+-            Object bean, int index, String typeId) throws IOException
+-    {
+-        /* Ok: time to mix type id, value; and we will actually use "wrapper-array"
+-         * style to ensure we can handle all kinds of JSON constructs.
+-         */
+-        JsonParser p2 = _tokens[index].asParser(p);
+-        JsonToken t = p2.nextToken();
+-        // 29-Sep-2015, tatu: As per [databind#942], nulls need special support
+-        TokenBuffer merged = new TokenBuffer(p);
+-        merged.writeStartArray();
+-        merged.writeString(typeId);
+-        
+-        merged.copyCurrentStructure(p2);
+-        merged.writeEndArray();
+-        // needs to point to START_OBJECT (or whatever first token is)
+-        JsonParser mp = merged.asParser(p);
+-        mp.nextToken();
+-        _properties[index].getProperty().deserializeAndSet(mp, ctxt, bean);
+-    }
++    @SuppressWarnings("resource")
++    protected final void _deserializeAndSet(JsonParser p, DeserializationContext ctxt,
++            Object bean, int index, String typeId) throws IOException
++    {
++        /* Ok: time to mix type id, value; and we will actually use "wrapper-array"
++         * style to ensure we can handle all kinds of JSON constructs.
++         */
++        // 29-Sep-2015, tatu: As per [databind#942], nulls need special support
++        if (_tokens[index] == null) {
++            _properties[index].getProperty().set(bean, null);
++            return;
++        }
++        JsonParser p2 = _tokens[index].asParser(p);
++        JsonToken t = p2.nextToken();
++        TokenBuffer merged = new TokenBuffer(p);
++        merged.writeStartArray();
++        merged.writeString(typeId);
++        
++        merged.copyCurrentStructure(p2);
++        merged.writeEndArray();
++        // needs to point to START_OBJECT (or whatever first token is)
++        JsonParser mp = merged.asParser(p);
++        mp.nextToken();
++        _properties[index].getProperty().deserializeAndSet(mp, ctxt, bean);
++    }
+@@ -1,22 +1,19 @@
+-    @SuppressWarnings("resource")
+-    protected final Object _deserialize(JsonParser p, DeserializationContext ctxt,
+-            int index, String typeId) throws IOException
+-    {
+-        // 29-Sep-2015, tatu: As per [databind#942], nulls need special support
+-        if (_tokens[index] == null) {
+-            return null;
+-        }
+-        JsonParser p2 = _tokens[index].asParser(p);
+-        JsonToken t = p2.nextToken();
+-
+-        TokenBuffer merged = new TokenBuffer(p);
+-        merged.writeStartArray();
+-        merged.writeString(typeId);
+-        merged.copyCurrentStructure(p2);
+-        merged.writeEndArray();
+-
+-        // needs to point to START_OBJECT (or whatever first token is)
+-        JsonParser mp = merged.asParser(p);
+-        mp.nextToken();
+-        return _properties[index].getProperty().deserialize(mp, ctxt);
+-    }
++    @SuppressWarnings("resource")
++    protected final Object _deserialize(JsonParser p, DeserializationContext ctxt,
++            int index, String typeId) throws IOException
++    {
++        JsonParser p2 = _tokens[index].asParser(p);
++        JsonToken t = p2.nextToken();
++        // 29-Sep-2015, tatu: As per [databind#942], nulls need special support
++
++        TokenBuffer merged = new TokenBuffer(p);
++        merged.writeStartArray();
++        merged.writeString(typeId);
++        merged.copyCurrentStructure(p2);
++        merged.writeEndArray();
++
++        // needs to point to START_OBJECT (or whatever first token is)
++        JsonParser mp = merged.asParser(p);
++        mp.nextToken();
++        return _properties[index].getProperty().deserialize(mp, ctxt);
++    }
+@@ -1,25 +1,21 @@
+-    @SuppressWarnings("resource")
+-    protected final void _deserializeAndSet(JsonParser p, DeserializationContext ctxt,
+-            Object bean, int index, String typeId) throws IOException
+-    {
+-        /* Ok: time to mix type id, value; and we will actually use "wrapper-array"
+-         * style to ensure we can handle all kinds of JSON constructs.
+-         */
+-        // 29-Sep-2015, tatu: As per [databind#942], nulls need special support
+-        if (_tokens[index] == null) {
+-            _properties[index].getProperty().set(bean, null);
+-            return;
+-        }
+-        JsonParser p2 = _tokens[index].asParser(p);
+-        JsonToken t = p2.nextToken();
+-        TokenBuffer merged = new TokenBuffer(p);
+-        merged.writeStartArray();
+-        merged.writeString(typeId);
+-        
+-        merged.copyCurrentStructure(p2);
+-        merged.writeEndArray();
+-        // needs to point to START_OBJECT (or whatever first token is)
+-        JsonParser mp = merged.asParser(p);
+-        mp.nextToken();
+-        _properties[index].getProperty().deserializeAndSet(mp, ctxt, bean);
+-    }
++    @SuppressWarnings("resource")
++    protected final void _deserializeAndSet(JsonParser p, DeserializationContext ctxt,
++            Object bean, int index, String typeId) throws IOException
++    {
++        /* Ok: time to mix type id, value; and we will actually use "wrapper-array"
++         * style to ensure we can handle all kinds of JSON constructs.
++         */
++        JsonParser p2 = _tokens[index].asParser(p);
++        JsonToken t = p2.nextToken();
++        // 29-Sep-2015, tatu: As per [databind#942], nulls need special support
++        TokenBuffer merged = new TokenBuffer(p);
++        merged.writeStartArray();
++        merged.writeString(typeId);
++        
++        merged.copyCurrentStructure(p2);
++        merged.writeEndArray();
++        // needs to point to START_OBJECT (or whatever first token is)
++        JsonParser mp = merged.asParser(p);
++        mp.nextToken();
++        _properties[index].getProperty().deserializeAndSet(mp, ctxt, bean);
++    }
+@@ -1,19 +1,21 @@
+-    @SuppressWarnings("resource")
+-    protected final Object _deserialize(JsonParser p, DeserializationContext ctxt,
+-            int index, String typeId) throws IOException
+-    {
+-        JsonParser p2 = _tokens[index].asParser(p);
+-        JsonToken t = p2.nextToken();
+-        // 29-Sep-2015, tatu: As per [databind#942], nulls need special support
+-
+-        TokenBuffer merged = new TokenBuffer(p);
+-        merged.writeStartArray();
+-        merged.writeString(typeId);
+-        merged.copyCurrentStructure(p2);
+-        merged.writeEndArray();
+-
+-        // needs to point to START_OBJECT (or whatever first token is)
+-        JsonParser mp = merged.asParser(p);
+-        mp.nextToken();
+-        return _properties[index].getProperty().deserialize(mp, ctxt);
+-    }
++    @SuppressWarnings("resource")
++    protected final Object _deserialize(JsonParser p, DeserializationContext ctxt,
++            int index, String typeId) throws IOException
++    {
++        JsonParser p2 = _tokens[index].asParser(p);
++        // 29-Sep-2015, tatu: As per [databind#942], nulls need special support
++        if (p2.nextToken() == JsonToken.VALUE_NULL) {
++            return null;
++        }
++
++        TokenBuffer merged = new TokenBuffer(p);
++        merged.writeStartArray();
++        merged.writeString(typeId);
++        merged.copyCurrentStructure(p2);
++        merged.writeEndArray();
++
++        // needs to point to START_OBJECT (or whatever first token is)
++        JsonParser mp = merged.asParser(p);
++        mp.nextToken();
++        return _properties[index].getProperty().deserialize(mp, ctxt);
++    }
+@@ -1,21 +1,24 @@
+-    @SuppressWarnings("resource")
+-    protected final void _deserializeAndSet(JsonParser p, DeserializationContext ctxt,
+-            Object bean, int index, String typeId) throws IOException
+-    {
+-        /* Ok: time to mix type id, value; and we will actually use "wrapper-array"
+-         * style to ensure we can handle all kinds of JSON constructs.
+-         */
+-        JsonParser p2 = _tokens[index].asParser(p);
+-        JsonToken t = p2.nextToken();
+-        // 29-Sep-2015, tatu: As per [databind#942], nulls need special support
+-        TokenBuffer merged = new TokenBuffer(p);
+-        merged.writeStartArray();
+-        merged.writeString(typeId);
+-        
+-        merged.copyCurrentStructure(p2);
+-        merged.writeEndArray();
+-        // needs to point to START_OBJECT (or whatever first token is)
+-        JsonParser mp = merged.asParser(p);
+-        mp.nextToken();
+-        _properties[index].getProperty().deserializeAndSet(mp, ctxt, bean);
+-    }
++    @SuppressWarnings("resource")
++    protected final void _deserializeAndSet(JsonParser p, DeserializationContext ctxt,
++            Object bean, int index, String typeId) throws IOException
++    {
++        /* Ok: time to mix type id, value; and we will actually use "wrapper-array"
++         * style to ensure we can handle all kinds of JSON constructs.
++         */
++        JsonParser p2 = _tokens[index].asParser(p);
++        // 29-Sep-2015, tatu: As per [databind#942], nulls need special support
++        if (p2.nextToken() == JsonToken.VALUE_NULL) {
++            _properties[index].getProperty().set(bean, null);
++            return;
++        }
++        TokenBuffer merged = new TokenBuffer(p);
++        merged.writeStartArray();
++        merged.writeString(typeId);
++        
++        merged.copyCurrentStructure(p2);
++        merged.writeEndArray();
++        // needs to point to START_OBJECT (or whatever first token is)
++        JsonParser mp = merged.asParser(p);
++        mp.nextToken();
++        _properties[index].getProperty().deserializeAndSet(mp, ctxt, bean);
++    }

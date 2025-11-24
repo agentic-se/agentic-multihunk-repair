@@ -1,0 +1,21 @@
+diff --git a/src/main/java/org/apache/commons/csv/CSVParser.java b/src/main/java/org/apache/commons/csv/CSVParser.java
+index a6a6d49..240282f 100644
+--- a/src/main/java/org/apache/commons/csv/CSVParser.java
++++ b/src/main/java/org/apache/commons/csv/CSVParser.java
+@@ -368,7 +368,11 @@ public final class CSVParser implements Iterable<CSVRecord>, Closeable {
+             // build the name to index mappings
+             if (header != null) {
+                 for (int i = 0; i < header.length; i++) {
+-                    hdrMap.put(header[i], Integer.valueOf(i));
++                    final String name = header[i];
++                    if (hdrMap.containsKey(name)) {
++                        throw new IllegalStateException("The header contains a duplicate name: \"" + name + "\"");
++                    }
++                    hdrMap.put(name, Integer.valueOf(i));
+                 }
+             }
+         }
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

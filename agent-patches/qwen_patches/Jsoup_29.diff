@@ -1,0 +1,35 @@
+diff --git a/src/main/java/org/jsoup/nodes/Document.java b/src/main/java/org/jsoup/nodes/Document.java
+index c5814af..ce8b083 100644
+--- a/src/main/java/org/jsoup/nodes/Document.java
++++ b/src/main/java/org/jsoup/nodes/Document.java
+@@ -66,7 +66,21 @@ public class Document extends Element {
+     public String title() {
+         // title is a preserve whitespace tag (for document output), but normalised here
+         Element titleEl = getElementsByTag("title").first();
+-        return titleEl != null ? titleEl.text().trim() : "";
++        if (titleEl == null) {
++            return "";
++        }
++
++        // Collect all text nodes and normalize whitespace properly
++        StringBuilder sb = new StringBuilder();
++        for (org.jsoup.nodes.Node node : titleEl.childNodes()) {
++            if (node instanceof org.jsoup.nodes.TextNode) {
++                org.jsoup.nodes.TextNode textNode = (org.jsoup.nodes.TextNode) node;
++                sb.append(textNode.getWholeText());
++            }
++        }
++
++        // Normalize whitespace as Element.text() does, but on combined text
++        return org.jsoup.helper.StringUtil.normaliseWhitespace(sb.toString()).trim();
+     }
+ 
+     /**
+@@ -358,5 +372,4 @@ public class Document extends Element {
+         this.quirksMode = quirksMode;
+         return this;
+     }
+-}
+-
++}
+\ No newline at end of file

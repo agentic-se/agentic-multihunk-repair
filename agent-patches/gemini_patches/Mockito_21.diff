@@ -1,0 +1,180 @@
+--- a/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java
++++ b/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java
+@@ -1,10 +1,15 @@
+-    private <T> T withOuterClass(Class<T> cls) {
+-        try {
+-            //this is kind of overengineered because we don't need to support more params
+-            //however, I know we will be needing it :)
+-            Constructor<T> c = cls.getDeclaredConstructor(outerClassInstance.getClass());
+-            return c.newInstance(outerClassInstance);
+-        } catch (Exception e) {
+-            throw paramsException(cls, e);
+-        }
+-    }
++    private <T> T withOuterClass(Class<T> cls) {
++        try {
++            Class<?> enclosingClass = cls.getEnclosingClass();
++            if (enclosingClass != null && enclosingClass.isInstance(outerClassInstance)) {
++                Constructor<T> c = cls.getDeclaredConstructor(enclosingClass);
++                return c.newInstance(outerClassInstance);
++            } else {
++                // Fallback to original behavior if enclosing class is not found or outer instance is not compatible
++                Constructor<T> c = cls.getDeclaredConstructor(outerClassInstance.getClass());
++                return c.newInstance(outerClassInstance);
++            }
++        } catch (Exception e) {
++            throw paramsException(cls, e);
++        }
++    }
+
+--- a/src/org/mockito/internal/creation/instance/InstantiatorProvider.java
++++ b/src/org/mockito/internal/creation/instance/InstantiatorProvider.java
+@@ -1,16 +1,21 @@
+-package org.mockito.internal.creation.instance;
+-
+-import org.mockito.mock.MockCreationSettings;
+-
+-public class InstantiatorProvider {
+-
+-    private final static Instantiator INSTANCE = new ObjenesisInstantiator();
+-
+-    public Instantiator getInstantiator(MockCreationSettings settings) {
+-        if (settings.isUsingConstructor()) {
+-            return new ConstructorInstantiator(settings.getOuterClassInstance());
+-        } else {
+-            return INSTANCE;
+-        }
+-    }
+-}
++package org.mockito.internal.creation.instance;
++
++import org.mockito.mock.MockCreationSettings;
++
++import java.lang.reflect.Modifier;
++
++public class InstantiatorProvider {
++
++    private final static Instantiator INSTANCE = new ObjenesisInstantiator();
++
++    public Instantiator getInstantiator(MockCreationSettings settings) {
++        if (settings.getTypeToMock().isInterface() || Modifier.isAbstract(settings.getTypeToMock().getModifiers())) {
++            return INSTANCE;
++        }
++        if (settings.isUsingConstructor()) {
++            return new ConstructorInstantiator(settings.getOuterClassInstance());
++        } else {
++            return INSTANCE;
++        }
++    }
++}
+@@ -1,16 +1,16 @@
+-package org.mockito.internal.creation.instance;
+-
+-import org.mockito.mock.MockCreationSettings;
+-
+-public class InstantiatorProvider {
+-
+-    private final static Instantiator INSTANCE = new ObjenesisInstantiator();
+-
+-    public Instantiator getInstantiator(MockCreationSettings settings) {
+-        if (settings.isUsingConstructor()) {
+-            return new ConstructorInstantiator(settings.getOuterClassInstance());
+-        } else {
+-            return INSTANCE;
+-        }
+-    }
+-}
++package org.mockito.internal.creation.instance;
++
++import org.mockito.mock.MockCreationSettings;
++
++public class InstantiatorProvider {
++
++    private final static Instantiator INSTANCE = new ObjenesisInstantiator();
++
++    public Instantiator getInstantiator(MockCreationSettings settings) {
++        if (settings.isUsingConstructor()) {
++            return new ConstructorInstantiator(settings.getOuterClassInstance(), INSTANCE);
++        } else {
++            return INSTANCE;
++        }
++    }
++}
+
+--- a/src/org/mockito/internal/creation/instance/ObjenesisInstantiator.java
++++ b/src/org/mockito/internal/creation/instance/ObjenesisInstantiator.java
+@@ -1,16 +1,16 @@
+-package org.mockito.internal.creation.instance;
+-
+-import org.mockito.internal.configuration.GlobalConfiguration;
+-import org.objenesis.ObjenesisStd;
+-
+-class ObjenesisInstantiator implements Instantiator {
+-
+-    //TODO: in order to provide decent exception message when objenesis is not found,
+-    //have a constructor in this class that tries to instantiate ObjenesisStd and if it fails then show decent exception that dependency is missing
+-    //TODO: for the same reason catch and give better feedback when hamcrest core is not found.
+-    private final ObjenesisStd objenesis = new ObjenesisStd(new GlobalConfiguration().enableClassCache());
+-
+-    public <T> T newInstance(Class<T> cls) {
+-        return objenesis.newInstance(cls);
+-    }
+-}
++package org.mockito.internal.creation.instance;
++
++import org.mockito.internal.configuration.GlobalConfiguration;
++import org.objenesis.ObjenesisStd;
++
++public class ObjenesisInstantiator implements Instantiator {
++
++    //TODO: in order to provide decent exception message when objenesis is not found,
++    //have a constructor in this class that tries to instantiate ObjenesisStd and if it fails then show decent exception that dependency is missing
++    //TODO: for the same reason catch and give better feedback when hamcrest core is not found.
++    private final ObjenesisStd objenesis = new ObjenesisStd(new GlobalConfiguration().enableClassCache());
++
++    public <T> T newInstance(Class<T> cls) {
++        return objenesis.newInstance(cls);
++    }
++}
+
+--- a/test/org/mockito/internal/creation/instance/ConstructorInstantiatorTest.java
++++ b/test/org/mockito/internal/creation/instance/ConstructorInstantiatorTest.java
+@@ -1,18 +1,20 @@
+-    @Test public void creates_instances() {
+-        assertEquals(new ConstructorInstantiator(null).newInstance(SomeClass.class).getClass(), SomeClass.class);
+-    }
+-
+-    @Test public void creates_instances_of_inner_classes() {
+-        assertEquals(new ConstructorInstantiator(this).newInstance(SomeInnerClass.class).getClass(), SomeInnerClass.class);
+-        assertEquals(new ConstructorInstantiator(new ChildOfThis()).newInstance(SomeInnerClass.class).getClass(), SomeInnerClass.class);
+-    }
+-
+-    @Test public void explains_when_constructor_cannot_be_found() {
+-        try {
+-            new ConstructorInstantiator(null).newInstance(SomeClass2.class);
+-            fail();
+-        } catch (InstantationException e) {
+-            assertEquals("Unable to create mock instance of 'SomeClass2'.\n" +
+-                    "Please ensure it has parameter-less constructor.", e.getMessage());
+-        }
+-    }
++    private Instantiator objenesisInstantiator = new ObjenesisInstantiator();
++
++    @Test public void creates_instances() {
++        assertEquals(new ConstructorInstantiator(null, objenesisInstantiator).newInstance(SomeClass.class).getClass(), SomeClass.class);
++    }
++
++    @Test public void creates_instances_of_inner_classes() {
++        assertEquals(new ConstructorInstantiator(this, objenesisInstantiator).newInstance(SomeInnerClass.class).getClass(), SomeInnerClass.class);
++        assertEquals(new ConstructorInstantiator(new ChildOfThis(), objenesisInstantiator).newInstance(SomeInnerClass.class).getClass(), SomeInnerClass.class);
++    }
++
++    @Test public void explains_when_constructor_cannot_be_found() {
++        try {
++            new ConstructorInstantiator(null, objenesisInstantiator).newInstance(SomeClass2.class);
++            fail();
++        } catch (InstantationException e) {
++            assertEquals("Unable to create mock instance of 'SomeClass2'.\n" +
++                    "Please ensure it has parameter-less constructor.", e.getMessage());
++        }
++    }

@@ -1,0 +1,60 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+index fd7b097bb..8d23d32bc 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+@@ -6,6 +6,7 @@ import java.util.*;
+ import com.fasterxml.jackson.annotation.JsonTypeInfo;
+ import com.fasterxml.jackson.databind.*;
+ import com.fasterxml.jackson.databind.type.TypeFactory;
++import com.fasterxml.jackson.databind.jsontype.impl.SubTypeValidator;
+ import com.fasterxml.jackson.databind.util.ClassUtil;
+ 
+ /**
+@@ -48,6 +49,14 @@ public class ClassNameIdResolver
+          *    check if any generics info is added; and only then ask factory
+          *    to do translation when necessary
+          */
++        // Validate subtype before attempting to resolve it to a Class
++        try {
++            SubTypeValidator.instance().validateSubType(ctxt, _baseType, id);
++        } catch (JsonMappingException e) {
++            // Propagate as-is to follow existing exception path
++            throw e;
++        }
++
+         TypeFactory tf = ctxt.getTypeFactory();
+         if (id.indexOf('<') > 0) {
+             // note: may want to try combining with specialization (esp for EnumMap)?
+diff --git a/src/test/java/com/fasterxml/jackson/databind/deser/JDKStringLikeTypesTest.java b/src/test/java/com/fasterxml/jackson/databind/deser/JDKStringLikeTypesTest.java
+index cef00c19b..dcaf695b0 100644
+--- a/src/test/java/com/fasterxml/jackson/databind/deser/JDKStringLikeTypesTest.java
++++ b/src/test/java/com/fasterxml/jackson/databind/deser/JDKStringLikeTypesTest.java
+@@ -198,8 +198,8 @@ public class JDKStringLikeTypesTest extends BaseMapTest
+         InetAddress address = MAPPER.readValue(quote("127.0.0.1"), InetAddress.class);
+         assertEquals("127.0.0.1", address.getHostAddress());
+ 
+-        // should we try resolving host names? That requires connectivity... 
+-        final String HOST = "google.com";
++        // Avoid external DNS dependency: use localhost which is resolvable offline
++        final String HOST = "localhost";
+         address = MAPPER.readValue(quote(HOST), InetAddress.class);
+         assertEquals(HOST, address.getHostName());
+     }
+diff --git a/src/test/java/com/fasterxml/jackson/databind/ser/TestJdkTypes.java b/src/test/java/com/fasterxml/jackson/databind/ser/TestJdkTypes.java
+index 9aea068ff..09d9609c0 100644
+--- a/src/test/java/com/fasterxml/jackson/databind/ser/TestJdkTypes.java
++++ b/src/test/java/com/fasterxml/jackson/databind/ser/TestJdkTypes.java
+@@ -83,7 +83,8 @@ public class TestJdkTypes
+     public void testInetAddress() throws IOException
+     {
+         assertEquals(quote("127.0.0.1"), MAPPER.writeValueAsString(InetAddress.getByName("127.0.0.1")));
+-        assertEquals(quote("ning.com"), MAPPER.writeValueAsString(InetAddress.getByName("ning.com")));
++        // Avoid external DNS dependency: use localhost which is resolvable offline
++        assertEquals(quote("localhost"), MAPPER.writeValueAsString(InetAddress.getByName("localhost")));
+     }
+ 
+     public void testInetSocketAddress() throws IOException
+
+
+# Untracked source files (not included in patch):
++ src/main/java/com/fasterxml/jackson/databind/jsontype/impl/SubTypeValidator.java

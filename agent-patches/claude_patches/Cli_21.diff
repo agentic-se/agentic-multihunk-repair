@@ -1,0 +1,34 @@
+diff --git a/src/java/org/apache/commons/cli2/commandline/WriteableCommandLineImpl.java b/src/java/org/apache/commons/cli2/commandline/WriteableCommandLineImpl.java
+index 88d3286..6dbed58 100644
+--- a/src/java/org/apache/commons/cli2/commandline/WriteableCommandLineImpl.java
++++ b/src/java/org/apache/commons/cli2/commandline/WriteableCommandLineImpl.java
+@@ -239,6 +239,25 @@ public class WriteableCommandLineImpl
+ 
+                 if (trigger.startsWith(prefix))
+                 {
++                        // Check if this is actually a negative number
++                        // If so, it's not an option
++                        if (trigger.length() > prefix.length())
++                        {
++                            String remainder = trigger.substring(prefix.length());
++                            // Check if remainder looks like a number
++                            if (remainder.length() > 0 && Character.isDigit(remainder.charAt(0)))
++                            {
++                                try
++                                {
++                                    Double.parseDouble(remainder);
++                                    return false;  // It's a negative number, not an option
++                                }
++                                catch (NumberFormatException e)
++                                {
++                                    // Not a valid number, so it must be an option
++                                }
++                            }
++                        }
+                         return true;
+                 }
+             }
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

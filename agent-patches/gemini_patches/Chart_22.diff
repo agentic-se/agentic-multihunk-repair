@@ -1,0 +1,219 @@
+--- a/source/org/jfree/data/KeyedObjects2D.java
++++ b/source/org/jfree/data/KeyedObjects2D.java
+@@ -1,4 +1,6 @@
+-    public void removeRow(Comparable rowKey) {
+-        int index = getRowIndex(rowKey);
+-        removeRow(index);
+-    }
++    public void removeRow(Comparable rowKey) {
++        int index = getRowIndex(rowKey);
++        if (index >= 0) {
++            removeRow(index);
++        }
++    }
+@@ -1,25 +1,42 @@
+-    public void removeObject(Comparable rowKey, Comparable columnKey) {
+-        setObject(null, rowKey, columnKey);
+-        
+-        // 1. check whether the row is now empty.
+-        boolean allNull = true;
+-        int rowIndex = getRowIndex(rowKey);
+-        KeyedObjects row = (KeyedObjects) this.rows.get(rowIndex);
+-
+-        for (int item = 0, itemCount = row.getItemCount(); item < itemCount; 
+-             item++) {
+-            if (row.getObject(item) != null) {
+-                allNull = false;
+-                break;
+-            }
+-        }
+-        
+-        if (allNull) {
+-            this.rowKeys.remove(rowIndex);
+-            this.rows.remove(rowIndex);
+-        }
+-        
+-        // 2. check whether the column is now empty.
+-        
+-        
+-    }
++    public void removeObject(Comparable rowKey, Comparable columnKey) {
++        setObject(null, rowKey, columnKey);
++
++        int rowIndex = getRowIndex(rowKey);
++        if (rowIndex < 0) { // If rowKey is not found, nothing to remove.
++            return;
++        }
++
++        // 1. check whether the row is now empty.
++        boolean allNull = true;
++        KeyedObjects row = (KeyedObjects) this.rows.get(rowIndex);
++
++        for (int item = 0, itemCount = row.getItemCount(); item < itemCount;
++             item++) {
++            if (row.getObject(item) != null) {
++                allNull = false;
++                break;
++            }
++        }
++
++        if (allNull) {
++            this.rowKeys.remove(rowIndex);
++            this.rows.remove(rowIndex);
++        }
++
++        // 2. check whether the column is now empty.
++        boolean columnAllNull = true;
++        for (int i = 0; i < this.rows.size(); i++) {
++            KeyedObjects r = (KeyedObjects) this.rows.get(i);
++            int colIndex = r.getIndex(columnKey);
++            if (colIndex >= 0 && r.getObject(colIndex) != null) {
++                columnAllNull = false;
++                break;
++            }
++        }
++        if (columnAllNull) {
++            int colIndex = getColumnIndex(columnKey);
++            if (colIndex >= 0) {
++                this.columnKeys.remove(colIndex);
++            }
++        }
++    }
+@@ -1,13 +1,16 @@
+-    public void removeColumn(Comparable columnKey) {
+-        int index = getColumnIndex(columnKey);
+-        if (index < 0) {
+-            throw new UnknownKeyException("Column key (" + columnKey 
+-                    + ") not recognised.");
+-        }
+-        Iterator iterator = this.rows.iterator();
+-        while (iterator.hasNext()) {
+-            KeyedObjects rowData = (KeyedObjects) iterator.next();
+-                rowData.removeValue(columnKey);
+-        }
+-        this.columnKeys.remove(columnKey);
+-    }
++    public void removeColumn(Comparable columnKey) {
++        int index = getColumnIndex(columnKey);
++        if (index < 0) {
++            throw new UnknownKeyException("Column key (" + columnKey
++                    + ") not recognised.");
++        }
++        Iterator iterator = this.rows.iterator();
++        while (iterator.hasNext()) {
++            KeyedObjects rowData = (KeyedObjects) iterator.next();
++            // Only remove if the columnKey exists in this specific rowData
++            if (rowData.getIndex(columnKey) >= 0) {
++                rowData.removeValue(columnKey);
++            }
++        }
++        this.columnKeys.remove(columnKey);
++    }
+@@ -1,25 +1,20 @@
+-    public Object getObject(Comparable rowKey, Comparable columnKey) {
+-        if (rowKey == null) {
+-            throw new IllegalArgumentException("Null 'rowKey' argument.");
+-        }
+-        if (columnKey == null) {
+-            throw new IllegalArgumentException("Null 'columnKey' argument.");
+-        }
+-        int row = this.rowKeys.indexOf(rowKey);
+-        if (row < 0) {
+-            throw new UnknownKeyException("Row key (" + rowKey 
+-                    + ") not recognised.");
+-        }
+-        int column = this.columnKeys.indexOf(columnKey);
+-        if (column < 0) {
+-            throw new UnknownKeyException("Column key (" + columnKey 
+-                    + ") not recognised.");
+-        }
+-        if (row >= 0) {
+-        KeyedObjects rowData = (KeyedObjects) this.rows.get(row);
+-            return rowData.getObject(columnKey);
+-        }
+-        else {
+-            return null;
+-        }
+-    }
++    public Object getObject(Comparable rowKey, Comparable columnKey) {
++        if (rowKey == null) {
++            throw new IllegalArgumentException("Null 'rowKey' argument.");
++        }
++        if (columnKey == null) {
++            throw new IllegalArgumentException("Null 'columnKey' argument.");
++        }
++        int row = this.rowKeys.indexOf(rowKey);
++        if (row < 0) {
++            throw new UnknownKeyException("Row key (" + rowKey
++                    + ") not recognised.");
++        }
++        KeyedObjects rowData = (KeyedObjects) this.rows.get(row);
++        // If columnKey is not found in rowData, getObject should return null, not throw UnknownKeyException
++        int col = rowData.getIndex(columnKey);
++        if (col < 0) {
++            return null;
++        }
++        return rowData.getObject(columnKey);
++    }
+@@ -1,20 +1,26 @@
+-    public Object getObject(Comparable rowKey, Comparable columnKey) {
+-        if (rowKey == null) {
+-            throw new IllegalArgumentException("Null 'rowKey' argument.");
+-        }
+-        if (columnKey == null) {
+-            throw new IllegalArgumentException("Null 'columnKey' argument.");
+-        }
+-        int row = this.rowKeys.indexOf(rowKey);
+-        if (row < 0) {
+-            throw new UnknownKeyException("Row key (" + rowKey
+-                    + ") not recognised.");
+-        }
+-        KeyedObjects rowData = (KeyedObjects) this.rows.get(row);
+-        // If columnKey is not found in rowData, getObject should return null, not throw UnknownKeyException
+-        int col = rowData.getIndex(columnKey);
+-        if (col < 0) {
+-            return null;
+-        }
+-        return rowData.getObject(columnKey);
+-    }
++    public Object getObject(Comparable rowKey, Comparable columnKey) {
++        if (rowKey == null) {
++            throw new IllegalArgumentException("Null 'rowKey' argument.");
++        }
++        if (columnKey == null) {
++            throw new IllegalArgumentException("Null 'columnKey' argument.");
++        }
++        int row = this.rowKeys.indexOf(rowKey);
++        if (row < 0) {
++            throw new UnknownKeyException("Row key (" + rowKey
++                    + ") not recognised.");
++        }
++        int column = this.columnKeys.indexOf(columnKey);
++        if (column < 0) {
++            throw new UnknownKeyException("Column key (" + columnKey
++                    + ") not recognised.");
++        }
++        KeyedObjects rowData = (KeyedObjects) this.rows.get(row);
++        // Now, check if the columnKey exists in this specific rowData.
++        // If it doesn't, return null. Otherwise, get the object.
++        int colIndexInRowData = rowData.getIndex(columnKey);
++        if (colIndexInRowData < 0) {
++            return null;
++        }
++        return rowData.getObject(columnKey);
++    }
+@@ -1,6 +1,8 @@
+-    public void removeRow(Comparable rowKey) {
+-        int index = getRowIndex(rowKey);
+-        if (index >= 0) {
+-            removeRow(index);
+-        }
+-    }
++    public void removeRow(Comparable rowKey) {
++        int index = getRowIndex(rowKey);
++        if (index < 0) {
++            throw new UnknownKeyException("Row key (" + rowKey
++                    + ") not recognised.");
++        }
++        removeRow(index);
++    }

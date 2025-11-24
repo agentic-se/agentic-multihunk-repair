@@ -1,0 +1,16 @@
+--- a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+@@ -1,4 +1,9 @@
+-    @Deprecated
+-    public JavaType constructType(Type type, Class<?> contextClass) {
+-        return constructType(type, constructType(contextClass));
+-    }
++    @Deprecated
++    public JavaType constructType(Type type, Class<?> contextClass) {
++        // 19-Oct-2015, tatu: This is the problematic case; if context is null,
++        //   we should just use empty bindings.
++        if (contextClass == null) {
++            return constructType(type);
++        }
++        return constructType(type, constructType(contextClass));
++    }

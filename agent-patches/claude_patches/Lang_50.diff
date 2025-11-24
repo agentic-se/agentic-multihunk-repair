@@ -1,0 +1,81 @@
+diff --git a/src/java/org/apache/commons/lang/time/FastDateFormat.java b/src/java/org/apache/commons/lang/time/FastDateFormat.java
+index 8a26f283..670331f8 100644
+--- a/src/java/org/apache/commons/lang/time/FastDateFormat.java
++++ b/src/java/org/apache/commons/lang/time/FastDateFormat.java
+@@ -282,22 +282,20 @@ public class FastDateFormat extends Format {
+             key = new Pair(key, timeZone);
+         }
+ 
+-        if (locale != null) {
+-            key = new Pair(key, locale);
++        if (locale == null) {
++            locale = Locale.getDefault();
+         }
++        key = new Pair(key, locale);
+ 
+ 
+         FastDateFormat format = (FastDateFormat) cDateInstanceCache.get(key);
+         if (format == null) {
+-            if (locale == null) {
+-                locale = Locale.getDefault();
+-            }
+             try {
+                 SimpleDateFormat formatter = (SimpleDateFormat) DateFormat.getDateInstance(style, locale);
+                 String pattern = formatter.toPattern();
+                 format = getInstance(pattern, timeZone, locale);
+                 cDateInstanceCache.put(key, format);
+-                
++
+             } catch (ClassCastException ex) {
+                 throw new IllegalArgumentException("No date pattern for locale: " + locale);
+             }
+@@ -368,22 +366,19 @@ public class FastDateFormat extends Format {
+         if (timeZone != null) {
+             key = new Pair(key, timeZone);
+         }
+-        if (locale != null) {
+-            key = new Pair(key, locale);
++        if (locale == null) {
++            locale = Locale.getDefault();
+         }
++        key = new Pair(key, locale);
+ 
+         FastDateFormat format = (FastDateFormat) cTimeInstanceCache.get(key);
+         if (format == null) {
+-            if (locale == null) {
+-                locale = Locale.getDefault();
+-            }
+-
+             try {
+                 SimpleDateFormat formatter = (SimpleDateFormat) DateFormat.getTimeInstance(style, locale);
+                 String pattern = formatter.toPattern();
+                 format = getInstance(pattern, timeZone, locale);
+                 cTimeInstanceCache.put(key, format);
+-            
++
+             } catch (ClassCastException ex) {
+                 throw new IllegalArgumentException("No date pattern for locale: " + locale);
+             }
+@@ -462,15 +457,13 @@ public class FastDateFormat extends Format {
+         if (timeZone != null) {
+             key = new Pair(key, timeZone);
+         }
+-        if (locale != null) {
+-            key = new Pair(key, locale);
++        if (locale == null) {
++            locale = Locale.getDefault();
+         }
++        key = new Pair(key, locale);
+ 
+         FastDateFormat format = (FastDateFormat) cDateTimeInstanceCache.get(key);
+         if (format == null) {
+-            if (locale == null) {
+-                locale = Locale.getDefault();
+-            }
+             try {
+                 SimpleDateFormat formatter = (SimpleDateFormat) DateFormat.getDateTimeInstance(dateStyle, timeStyle,
+                         locale);
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

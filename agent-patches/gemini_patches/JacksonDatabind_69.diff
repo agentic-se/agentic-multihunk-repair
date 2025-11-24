@@ -1,0 +1,169 @@
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BasicDeserializerFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BasicDeserializerFactory.java
+@@ -1,6 +1,9 @@
+-                // One more thing: implicit names are ok iff ctor has creator annotation
+-                if (isCreator && (name != null && !name.isEmpty())) {
+-                    ++implicitWithCreatorCount;
+-                    properties[i] = constructCreatorProperty(ctxt, beanDesc, name, i, param, injectId);
+-                    continue;
+-                }
++                // One more thing: implicit names are ok iff ctor has creator annotation
++                if (isCreator) { // Always consider implicit names if @JsonCreator is present
++                    PropertyName implicitName = _findImplicitParamName(param, intr);
++                    if (implicitName != null && !implicitName.isEmpty()) {
++                        ++implicitWithCreatorCount;
++                        properties[i] = constructCreatorProperty(ctxt, beanDesc, implicitName, i, param, injectId);
++                        continue;
++                    }
++                }
+@@ -1,9 +1,6 @@
+-                // One more thing: implicit names are ok iff ctor has creator annotation
+-                if (isCreator) { // Always consider implicit names if @JsonCreator is present
+-                    PropertyName implicitName = _findImplicitParamName(param, intr);
+-                    if (implicitName != null && !implicitName.isEmpty()) {
+-                        ++implicitWithCreatorCount;
+-                        properties[i] = constructCreatorProperty(ctxt, beanDesc, implicitName, i, param, injectId);
+-                        continue;
+-                    }
+-                }
++                // One more thing: implicit names are ok iff ctor has creator annotation
++                if (isCreator && (name != null && !name.isEmpty())) {
++                    ++implicitWithCreatorCount;
++                    properties[i] = constructCreatorProperty(ctxt, beanDesc, name, i, param, injectId);
++                    continue;
++                }
+@@ -1,6 +1,9 @@
+-                // One more thing: implicit names are ok iff ctor has creator annotation
+-                if (isCreator && (name != null && !name.isEmpty())) {
+-                    ++implicitWithCreatorCount;
+-                    properties[i] = constructCreatorProperty(ctxt, beanDesc, name, i, param, injectId);
+-                    continue;
+-                }
++                // One more thing: implicit names are ok iff ctor has creator annotation
++                if (isCreator) { // If @JsonCreator, always try to find implicit name
++                    PropertyName implicitName = _findImplicitParamName(param, intr);
++                    if (implicitName != null && !implicitName.isEmpty()) {
++                        ++implicitWithCreatorCount;
++                        properties[i] = constructCreatorProperty(ctxt, beanDesc, implicitName, i, param, injectId);
++                        continue;
++                    }
++                }
+@@ -1,6 +1,10 @@
+-                // One more thing: implicit names are ok iff ctor has creator annotation
+-                if (isCreator && (name != null && !name.isEmpty())) {
+-                    ++implicitWithCreatorCount;
+-                    properties[i] = constructCreatorProperty(ctxt, beanDesc, name, i, param, injectId);
+-                    continue;
+-                }
++                // If this is a @JsonCreator constructor, and the parameter doesn't have an explicit name,
++                // try to find an implicit name.
++                if (isCreator && (propDef == null || !propDef.isExplicitlyNamed())) {
++                    PropertyName implicitName = _findImplicitParamName(param, intr);
++                    if (implicitName != null && !implicitName.isEmpty()) {
++                        ++implicitWithCreatorCount;
++                        properties[i] = constructCreatorProperty(ctxt, beanDesc, implicitName, i, param, injectId);
++                        continue;
++                    }
++                }
+@@ -1,6 +1,10 @@
+-                // One more thing: implicit names are ok iff ctor has creator annotation
+-                if (isCreator && (name != null && !name.isEmpty())) {
+-                    ++implicitWithCreatorCount;
+-                    properties[i] = constructCreatorProperty(ctxt, beanDesc, name, i, param, injectId);
+-                    continue;
+-                }
++                // If this is a @JsonCreator constructor, and the parameter doesn't have an explicit name,
++                // try to find an implicit name.
++                if (isCreator && (propDef == null || !propDef.isExplicitlyNamed())) {
++                    PropertyName implicitName = _findImplicitParamName(param, intr);
++                    if (implicitName != null && !implicitName.isEmpty()) {
++                        ++implicitWithCreatorCount;
++                        properties[i] = constructCreatorProperty(ctxt, beanDesc, implicitName, i, param, injectId);
++                        continue;
++                    }
++                }
+@@ -1,6 +1,10 @@
+-                // One more thing: implicit names are ok iff ctor has creator annotation
+-                if (isCreator && (name != null && !name.isEmpty())) {
+-                    ++implicitWithCreatorCount;
+-                    properties[i] = constructCreatorProperty(ctxt, beanDesc, name, i, param, injectId);
+-                    continue;
+-                }
++                // If this is a @JsonCreator constructor, and the parameter doesn't have an explicit name,
++                // try to find an implicit name.
++                if (isCreator && (propDef == null || !propDef.isExplicitlyNamed())) {
++                    PropertyName implicitName = _findImplicitParamName(param, intr);
++                    if (implicitName != null && !implicitName.isEmpty()) {
++                        ++implicitWithCreatorCount;
++                        properties[i] = constructCreatorProperty(ctxt, beanDesc, implicitName, i, param, injectId);
++                        continue;
++                    }
++                }
+@@ -1,6 +1,10 @@
+-                // One more thing: implicit names are ok iff ctor has creator annotation
+-                if (isCreator && (name != null && !name.isEmpty())) {
+-                    ++implicitWithCreatorCount;
+-                    properties[i] = constructCreatorProperty(ctxt, beanDesc, name, i, param, injectId);
+-                    continue;
+-                }
++                // If this is a @JsonCreator constructor, and the parameter doesn't have an explicit name,
++                // try to find an implicit name.
++                if (isCreator && (propDef == null || !propDef.isExplicitlyNamed())) {
++                    PropertyName implicitName = _findImplicitParamName(param, intr);
++                    if (implicitName != null && !implicitName.isEmpty()) {
++                        ++implicitWithCreatorCount;
++                        properties[i] = constructCreatorProperty(ctxt, beanDesc, implicitName, i, param, injectId);
++                        continue;
++                    }
++                }
+@@ -1,6 +1,10 @@
+-                // One more thing: implicit names are ok iff ctor has creator annotation
+-                if (isCreator && (name != null && !name.isEmpty())) {
+-                    ++implicitWithCreatorCount;
+-                    properties[i] = constructCreatorProperty(ctxt, beanDesc, name, i, param, injectId);
+-                    continue;
+-                }
++                // If this is a @JsonCreator constructor, and the parameter doesn't have an explicit name,
++                // try to find an implicit name.
++                if (isCreator && (propDef == null || !propDef.isExplicitlyNamed())) {
++                    PropertyName implicitName = _findImplicitParamName(param, intr);
++                    if (implicitName != null && !implicitName.isEmpty()) {
++                        ++implicitWithCreatorCount;
++                        properties[i] = constructCreatorProperty(ctxt, beanDesc, implicitName, i, param, injectId);
++                        continue;
++                    }
++                }
+@@ -1,6 +1,10 @@
+-                // One more thing: implicit names are ok iff ctor has creator annotation
+-                if (isCreator && (name != null && !name.isEmpty())) {
+-                    ++implicitWithCreatorCount;
+-                    properties[i] = constructCreatorProperty(ctxt, beanDesc, name, i, param, injectId);
+-                    continue;
+-                }
++                // If this is a @JsonCreator constructor, and the parameter doesn't have an explicit name,
++                // try to find an implicit name.
++                if (isCreator && (propDef == null || !propDef.isExplicitlyNamed())) {
++                    PropertyName implicitName = _findImplicitParamName(param, intr);
++                    if (implicitName != null && !implicitName.isEmpty()) {
++                        ++implicitWithCreatorCount;
++                        properties[i] = constructCreatorProperty(ctxt, beanDesc, implicitName, i, param, injectId);
++                        continue;
++                    }
++                }
+@@ -1,6 +1,10 @@
+-                // One more thing: implicit names are ok iff ctor has creator annotation
+-                if (isCreator && (name != null && !name.isEmpty())) {
+-                    ++implicitWithCreatorCount;
+-                    properties[i] = constructCreatorProperty(ctxt, beanDesc, name, i, param, injectId);
+-                    continue;
+-                }
++                // If this is a @JsonCreator constructor, and the parameter doesn't have an explicit name,
++                // try to find an implicit name.
++                if (isCreator && (propDef == null || !propDef.isExplicitlyNamed())) {
++                    PropertyName implicitName = _findImplicitParamName(param, intr);
++                    if (implicitName != null && !implicitName.isEmpty()) {
++                        ++implicitWithCreatorCount;
++                        properties[i] = constructCreatorProperty(ctxt, beanDesc, implicitName, i, param, injectId);
++                        continue;
++                    }
++                }

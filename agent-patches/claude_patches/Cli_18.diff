@@ -1,0 +1,17 @@
+diff --git a/src/java/org/apache/commons/cli/PosixParser.java b/src/java/org/apache/commons/cli/PosixParser.java
+index 8f03474..c6c9ea8 100644
+--- a/src/java/org/apache/commons/cli/PosixParser.java
++++ b/src/java/org/apache/commons/cli/PosixParser.java
+@@ -237,7 +237,7 @@ public class PosixParser extends Parser {
+         }
+         else if (stopAtNonOption)
+         {
+-            eatTheRest = true;
++            process(token);
+         }
+     }
+ 
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

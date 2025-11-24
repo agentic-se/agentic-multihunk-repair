@@ -1,0 +1,52 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/JavaUtilCollectionsDeserializers.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/JavaUtilCollectionsDeserializers.java
+index 3228bacda..b984af193 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/JavaUtilCollectionsDeserializers.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/JavaUtilCollectionsDeserializers.java
+@@ -40,6 +40,7 @@ public abstract class JavaUtilCollectionsDeserializers
+ 
+     private final static Class<?> CLASS_UNMODIFIABLE_SET;
+     private final static Class<?> CLASS_UNMODIFIABLE_LIST;
++    private final static Class<?> CLASS_UNMODIFIABLE_LIST_ALT;
+ 
+     /* 02-Mar-2019, tatu: for [databind#2265], need to consider possible alternate type...
+      *    which we essentially coerce into the other one
+@@ -54,8 +55,14 @@ public abstract class JavaUtilCollectionsDeserializers
+         List<?> list = Collections.singletonList(Boolean.TRUE);
+         CLASS_SINGLETON_LIST = list.getClass();
+         CLASS_UNMODIFIABLE_LIST = Collections.unmodifiableList(list).getClass();
+-        // for [databind#2265]
+         
++        // [databind#2265]: for [databind#1880] - support both UnmodifiableList variants
++        // Collections.unmodifiableList() can return either Collections$UnmodifiableRandomAccessList
++        // or Collections$UnmodifiableList depending on whether the input list implements RandomAccess
++        List<?> altList = new LinkedList<>(Arrays.asList(Boolean.TRUE));
++        CLASS_UNMODIFIABLE_LIST_ALT = Collections.unmodifiableList(altList).getClass();
++
++        // for [databind#2265]
+         Map<?,?> map = Collections.singletonMap("a", "b");
+         CLASS_SINGLETON_MAP = map.getClass();
+         CLASS_UNMODIFIABLE_MAP = Collections.unmodifiableMap(map).getClass();
+@@ -75,7 +82,7 @@ public abstract class JavaUtilCollectionsDeserializers
+         } else if (type.hasRawClass(CLASS_SINGLETON_SET)) {
+             conv = converter(TYPE_SINGLETON_SET, type, Set.class);
+         // [databind#2265]: we may have another impl type for unmodifiable Lists, check both
+-        } else if (type.hasRawClass(CLASS_UNMODIFIABLE_LIST)) {
++        } else if (type.hasRawClass(CLASS_UNMODIFIABLE_LIST) || type.hasRawClass(CLASS_UNMODIFIABLE_LIST_ALT)) {
+             conv = converter(TYPE_UNMODIFIABLE_LIST, type, List.class);
+         } else if (type.hasRawClass(CLASS_UNMODIFIABLE_SET)) {
+             conv = converter(TYPE_UNMODIFIABLE_SET, type, Set.class);
+diff --git a/src/test/java/com/fasterxml/jackson/databind/deser/jdk/UtilCollectionsTypesTest.java b/src/test/java/com/fasterxml/jackson/databind/deser/jdk/UtilCollectionsTypesTest.java
+index 79d91d8d0..457d08f18 100644
+--- a/src/test/java/com/fasterxml/jackson/databind/deser/jdk/UtilCollectionsTypesTest.java
++++ b/src/test/java/com/fasterxml/jackson/databind/deser/jdk/UtilCollectionsTypesTest.java
+@@ -81,6 +81,10 @@ public class UtilCollectionsTypesTest extends BaseMapTest
+        _verifyCollection(Collections.unmodifiableSet(input));
+    }
+ 
++   public void testUnmodifiableNonRandomAccessList() throws Exception {
++       _verifyCollection(Collections.unmodifiableList(new LinkedList<>(Arrays.asList("first", "second"))));
++   }
++
+    public void testUnmodifiableMap() throws Exception
+    {
+        Map<String,String> input = new LinkedHashMap<>();

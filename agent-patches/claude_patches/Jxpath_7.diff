@@ -1,0 +1,190 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationGreaterThan.java b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationGreaterThan.java
+index 3a053d4..cf89ebc 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationGreaterThan.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationGreaterThan.java
+@@ -29,9 +29,7 @@ public class CoreOperationGreaterThan extends CoreOperationRelationalExpression
+     }
+ 
+     public Object computeValue(org.apache.commons.jxpath.ri.EvalContext context) {
+-        double l = org.apache.commons.jxpath.ri.InfoSetUtil.doubleValue(args[0].computeValue(context));
+-        double r = org.apache.commons.jxpath.ri.InfoSetUtil.doubleValue(args[1].computeValue(context));
+-        return l > r ? Boolean.TRUE : Boolean.FALSE;
++        return evaluateCompare(context, 1) ? Boolean.TRUE : Boolean.FALSE;
+     }
+ 
+     public String getSymbol() {
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationGreaterThanOrEqual.java b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationGreaterThanOrEqual.java
+index b9f156c..fe12ec3 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationGreaterThanOrEqual.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationGreaterThanOrEqual.java
+@@ -30,9 +30,7 @@ public class CoreOperationGreaterThanOrEqual extends
+     }
+ 
+     public Object computeValue(org.apache.commons.jxpath.ri.EvalContext context) {
+-        double l = org.apache.commons.jxpath.ri.InfoSetUtil.doubleValue(args[0].computeValue(context));
+-        double r = org.apache.commons.jxpath.ri.InfoSetUtil.doubleValue(args[1].computeValue(context));
+-        return l >= r ? Boolean.TRUE : Boolean.FALSE;
++        return evaluateCompare(context, 2) ? Boolean.TRUE : Boolean.FALSE;
+     }
+ 
+     public String getSymbol() {
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationLessThan.java b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationLessThan.java
+index 374f772..18e722c 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationLessThan.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationLessThan.java
+@@ -29,9 +29,7 @@ public class CoreOperationLessThan extends CoreOperationRelationalExpression {
+     }
+ 
+     public Object computeValue(org.apache.commons.jxpath.ri.EvalContext context) {
+-        double l = org.apache.commons.jxpath.ri.InfoSetUtil.doubleValue(args[0].computeValue(context));
+-        double r = org.apache.commons.jxpath.ri.InfoSetUtil.doubleValue(args[1].computeValue(context));
+-        return l < r ? Boolean.TRUE : Boolean.FALSE;
++        return evaluateCompare(context, 3) ? Boolean.TRUE : Boolean.FALSE;
+     }
+ 
+     public String getSymbol() {
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationLessThanOrEqual.java b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationLessThanOrEqual.java
+index db562d8..d343d7d 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationLessThanOrEqual.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationLessThanOrEqual.java
+@@ -30,9 +30,7 @@ public class CoreOperationLessThanOrEqual extends
+     }
+ 
+     public Object computeValue(org.apache.commons.jxpath.ri.EvalContext context) {
+-        double l = org.apache.commons.jxpath.ri.InfoSetUtil.doubleValue(args[0].computeValue(context));
+-        double r = org.apache.commons.jxpath.ri.InfoSetUtil.doubleValue(args[1].computeValue(context));
+-        return l <= r ? Boolean.TRUE : Boolean.FALSE;
++        return evaluateCompare(context, 4) ? Boolean.TRUE : Boolean.FALSE;
+     }
+ 
+     public String getSymbol() {
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
+index 4893dd6..8a4f10f 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
+@@ -16,7 +16,14 @@
+  */
+ package org.apache.commons.jxpath.ri.compiler;
+ 
++import java.util.Collection;
++import java.util.Iterator;
+ 
++import org.apache.commons.jxpath.Pointer;
++import org.apache.commons.jxpath.ri.EvalContext;
++import org.apache.commons.jxpath.ri.InfoSetUtil;
++import org.apache.commons.jxpath.ri.axes.InitialContext;
++import org.apache.commons.jxpath.ri.axes.SelfContext;
+ 
+ /**
+  * Base implementation of Expression for the operations "&gt;", "&gt;=", "&lt;", "&lt;=".
+@@ -39,11 +46,106 @@ public abstract class CoreOperationRelationalExpression extends CoreOperation {
+         return false;
+     }
+ 
++    /**
++     * Compares two values using a relational operator.
++     * Handles node-sets according to XPath specification.
++     */
++    protected boolean evaluateCompare(EvalContext context, int compareCode) {
++        Object leftValue = args[0].computeValue(context);
++        Object rightValue = args[1].computeValue(context);
++        return compare(leftValue, rightValue, compareCode);
++    }
++
++    private boolean compare(Object l, Object r, int compareCode) {
++        if (l instanceof InitialContext) {
++            ((EvalContext) l).reset();
++        }
+ 
++        if (l instanceof SelfContext) {
++            l = ((EvalContext) l).getSingleNodePointer();
++        }
+ 
++        if (r instanceof InitialContext) {
++            ((EvalContext) r).reset();
++        }
+ 
++        if (r instanceof SelfContext) {
++            r = ((EvalContext) r).getSingleNodePointer();
++        }
+ 
++        if (l instanceof Collection) {
++            l = ((Collection) l).iterator();
++        }
+ 
++        if (r instanceof Collection) {
++            r = ((Collection) r).iterator();
++        }
+ 
++        if ((l instanceof Iterator) && !(r instanceof Iterator)) {
++            return containsMatch((Iterator) l, r, compareCode, false);
++        }
++        if (!(l instanceof Iterator) && (r instanceof Iterator)) {
++            return containsMatch((Iterator) r, l, compareCode, true);
++        }
++        if (l instanceof Iterator && r instanceof Iterator) {
++            return findMatch((Iterator) l, (Iterator) r, compareCode);
++        }
++        return compareValues(l, r, compareCode);
++    }
+ 
++    private boolean containsMatch(Iterator it, Object value, int compareCode, boolean reverse) {
++        while (it.hasNext()) {
++            Object element = it.next();
++            if (reverse) {
++                if (compareValues(value, element, compareCode)) {
++                    return true;
++                }
++            } else {
++                if (compareValues(element, value, compareCode)) {
++                    return true;
++                }
++            }
++        }
++        return false;
++    }
++
++    private boolean findMatch(Iterator lit, Iterator rit, int compareCode) {
++        while (lit.hasNext()) {
++            Object left = lit.next();
++            Iterator rightCopy = rit;
++            while (rightCopy.hasNext()) {
++                Object right = rightCopy.next();
++                if (compareValues(left, right, compareCode)) {
++                    return true;
++                }
++            }
++        }
++        return false;
++    }
++
++    private boolean compareValues(Object l, Object r, int compareCode) {
++        if (l instanceof Pointer) {
++            l = ((Pointer) l).getValue();
++        }
++
++        if (r instanceof Pointer) {
++            r = ((Pointer) r).getValue();
++        }
++
++        double ld = InfoSetUtil.doubleValue(l);
++        double rd = InfoSetUtil.doubleValue(r);
++
++        switch (compareCode) {
++            case 1: // Greater than
++                return ld > rd;
++            case 2: // Greater than or equal
++                return ld >= rd;
++            case 3: // Less than
++                return ld < rd;
++            case 4: // Less than or equal
++                return ld <= rd;
++            default:
++                return false;
++        }
++    }
+ }
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

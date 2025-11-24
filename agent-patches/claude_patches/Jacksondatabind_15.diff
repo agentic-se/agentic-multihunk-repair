@@ -1,0 +1,29 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/std/StdDelegatingSerializer.java b/src/main/java/com/fasterxml/jackson/databind/ser/std/StdDelegatingSerializer.java
+index 3aeb4f306..74c340358 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/StdDelegatingSerializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/StdDelegatingSerializer.java
+@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.jsonschema.SchemaAware;
+ import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
+ import com.fasterxml.jackson.databind.ser.ContextualSerializer;
+ import com.fasterxml.jackson.databind.ser.ResolvableSerializer;
++import com.fasterxml.jackson.databind.ser.impl.UnknownSerializer;
+ import com.fasterxml.jackson.databind.util.Converter;
+ 
+ import java.io.IOException;
+@@ -158,7 +159,11 @@ public class StdDelegatingSerializer
+             return;
+         }
+         // 02-Apr-2015, tatu: As per [databind#731] may need to do dynamic lookup
+-        _delegateSerializer.serialize(delegateValue, gen, provider);
++        JsonSerializer<Object> ser = _delegateSerializer;
++        if (ser instanceof UnknownSerializer) {
++            ser = provider.findValueSerializer(delegateValue.getClass());
++        }
++        ser.serialize(delegateValue, gen, provider);
+     }
+ 
+     @Override
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

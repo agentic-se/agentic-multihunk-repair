@@ -1,0 +1,23 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
+index f22f825..ccab2d8 100644
+--- a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
+@@ -412,7 +412,13 @@ public class DOMNodePointer extends NodePointer {
+         Element element = (Element) node;
+         String prefix = name.getPrefix();
+         if (prefix != null) {
+-            String ns = getNamespaceURI(prefix);
++            String ns = null;
++            // First, check if the namespace is registered externally with the context
++            ns = context.getNamespaceURI(prefix);
++            // If not found in context, check the DOM document
++            if (ns == null) {
++                ns = getNamespaceURI(prefix);
++            }
+             if (ns == null) {
+                 throw new JXPathException(
+                     "Unknown namespace prefix: " + prefix);
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

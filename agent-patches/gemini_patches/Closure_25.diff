@@ -1,0 +1,34 @@
+--- a/src/com/google/javascript/jscomp/TypeInference.java
++++ b/src/com/google/javascript/jscomp/TypeInference.java
+@@ -1,5 +1,8 @@
+-    for (Node arg = constructor.getNext(); arg != null; arg = arg.getNext()) {
+-      scope = traverse(arg, scope);
+-    }
+-    return scope;
+-  }
++    for (Node arg = constructor.getNext(); arg != null; arg = arg.getNext()) {
++      scope = traverse(arg, scope);
++    }
++    if (ct != null) {
++      backwardsInferenceFromCallSite(n, ct);
++    }
++    return scope;
++  }
+@@ -1,8 +1,9 @@
+-    JSType type = null;
+-    if (constructorType != null) {
+-      constructorType = constructorType.restrictByNotNullOrUndefined();
+-      if (constructorType.isUnknownType()) {
+-        type = getNativeType(UNKNOWN_TYPE);
+-      } else {
+-        FunctionType ct = constructorType.toMaybeFunctionType();
+-        if (ct == null && constructorType instanceof FunctionType) {
++    JSType type = null;
++    FunctionType ct = null; // Declare ct here
++    if (constructorType != null) {
++      constructorType = constructorType.restrictByNotNullOrUndefined();
++      if (constructorType.isUnknownType()) {
++        type = getNativeType(UNKNOWN_TYPE);
++      } else {
++        ct = constructorType.toMaybeFunctionType(); // Assign ct here
++        if (ct == null && constructorType instanceof FunctionType) {

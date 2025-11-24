@@ -1,0 +1,29 @@
+diff --git a/src/main/java/com/fasterxml/jackson/dataformat/xml/deser/FromXmlParser.java b/src/main/java/com/fasterxml/jackson/dataformat/xml/deser/FromXmlParser.java
+index 91b14dd..a0f6ad1 100644
+--- a/src/main/java/com/fasterxml/jackson/dataformat/xml/deser/FromXmlParser.java
++++ b/src/main/java/com/fasterxml/jackson/dataformat/xml/deser/FromXmlParser.java
+@@ -508,9 +508,22 @@ public class FromXmlParser
+         case XmlTokenStream.XML_END_ELEMENT:
+             // Simple, except that if this is a leaf, need to suppress end:
+             if (_mayBeLeaf) {
++                // 06-Jan-2015, tatu: as per [dataformat-xml#180], need to
++                //    expose as empty Object, not null
++                // Special handling for nested unwrapped lists with empty elements
++                // This fixes Issue #180 where empty elements would lead to incorrect 
++                // splitting of outermost list items
++                if (_parsingContext.inArray() && _namesToWrap != null) {
++                    String name = _xmlTokens.getLocalName();
++                    // If we are in an array context and processing a named element
++                    // that should be wrapped (unwrapped list item), we should 
++                    // not suppress this as a leaf
++                    if (_namesToWrap.contains(name)) {
++                        _mayBeLeaf = false;
++                        return (_currToken = JsonToken.START_OBJECT);
++                    }
++                }
+                 _mayBeLeaf = false;
+-                    // 06-Jan-2015, tatu: as per [dataformat-xml#180], need to
+-                    //    expose as empty Object, not null
+                 return (_currToken = JsonToken.VALUE_NULL);
+             }
+             _currToken = _parsingContext.inArray() ? JsonToken.END_ARRAY : JsonToken.END_OBJECT;

@@ -1,0 +1,33 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/axes/DescendantContext.java b/src/java/org/apache/commons/jxpath/ri/axes/DescendantContext.java
+index e2665a9..7a4b21c 100644
+--- a/src/java/org/apache/commons/jxpath/ri/axes/DescendantContext.java
++++ b/src/java/org/apache/commons/jxpath/ri/axes/DescendantContext.java
+@@ -97,7 +97,20 @@ public class DescendantContext extends EvalContext {
+                             null));
+                 }
+                 if (includeSelf) {
+-                    if (currentNodePointer.testNode(nodeTest)) {
++                    boolean include = currentNodePointer.testNode(nodeTest);
++                    // Special-case descendant-or-self::node() at the root.
++                    // In XPath, node() matches any node, including the
++                    // document/root node. Some models (e.g. DOM/JDOM)
++                    // implement NODE test to match only element nodes, which
++                    // prevents the root document from being included here.
++                    // That breaks "//name" at the root because the next
++                    // child::name step needs the document node in the set.
++                    if (!include && nodeTest instanceof NodeTypeTest
++                            && ((NodeTypeTest) nodeTest).getNodeType()
++                                    == Compiler.NODE_TYPE_NODE) {
++                        include = true;
++                    }
++                    if (include) {
+                         position++;
+                         return true;
+                     }
+@@ -147,4 +160,4 @@ public class DescendantContext extends EvalContext {
+         }
+         return false;
+     }
+-}
+\ No newline at end of file
++}

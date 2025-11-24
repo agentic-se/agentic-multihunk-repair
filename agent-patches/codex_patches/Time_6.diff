@@ -1,0 +1,83 @@
+diff --git a/src/main/java/org/joda/time/chrono/GJChronology.java b/src/main/java/org/joda/time/chrono/GJChronology.java
+index b970403b..8d0f1a98 100644
+--- a/src/main/java/org/joda/time/chrono/GJChronology.java
++++ b/src/main/java/org/joda/time/chrono/GJChronology.java
+@@ -81,8 +81,16 @@ public final class GJChronology extends AssembledChronology {
+      * Convert a datetime from one chronology to another.
+      */
+     private static long convertByYear(long instant, Chronology from, Chronology to) {
++        int year = from.year().get(instant);
++        // When converting from proleptic Gregorian to Julian, handle year zero.
++        // Gregorian defines year 0, but Julian does not (1 BCE is -1).
++        if (from instanceof GregorianChronology && to instanceof JulianChronology) {
++            if (year == 0) {
++                year = -1;
++            }
++        }
+         return to.getDateTimeMillis
+-            (from.year().get(instant),
++            (year,
+              from.monthOfYear().get(instant),
+              from.dayOfMonth().get(instant),
+              from.millisOfDay().get(instant));
+@@ -93,7 +101,14 @@ public final class GJChronology extends AssembledChronology {
+      */
+     private static long convertByWeekyear(final long instant, Chronology from, Chronology to) {
+         long newInstant;
+-        newInstant = to.weekyear().set(0, from.weekyear().get(instant));
++        int weekyear = from.weekyear().get(instant);
++        // Handle year zero when converting proleptic Gregorian to Julian weekyear
++        if (from instanceof GregorianChronology && to instanceof JulianChronology) {
++            if (weekyear == 0) {
++                weekyear = -1;
++            }
++        }
++        newInstant = to.weekyear().set(0, weekyear);
+         newInstant = to.weekOfWeekyear().set(newInstant, from.weekOfWeekyear().get(instant));
+         newInstant = to.dayOfWeek().set(newInstant, from.dayOfWeek().get(instant));
+         newInstant = to.millisOfDay().set(newInstant, from.millisOfDay().get(instant));
+@@ -195,6 +210,14 @@ public final class GJChronology extends AssembledChronology {
+             cutoverInstant = gregorianCutover.toInstant();
+         }
+ 
++        // Reject cutover instants that are before or in year zero, since
++        // the Julian calendar has no year zero and GJChronology assumes
++        // cutover occurs strictly after year zero.
++        int cutoverYear = GregorianChronology.getInstanceUTC().year().get(cutoverInstant.getMillis());
++        if (cutoverYear <= 0) {
++            throw new IllegalArgumentException("Cutover instant must be after year zero");
++        }
++
+         GJChronology chrono;
+         synchronized (cCache) {
+             ArrayList<GJChronology> chronos = cCache.get(zone);
+@@ -974,6 +997,14 @@ public final class GJChronology extends AssembledChronology {
+             if (instant >= iCutover) {
+                 instant = iGregorianField.add(instant, value);
+                 if (instant < iCutover) {
++                    // If moving backwards across the era boundary from Gregorian to Julian,
++                    // account for the non-existent year zero by skipping it.
++                    if (value < 0) {
++                        int newVal = iGregorianField.get(instant);
++                        if (newVal <= 0) {
++                            instant = iGregorianField.add(instant, -1);
++                        }
++                    }
+                     // Only adjust if gap fully crossed.
+                     if (instant + iGapDuration < iCutover) {
+                         instant = gregorianToJulian(instant);
+@@ -996,6 +1027,14 @@ public final class GJChronology extends AssembledChronology {
+             if (instant >= iCutover) {
+                 instant = iGregorianField.add(instant, value);
+                 if (instant < iCutover) {
++                    // If moving backwards across the era boundary from Gregorian to Julian,
++                    // account for the non-existent year zero by skipping it.
++                    if (value < 0) {
++                        int newVal = iGregorianField.get(instant);
++                        if (newVal <= 0) {
++                            instant = iGregorianField.add(instant, -1);
++                        }
++                    }
+                     // Only adjust if gap fully crossed.
+                     if (instant + iGapDuration < iCutover) {
+                         instant = gregorianToJulian(instant);

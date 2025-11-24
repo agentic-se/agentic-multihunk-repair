@@ -1,0 +1,27 @@
+diff --git a/src/main/java/org/jsoup/parser/XmlTreeBuilder.java b/src/main/java/org/jsoup/parser/XmlTreeBuilder.java
+index 11eae8b..8764f49 100644
+--- a/src/main/java/org/jsoup/parser/XmlTreeBuilder.java
++++ b/src/main/java/org/jsoup/parser/XmlTreeBuilder.java
+@@ -62,8 +62,20 @@ public class XmlTreeBuilder extends TreeBuilder {
+     }
+ 
+     void insert(Token.Comment commentToken) {
+-        Comment comment = new Comment(commentToken.getData(), baseUri);
+-        Node insert = comment;
++        Node insert;
++        String data = commentToken.getData();
++        // In XML mode, a BogusComment that starts with '?' or '!' is actually a declaration or PI
++        if (data.length() > 0) {
++            char first = data.charAt(0);
++            if (first == '!' || first == '?') {
++                boolean isProcessingInstruction = first == '!';
++                String decl = data.substring(1); // drop the leading marker
++                insert = new XmlDeclaration(decl, baseUri, isProcessingInstruction);
++                insertNode(insert);
++                return;
++            }
++        }
++        insert = new Comment(data, baseUri);
+         insertNode(insert);
+     }
+ 

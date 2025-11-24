@@ -1,0 +1,35 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
+index 93f3013f6..2276bf96a 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
+@@ -225,7 +225,9 @@ public class ExternalTypeHandler
+         JsonParser p2 = _tokens[index].asParser(p);
+         JsonToken t = p2.nextToken();
+         // 29-Sep-2015, tatu: As per [databind#942], nulls need special support
+-
++        if (t == JsonToken.VALUE_NULL) {
++            return null;
++        }
+         TokenBuffer merged = new TokenBuffer(p);
+         merged.writeStartArray();
+         merged.writeString(typeId);
+@@ -248,10 +250,14 @@ public class ExternalTypeHandler
+         JsonParser p2 = _tokens[index].asParser(p);
+         JsonToken t = p2.nextToken();
+         // 29-Sep-2015, tatu: As per [databind#942], nulls need special support
++        if (t == JsonToken.VALUE_NULL) {
++            _properties[index].getProperty().set(bean, null);
++            return;
++        }
+         TokenBuffer merged = new TokenBuffer(p);
+         merged.writeStartArray();
+         merged.writeString(typeId);
+-        
++
+         merged.copyCurrentStructure(p2);
+         merged.writeEndArray();
+         // needs to point to START_OBJECT (or whatever first token is)
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

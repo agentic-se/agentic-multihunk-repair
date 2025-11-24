@@ -1,0 +1,68 @@
+diff --git a/src/com/google/javascript/jscomp/CheckSideEffects.java b/src/com/google/javascript/jscomp/CheckSideEffects.java
+index 0d1e95a0..c77b1507 100644
+--- a/src/com/google/javascript/jscomp/CheckSideEffects.java
++++ b/src/com/google/javascript/jscomp/CheckSideEffects.java
+@@ -115,11 +115,32 @@ final class CheckSideEffects extends AbstractPostOrderCallback
+         return;
+       }
+       if (n == parent.getLastChild()) {
+-        for (Node an : parent.getAncestors()) {
+-          int ancestorType = an.getType();
+-          if (ancestorType == Token.COMMA) continue;
+-          if (ancestorType != Token.EXPR_RESULT && ancestorType != Token.BLOCK) return;
+-          else break;
++        // Determine if this node is the rightmost expression in the entire
++        // comma expression chain. Only the overall rightmost expression may
++        // have its result used by the surrounding context.
++        boolean isRightmostInChain = true;
++        Node c = n;
++        Node p = parent;
++        while (p != null && p.getType() == Token.COMMA) {
++          if (c != p.getLastChild()) {
++            isRightmostInChain = false;
++            break;
++          }
++          c = p;
++          p = p.getParent();
++        }
++        if (isRightmostInChain) {
++          // If the entire comma expression is used as a value, then the
++          // rightmost expression's result is used; do not flag it.
++          for (Node an : c.getAncestors()) {
++            int ancestorType = an.getType();
++            if (ancestorType == Token.COMMA) continue;
++            if (ancestorType != Token.EXPR_RESULT && ancestorType != Token.BLOCK) {
++              return;
++            } else {
++              break;
++            }
++          }
+         }
+       }
+     } else if (parent.getType() != Token.EXPR_RESULT && parent.getType() != Token.BLOCK) {
+diff --git a/src/com/google/javascript/jscomp/NodeUtil.java b/src/com/google/javascript/jscomp/NodeUtil.java
+index 00e31e0e..7ee7c1c3 100644
+--- a/src/com/google/javascript/jscomp/NodeUtil.java
++++ b/src/com/google/javascript/jscomp/NodeUtil.java
+@@ -3126,7 +3126,7 @@ public final class NodeUtil {
+           // Semantically, a direct call to eval is different from an indirect
+           // call to an eval. See ECMA-262 S15.1.2.1. So it's OK for the first
+           // expression to a comma to be a no-op if it's used to indirect
+-          // an eval. This we pretend that this is "used".
++          // an eval. Thus, pretend that this is "used".
+           if (expr == parent.getFirstChild() &&
+               parent.getChildCount() == 2 &&
+               expr.getNext().isName() &&
+@@ -3135,8 +3135,10 @@ public final class NodeUtil {
+           }
+         }
+ 
+-        return (expr == parent.getFirstChild())
+-            ? false : isExpressionResultUsed(parent);
++        // Only the rightmost expression of a comma expression contributes
++        // a value; all non-rightmost expressions' results are unused.
++        return (expr == parent.getLastChild())
++            ? isExpressionResultUsed(parent) : false;
+       case Token.FOR:
+         if (!NodeUtil.isForIn(parent)) {
+           // Only an expression whose result is in the condition part of the

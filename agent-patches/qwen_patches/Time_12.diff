@@ -1,0 +1,28 @@
+diff --git a/src/main/java/org/joda/time/LocalDate.java b/src/main/java/org/joda/time/LocalDate.java
+index 38685311..6db1cd58 100644
+--- a/src/main/java/org/joda/time/LocalDate.java
++++ b/src/main/java/org/joda/time/LocalDate.java
+@@ -208,6 +208,12 @@ public final class LocalDate
+             throw new IllegalArgumentException("The calendar must not be null");
+         }
+         int yearOfEra = calendar.get(Calendar.YEAR);
++        // Handle BCE years correctly - convert from Calendar year representation to Joda-Time
++        // Calendar treats year 1 BC as -1, year 2 BC as -2, etc.
++        // But Joda-Time expects year 0 for 1 BC, year -1 for 2 BC, etc.
++        if (yearOfEra < 0) {
++            yearOfEra = yearOfEra + 1;
++        }
+         return new LocalDate(
+             yearOfEra,
+             calendar.get(Calendar.MONTH) + 1,
+@@ -2099,4 +2105,4 @@ public final class LocalDate
+         }
+     }
+ 
+-}
++}
+\ No newline at end of file
+
+
+# Untracked source files (not included in patch):
++ src/main/java/org/joda/time/LocalDate.java.backup

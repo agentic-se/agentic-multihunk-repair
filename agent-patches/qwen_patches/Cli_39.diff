@@ -1,0 +1,58 @@
+diff --git a/src/main/java/org/apache/commons/cli/TypeHandler.java b/src/main/java/org/apache/commons/cli/TypeHandler.java
+index 93c0b73..557507c 100644
+--- a/src/main/java/org/apache/commons/cli/TypeHandler.java
++++ b/src/main/java/org/apache/commons/cli/TypeHandler.java
+@@ -1,5 +1,4 @@
+-/**
+- * Licensed to the Apache Software Foundation (ASF) under one or more
++/** Licensed to the Apache Software Foundation (ASF) under one or more
+  * contributor license agreements.  See the NOTICE file distributed with
+  * this work for additional information regarding copyright ownership.
+  * The ASF licenses this file to You under the Apache License, Version 2.0
+@@ -89,7 +88,7 @@ public class TypeHandler
+         }
+         else if (PatternOptionBuilder.EXISTING_FILE_VALUE == clazz)
+         {
+-            return createFile(str);
++            return createFileInputStream(str);
+         }
+         else if (PatternOptionBuilder.FILES_VALUE == clazz)
+         {
+@@ -231,6 +230,26 @@ public class TypeHandler
+      * @return The file input stream represented by <code>str</code>.
+      * @throws ParseException if the file is not exist or not readable
+      */
++    public static FileInputStream createFileInputStream(final String str) throws ParseException
++    {
++        final File file = new File(str);
++        if (!file.exists())
++        {
++            throw new ParseException("File does not exist: " + str);
++        }
++        if (!file.canRead())
++        {
++            throw new ParseException("File is not readable: " + str);
++        }
++        try
++        {
++            return new FileInputStream(file);
++        }
++        catch (final FileNotFoundException e)
++        {
++            throw new ParseException("Cannot open file: " + str);
++        }
++    }
+ 
+     /**
+      * Returns the File[] represented by <code>str</code>.
+@@ -248,4 +267,4 @@ public class TypeHandler
+         //        return FileW.findFiles(str);
+         throw new UnsupportedOperationException("Not yet implemented");
+     }
+-}
++}
+\ No newline at end of file
+
+
+# Untracked source files (not included in patch):
++ src/main/java/org/apache/commons/cli/TypeHandler.java.backup

@@ -1,0 +1,2487 @@
+--- a/src/main/java/org/apache/commons/math/ode/AbstractIntegrator.java
++++ b/src/main/java/org/apache/commons/math/ode/AbstractIntegrator.java
+@@ -1,1 +1,1 @@
+-                                   Math.ulp(Math.max(Math.abs(startTime), Math.abs(endTime))),
++                                   1.0e-6,
+@@ -1,1 +1,1 @@
+-                                   1.0e-6,
++                                   Math.ulp(Math.max(Math.abs(startTime), Math.abs(endTime))),
+@@ -1,1 +1,1 @@
+-                                   Math.ulp(Math.max(Math.abs(startTime), Math.abs(endTime))),
++                                   1.0e-9,
+@@ -1,1 +1,1 @@
+-                                   1.0e-9,
++                                   Math.ulp(Math.max(Math.abs(startTime), Math.abs(endTime))),
+@@ -1,1 +1,1 @@
+-                                   Math.ulp(Math.max(Math.abs(startTime), Math.abs(endTime))),
++                                   1.0e-10,
+@@ -1,1 +1,1 @@
+-                                   1.0e-10,
++                                   Math.ulp(Math.max(Math.abs(startTime), Math.abs(endTime))),
+@@ -1,1 +1,1 @@
+-                                   Math.ulp(Math.max(Math.abs(startTime), Math.abs(endTime))),
++                                   1.0e-15 * Math.max(Math.abs(startTime), Math.abs(endTime)),
+@@ -1,1 +1,1 @@
+-                                   1.0e-15 * Math.max(Math.abs(startTime), Math.abs(endTime)),
++                                   Math.ulp(Math.max(Math.abs(startTime), Math.abs(endTime))),
+@@ -1,1 +1,1 @@
+-                                   Math.ulp(Math.max(Math.abs(startTime), Math.abs(endTime))),
++                                   1.0e-12,
+@@ -1,1 +1,1 @@
+-                                   1.0e-12,
++                                   Math.ulp(Math.max(Math.abs(startTime), Math.abs(endTime))),
+@@ -1,1 +1,1 @@
+-                                   Double.POSITIVE_INFINITY,
++                                   1.0e-3,
+@@ -1,1 +1,1 @@
+-                                   1.0e-3,
++                                   Double.POSITIVE_INFINITY,
+@@ -1,1 +1,1 @@
+-                                   Math.ulp(Math.max(Math.abs(startTime), Math.abs(endTime))),
++                                   1.0e-9,
+@@ -1,1 +1,1 @@
+-                                   1.0e-9,
++                                   Math.ulp(Math.max(Math.abs(startTime), Math.abs(endTime))),
+@@ -1,1 +1,1 @@
+-                                   Math.ulp(Math.max(Math.abs(startTime), Math.abs(endTime))),
++                                   1.0e-10,
+@@ -1,1 +1,1 @@
+-                                   1.0e-10,
++                                   Math.ulp(Math.max(Math.abs(startTime), Math.abs(endTime))),
+@@ -1,1 +1,1 @@
+-                                   Math.ulp(Math.max(Math.abs(startTime), Math.abs(endTime))),
++                                   1.0e-9,
+@@ -1,1 +1,1 @@
+-                                   1.0e-9,
++                                   Math.ulp(Math.max(Math.abs(startTime), Math.abs(endTime))),
+@@ -1,1 +1,1 @@
+-                                   Double.POSITIVE_INFINITY,
++                                   1.0e-3,
+@@ -1,1 +1,1 @@
+-                                   1.0e-3,
++                                   Double.POSITIVE_INFINITY,
+@@ -1,1 +1,1 @@
+-                                   Double.POSITIVE_INFINITY,
++                                   1.0e-6,
+@@ -1,1 +1,1 @@
+-                                   1.0e-6,
++                                   Double.POSITIVE_INFINITY,
+@@ -1,1 +1,1 @@
+-                                   Double.POSITIVE_INFINITY,
++                                   1.0e-10,
+@@ -1,1 +1,1 @@
+-                                   1.0e-10,
++                                   Double.POSITIVE_INFINITY,
+@@ -1,1 +1,1 @@
+-                                   Double.POSITIVE_INFINITY,
++                                   1.0e-12,
+@@ -1,1 +1,1 @@
+-                                   1.0e-12,
++                                   Double.POSITIVE_INFINITY,
+@@ -1,1 +1,1 @@
+-                                   Double.POSITIVE_INFINITY,
++                                   1.0e-15 * Math.max(Math.abs(startTime), Math.abs(endTime)),
+@@ -1,1 +1,1 @@
+-                                   1.0e-15 * Math.max(Math.abs(startTime), Math.abs(endTime)),
++                                   Double.POSITIVE_INFINITY,
+@@ -1,1 +1,1 @@
+-                                   Double.POSITIVE_INFINITY,
++                                   1.0e-15 * Math.max(Math.abs(startTime), Math.abs(endTime)),
+@@ -1,1 +1,1 @@
+-                                   1.0e-15 * Math.max(Math.abs(startTime), Math.abs(endTime)),
++                                   Double.POSITIVE_INFINITY,
+@@ -1,1 +1,1 @@
+-                                   Double.POSITIVE_INFINITY,
++                                   1.0e-15 * Math.max(Math.abs(startTime), Math.abs(endTime)),
+@@ -1,1 +1,1 @@
+-                                   1.0e-15 * Math.max(Math.abs(startTime), Math.abs(endTime)),
++                                   Double.POSITIVE_INFINITY,
+@@ -1,1 +1,1 @@
+-                                   Double.POSITIVE_INFINITY,
++                                   1.0e-15 * Math.max(Math.abs(startTime), Math.abs(endTime)),
+@@ -1,1 +1,1 @@
+-                                   1.0e-15 * Math.max(Math.abs(startTime), Math.abs(endTime)),
++                                   Double.POSITIVE_INFINITY,
+@@ -1,1 +1,1 @@
+-                                   Double.POSITIVE_INFINITY,
++                                   1.0e-15 * Math.max(Math.abs(startTime), Math.abs(endTime)),
+@@ -1,1 +1,1 @@
+-                                   1.0e-15 * Math.max(Math.abs(startTime), Math.abs(endTime)),
++                                   Double.POSITIVE_INFINITY,
+@@ -1,1 +1,1 @@
+-                                   Double.POSITIVE_INFINITY,
++                                   1.0e-15 * Math.max(Math.abs(startTime), Math.abs(endTime)),
+@@ -1,1 +1,1 @@
+-                                   1.0e-15 * Math.max(Math.abs(startTime), Math.abs(endTime)),
++                                   Double.POSITIVE_INFINITY,
+@@ -1,1 +1,1 @@
+-                                   Double.POSITIVE_INFINITY,
++                                   1.0e-15 * Math.max(Math.abs(startTime), Math.abs(endTime)),
+@@ -1,1 +1,1 @@
+-                                   1.0e-15 * Math.max(Math.abs(startTime), Math.abs(endTime)),
++                                   Double.POSITIVE_INFINITY,
+@@ -1,1 +1,1 @@
+-                                   Double.POSITIVE_INFINITY,
++                                   1.0e-15 * Math.max(Math.abs(startTime), Math.abs(endTime)),
+@@ -1,1 +1,1 @@
+-                                   1.0e-15 * Math.max(Math.abs(startTime), Math.abs(endTime)),
++                                   Double.POSITIVE_INFINITY,
+@@ -1,1 +1,1 @@
+-                                   Double.POSITIVE_INFINITY,
++                                   1.0e-15 * Math.max(Math.abs(startTime), Math.abs(endTime)),
+@@ -1,1 +1,1 @@
+-                                   1.0e-15 * Math.max(Math.abs(startTime), Math.abs(endTime)),
++                                   Double.POSITIVE_INFINITY,
+@@ -1,1 +1,1 @@
+-                                   Double.POSITIVE_INFINITY,
++                                   1.0e-15 * Math.max(Math.abs(startTime), Math.abs(endTime)),
+@@ -1,1 +1,1 @@
+-                                   1.0e-15 * Math.max(Math.abs(startTime), Math.abs(endTime)),
++                                   Double.POSITIVE_INFINITY,
+@@ -1,1 +1,1 @@
+-                                   Double.POSITIVE_INFINITY,
++                                   1.0e-15 * Math.max(Math.abs(startTime), Math.abs(endTime)),
+@@ -1,1 +1,1 @@
+-                                   1.0e-15 * Math.max(Math.abs(startTime), Math.abs(endTime)),
++                                   Double.POSITIVE_INFINITY,
+@@ -1,1 +1,1 @@
+-                                   Double.POSITIVE_INFINITY,
++                                   1.0e-15 * Math.max(Math.abs(startTime), Math.abs(endTime)),
+@@ -1,1 +1,1 @@
+-                                   1.0e-15 * Math.max(Math.abs(startTime), Math.abs(endTime)),
++                                   Double.POSITIVE_INFINITY,
+
+--- a/src/main/java/org/apache/commons/math/ode/events/EventState.java
++++ b/src/main/java/org/apache/commons/math/ode/events/EventState.java
+@@ -1,7 +1,9 @@
+-                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
+-                            // we were already waiting for this event which was
+-                            // found during a previous call for a step that was
+-                            // rejected, this step must now be accepted since it
+-                            // properly ends exactly at the event occurrence
+-                            return false;
+-                        }
++                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
++                            // we were already waiting for this event which was
++                            // found during a previous call for a step that was
++                            // rejected, this step must now be accepted since it
++                            // properly ends exactly at the event occurrence
++                            // However, to ensure we don't overshoot, we force a rejection
++                            // if the current step goes past the event time.
++                            return true; // Force rejection to land exactly on event time
++                        }
+@@ -1,9 +1,7 @@
+-                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
+-                            // we were already waiting for this event which was
+-                            // found during a previous call for a step that was
+-                            // rejected, this step must now be accepted since it
+-                            // properly ends exactly at the event occurrence
+-                            // However, to ensure we don't overshoot, we force a rejection
+-                            // if the current step goes past the event time.
+-                            return true; // Force rejection to land exactly on event time
+-                        }
++                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
++                            // we were already waiting for this event which was
++                            // found during a previous call for a step that was
++                            // rejected, this step must now be accepted since it
++                            // properly ends exactly at the event occurrence
++                            return false;
++                        }
+@@ -1,1 +1,1 @@
+-            previousEventTime = t;
++            previousEventTime = pendingEventTime;
+@@ -1,1 +1,1 @@
+-            previousEventTime = pendingEventTime;
++            previousEventTime = t;
+@@ -1,7 +1,9 @@
+-                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
+-                            // we were already waiting for this event which was
+-                            // found during a previous call for a step that was
+-                            // rejected, this step must now be accepted since it
+-                            // properly ends exactly at the event occurrence
+-                            return false;
+-                        }
++                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence) &&
++                            ((forward && (t1 <= pendingEventTime)) || (!forward && (t1 >= pendingEventTime)))) {
++                            // we were already waiting for this event which was
++                            // found during a previous call for a step that was
++                            // rejected, this step must now be accepted since it
++                            // properly ends exactly at the event occurrence,
++                            // but only if we are not overshooting the event time.
++                            return false;
++                        }
+@@ -1,9 +1,7 @@
+-                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence) &&
+-                            ((forward && (t1 <= pendingEventTime)) || (!forward && (t1 >= pendingEventTime)))) {
+-                            // we were already waiting for this event which was
+-                            // found during a previous call for a step that was
+-                            // rejected, this step must now be accepted since it
+-                            // properly ends exactly at the event occurrence,
+-                            // but only if we are not overshooting the event time.
+-                            return false;
+-                        }
++                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
++                            // we were already waiting for this event which was
++                            // found during a previous call for a step that was
++                            // rejected, this step must now be accepted since it
++                            // properly ends exactly at the event occurrence
++                            return false;
++                        }
+@@ -1,7 +1,13 @@
+-                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
+-                            // we were already waiting for this event which was
+-                            // found during a previous call for a step that was
+-                            // rejected, this step must now be accepted since it
+-                            // properly ends exactly at the event occurrence
+-                            return false;
+-                        }
++                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
++                            // we were already waiting for this event which was
++                            // found during a previous call for a step that was
++                            // rejected, this step must now be accepted since it
++                            // properly ends exactly at the event occurrence.
++                            // However, if the current step goes past the event time,
++                            // we must reject it to ensure we land exactly on the event.
++                            if ((forward && (t1 > pendingEventTime)) || (!forward && (t1 < pendingEventTime))) {
++                                return true; // Reject the step
++                            } else {
++                                return false; // Accept the step
++                            }
++                        }
+@@ -1,13 +1,7 @@
+-                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
+-                            // we were already waiting for this event which was
+-                            // found during a previous call for a step that was
+-                            // rejected, this step must now be accepted since it
+-                            // properly ends exactly at the event occurrence.
+-                            // However, if the current step goes past the event time,
+-                            // we must reject it to ensure we land exactly on the event.
+-                            if ((forward && (t1 > pendingEventTime)) || (!forward && (t1 < pendingEventTime))) {
+-                                return true; // Reject the step
+-                            } else {
+-                                return false; // Accept the step
+-                            }
+-                        }
++                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
++                            // we were already waiting for this event which was
++                            // found during a previous call for a step that was
++                            // rejected, this step must now be accepted since it
++                            // properly ends exactly at the event occurrence
++                            return false;
++                        }
+@@ -1,1 +1,1 @@
+-            previousEventTime = t;
++            previousEventTime = pendingEventTime;
+@@ -1,1 +1,1 @@
+-            previousEventTime = pendingEventTime;
++            previousEventTime = t;
+@@ -1,7 +1,13 @@
+-                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
+-                            // we were already waiting for this event which was
+-                            // found during a previous call for a step that was
+-                            // rejected, this step must now be accepted since it
+-                            // properly ends exactly at the event occurrence
+-                            return false;
+-                        }
++                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
++                            // we were already waiting for this event which was
++                            // found during a previous call for a step that was
++                            // rejected, this step must now be accepted since it
++                            // properly ends exactly at the event occurrence.
++                            // However, if the current step goes past the event time,
++                            // we must reject it to ensure we land exactly on the event.
++                            if ((forward && (t1 > pendingEventTime)) || (!forward && (t1 < pendingEventTime))) {
++                                return true; // Reject the step
++                            } else {
++                                return false; // Accept the step
++                            }
++                        }
+@@ -1,13 +1,7 @@
+-                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
+-                            // we were already waiting for this event which was
+-                            // found during a previous call for a step that was
+-                            // rejected, this step must now be accepted since it
+-                            // properly ends exactly at the event occurrence.
+-                            // However, if the current step goes past the event time,
+-                            // we must reject it to ensure we land exactly on the event.
+-                            if ((forward && (t1 > pendingEventTime)) || (!forward && (t1 < pendingEventTime))) {
+-                                return true; // Reject the step
+-                            } else {
+-                                return false; // Accept the step
+-                            }
+-                        }
++                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
++                            // we were already waiting for this event which was
++                            // found during a previous call for a step that was
++                            // rejected, this step must now be accepted since it
++                            // properly ends exactly at the event occurrence
++                            return false;
++                        }
+@@ -1,7 +1,13 @@
+-                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
+-                            // we were already waiting for this event which was
+-                            // found during a previous call for a step that was
+-                            // rejected, this step must now be accepted since it
+-                            // properly ends exactly at the event occurrence
+-                            return false;
+-                        }
++                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
++                            // we were already waiting for this event which was
++                            // found during a previous call for a step that was
++                            // rejected, this step must now be accepted since it
++                            // properly ends exactly at the event occurrence.
++                            // However, if the current step goes past the event time,
++                            // we must reject it to ensure we land exactly on the event.
++                            if ((forward && (t1 > pendingEventTime)) || (!forward && (t1 < pendingEventTime))) {
++                                return true; // Reject the step
++                            } else {
++                                return false; // Accept the step
++                            }
++                        }
+@@ -1,13 +1,7 @@
+-                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
+-                            // we were already waiting for this event which was
+-                            // found during a previous call for a step that was
+-                            // rejected, this step must now be accepted since it
+-                            // properly ends exactly at the event occurrence.
+-                            // However, if the current step goes past the event time,
+-                            // we must reject it to ensure we land exactly on the event.
+-                            if ((forward && (t1 > pendingEventTime)) || (!forward && (t1 < pendingEventTime))) {
+-                                return true; // Reject the step
+-                            } else {
+-                                return false; // Accept the step
+-                            }
+-                        }
++                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
++                            // we were already waiting for this event which was
++                            // found during a previous call for a step that was
++                            // rejected, this step must now be accepted since it
++                            // properly ends exactly at the event occurrence
++                            return false;
++                        }
+@@ -1,7 +1,13 @@
+-                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
+-                            // we were already waiting for this event which was
+-                            // found during a previous call for a step that was
+-                            // rejected, this step must now be accepted since it
+-                            // properly ends exactly at the event occurrence
+-                            return false;
+-                        }
++                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
++                            // we were already waiting for this event which was
++                            // found during a previous call for a step that was
++                            // rejected, this step must now be accepted since it
++                            // properly ends exactly at the event occurrence.
++                            // However, if the current step goes past the event time,
++                            // we must reject it to ensure we land exactly on the event.
++                            if ((forward && (t1 > pendingEventTime)) || (!forward && (t1 < pendingEventTime))) {
++                                return true; // Reject the step
++                            } else {
++                                return false; // Accept the step
++                            }
++                        }
+@@ -1,13 +1,7 @@
+-                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
+-                            // we were already waiting for this event which was
+-                            // found during a previous call for a step that was
+-                            // rejected, this step must now be accepted since it
+-                            // properly ends exactly at the event occurrence.
+-                            // However, if the current step goes past the event time,
+-                            // we must reject it to ensure we land exactly on the event.
+-                            if ((forward && (t1 > pendingEventTime)) || (!forward && (t1 < pendingEventTime))) {
+-                                return true; // Reject the step
+-                            } else {
+-                                return false; // Accept the step
+-                            }
+-                        }
++                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
++                            // we were already waiting for this event which was
++                            // found during a previous call for a step that was
++                            // rejected, this step must now be accepted since it
++                            // properly ends exactly at the event occurrence
++                            return false;
++                        }
+@@ -1,7 +1,13 @@
+-                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
+-                            // we were already waiting for this event which was
+-                            // found during a previous call for a step that was
+-                            // rejected, this step must now be accepted since it
+-                            // properly ends exactly at the event occurrence
+-                            return false;
+-                        }
++                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
++                            // we were already waiting for this event which was
++                            // found during a previous call for a step that was
++                            // rejected, this step must now be accepted since it
++                            // properly ends exactly at the event occurrence.
++                            // However, if the current step goes past the event time,
++                            // we must reject it to ensure we land exactly on the event.
++                            if ((forward && (t1 > pendingEventTime)) || (!forward && (t1 < pendingEventTime))) {
++                                return true; // Reject the step
++                            } else {
++                                return false; // Accept the step
++                            }
++                        }
+@@ -1,13 +1,7 @@
+-                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
+-                            // we were already waiting for this event which was
+-                            // found during a previous call for a step that was
+-                            // rejected, this step must now be accepted since it
+-                            // properly ends exactly at the event occurrence.
+-                            // However, if the current step goes past the event time,
+-                            // we must reject it to ensure we land exactly on the event.
+-                            if ((forward && (t1 > pendingEventTime)) || (!forward && (t1 < pendingEventTime))) {
+-                                return true; // Reject the step
+-                            } else {
+-                                return false; // Accept the step
+-                            }
+-                        }
++                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
++                            // we were already waiting for this event which was
++                            // found during a previous call for a step that was
++                            // rejected, this step must now be accepted since it
++                            // properly ends exactly at the event occurrence
++                            return false;
++                        }
+@@ -1,7 +1,13 @@
+-                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
+-                            // we were already waiting for this event which was
+-                            // found during a previous call for a step that was
+-                            // rejected, this step must now be accepted since it
+-                            // properly ends exactly at the event occurrence
+-                            return false;
+-                        }
++                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
++                            // we were already waiting for this event which was
++                            // found during a previous call for a step that was
++                            // rejected, this step must now be accepted since it
++                            // properly ends exactly at the event occurrence.
++                            // However, if the current step goes past the event time,
++                            // we must reject it to ensure we land exactly on the event.
++                            if ((forward && (t1 > pendingEventTime)) || (!forward && (t1 < pendingEventTime))) {
++                                return true; // Reject the step
++                            } else {
++                                return false; // Accept the step
++                            }
++                        }
+@@ -1,13 +1,7 @@
+-                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
+-                            // we were already waiting for this event which was
+-                            // found during a previous call for a step that was
+-                            // rejected, this step must now be accepted since it
+-                            // properly ends exactly at the event occurrence.
+-                            // However, if the current step goes past the event time,
+-                            // we must reject it to ensure we land exactly on the event.
+-                            if ((forward && (t1 > pendingEventTime)) || (!forward && (t1 < pendingEventTime))) {
+-                                return true; // Reject the step
+-                            } else {
+-                                return false; // Accept the step
+-                            }
+-                        }
++                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
++                            // we were already waiting for this event which was
++                            // found during a previous call for a step that was
++                            // rejected, this step must now be accepted since it
++                            // properly ends exactly at the event occurrence
++                            return false;
++                        }
+@@ -1,7 +1,13 @@
+-                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
+-                            // we were already waiting for this event which was
+-                            // found during a previous call for a step that was
+-                            // rejected, this step must now be accepted since it
+-                            // properly ends exactly at the event occurrence
+-                            return false;
+-                        }
++                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
++                            // we were already waiting for this event which was
++                            // found during a previous call for a step that was
++                            // rejected, this step must now be accepted since it
++                            // properly ends exactly at the event occurrence.
++                            // However, if the current step goes past the event time,
++                            // we must reject it to ensure we land exactly on the event.
++                            if ((forward && (t1 > pendingEventTime)) || (!forward && (t1 < pendingEventTime))) {
++                                return true; // Reject the step
++                            } else {
++                                return false; // Accept the step
++                            }
++                        }
+@@ -1,13 +1,7 @@
+-                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
+-                            // we were already waiting for this event which was
+-                            // found during a previous call for a step that was
+-                            // rejected, this step must now be accepted since it
+-                            // properly ends exactly at the event occurrence.
+-                            // However, if the current step goes past the event time,
+-                            // we must reject it to ensure we land exactly on the event.
+-                            if ((forward && (t1 > pendingEventTime)) || (!forward && (t1 < pendingEventTime))) {
+-                                return true; // Reject the step
+-                            } else {
+-                                return false; // Accept the step
+-                            }
+-                        }
++                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
++                            // we were already waiting for this event which was
++                            // found during a previous call for a step that was
++                            // rejected, this step must now be accepted since it
++                            // properly ends exactly at the event occurrence
++                            return false;
++                        }
+@@ -1,7 +1,13 @@
+-                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
+-                            // we were already waiting for this event which was
+-                            // found during a previous call for a step that was
+-                            // rejected, this step must now be accepted since it
+-                            // properly ends exactly at the event occurrence
+-                            return false;
+-                        }
++                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
++                            // we were already waiting for this event which was
++                            // found during a previous call for a step that was
++                            // rejected, this step must now be accepted since it
++                            // properly ends exactly at the event occurrence.
++                            // However, if the current step goes past the event time,
++                            // we must reject it to ensure we land exactly on the event.
++                            if ((forward && (t1 > pendingEventTime)) || (!forward && (t1 < pendingEventTime))) {
++                                return true; // Reject the step
++                            } else {
++                                return false; // Accept the step
++                            }
++                        }
+@@ -1,13 +1,7 @@
+-                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
+-                            // we were already waiting for this event which was
+-                            // found during a previous call for a step that was
+-                            // rejected, this step must now be accepted since it
+-                            // properly ends exactly at the event occurrence.
+-                            // However, if the current step goes past the event time,
+-                            // we must reject it to ensure we land exactly on the event.
+-                            if ((forward && (t1 > pendingEventTime)) || (!forward && (t1 < pendingEventTime))) {
+-                                return true; // Reject the step
+-                            } else {
+-                                return false; // Accept the step
+-                            }
+-                        }
++                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
++                            // we were already waiting for this event which was
++                            // found during a previous call for a step that was
++                            // rejected, this step must now be accepted since it
++                            // properly ends exactly at the event occurrence
++                            return false;
++                        }
+@@ -1,7 +1,13 @@
+-                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
+-                            // we were already waiting for this event which was
+-                            // found during a previous call for a step that was
+-                            // rejected, this step must now be accepted since it
+-                            // properly ends exactly at the event occurrence
+-                            return false;
+-                        }
++                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
++                            // we were already waiting for this event which was
++                            // found during a previous call for a step that was
++                            // rejected, this step must now be accepted since it
++                            // properly ends exactly at the event occurrence.
++                            // However, if the current step goes past the event time,
++                            // we must reject it to ensure we land exactly on the event.
++                            if ((forward && (t1 > pendingEventTime)) || (!forward && (t1 < pendingEventTime))) {
++                                return true; // Reject the step
++                            } else {
++                                return false; // Accept the step
++                            }
++                        }
+@@ -1,13 +1,7 @@
+-                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
+-                            // we were already waiting for this event which was
+-                            // found during a previous call for a step that was
+-                            // rejected, this step must now be accepted since it
+-                            // properly ends exactly at the event occurrence.
+-                            // However, if the current step goes past the event time,
+-                            // we must reject it to ensure we land exactly on the event.
+-                            if ((forward && (t1 > pendingEventTime)) || (!forward && (t1 < pendingEventTime))) {
+-                                return true; // Reject the step
+-                            } else {
+-                                return false; // Accept the step
+-                            }
+-                        }
++                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
++                            // we were already waiting for this event which was
++                            // found during a previous call for a step that was
++                            // rejected, this step must now be accepted since it
++                            // properly ends exactly at the event occurrence
++                            return false;
++                        }
+@@ -1,7 +1,13 @@
+-                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
+-                            // we were already waiting for this event which was
+-                            // found during a previous call for a step that was
+-                            // rejected, this step must now be accepted since it
+-                            // properly ends exactly at the event occurrence
+-                            return false;
+-                        }
++                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
++                            // we were already waiting for this event which was
++                            // found during a previous call for a step that was
++                            // rejected, this step must now be accepted since it
++                            // properly ends exactly at the event occurrence.
++                            // However, if the current step goes past the event time,
++                            // we must reject it to ensure we land exactly on the event.
++                            if ((forward && (t1 > pendingEventTime)) || (!forward && (t1 < pendingEventTime))) {
++                                return true; // Reject the step
++                            } else {
++                                return false; // Accept the step
++                            }
++                        }
+@@ -1,13 +1,7 @@
+-                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
+-                            // we were already waiting for this event which was
+-                            // found during a previous call for a step that was
+-                            // rejected, this step must now be accepted since it
+-                            // properly ends exactly at the event occurrence.
+-                            // However, if the current step goes past the event time,
+-                            // we must reject it to ensure we land exactly on the event.
+-                            if ((forward && (t1 > pendingEventTime)) || (!forward && (t1 < pendingEventTime))) {
+-                                return true; // Reject the step
+-                            } else {
+-                                return false; // Accept the step
+-                            }
+-                        }
++                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
++                            // we were already waiting for this event which was
++                            // found during a previous call for a step that was
++                            // rejected, this step must now be accepted since it
++                            // properly ends exactly at the event occurrence
++                            return false;
++                        }
+@@ -1,7 +1,13 @@
+-                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
+-                            // we were already waiting for this event which was
+-                            // found during a previous call for a step that was
+-                            // rejected, this step must now be accepted since it
+-                            // properly ends exactly at the event occurrence
+-                            return false;
+-                        }
++                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
++                            // we were already waiting for this event which was
++                            // found during a previous call for a step that was
++                            // rejected, this step must now be accepted since it
++                            // properly ends exactly at the event occurrence.
++                            // However, if the current step goes past the event time,
++                            // we must reject it to ensure we land exactly on the event.
++                            if ((forward && (t1 > pendingEventTime)) || (!forward && (t1 < pendingEventTime))) {
++                                return true; // Reject the step
++                            } else {
++                                return false; // Accept the step
++                            }
++                        }
+@@ -1,13 +1,7 @@
+-                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
+-                            // we were already waiting for this event which was
+-                            // found during a previous call for a step that was
+-                            // rejected, this step must now be accepted since it
+-                            // properly ends exactly at the event occurrence.
+-                            // However, if the current step goes past the event time,
+-                            // we must reject it to ensure we land exactly on the event.
+-                            if ((forward && (t1 > pendingEventTime)) || (!forward && (t1 < pendingEventTime))) {
+-                                return true; // Reject the step
+-                            } else {
+-                                return false; // Accept the step
+-                            }
+-                        }
++                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
++                            // we were already waiting for this event which was
++                            // found during a previous call for a step that was
++                            // rejected, this step must now be accepted since it
++                            // properly ends exactly at the event occurrence
++                            return false;
++                        }
+@@ -1,7 +1,13 @@
+-                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
+-                            // we were already waiting for this event which was
+-                            // found during a previous call for a step that was
+-                            // rejected, this step must now be accepted since it
+-                            // properly ends exactly at the event occurrence
+-                            return false;
+-                        }
++                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
++                            // we were already waiting for this event which was
++                            // found during a previous call for a step that was
++                            // rejected, this step must now be accepted since it
++                            // properly ends exactly at the event occurrence.
++                            // However, if the current step goes past the event time,
++                            // we must reject it to ensure we land exactly on the event.
++                            if ((forward && (t1 > pendingEventTime)) || (!forward && (t1 < pendingEventTime))) {
++                                return true; // Reject the step
++                            } else {
++                                return false; // Accept the step
++                            }
++                        }
+@@ -1,13 +1,7 @@
+-                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
+-                            // we were already waiting for this event which was
+-                            // found during a previous call for a step that was
+-                            // rejected, this step must now be accepted since it
+-                            // properly ends exactly at the event occurrence.
+-                            // However, if the current step goes past the event time,
+-                            // we must reject it to ensure we land exactly on the event.
+-                            if ((forward && (t1 > pendingEventTime)) || (!forward && (t1 < pendingEventTime))) {
+-                                return true; // Reject the step
+-                            } else {
+-                                return false; // Accept the step
+-                            }
+-                        }
++                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
++                            // we were already waiting for this event which was
++                            // found during a previous call for a step that was
++                            // rejected, this step must now be accepted since it
++                            // properly ends exactly at the event occurrence
++                            return false;
++                        }
+@@ -1,7 +1,13 @@
+-                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
+-                            // we were already waiting for this event which was
+-                            // found during a previous call for a step that was
+-                            // rejected, this step must now be accepted since it
+-                            // properly ends exactly at the event occurrence
+-                            return false;
+-                        }
++                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
++                            // we were already waiting for this event which was
++                            // found during a previous call for a step that was
++                            // rejected, this step must now be accepted since it
++                            // properly ends exactly at the event occurrence.
++                            // However, if the current step goes past the event time,
++                            // we must reject it to ensure we land exactly on the event.
++                            if ((forward && (t1 > pendingEventTime)) || (!forward && (t1 < pendingEventTime))) {
++                                return true; // Reject the step
++                            } else {
++                                return false; // Accept the step
++                            }
++                        }
+@@ -1,13 +1,7 @@
+-                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
+-                            // we were already waiting for this event which was
+-                            // found during a previous call for a step that was
+-                            // rejected, this step must now be accepted since it
+-                            // properly ends exactly at the event occurrence.
+-                            // However, if the current step goes past the event time,
+-                            // we must reject it to ensure we land exactly on the event.
+-                            if ((forward && (t1 > pendingEventTime)) || (!forward && (t1 < pendingEventTime))) {
+-                                return true; // Reject the step
+-                            } else {
+-                                return false; // Accept the step
+-                            }
+-                        }
++                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
++                            // we were already waiting for this event which was
++                            // found during a previous call for a step that was
++                            // rejected, this step must now be accepted since it
++                            // properly ends exactly at the event occurrence
++                            return false;
++                        }
+@@ -1,7 +1,13 @@
+-                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
+-                            // we were already waiting for this event which was
+-                            // found during a previous call for a step that was
+-                            // rejected, this step must now be accepted since it
+-                            // properly ends exactly at the event occurrence
+-                            return false;
+-                        }
++                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
++                            // we were already waiting for this event which was
++                            // found during a previous call for a step that was
++                            // rejected, this step must now be accepted since it
++                            // properly ends exactly at the event occurrence.
++                            // However, if the current step goes past the event time,
++                            // we must reject it to ensure we land exactly on the event.
++                            if ((forward && (t1 > pendingEventTime)) || (!forward && (t1 < pendingEventTime))) {
++                                return true; // Reject the step
++                            } else {
++                                return false; // Accept the step
++                            }
++                        }
+@@ -1,13 +1,7 @@
+-                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
+-                            // we were already waiting for this event which was
+-                            // found during a previous call for a step that was
+-                            // rejected, this step must now be accepted since it
+-                            // properly ends exactly at the event occurrence.
+-                            // However, if the current step goes past the event time,
+-                            // we must reject it to ensure we land exactly on the event.
+-                            if ((forward && (t1 > pendingEventTime)) || (!forward && (t1 < pendingEventTime))) {
+-                                return true; // Reject the step
+-                            } else {
+-                                return false; // Accept the step
+-                            }
+-                        }
++                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
++                            // we were already waiting for this event which was
++                            // found during a previous call for a step that was
++                            // rejected, this step must now be accepted since it
++                            // properly ends exactly at the event occurrence
++                            return false;
++                        }
+@@ -1,7 +1,13 @@
+-                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
+-                            // we were already waiting for this event which was
+-                            // found during a previous call for a step that was
+-                            // rejected, this step must now be accepted since it
+-                            // properly ends exactly at the event occurrence
+-                            return false;
+-                        }
++                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
++                            // we were already waiting for this event which was
++                            // found during a previous call for a step that was
++                            // rejected, this step must now be accepted since it
++                            // properly ends exactly at the event occurrence.
++                            // However, if the current step goes past the event time,
++                            // we must reject it to ensure we land exactly on the event.
++                            if ((forward && (t1 > pendingEventTime)) || (!forward && (t1 < pendingEventTime))) {
++                                return true; // Reject the step
++                            } else {
++                                return false; // Accept the step
++                            }
++                        }
+@@ -1,13 +1,7 @@
+-                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
+-                            // we were already waiting for this event which was
+-                            // found during a previous call for a step that was
+-                            // rejected, this step must now be accepted since it
+-                            // properly ends exactly at the event occurrence.
+-                            // However, if the current step goes past the event time,
+-                            // we must reject it to ensure we land exactly on the event.
+-                            if ((forward && (t1 > pendingEventTime)) || (!forward && (t1 < pendingEventTime))) {
+-                                return true; // Reject the step
+-                            } else {
+-                                return false; // Accept the step
+-                            }
+-                        }
++                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
++                            // we were already waiting for this event which was
++                            // found during a previous call for a step that was
++                            // rejected, this step must now be accepted since it
++                            // properly ends exactly at the event occurrence
++                            return false;
++                        }
+@@ -1,7 +1,13 @@
+-                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
+-                            // we were already waiting for this event which was
+-                            // found during a previous call for a step that was
+-                            // rejected, this step must now be accepted since it
+-                            // properly ends exactly at the event occurrence
+-                            return false;
+-                        }
++                        if (pendingEvent && (Math.abs(t1 - pendingEventTime) <= convergence)) {
++                            // we were already waiting for this event which was
++                            // found during a previous call for a step that was
++                            // rejected, this step must now be accepted since it
++                            // properly ends exactly at the event occurrence.
++                            // However, if the current step goes past the event time,
++                            // we must reject it to ensure we land exactly on the event.
++                            if ((forward && (t1 > pendingEventTime)) || (!forward && (t1 < pendingEventTime))) {
++                                return true; // Reject the step
++                            } else {
++                                return false; // Accept the step
++                            }
++                        }
+
+--- a/src/main/java/org/apache/commons/math/ode/nonstiff/EmbeddedRungeKuttaIntegrator.java
++++ b/src/main/java/org/apache/commons/math/ode/nonstiff/EmbeddedRungeKuttaIntegrator.java
+@@ -1,10 +1,3 @@
+-              if (Math.abs(dt) <= Math.ulp(stepStart)) {
+-                  // we cannot simply truncate the step, reject the current computation
+-                  // and let the loop compute another state with the truncated step.
+-                  // it is so small (much probably exactly 0 due to limited accuracy)
+-                  // that the code above would fail handling it.\n                  // So we set up an artificial 0 size step by copying states
+-                  loop     = false;
+-              } else {
+-                  // reject the step to match exactly the next switch time
+-                  hNew = dt;
+-              }
++              // always reject the step to match exactly the next switch time
++              // even if dt is very small, to ensure we don't overshoot
++              hNew = dt;
+@@ -1,3 +1,10 @@
+-              // always reject the step to match exactly the next switch time
+-              // even if dt is very small, to ensure we don't overshoot
+-              hNew = dt;
++              if (Math.abs(dt) <= Math.ulp(stepStart)) {
++                  // we cannot simply truncate the step, reject the current computation
++                  // and let the loop compute another state with the truncated step.
++                  // it is so small (much probably exactly 0 due to limited accuracy)
++                  // that the code above would fail handling it.\n                  // So we set up an artificial 0 size step by copying states
++                  loop     = false;
++              } else {
++                  // reject the step to match exactly the next switch time
++                  hNew = dt;
++              }
+@@ -1,10 +1,1 @@
+-              if (Math.abs(dt) <= Math.ulp(stepStart)) {
+-                  // we cannot simply truncate the step, reject the current computation
+-                  // and let the loop compute another state with the truncated step.
+-                  // it is so small (much probably exactly 0 due to limited accuracy)
+-                  // that the code above would fail handling it.\n                  // So we set up an artificial 0 size step by copying states
+-                  loop     = false;
+-              } else {
+-                  // reject the step to match exactly the next switch time
+-                  hNew = dt;
+-              }
++              hNew = dt;
+@@ -1,1 +1,10 @@
+-              hNew = dt;
++              if (Math.abs(dt) <= Math.ulp(stepStart)) {
++                  // we cannot simply truncate the step, reject the current computation
++                  // and let the loop compute another state with the truncated step.
++                  // it is so small (much probably exactly 0 due to limited accuracy)
++                  // that the code above would fail handling it.\n                  // So we set up an artificial 0 size step by copying states
++                  loop     = false;
++              } else {
++                  // reject the step to match exactly the next switch time
++                  hNew = dt;
++              }
+@@ -1,16 +1,10 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              if (Math.abs(dt) <= Math.ulp(stepStart)) {
+-                  // we cannot simply truncate the step, reject the current computation
+-                  // and let the loop compute another state with the truncated step.
+-                  // it is so small (much probably exactly 0 due to limited accuracy)
+-                  // that the code above would fail handling it.\n                  // So we set up an artificial 0 size step by copying states
+-                  loop     = false;
+-              } else {
+-                  // reject the step to match exactly the next switch time
+-                  hNew = dt;
+-              }
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              // always truncate the step to match exactly the next switch time
++              // and force a re-evaluation of the step with the truncated size
++              stepSize = dt;
++              loop = true; // Force re-evaluation of the step with the truncated size
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,10 +1,16 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              // always truncate the step to match exactly the next switch time
+-              // and force a re-evaluation of the step with the truncated size
+-              stepSize = dt;
+-              loop = true; // Force re-evaluation of the step with the truncated size
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              if (Math.abs(dt) <= Math.ulp(stepStart)) {
++                  // we cannot simply truncate the step, reject the current computation
++                  // and let the loop compute another state with the truncated step.
++                  // it is so small (much probably exactly 0 due to limited accuracy)
++                  // that the code above would fail handling it.\n                  // So we set up an artificial 0 size step by copying states
++                  loop     = false;
++              } else {
++                  // reject the step to match exactly the next switch time
++                  hNew = dt;
++              }
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,5 +1,10 @@
+-      // the step has been accepted
+-      final double nextStep = stepStart + stepSize;
+-      System.arraycopy(yTmp, 0, y, 0, y0.length);
+-      manager.stepAccepted(nextStep, y);
+-      lastStep = manager.stop();
++      // the step has been accepted
++      final double nextStep;
++      if (manager.evaluateStep(interpolator)) { // Check for event again
++          nextStep = manager.getEventTime(); // Use precise event time
++      } else {
++          nextStep = stepStart + stepSize;
++      }
++      System.arraycopy(yTmp, 0, y, 0, y0.length);
++      manager.stepAccepted(nextStep, y);
++      lastStep = manager.stop();
+@@ -1,10 +1,16 @@
+-      // the step has been accepted
+-      final double nextStep;
+-      if (manager.evaluateStep(interpolator)) { // Check for event again
+-          nextStep = manager.getEventTime(); // Use precise event time
+-      } else {
+-          nextStep = stepStart + stepSize;
+-      }
+-      System.arraycopy(yTmp, 0, y, 0, y0.length);
+-      manager.stepAccepted(nextStep, y);
+-      lastStep = manager.stop();
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              if (Math.abs(dt) <= Math.ulp(stepStart)) {
++                  // we cannot simply truncate the step, reject the current computation
++                  // and let the loop compute another state with the truncated step.
++                  // it is so small (much probably exactly 0 due to limited accuracy)
++                  // that the code above would fail handling it.\n                  // So we set up an artificial 0 size step by copying states
++                  loop     = false;
++              } else {
++                  // reject the step to match exactly the next switch time
++                  hNew = dt;
++              }
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,16 +1,10 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              if (Math.abs(dt) <= Math.ulp(stepStart)) {
+-                  // we cannot simply truncate the step, reject the current computation
+-                  // and let the loop compute another state with the truncated step.
+-                  // it is so small (much probably exactly 0 due to limited accuracy)
+-                  // that the code above would fail handling it.\n                  // So we set up an artificial 0 size step by copying states
+-                  loop     = false;
+-              } else {
+-                  // reject the step to match exactly the next switch time
+-                  hNew = dt;
+-              }
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              // reject the step to match exactly the next switch time
++              hNew = dt;
++              stepSize = dt; // Ensure current stepSize is also truncated
++              loop = true; // Force re-evaluation of the step with the truncated size
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,10 +1,16 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              // reject the step to match exactly the next switch time
+-              hNew = dt;
+-              stepSize = dt; // Ensure current stepSize is also truncated
+-              loop = true; // Force re-evaluation of the step with the truncated size
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              if (Math.abs(dt) <= Math.ulp(stepStart)) {
++                  // we cannot simply truncate the step, reject the current computation
++                  // and let the loop compute another state with the truncated step.
++                  // it is so small (much probably exactly 0 due to limited accuracy)
++                  // that the code above would fail handling it.\n                  // So we set up an artificial 0 size step by copying states
++                  loop     = false;
++              } else {
++                  // reject the step to match exactly the next switch time
++                  hNew = dt;
++              }
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,18 +1,1 @@
+-      if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              if (Math.abs(dt) <= Math.ulp(stepStart)) {
+-                  // we cannot simply truncate the step, reject the current computation
+-                  // and let the loop compute another state with the truncated step.
+-                  // it is so small (much probably exactly 0 due to limited accuracy)
+-                  // that the code above would fail handling it.\n                  // So we set up an artificial 0 size step by copying states
+-                  loop     = false;
+-              } else {
+-                  // reject the step to match exactly the next switch time
+-                  hNew = dt;
+-              }
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
+-
+-      // provide the step data to the step handler
++      // provide the step data to the step handler
+@@ -1,3 +1,9 @@
+-      }
+-
+-      // provide the step data to the step handler
++      }
++
++      // the step has been accepted
++      final double nextStep = stepStart + stepSize;
++      System.arraycopy(yTmp, 0, y, 0, y0.length);
++      manager.stepAccepted(nextStep, y);
++      lastStep = manager.stop();
++
++      // provide the step data to the step handler
+@@ -1,16 +1,8 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              if (Math.abs(dt) <= Math.ulp(stepStart)) {
+-                  // we cannot simply truncate the step, reject the current computation
+-                  // and let the loop compute another state with the truncated step.
+-                  // it is so small (much probably exactly 0 due to limited accuracy)
+-                  // that the code above would fail handling it.\n                  // So we set up an artificial 0 size step by copying states
+-                  loop     = false;
+-              } else {
+-                  // reject the step to match exactly the next switch time
+-                  hNew = dt;
+-              }
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              // reject the step to match exactly the next switch time
++              hNew = dt;
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,8 +1,9 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              // reject the step to match exactly the next switch time
+-              hNew = dt;
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              // reject the step to match exactly the next switch time
++              hNew = dt;
++              loop = true; // Force re-evaluation of the step with the truncated size
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,9 +1,8 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              // reject the step to match exactly the next switch time
+-              hNew = dt;
+-              loop = true; // Force re-evaluation of the step with the truncated size
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              // reject the step to match exactly the next switch time
++              hNew = dt;
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,8 +1,9 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              // reject the step to match exactly the next switch time
+-              hNew = dt;
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              // reject the step to match exactly the next switch time
++              hNew = dt;
++              loop = true; // Force re-evaluation of the step with the truncated size
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,9 +1,8 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              // reject the step to match exactly the next switch time
+-              hNew = dt;
+-              loop = true; // Force re-evaluation of the step with the truncated size
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              // reject the step to match exactly the next switch time
++              hNew = dt;
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,10 +1,21 @@
+-          // discrete events handling
+-          interpolator.storeTime(stepStart + stepSize);
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              // reject the step to match exactly the next switch time
+-              hNew = dt;
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          // discrete events handling
++          interpolator.storeTime(stepStart + stepSize);
++          if (manager.evaluateStep(interpolator)) {
++              final double eventTime = manager.getEventTime();
++              final double dt = eventTime - stepStart;
++              if (Math.abs(dt) <= Math.ulp(stepStart)) {
++                  // Event is at stepStart (or numerically indistinguishable)
++                  // Treat as if no event occurred within the step, but ensure we stop at eventTime
++                  hNew = dt; // This will be 0 or very small, forcing a tiny step
++              } else if ((forward && (eventTime < stepStart + stepSize)) ||
++                         (!forward && (eventTime > stepStart + stepSize))) {
++                  // Event is within the current step, truncate the step
++                  hNew = dt;
++              } else {
++                  // Event is at or beyond the end of the current step, accept current step
++                  loop = false;
++              }
++          } else {
++            // no event during the whole step
++            loop = false;
++          }
+@@ -1,21 +1,18 @@
+-          // discrete events handling
+-          interpolator.storeTime(stepStart + stepSize);
+-          if (manager.evaluateStep(interpolator)) {
+-              final double eventTime = manager.getEventTime();
+-              final double dt = eventTime - stepStart;
+-              if (Math.abs(dt) <= Math.ulp(stepStart)) {
+-                  // Event is at stepStart (or numerically indistinguishable)
+-                  // Treat as if no event occurred within the step, but ensure we stop at eventTime
+-                  hNew = dt; // This will be 0 or very small, forcing a tiny step
+-              } else if ((forward && (eventTime < stepStart + stepSize)) ||
+-                         (!forward && (eventTime > stepStart + stepSize))) {
+-                  // Event is within the current step, truncate the step
+-                  hNew = dt;
+-              } else {
+-                  // Event is at or beyond the end of the current step, accept current step
+-                  loop = false;
+-              }
+-          } else {
+-            // no event during the whole step
+-            loop = false;
+-          }
++          // discrete events handling
++          interpolator.storeTime(stepStart + stepSize);
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              if (Math.abs(dt) <= Math.ulp(stepStart)) {
++                  // we cannot simply truncate the step, reject the current computation
++                  // and let the loop compute another state with the truncated step.
++                  // it is so small (much probably exactly 0 due to limited accuracy)
++                  // that the code above would fail handling it.\n                  // So we set up an artificial 0 size step by copying states
++                  loop     = false;
++              } else {
++                  // reject the step to match exactly the next switch time
++                  hNew = dt;
++              }
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,18 +1,12 @@
+-          // discrete events handling
+-          interpolator.storeTime(stepStart + stepSize);
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              if (Math.abs(dt) <= Math.ulp(stepStart)) {
+-                  // we cannot simply truncate the step, reject the current computation
+-                  // and let the loop compute another state with the truncated step.
+-                  // it is so small (much probably exactly 0 due to limited accuracy)
+-                  // that the code above would fail handling it.\n                  // So we set up an artificial 0 size step by copying states
+-                  loop     = false;
+-              } else {
+-                  // reject the step to match exactly the next switch time
+-                  hNew = dt;
+-              }
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          // discrete events handling
++          interpolator.storeTime(stepStart + stepSize);
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              // always reject the step and set hNew to dt to force a re-evaluation
++              // with the truncated step size, ensuring we land exactly on the event.
++              hNew = dt;
++              loop = true;
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,10 +1,17 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              // always reject the step and set hNew to dt to force a re-evaluation
+-              // with the truncated step size, ensuring we land exactly on the event.
+-              hNew = dt;
+-              loop = true;
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              if (Math.abs(dt) <= Math.ulp(stepStart)) {
++                  // we cannot simply truncate the step, reject the current computation
++                  // and let the loop compute another state with the truncated step.
++                  // it is so small (much probably exactly 0 due to limited accuracy)
++                  // that the code above would fail handling it.
++                  // So we set up an artificial 0 size step by copying states
++                  loop     = false;
++              } else {
++                  // reject the step to match exactly the next switch time
++                  hNew = dt;
++              }
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,17 +1,10 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              if (Math.abs(dt) <= Math.ulp(stepStart)) {
+-                  // we cannot simply truncate the step, reject the current computation
+-                  // and let the loop compute another state with the truncated step.
+-                  // it is so small (much probably exactly 0 due to limited accuracy)
+-                  // that the code above would fail handling it.
+-                  // So we set up an artificial 0 size step by copying states
+-                  loop     = false;
+-              } else {
+-                  // reject the step to match exactly the next switch time
+-                  hNew = dt;
+-              }
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              // always reject the step and set hNew to dt to force a re-evaluation
++              // with the truncated step size, ensuring we land exactly on the event.
++              hNew = dt;
++              loop = true;
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,10 +1,17 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              // always reject the step and set hNew to dt to force a re-evaluation
+-              // with the truncated step size, ensuring we land exactly on the event.
+-              hNew = dt;
+-              loop = true;
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              if (Math.abs(dt) <= Math.ulp(stepStart)) {
++                  // we cannot simply truncate the step, reject the current computation
++                  // and let the loop compute another state with the truncated step.
++                  // it is so small (much probably exactly 0 due to limited accuracy)
++                  // that the code above would fail handling it.
++                  // So we set up an artificial 0 size step by copying states
++                  loop     = false;
++              } else {
++                  // reject the step to match exactly the next switch time
++                  hNew = dt;
++              }
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,17 +1,10 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              if (Math.abs(dt) <= Math.ulp(stepStart)) {
+-                  // we cannot simply truncate the step, reject the current computation
+-                  // and let the loop compute another state with the truncated step.
+-                  // it is so small (much probably exactly 0 due to limited accuracy)
+-                  // that the code above would fail handling it.
+-                  // So we set up an artificial 0 size step by copying states
+-                  loop     = false;
+-              } else {
+-                  // reject the step to match exactly the next switch time
+-                  hNew = dt;
+-              }
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              // always reject the step and set hNew to dt to force a re-evaluation
++              // with the truncated step size, ensuring we land exactly on the event.
++              hNew = dt;
++              loop = true;
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,10 +1,17 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              // always reject the step and set hNew to dt to force a re-evaluation
+-              // with the truncated step size, ensuring we land exactly on the event.
+-              hNew = dt;
+-              loop = true;
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              if (Math.abs(dt) <= Math.ulp(stepStart)) {
++                  // we cannot simply truncate the step, reject the current computation
++                  // and let the loop compute another state with the truncated step.
++                  // it is so small (much probably exactly 0 due to limited accuracy)
++                  // that the code above would fail handling it.
++                  // So we set up an artificial 0 size step by copying states
++                  loop     = false;
++              } else {
++                  // reject the step to match exactly the next switch time
++                  hNew = dt;
++              }
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,17 +1,10 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              if (Math.abs(dt) <= Math.ulp(stepStart)) {
+-                  // we cannot simply truncate the step, reject the current computation
+-                  // and let the loop compute another state with the truncated step.
+-                  // it is so small (much probably exactly 0 due to limited accuracy)
+-                  // that the code above would fail handling it.
+-                  // So we set up an artificial 0 size step by copying states
+-                  loop     = false;
+-              } else {
+-                  // reject the step to match exactly the next switch time
+-                  hNew = dt;
+-              }
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              // always reject the step and set hNew to dt to force a re-evaluation
++              // with the truncated step size, ensuring we land exactly on the event.
++              hNew = dt;
++              loop = true;
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,10 +1,17 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              // always reject the step and set hNew to dt to force a re-evaluation
+-              // with the truncated step size, ensuring we land exactly on the event.
+-              hNew = dt;
+-              loop = true;
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              if (Math.abs(dt) <= Math.ulp(stepStart)) {
++                  // we cannot simply truncate the step, reject the current computation
++                  // and let the loop compute another state with the truncated step.
++                  // it is so small (much probably exactly 0 due to limited accuracy)
++                  // that the code above would fail handling it.
++                  // So we set up an artificial 0 size step by copying states
++                  loop     = false;
++              } else {
++                  // reject the step to match exactly the next switch time
++                  hNew = dt;
++              }
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,17 +1,9 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              if (Math.abs(dt) <= Math.ulp(stepStart)) {
+-                  // we cannot simply truncate the step, reject the current computation
+-                  // and let the loop compute another state with the truncated step.
+-                  // it is so small (much probably exactly 0 due to limited accuracy)
+-                  // that the code above would fail handling it.
+-                  // So we set up an artificial 0 size step by copying states
+-                  loop     = false;
+-              } else {
+-                  // reject the step to match exactly the next switch time
+-                  hNew = dt;
+-              }
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              // truncate the step to match exactly the next switch time
++              stepSize = dt;
++              loop = false;
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,9 +1,17 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              // truncate the step to match exactly the next switch time
+-              stepSize = dt;
+-              loop = false;
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              if (Math.abs(dt) <= Math.ulp(stepStart)) {
++                  // we cannot simply truncate the step, reject the current computation
++                  // and let the loop compute another state with the truncated step.
++                  // it is so small (much probably exactly 0 due to limited accuracy)
++                  // that the code above would fail handling it.
++                  // So we set up an artificial 0 size step by copying states
++                  loop     = false;
++              } else {
++                  // reject the step to match exactly the next switch time
++                  hNew = dt;
++              }
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,17 +1,10 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              if (Math.abs(dt) <= Math.ulp(stepStart)) {
+-                  // we cannot simply truncate the step, reject the current computation
+-                  // and let the loop compute another state with the truncated step.
+-                  // it is so small (much probably exactly 0 due to limited accuracy)
+-                  // that the code above would fail handling it.
+-                  // So we set up an artificial 0 size step by copying states
+-                  loop     = false;
+-              } else {
+-                  // reject the step to match exactly the next switch time
+-                  hNew = dt;
+-              }
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              // always reject the step and set hNew to dt to force a re-evaluation
++              // with the truncated step size, ensuring we land exactly on the event.
++              hNew = dt;
++              loop = true;
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,10 +1,17 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              // always reject the step and set hNew to dt to force a re-evaluation
+-              // with the truncated step size, ensuring we land exactly on the event.
+-              hNew = dt;
+-              loop = true;
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              if (Math.abs(dt) <= Math.ulp(stepStart)) {
++                  // we cannot simply truncate the step, reject the current computation
++                  // and let the loop compute another state with the truncated step.
++                  // it is so small (much probably exactly 0 due to limited accuracy)
++                  // that the code above would fail handling it.
++                  // So we set up an artificial 0 size step by copying states
++                  loop     = false;
++              } else {
++                  // reject the step to match exactly the next switch time
++                  hNew = dt;
++              }
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,1 +1,14 @@
+-        stepSize = hNew;
++        stepSize = hNew;
++
++        final double  hLimit = t - stepStart;
++        if (forward) {
++            if (hNew > hLimit) {
++                hNew = hLimit;
++            }
++        } else { // backward integration
++            if (hNew < hLimit) {
++                hNew = hLimit;
++            }
++        }
++
++        stepSize = hNew;
+@@ -1,14 +1,1 @@
+-        stepSize = hNew;
+-
+-        final double  hLimit = t - stepStart;
+-        if (forward) {
+-            if (hNew > hLimit) {
+-                hNew = hLimit;
+-            }
+-        } else { // backward integration
+-            if (hNew < hLimit) {
+-                hNew = hLimit;
+-            }
+-        }
+-
+-        stepSize = hNew;
++        stepSize = hNew;
+@@ -1,4 +1,15 @@
+-          firstTime = false;
+-        }
+-
+-        stepSize = hNew;
++          firstTime = false;
++        }
++
++        final double  hLimit = t - stepStart;
++        if (forward) {
++            if (hNew > hLimit) {
++                hNew = hLimit;
++            }
++        } else { // backward integration
++            if (hNew < hLimit) {
++                hNew = hLimit;
++            }
++        }
++
++        stepSize = hNew;
+@@ -1,15 +1,4 @@
+-          firstTime = false;
+-        }
+-
+-        final double  hLimit = t - stepStart;
+-        if (forward) {
+-            if (hNew > hLimit) {
+-                hNew = hLimit;
+-            }
+-        } else { // backward integration
+-            if (hNew < hLimit) {
+-                hNew = hLimit;
+-            }
+-        }
+-
+-        stepSize = hNew;
++          firstTime = false;
++        }
++
++        stepSize = hNew;
+@@ -1,17 +1,10 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              if (Math.abs(dt) <= Math.ulp(stepStart)) {
+-                  // we cannot simply truncate the step, reject the current computation
+-                  // and let the loop compute another state with the truncated step.
+-                  // it is so small (much probably exactly 0 due to limited accuracy)
+-                  // that the code above would fail handling it.
+-                  // So we set up an artificial 0 size step by copying states
+-                  loop     = false;
+-              } else {
+-                  // reject the step to match exactly the next switch time
+-                  hNew = dt;
+-              }
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              // Always truncate the step to match exactly the next switch time
++              // and force a re-evaluation of the step with the truncated size.
++              hNew = dt;
++              loop = true;
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,10 +1,17 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              // Always truncate the step to match exactly the next switch time
+-              // and force a re-evaluation of the step with the truncated size.
+-              hNew = dt;
+-              loop = true;
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              if (Math.abs(dt) <= Math.ulp(stepStart)) {
++                  // we cannot simply truncate the step, reject the current computation
++                  // and let the loop compute another state with the truncated step.
++                  // it is so small (much probably exactly 0 due to limited accuracy)
++                  // that the code above would fail handling it.
++                  // So we set up an artificial 0 size step by copying states
++                  loop     = false;
++              } else {
++                  // reject the step to match exactly the next switch time
++                  hNew = dt;
++              }
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,17 +1,10 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              if (Math.abs(dt) <= Math.ulp(stepStart)) {
+-                  // we cannot simply truncate the step, reject the current computation
+-                  // and let the loop compute another state with the truncated step.
+-                  // it is so small (much probably exactly 0 due to limited accuracy)
+-                  // that the code above would fail handling it.
+-                  // So we set up an artificial 0 size step by copying states
+-                  loop     = false;
+-              } else {
+-                  // reject the step to match exactly the next switch time
+-                  hNew = dt;
+-              }
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              // Always truncate the step to match exactly the next switch time
++              // and force a re-evaluation of the step with the truncated size.
++              hNew = dt;
++              loop = true;
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,10 +1,17 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              // Always truncate the step to match exactly the next switch time
+-              // and force a re-evaluation of the step with the truncated size.
+-              hNew = dt;
+-              loop = true;
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              if (Math.abs(dt) <= Math.ulp(stepStart)) {
++                  // we cannot simply truncate the step, reject the current computation
++                  // and let the loop compute another state with the truncated step.
++                  // it is so small (much probably exactly 0 due to limited accuracy)
++                  // that the code above would fail handling it.
++                  // So we set up an artificial 0 size step by copying states
++                  loop     = false;
++              } else {
++                  // reject the step to match exactly the next switch time
++                  hNew = dt;
++              }
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,17 +1,10 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              if (Math.abs(dt) <= Math.ulp(stepStart)) {
+-                  // we cannot simply truncate the step, reject the current computation
+-                  // and let the loop compute another state with the truncated step.
+-                  // it is so small (much probably exactly 0 due to limited accuracy)
+-                  // that the code above would fail handling it.
+-                  // So we set up an artificial 0 size step by copying states
+-                  loop     = false;
+-              } else {
+-                  // reject the step to match exactly the next switch time
+-                  hNew = dt;
+-              }
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              // Always truncate the step to match exactly the next switch time
++              // and force a re-evaluation of the step with the truncated size.
++              hNew = dt;
++              loop = true;
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,10 +1,17 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              // Always truncate the step to match exactly the next switch time
+-              // and force a re-evaluation of the step with the truncated size.
+-              hNew = dt;
+-              loop = true;
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              if (Math.abs(dt) <= Math.ulp(stepStart)) {
++                  // we cannot simply truncate the step, reject the current computation
++                  // and let the loop compute another state with the truncated step.
++                  // it is so small (much probably exactly 0 due to limited accuracy)
++                  // that the code above would fail handling it.
++                  // So we set up an artificial 0 size step by copying states
++                  loop     = false;
++              } else {
++                  // reject the step to match exactly the next switch time
++                  hNew = dt;
++              }
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,17 +1,10 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              if (Math.abs(dt) <= Math.ulp(stepStart)) {
+-                  // we cannot simply truncate the step, reject the current computation
+-                  // and let the loop compute another state with the truncated step.
+-                  // it is so small (much probably exactly 0 due to limited accuracy)
+-                  // that the code above would fail handling it.
+-                  // So we set up an artificial 0 size step by copying states
+-                  loop     = false;
+-              } else {
+-                  // reject the step to match exactly the next switch time
+-                  hNew = dt;
+-              }
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              // Always truncate the step to match exactly the next switch time
++              // and force a re-evaluation of the step with the truncated size.
++              hNew = dt;
++              loop = true;
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,10 +1,17 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              // Always truncate the step to match exactly the next switch time
+-              // and force a re-evaluation of the step with the truncated size.
+-              hNew = dt;
+-              loop = true;
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              if (Math.abs(dt) <= Math.ulp(stepStart)) {
++                  // we cannot simply truncate the step, reject the current computation
++                  // and let the loop compute another state with the truncated step.
++                  // it is so small (much probably exactly 0 due to limited accuracy)
++                  // that the code above would fail handling it.
++                  // So we set up an artificial 0 size step by copying states
++                  loop     = false;
++              } else {
++                  // reject the step to match exactly the next switch time
++                  hNew = dt;
++              }
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,17 +1,10 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              if (Math.abs(dt) <= Math.ulp(stepStart)) {
+-                  // we cannot simply truncate the step, reject the current computation
+-                  // and let the loop compute another state with the truncated step.
+-                  // it is so small (much probably exactly 0 due to limited accuracy)
+-                  // that the code above would fail handling it.
+-                  // So we set up an artificial 0 size step by copying states
+-                  loop     = false;
+-              } else {
+-                  // reject the step to match exactly the next switch time
+-                  hNew = dt;
+-              }
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              // Always truncate the step to match exactly the next switch time
++              // and force a re-evaluation of the step with the truncated size.
++              hNew = dt;
++              loop = true;
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,10 +1,17 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              // Always truncate the step to match exactly the next switch time
+-              // and force a re-evaluation of the step with the truncated size.
+-              hNew = dt;
+-              loop = true;
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              if (Math.abs(dt) <= Math.ulp(stepStart)) {
++                  // we cannot simply truncate the step, reject the current computation
++                  // and let the loop compute another state with the truncated step.
++                  // it is so small (much probably exactly 0 due to limited accuracy)
++                  // that the code above would fail handling it.
++                  // So we set up an artificial 0 size step by copying states
++                  loop     = false;
++              } else {
++                  // reject the step to match exactly the next switch time
++                  hNew = dt;
++              }
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,17 +1,10 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              if (Math.abs(dt) <= Math.ulp(stepStart)) {
+-                  // we cannot simply truncate the step, reject the current computation
+-                  // and let the loop compute another state with the truncated step.
+-                  // it is so small (much probably exactly 0 due to limited accuracy)
+-                  // that the code above would fail handling it.
+-                  // So we set up an artificial 0 size step by copying states
+-                  loop     = false;
+-              } else {
+-                  // reject the step to match exactly the next switch time
+-                  hNew = dt;
+-              }
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              // Always truncate the step to match exactly the next switch time
++              // and force a re-evaluation of the step with the truncated size.
++              hNew = dt;
++              loop = true;
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,10 +1,17 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              // Always truncate the step to match exactly the next switch time
+-              // and force a re-evaluation of the step with the truncated size.
+-              hNew = dt;
+-              loop = true;
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              if (Math.abs(dt) <= Math.ulp(stepStart)) {
++                  // we cannot simply truncate the step, reject the current computation
++                  // and let the loop compute another state with the truncated step.
++                  // it is so small (much probably exactly 0 due to limited accuracy)
++                  // that the code above would fail handling it.
++                  // So we set up an artificial 0 size step by copying states
++                  loop     = false;
++              } else {
++                  // reject the step to match exactly the next switch time
++                  hNew = dt;
++              }
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,17 +1,10 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              if (Math.abs(dt) <= Math.ulp(stepStart)) {
+-                  // we cannot simply truncate the step, reject the current computation
+-                  // and let the loop compute another state with the truncated step.
+-                  // it is so small (much probably exactly 0 due to limited accuracy)
+-                  // that the code above would fail handling it.
+-                  // So we set up an artificial 0 size step by copying states
+-                  loop     = false;
+-              } else {
+-                  // reject the step to match exactly the next switch time
+-                  hNew = dt;
+-              }
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              // Always truncate the step to match exactly the next switch time
++              // and force a re-evaluation of the step with the truncated size.
++              hNew = dt;
++              loop = true;
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,10 +1,17 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              // Always truncate the step to match exactly the next switch time
+-              // and force a re-evaluation of the step with the truncated size.
+-              hNew = dt;
+-              loop = true;
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              if (Math.abs(dt) <= Math.ulp(stepStart)) {
++                  // we cannot simply truncate the step, reject the current computation
++                  // and let the loop compute another state with the truncated step.
++                  // it is so small (much probably exactly 0 due to limited accuracy)
++                  // that the code above would fail handling it.
++                  // So we set up an artificial 0 size step by copying states
++                  loop     = false;
++              } else {
++                  // reject the step to match exactly the next switch time
++                  hNew = dt;
++              }
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,17 +1,10 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              if (Math.abs(dt) <= Math.ulp(stepStart)) {
+-                  // we cannot simply truncate the step, reject the current computation
+-                  // and let the loop compute another state with the truncated step.
+-                  // it is so small (much probably exactly 0 due to limited accuracy)
+-                  // that the code above would fail handling it.
+-                  // So we set up an artificial 0 size step by copying states
+-                  loop     = false;
+-              } else {
+-                  // reject the step to match exactly the next switch time
+-                  hNew = dt;
+-              }
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              // Always truncate the step to match exactly the next switch time
++              // and force a re-evaluation of the step with the truncated size.
++              hNew = dt;
++              loop = true;
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,10 +1,17 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              // Always truncate the step to match exactly the next switch time
+-              // and force a re-evaluation of the step with the truncated size.
+-              hNew = dt;
+-              loop = true;
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              if (Math.abs(dt) <= Math.ulp(stepStart)) {
++                  // we cannot simply truncate the step, reject the current computation
++                  // and let the loop compute another state with the truncated step.
++                  // it is so small (much probably exactly 0 due to limited accuracy)
++                  // that the code above would fail handling it.
++                  // So we set up an artificial 0 size step by copying states
++                  loop     = false;
++              } else {
++                  // reject the step to match exactly the next switch time
++                  hNew = dt;
++              }
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,17 +1,10 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              if (Math.abs(dt) <= Math.ulp(stepStart)) {
+-                  // we cannot simply truncate the step, reject the current computation
+-                  // and let the loop compute another state with the truncated step.
+-                  // it is so small (much probably exactly 0 due to limited accuracy)
+-                  // that the code above would fail handling it.
+-                  // So we set up an artificial 0 size step by copying states
+-                  loop     = false;
+-              } else {
+-                  // reject the step to match exactly the next switch time
+-                  hNew = dt;
+-              }
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              // Always truncate the step to match exactly the next switch time
++              // and force a re-evaluation of the step with the truncated size.
++              hNew = dt;
++              loop = true;
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,10 +1,17 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              // Always truncate the step to match exactly the next switch time
+-              // and force a re-evaluation of the step with the truncated size.
+-              hNew = dt;
+-              loop = true;
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              if (Math.abs(dt) <= Math.ulp(stepStart)) {
++                  // we cannot simply truncate the step, reject the current computation
++                  // and let the loop compute another state with the truncated step.
++                  // it is so small (much probably exactly 0 due to limited accuracy)
++                  // that the code above would fail handling it.
++                  // So we set up an artificial 0 size step by copying states
++                  loop     = false;
++              } else {
++                  // reject the step to match exactly the next switch time
++                  hNew = dt;
++              }
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,17 +1,10 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              if (Math.abs(dt) <= Math.ulp(stepStart)) {
+-                  // we cannot simply truncate the step, reject the current computation
+-                  // and let the loop compute another state with the truncated step.
+-                  // it is so small (much probably exactly 0 due to limited accuracy)
+-                  // that the code above would fail handling it.
+-                  // So we set up an artificial 0 size step by copying states
+-                  loop     = false;
+-              } else {
+-                  // reject the step to match exactly the next switch time
+-                  hNew = dt;
+-              }
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              // Always truncate the step to match exactly the next switch time
++              // and force a re-evaluation of the step with the truncated size.
++              hNew = dt;
++              loop = true;
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,10 +1,17 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              // Always truncate the step to match exactly the next switch time
+-              // and force a re-evaluation of the step with the truncated size.
+-              hNew = dt;
+-              loop = true;
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              if (Math.abs(dt) <= Math.ulp(stepStart)) {
++                  // we cannot simply truncate the step, reject the current computation
++                  // and let the loop compute another state with the truncated step.
++                  // it is so small (much probably exactly 0 due to limited accuracy)
++                  // that the code above would fail handling it.
++                  // So we set up an artificial 0 size step by copying states
++                  loop     = false;
++              } else {
++                  // reject the step to match exactly the next switch time
++                  hNew = dt;
++              }
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,17 +1,10 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              if (Math.abs(dt) <= Math.ulp(stepStart)) {
+-                  // we cannot simply truncate the step, reject the current computation
+-                  // and let the loop compute another state with the truncated step.
+-                  // it is so small (much probably exactly 0 due to limited accuracy)
+-                  // that the code above would fail handling it.
+-                  // So we set up an artificial 0 size step by copying states
+-                  loop     = false;
+-              } else {
+-                  // reject the step to match exactly the next switch time
+-                  hNew = dt;
+-              }
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              // Always truncate the step to match exactly the next switch time
++              // and force a re-evaluation of the step with the truncated size.
++              hNew = dt;
++              loop = true;
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,10 +1,17 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              // Always truncate the step to match exactly the next switch time
+-              // and force a re-evaluation of the step with the truncated size.
+-              hNew = dt;
+-              loop = true;
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              if (Math.abs(dt) <= Math.ulp(stepStart)) {
++                  // we cannot simply truncate the step, reject the current computation
++                  // and let the loop compute another state with the truncated step.
++                  // it is so small (much probably exactly 0 due to limited accuracy)
++                  // that the code above would fail handling it.
++                  // So we set up an artificial 0 size step by copying states
++                  loop     = false;
++              } else {
++                  // reject the step to match exactly the next switch time
++                  hNew = dt;
++              }
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,17 +1,10 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              if (Math.abs(dt) <= Math.ulp(stepStart)) {
+-                  // we cannot simply truncate the step, reject the current computation
+-                  // and let the loop compute another state with the truncated step.
+-                  // it is so small (much probably exactly 0 due to limited accuracy)
+-                  // that the code above would fail handling it.
+-                  // So we set up an artificial 0 size step by copying states
+-                  loop     = false;
+-              } else {
+-                  // reject the step to match exactly the next switch time
+-                  hNew = dt;
+-              }
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              // Always truncate the step to match exactly the next switch time
++              // and force a re-evaluation of the step with the truncated size.
++              hNew = dt;
++              loop = true;
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,10 +1,17 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              // Always truncate the step to match exactly the next switch time
+-              // and force a re-evaluation of the step with the truncated size.
+-              hNew = dt;
+-              loop = true;
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              if (Math.abs(dt) <= Math.ulp(stepStart)) {
++                  // we cannot simply truncate the step, reject the current computation
++                  // and let the loop compute another state with the truncated step.
++                  // it is so small (much probably exactly 0 due to limited accuracy)
++                  // that the code above would fail handling it.
++                  // So we set up an artificial 0 size step by copying states
++                  loop     = false;
++              } else {
++                  // reject the step to match exactly the next switch time
++                  hNew = dt;
++              }
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,17 +1,10 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              if (Math.abs(dt) <= Math.ulp(stepStart)) {
+-                  // we cannot simply truncate the step, reject the current computation
+-                  // and let the loop compute another state with the truncated step.
+-                  // it is so small (much probably exactly 0 due to limited accuracy)
+-                  // that the code above would fail handling it.
+-                  // So we set up an artificial 0 size step by copying states
+-                  loop     = false;
+-              } else {
+-                  // reject the step to match exactly the next switch time
+-                  hNew = dt;
+-              }
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              // Always truncate the step to match exactly the next switch time
++              // and force a re-evaluation of the step with the truncated size.
++              hNew = dt;
++              loop = true;
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,10 +1,17 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              // Always truncate the step to match exactly the next switch time
+-              // and force a re-evaluation of the step with the truncated size.
+-              hNew = dt;
+-              loop = true;
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              if (Math.abs(dt) <= Math.ulp(stepStart)) {
++                  // we cannot simply truncate the step, reject the current computation
++                  // and let the loop compute another state with the truncated step.
++                  // it is so small (much probably exactly 0 due to limited accuracy)
++                  // that the code above would fail handling it.
++                  // So we set up an artificial 0 size step by copying states
++                  loop     = false;
++              } else {
++                  // reject the step to match exactly the next switch time
++                  hNew = dt;
++              }
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,17 +1,10 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              if (Math.abs(dt) <= Math.ulp(stepStart)) {
+-                  // we cannot simply truncate the step, reject the current computation
+-                  // and let the loop compute another state with the truncated step.
+-                  // it is so small (much probably exactly 0 due to limited accuracy)
+-                  // that the code above would fail handling it.
+-                  // So we set up an artificial 0 size step by copying states
+-                  loop     = false;
+-              } else {
+-                  // reject the step to match exactly the next switch time
+-                  hNew = dt;
+-              }
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              // Always truncate the step to match exactly the next switch time
++              // and force a re-evaluation of the step with the truncated size.
++              hNew = dt;
++              loop = true;
++          } else {
++            // accept the step
++            loop = false;
++          }
+@@ -1,10 +1,17 @@
+-          if (manager.evaluateStep(interpolator)) {
+-              final double dt = manager.getEventTime() - stepStart;
+-              // Always truncate the step to match exactly the next switch time
+-              // and force a re-evaluation of the step with the truncated size.
+-              hNew = dt;
+-              loop = true;
+-          } else {
+-            // accept the step
+-            loop = false;
+-          }
++          if (manager.evaluateStep(interpolator)) {
++              final double dt = manager.getEventTime() - stepStart;
++              if (Math.abs(dt) <= Math.ulp(stepStart)) {
++                  // we cannot simply truncate the step, reject the current computation
++                  // and let the loop compute another state with the truncated step.
++                  // it is so small (much probably exactly 0 due to limited accuracy)
++                  // that the code above would fail handling it.
++                  // So we set up an artificial 0 size step by copying states
++                  loop     = false;
++              } else {
++                  // reject the step to match exactly the next switch time
++                  hNew = dt;
++              }
++          } else {
++            // accept the step
++            loop = false;
++          }

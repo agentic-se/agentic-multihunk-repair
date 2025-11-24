@@ -1,0 +1,20 @@
+diff --git a/src/com/google/javascript/rhino/jstype/RecordType.java b/src/com/google/javascript/rhino/jstype/RecordType.java
+index 50423d5b..3a046685 100755
+--- a/src/com/google/javascript/rhino/jstype/RecordType.java
++++ b/src/com/google/javascript/rhino/jstype/RecordType.java
+@@ -265,7 +265,6 @@ class RecordType extends PrototypeObjectType {
+ 
+       JSType propA = typeA.getPropertyType(property);
+       JSType propB = typeB.getPropertyType(property);
+-      if (!propA.isUnknownType() && !propB.isUnknownType()) {
+       if (typeA.isPropertyTypeDeclared(property)) {
+         // If one declared property isn't invariant,
+         // then the whole record isn't covariant.
+@@ -277,7 +276,6 @@ class RecordType extends PrototypeObjectType {
+         // then the whole record isn't covariant.
+         if (!propA.isSubtype(propB)) {
+           return false;
+-          }
+         }
+       }
+     }

@@ -1,0 +1,30 @@
+diff --git a/src/org/mockito/internal/invocation/Invocation.java b/src/org/mockito/internal/invocation/Invocation.java
+index 94d4612f5..a61328ef5 100644
+--- a/src/org/mockito/internal/invocation/Invocation.java
++++ b/src/org/mockito/internal/invocation/Invocation.java
+@@ -15,6 +15,7 @@ import org.mockito.internal.reporting.PrintSettings;
+ import org.mockito.internal.reporting.PrintingFriendlyInvocation;
+ import org.mockito.internal.util.*;
+ import org.mockito.invocation.InvocationOnMock;
++import org.mockito.exceptions.Reporter;
+ 
+ /**
+  * Method call on a mock object.
+@@ -199,6 +200,10 @@ public class Invocation implements PrintableInvocation, InvocationOnMock, Printi
+     }
+ 
+     public Object callRealMethod() throws Throwable {
++        // Fail fast when attempting to call a real method on an interface
++        if (getMethod().getDeclaringClass().isInterface()) {
++            new Reporter().cannotCallRealMethodOnInterface();
++        }
+         return realMethod.invoke(mock, rawArguments);
+     }
+ 
+@@ -214,4 +219,4 @@ public class Invocation implements PrintableInvocation, InvocationOnMock, Printi
+         markVerified();
+         this.verifiedInOrder = true;
+     }
+-}
+\ No newline at end of file
++}

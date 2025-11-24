@@ -1,0 +1,53 @@
+diff --git a/src/java/org/apache/commons/lang3/math/NumberUtils.java b/src/java/org/apache/commons/lang3/math/NumberUtils.java
+index d3054f3f..a8f73c2b 100644
+--- a/src/java/org/apache/commons/lang3/math/NumberUtils.java
++++ b/src/java/org/apache/commons/lang3/math/NumberUtils.java
+@@ -489,6 +489,33 @@ public class NumberUtils {
+             dec = null;
+         }
+         if (!Character.isDigit(lastChar)) {
++            // Handle a trailing decimal point (e.g., "2.") as a valid number (LANG-521)
++            if (lastChar == '.') {
++                // if there is an exponent, a trailing decimal point is not allowed
++                if (expPos > -1) {
++                    throw new NumberFormatException(str + " is not a valid number.");
++                }
++                // Treat as a decimal number with no digits after the decimal point.
++                // Follow the same decision path as for unqualified decimal numbers.
++                boolean allZeros = isAllZeros(mant) && isAllZeros(null);
++                try {
++                    Float f = createFloat(str);
++                    if (!(f.isInfinite() || (f.floatValue() == 0.0F && !allZeros))) {
++                        return f;
++                    }
++                } catch (NumberFormatException nfe) {
++                    // ignore the bad number and try wider types
++                }
++                try {
++                    Double d = createDouble(str);
++                    if (!(d.isInfinite() || (d.doubleValue() == 0.0D && !allZeros))) {
++                        return d;
++                    }
++                } catch (NumberFormatException nfe) {
++                    // ignore the bad number and try BigDecimal
++                }
++                return createBigDecimal(str);
++            }
+             if (expPos > -1 && expPos < str.length() - 1) {
+                 exp = str.substring(expPos + 1, str.length() - 1);
+             } else {
+@@ -1385,6 +1412,14 @@ public class NumberUtils {
+                 // can't have an E at the last byte
+                 return false;
+             }
++            if (chars[i] == '.') {
++                if (hasDecPoint || hasExp) {
++                    // two decimal points or dec in exponent
++                    return false;
++                }
++                // single trailing decimal point after non-exponent is ok
++                return foundDigit;
++            }
+             if (!allowSigns
+                 && (chars[i] == 'd'
+                     || chars[i] == 'D'

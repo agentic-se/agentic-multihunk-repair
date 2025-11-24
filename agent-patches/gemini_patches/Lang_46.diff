@@ -1,0 +1,108 @@
+--- a/src/java/org/apache/commons/lang/StringEscapeUtils.java
++++ b/src/java/org/apache/commons/lang/StringEscapeUtils.java
+@@ -1,4 +1,1 @@
+-                    case '/' :
+-                            out.write('\\');
+-                        out.write('/');
+-                        break;
++
+@@ -1,1 +1,1 @@
+-    private static String escapeJavaStyleString(String str, boolean escapeSingleQuotes) {
++    private static String escapeJavaStyleString(String str, boolean escapeSingleQuotes, boolean escapeForwardSlash) {
+@@ -1,1 +1,1 @@
+-        return escapeJavaStyleString(str, false);
++        return escapeJavaStyleString(str, false, false);
+@@ -1,1 +1,1 @@
+-        return escapeJavaStyleString(str, true);
++        return escapeJavaStyleString(str, true, true);
+@@ -1,1 +1,1 @@
+-    private static void escapeJavaStyleString(Writer out, String str, boolean escapeSingleQuote) throws IOException {
++    private static void escapeJavaStyleString(Writer out, String str, boolean escapeSingleQuote, boolean escapeForwardSlash) throws IOException {
+@@ -1,1 +1,1 @@
+-        escapeJavaStyleString(out, str, false);
++        escapeJavaStyleString(out, str, false, false);
+@@ -1,1 +1,1 @@
+-        escapeJavaStyleString(out, str, true);
++        escapeJavaStyleString(out, str, true, true);
+@@ -1,5 +1,10 @@
+-                        break;
+-                    
+-                    default :
+-                        out.write(ch);
+-                        break;
++                        break;
++                    case '/' :
++                        if (escapeForwardSlash) {
++                            out.write('\\');
++                        }
++                        out.write('/');
++                        break;
++                    default :
++                        out.write(ch);
++                        break;
+@@ -1,5 +1,5 @@
+-     * @param escapeSingleQuotes escapes single quotes if <code>true</code>
+-     * @param escapeForwardSlash TODO
+-     * @return the escaped string
+-     */
+-    private static String escapeJavaStyleString(String str, boolean escapeSingleQuotes, boolean escapeForwardSlash) {
++     * @param escapeSingleQuotes escapes single quotes if <code>true</code>
++     * @param escapeForwardSlash escapes forward slash if <code>true</code>
++     * @return the escaped string
++     */
++    private static String escapeJavaStyleString(String str, boolean escapeSingleQuotes, boolean escapeForwardSlash) {
+@@ -1,5 +1,5 @@
+-     * @param escapeSingleQuote escapes single quotes if <code>true</code>
+-     * @param escapeForwardSlash TODO
+-     * @throws IOException if an IOException occurs
+-     */
+-    private static void escapeJavaStyleString(Writer out, String str, boolean escapeSingleQuote, boolean escapeForwardSlash) throws IOException {
++     * @param escapeSingleQuote escapes single quotes if <code>true</code>
++     * @param escapeForwardSlash escapes forward slash if <code>true</code>
++     * @throws IOException if an IOException occurs
++     */
++    private static void escapeJavaStyleString(Writer out, String str, boolean escapeSingleQuote, boolean escapeForwardSlash) throws IOException {
+@@ -1,3 +1,3 @@
+-                        if (escapeForwardSlash) {
+-                            out.write('\\');
+-                        }
++                        if (escapeForwardSlash) {
++                            out.write('\\\\');
++                        }
+@@ -1,1 +1,1 @@
+-            escapeJavaStyleString(writer, str, escapeSingleQuotes);
++            escapeJavaStyleString(writer, str, escapeSingleQuotes, escapeForwardSlash);
+@@ -1,6 +1,8 @@
+-                    case '/' :
+-                        if (escapeForwardSlash) {
+-                            out.write("");
+-                        }
+-                        out.write('/');
+-                        break;
++                    case '/' :
++                        if (escapeForwardSlash) {
++                            out.write('\\\\');
++                            out.write('/');
++                        } else {
++                            out.write('/');
++                        }
++                        break;
+
+--- a/src/test/java/org/apache/commons/lang/StringEscapeUtilsTestBug.java
++++ b/src/test/java/org/apache/commons/lang/StringEscapeUtilsTestBug.java
+@@ -1,6 +1,9 @@
+-        final String actual   = StringEscapeUtils.escapeJava( input );
+-
+-        /**
+-         * In 2.4 StringEscapeUtils.escapeJava(String) escapes '/' characters,
+-         * which are not a valid character to escape in a Java string.  
+-         */
++        final String actual   = StringEscapeUtils.escapeJava( input );
++
++        System.out.println("Expected: " + expected);
++        System.out.println("Actual:   " + actual);
++
++        /**
++         * In 2.4 StringEscapeUtils.escapeJava(String) escapes '/' characters,
++         * which are not a valid character to escape in a Java string.  
++         */

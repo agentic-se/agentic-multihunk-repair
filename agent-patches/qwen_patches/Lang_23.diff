@@ -1,0 +1,41 @@
+diff --git a/src/main/java/org/apache/commons/lang3/text/ExtendedMessageFormat.java b/src/main/java/org/apache/commons/lang3/text/ExtendedMessageFormat.java
+index a2cc1699..4bfca58f 100644
+--- a/src/main/java/org/apache/commons/lang3/text/ExtendedMessageFormat.java
++++ b/src/main/java/org/apache/commons/lang3/text/ExtendedMessageFormat.java
+@@ -260,12 +260,36 @@ public class ExtendedMessageFormat extends MessageFormat {
+      * @param obj the object to compare to
+      * @return true if this object equals the other, otherwise false
+      */
++    @Override
++    public boolean equals(Object obj) {
++        if (this == obj) {
++            return true;
++        }
++        if (obj == null || getClass() != obj.getClass()) {
++            return false;
++        }
++        ExtendedMessageFormat that = (ExtendedMessageFormat) obj;
++        
++        if (!super.equals(obj)) {
++            return false;
++        }
++        if (registry == null ? that.registry != null : !registry.equals(that.registry)) {
++            return false;
++        }
++        return true;
++    }
+ 
+     /**
+      * Return the hashcode.
+      *
+      * @return the hashcode
+      */
++    @Override
++    public int hashCode() {
++        int result = super.hashCode();
++        result = 31 * result + (registry == null ? 0 : registry.hashCode());
++        return result;
++    }
+ 
+     /**
+      * Get a custom format from a format description.

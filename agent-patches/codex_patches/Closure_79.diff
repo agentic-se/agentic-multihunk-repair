@@ -1,0 +1,62 @@
+diff --git a/src/com/google/javascript/jscomp/Normalize.java b/src/com/google/javascript/jscomp/Normalize.java
+index 6738b109..51b6d958 100644
+--- a/src/com/google/javascript/jscomp/Normalize.java
++++ b/src/com/google/javascript/jscomp/Normalize.java
+@@ -695,9 +695,32 @@ class Normalize implements CompilerPass {
+               v.getParentNode().getParent());
+         }
+       } else if (parent.getType() == Token.VAR) {
+-        Preconditions.checkState(parent.hasOneChild());
+-
+-        replaceVarWithAssignment(n, parent, parent.getParent());
++        if (parent.hasOneChild()) {
++          replaceVarWithAssignment(n, parent, parent.getParent());
++        } else {
++          // Handle duplicate declaration when VAR has multiple children.
++          // Remove just this NAME from the declaration list and preserve
++          // any initializer by converting it to a separate assignment.
++          Node gramps = parent.getParent();
++          if (n.hasChildren()) {
++            // Convert "var a = value, ..." by extracting "a = value" as a
++            // separate expression statement before the VAR.
++            parent.removeChild(n);
++            Node value = n.getFirstChild();
++            n.removeChild(value);
++            Node assign = new Node(Token.ASSIGN, n, value);
++            Node expr = NodeUtil.newExpr(assign);
++            gramps.addChildBefore(expr, parent);
++          } else {
++            // No initializer; just remove the name from the var list.
++            parent.removeChild(n);
++            // If this removal empties the VAR, clean it up.
++            if (!parent.hasChildren()) {
++              gramps.removeChild(parent);
++            }
++          }
++          reportCodeChange("Duplicate VAR child removed from multi-declare");
++        }
+       }
+     }
+ 
+diff --git a/src/com/google/javascript/jscomp/VarCheck.java b/src/com/google/javascript/jscomp/VarCheck.java
+index c8196b12..476dbe78 100644
+--- a/src/com/google/javascript/jscomp/VarCheck.java
++++ b/src/com/google/javascript/jscomp/VarCheck.java
+@@ -137,6 +137,8 @@ class VarCheck extends AbstractPostOrderCallback implements CompilerPass {
+       createSynthesizedExternVar(varName);
+ 
+       n.addSuppression("duplicate");
++      // Mark that we've changed the AST (added a suppression on a node).
++      compiler.reportCodeChange();
+     }
+ 
+     // Check that the var has been declared.
+@@ -218,6 +220,8 @@ class VarCheck extends AbstractPostOrderCallback implements CompilerPass {
+     getSynthesizedExternsRoot().addChildToBack(
+         new Node(Token.VAR, nameNode));
+     varsToDeclareInExterns.remove(varName);
++    // Adding a new declaration to the externs modifies the AST.
++    compiler.reportCodeChange();
+   }
+ 
+   /**

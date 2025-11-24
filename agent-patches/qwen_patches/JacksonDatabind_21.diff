@@ -1,0 +1,46 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/introspect/JacksonAnnotationIntrospector.java b/src/main/java/com/fasterxml/jackson/databind/introspect/JacksonAnnotationIntrospector.java
+index 624c08d5c..78429a3c6 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/introspect/JacksonAnnotationIntrospector.java
++++ b/src/main/java/com/fasterxml/jackson/databind/introspect/JacksonAnnotationIntrospector.java
+@@ -1,6 +1,7 @@
+ package com.fasterxml.jackson.databind.introspect;
+ 
+ import java.lang.annotation.Annotation;
++import java.lang.reflect.Field;
+ import java.util.*;
+ 
+ import com.fasterxml.jackson.annotation.*;
+@@ -859,6 +860,29 @@ public class JacksonAnnotationIntrospector
+         return _hasAnnotation(am, JsonAnyGetter.class);
+     }
+ 
++    /**
++     * Method for determining the String value to use for serializing
++     * given enumeration entry; used when serializing enumerations
++     * as Strings (the standard method).
++     *
++     * @return Serialized enum value.
++     */
++    @Override
++    public String findEnumValue(Enum<?> value) {
++        // Support @JsonProperty on enum constants
++        try {
++            Field field = value.getDeclaringClass().getField(value.name());
++            JsonProperty jsonProperty = field.getAnnotation(JsonProperty.class);
++            if (jsonProperty != null && !jsonProperty.value().isEmpty()) {
++                return jsonProperty.value();
++            }
++        } catch (NoSuchFieldException e) {
++            // Ignore, fallback to default behavior
++        }
++        // as per [JACKSON-875], should use default here
++        return value.name();
++    }
++
+     @Override
+     public boolean hasCreatorAnnotation(Annotated a)
+     {
+
+
+# Untracked source files (not included in patch):
++ src/test/java/com/fasterxml/jackson/databind/deser/TestEnumJsonPropertyFix.java

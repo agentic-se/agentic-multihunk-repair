@@ -1,0 +1,286 @@
+--- a/src/java/org/apache/commons/math/stat/Frequency.java
++++ b/src/java/org/apache/commons/math/stat/Frequency.java
+@@ -1,29 +1,12 @@
+-    @Deprecated
+-    public void addValue(Object v) {
+-    
+-    /**
+-     * Adds 1 to the frequency count for v.
+-     * <p>
+-     * If other objects have already been added to this Frequency, v must
+-     * be comparable to those that have already been added.
+-     * </p>
+-     * 
+-     * @param v the value to add.
+-     * @throws IllegalArgumentException if <code>v</code> is not comparable with previous entries
+-     */
+-        Object obj = v;
+-        if (v instanceof Integer) {
+-           obj = Long.valueOf(((Integer) v).longValue());
+-        }
+-        try {
+-            Long count = (Long) freqTable.get(obj);
+-            if (count == null) {
+-                freqTable.put(obj, Long.valueOf(1));
+-            } else {
+-                freqTable.put(obj, Long.valueOf(count.longValue() + 1));
+-            }
+-        } catch (ClassCastException ex) {   
+-            //TreeMap will throw ClassCastException if v is not comparable
+-            throw new IllegalArgumentException("Value not comparable to existing values.");
+-        }
+-    }
++    public void addValue(Comparable<?> v) {
++        Comparable<?> obj = v;
++        if (v instanceof Integer) {
++           obj = Long.valueOf(((Integer) v).longValue());
++        }
++        Long count = (Long) freqTable.get(obj);
++        if (count == null) {
++            freqTable.put(obj, Long.valueOf(1));
++        } else {
++            freqTable.put(obj, Long.valueOf(count.longValue() + 1));
++        }
++    }
+@@ -1,15 +1,11 @@
+-    public long getCount(Object v) {
+-        if (v instanceof Integer) {
+-            return getCount(((Integer) v).longValue());
+-        }
+-        long result = 0;
+-        try { 
+-            Long count =  (Long) freqTable.get(v);
+-            if (count != null) {
+-                result = count.longValue();
+-            }
+-        } catch (ClassCastException ex) {
+-            // ignore and return 0 -- ClassCastException will be thrown if value is not comparable
+-        }
+-        return result;
+-    }
++    public long getCount(Comparable<?> v) {
++        if (v instanceof Integer) {
++            return getCount(((Integer) v).longValue());
++        }
++        long result = 0;
++        Long count =  (Long) freqTable.get(v);
++        if (count != null) {
++            result = count.longValue();
++        }
++        return result;
++    }
+@@ -1,7 +1,7 @@
+-    public double getPct(Object v) {
+-        final long sumFreq = getSumFreq();
+-        if (sumFreq == 0) {
+-            return Double.NaN;
+-        }
+-        return (double) getCount(v) / (double) sumFreq;        
+-    }
++    public double getPct(Comparable<?> v) {
++        final long sumFreq = getSumFreq();
++        if (sumFreq == 0) {
++            return Double.NaN;
++        }
++        return (double) getCount(v) / (double) sumFreq;        
++    }
+@@ -1,41 +1,37 @@
+-    public long getCumFreq(Object v) {
+-        if (getSumFreq() == 0) {
+-            return 0;
+-        }
+-        if (v instanceof Integer) {
+-            return getCumFreq(((Integer) v).longValue());
+-        }
+-        Comparator c = freqTable.comparator();
+-        if (c == null) {
+-            c = new NaturalComparator();
+-        }
+-        long result = 0;
+-        
+-        try {
+-            Long value = (Long) freqTable.get(v);
+-            if (value != null) {
+-                result = value.longValue();
+-            }
+-        } catch (ClassCastException ex) {
+-            return result;   // v is not comparable
+-        }
+-        
+-        if (c.compare(v, freqTable.firstKey()) < 0) {
+-            return 0;  // v is comparable, but less than first value
+-        }
+-        
+-        if (c.compare(v, freqTable.lastKey()) >= 0) {
+-            return getSumFreq();    // v is comparable, but greater than the last value
+-        }
+-        
+-        Iterator values = valuesIterator();
+-        while (values.hasNext()) {
+-            Object nextValue = values.next();
+-            if (c.compare(v, nextValue) > 0) {
+-                result += getCount(nextValue);
+-            } else {
+-                return result;
+-            }
+-        }
+-        return result;
+-    }
++    public long getCumFreq(Comparable<?> v) {
++        if (getSumFreq() == 0) {
++            return 0;
++        }
++        if (v instanceof Integer) {
++            return getCumFreq(((Integer) v).longValue());
++        }
++        Comparator c = freqTable.comparator();
++        if (c == null) {
++            c = new NaturalComparator();
++        }
++        long result = 0;
++        
++        Long value = (Long) freqTable.get(v);
++        if (value != null) {
++            result = value.longValue();
++        }
++        
++        if (c.compare(v, freqTable.firstKey()) < 0) {
++            return 0;  // v is comparable, but less than first value
++        }
++        
++        if (c.compare(v, freqTable.lastKey()) >= 0) {
++            return getSumFreq();    // v is comparable, but greater than the last value
++        }
++        
++        Iterator values = valuesIterator();
++        while (values.hasNext()) {
++            Object nextValue = values.next();
++            if (c.compare(v, nextValue) > 0) {
++                result += getCount((Comparable<?>)nextValue);
++            } else {
++                return result;
++            }
++        }
++        return result;
++    }
+@@ -1,7 +1,7 @@
+-    public double getCumPct(Object v) {
+-        final long sumFreq = getSumFreq();
+-        if (sumFreq == 0) {
+-            return Double.NaN;
+-        }
+-        return (double) getCumFreq(v) / (double) sumFreq;        
+-    }
++    public double getCumPct(Comparable<?> v) {
++        final long sumFreq = getSumFreq();
++        if (sumFreq == 0) {
++            return Double.NaN;
++        }
++        return (double) getCumFreq(v) / (double) sumFreq;        
++    }
+@@ -1,8 +1,8 @@
+-            Object value = iter.next();
+-            outBuffer.append(value);
+-            outBuffer.append('\t');
+-            outBuffer.append(getCount(value));
+-            outBuffer.append('\t');
+-            outBuffer.append(nf.format(getPct(value)));
+-            outBuffer.append('\t');
+-            outBuffer.append(nf.format(getCumPct(value)));
++            Object value = iter.next();
++            outBuffer.append(value);
++            outBuffer.append('\t');
++            outBuffer.append(getCount((Comparable<?>)value));
++            outBuffer.append('\t');
++            outBuffer.append(nf.format(getPct((Comparable<?>)value)));
++            outBuffer.append('\t');
++            outBuffer.append(nf.format(getCumPct((Comparable<?>)value)));
+@@ -1,12 +1,17 @@
+-    public void addValue(Comparable<?> v) {
+-        Comparable<?> obj = v;
+-        if (v instanceof Integer) {
+-           obj = Long.valueOf(((Integer) v).longValue());
+-        }
+-        Long count = (Long) freqTable.get(obj);
+-        if (count == null) {
+-            freqTable.put(obj, Long.valueOf(1));
+-        } else {
+-            freqTable.put(obj, Long.valueOf(count.longValue() + 1));
+-        }
+-    }
++    public void addValue(Comparable<?> v) {
++        Comparable<?> obj = v;
++        if (v instanceof Integer) {
++           obj = Long.valueOf(((Integer) v).longValue());
++        }
++        try {
++            Long count = (Long) freqTable.get(obj);
++            if (count == null) {
++                freqTable.put(obj, Long.valueOf(1));
++            } else {
++                freqTable.put(obj, Long.valueOf(count.longValue() + 1));
++            }
++        } catch (ClassCastException ex) {   
++            //TreeMap will throw ClassCastException if v is not comparable
++            throw new IllegalArgumentException("Value not comparable to existing values.");
++        }
++    }
+@@ -1,11 +1,15 @@
+-    public long getCount(Comparable<?> v) {
+-        if (v instanceof Integer) {
+-            return getCount(((Integer) v).longValue());
+-        }
+-        long result = 0;
+-        Long count =  (Long) freqTable.get(v);
+-        if (count != null) {
+-            result = count.longValue();
+-        }
+-        return result;
+-    }
++    public long getCount(Comparable<?> v) {
++        if (v instanceof Integer) {
++            return getCount(((Integer) v).longValue());
++        }
++        long result = 0;
++        try { 
++            Long count =  (Long) freqTable.get(v);
++            if (count != null) {
++                result = count.longValue();
++            }
++        } catch (ClassCastException ex) {
++            // ignore and return 0 -- ClassCastException will be thrown if value is not comparable
++        }
++        return result;
++    }
+
+--- a/src/test/org/apache/commons/math/stat/FrequencyTest.java
++++ b/src/test/org/apache/commons/math/stat/FrequencyTest.java
+@@ -1,14 +1,9 @@
+-    public void testAddNonComparable(){
+-        try {
+-            f.addValue(new Object()); // This was OK
+-            fail("Expected ClassCastException");
+-        } catch (ClassCastException expected) {
+-        }
+-        f.clear();
+-        f.addValue(1);
+-        try {
+-            f.addValue(new Object());
+-            fail("Expected ClassCastException"); // Previously would have been IllegalArgument
+-        } catch (ClassCastException expected) {
+-        }
+-    }
++    public void testAddNonComparable(){
++        f.addValue(1L);
++        try {
++            f.addValue("a");
++            fail("Expected IllegalArgumentException");
++        } catch (IllegalArgumentException expected) {
++            // expected
++        }
++    }
+@@ -1,2 +1,2 @@
+-        Object obj1 = null;
+-        obj1 = Integer.valueOf(1);
++        Comparable<?> obj1 = null;
++        obj1 = Integer.valueOf(1);

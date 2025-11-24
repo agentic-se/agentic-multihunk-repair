@@ -1,0 +1,17 @@
+diff --git a/src/main/java/org/apache/commons/csv/CSVFormat.java b/src/main/java/org/apache/commons/csv/CSVFormat.java
+index 22130bf..b9044a6 100644
+--- a/src/main/java/org/apache/commons/csv/CSVFormat.java
++++ b/src/main/java/org/apache/commons/csv/CSVFormat.java
+@@ -666,7 +666,7 @@ public final class CSVFormat implements Serializable {
+             final Set<String> set = new HashSet<String>(header.length);
+             set.addAll(Arrays.asList(header));
+             if (set.size() != header.length) {
+-                throw new IllegalStateException("The header contains duplicate names: " + Arrays.toString(header));
++                throw new IllegalArgumentException("The header contains duplicate names: " + Arrays.toString(header));
+             }
+         }
+     }
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

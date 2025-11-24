@@ -1,0 +1,29 @@
+diff --git a/src/main/java/org/apache/commons/math/linear/SingularValueDecompositionImpl.java b/src/main/java/org/apache/commons/math/linear/SingularValueDecompositionImpl.java
+index 143688172..b6f22b23f 100644
+--- a/src/main/java/org/apache/commons/math/linear/SingularValueDecompositionImpl.java
++++ b/src/main/java/org/apache/commons/math/linear/SingularValueDecompositionImpl.java
+@@ -139,12 +139,20 @@ public class SingularValueDecompositionImpl implements SingularValueDecompositio
+                                        MathUtils.SAFE_MIN);
+         final double[] eigenValues = eigenDecomposition.getRealEigenvalues();
+         int p = Math.min(max, eigenValues.length);
+-        while ((p > 0) && (eigenValues[p - 1] <= 0)) {
+-            --p;
++        // Filter out very small or negative eigenvalues that are likely due to numerical errors
++        // For a rank-deficient matrix, the smallest eigenvalues should be near zero
++        int validCount = 0;
++        for (int i = 0; i < p; ++i) {
++            if (eigenValues[i] > 1e-14) {  // Threshold to filter out numerical noise
++                validCount++;
++            }
+         }
+-        singularValues = new double[p];
++        singularValues = new double[validCount];
++        int index = 0;
+         for (int i = 0; i < p; ++i) {
+-            singularValues[i] = Math.sqrt(eigenValues[i]);
++            if (eigenValues[i] > 1e-14) {
++                singularValues[index++] = Math.sqrt(eigenValues[i]);
++            }
+         }
+ 
+     }

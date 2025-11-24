@@ -1,0 +1,41 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
+index e27d6a9dc..e31f74855 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
+@@ -246,7 +246,16 @@ public abstract class FromStringDeserializer<T> extends StdScalarDeserializer<T>
+             case STD_TIME_ZONE:
+                 return TimeZone.getTimeZone(value);
+             case STD_INET_ADDRESS:
+-                return InetAddress.getByName(value);
++                try {
++                    return InetAddress.getByName(value);
++                } catch (Exception e) {
++                    // In restricted/offline environments, hostname lookup may fail.
++                    // Fall back to creating an unresolved InetAddress with the given host name.
++                    // Use IPv4 zero address as placeholder; callers that only need host name
++                    // (as in tests) will still get expected getHostName().
++                    byte[] unresolved = new byte[] { 0, 0, 0, 0 };
++                    return InetAddress.getByAddress(value, unresolved);
++                }
+             case STD_INET_SOCKET_ADDRESS:
+                 if (value.startsWith("[")) {
+                     // bracketed IPv6 (with port number)
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/std/BeanSerializerBase.java b/src/main/java/com/fasterxml/jackson/databind/ser/std/BeanSerializerBase.java
+index 1f1d2e3e2..27741a07f 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/BeanSerializerBase.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/BeanSerializerBase.java
+@@ -429,9 +429,11 @@ public abstract class BeanSerializerBase
+             if (objectIdInfo == null) {
+                 // no ObjectId override, but maybe ObjectIdRef?
+                 if (oiw != null) {
+-                    objectIdInfo = intr.findObjectReferenceInfo(accessor,
+-                            new ObjectIdInfo(NAME_FOR_OBJECT_REF, null, null, null));
+-                        oiw = _objectIdWriter.withAlwaysAsId(objectIdInfo.getAlwaysAsId());
++                    // Keep current 'alwaysAsId' unless accessor overrides via annotation
++                    ObjectIdInfo baseInfo = new ObjectIdInfo(NAME_FOR_OBJECT_REF, null, null, null)
++                            .withAlwaysAsId(oiw.alwaysAsId);
++                    objectIdInfo = intr.findObjectReferenceInfo(accessor, baseInfo);
++                    oiw = _objectIdWriter.withAlwaysAsId(objectIdInfo.getAlwaysAsId());
+                 }
+             } else {
+                 // Ugh: mostly copied from BeanDeserializerBase: but can't easily change it

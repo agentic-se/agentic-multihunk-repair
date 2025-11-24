@@ -1,0 +1,16 @@
+diff --git a/src/main/java/org/apache/commons/math/geometry/euclidean/threed/Rotation.java b/src/main/java/org/apache/commons/math/geometry/euclidean/threed/Rotation.java
+index 20f5b3486..a7579647e 100644
+--- a/src/main/java/org/apache/commons/math/geometry/euclidean/threed/Rotation.java
++++ b/src/main/java/org/apache/commons/math/geometry/euclidean/threed/Rotation.java
+@@ -341,6 +341,11 @@ public class Rotation implements Serializable {
+   Vector3D k     = v1Su1.crossProduct(v2Su2);
+   Vector3D u3    = u1.crossProduct(u2);
+   double c       = k.dotProduct(u3);
++  // Handle numerical precision issues where c might be slightly negative
++  // due to floating point arithmetic errors
++  if (c < 0.0) {
++      c = 0.0;
++  }
+   if (c == 0) {
+     // the (q1, q2, q3) vector is close to the (u1, u2) plane
+     // we try other vectors

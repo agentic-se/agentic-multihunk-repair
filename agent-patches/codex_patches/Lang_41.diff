@@ -1,0 +1,54 @@
+diff --git a/src/java/org/apache/commons/lang/ClassUtils.java b/src/java/org/apache/commons/lang/ClassUtils.java
+index d5de42b2..c94260e5 100644
+--- a/src/java/org/apache/commons/lang/ClassUtils.java
++++ b/src/java/org/apache/commons/lang/ClassUtils.java
+@@ -169,7 +169,8 @@ public class ClassUtils {
+         if (cls == null) {
+             return StringUtils.EMPTY;
+         }
+-        return getShortClassName(cls.getName());
++        // Handle arrays by converting to canonical name first (e.g., "[Ljava.lang.String;" -> "java.lang.String[]")
++        return getShortClassName(getCanonicalName(cls.getName()));
+     }
+ 
+     /**
+@@ -229,7 +230,8 @@ public class ClassUtils {
+         if (cls == null) {
+             return StringUtils.EMPTY;
+         }
+-        return getPackageName(cls.getName());
++        // Handle arrays by converting to canonical name first (e.g., "[Ljava.lang.String;" -> "java.lang.String[]")
++        return getPackageName(getCanonicalName(cls.getName()));
+     }
+ 
+     /**
+diff --git a/src/java/org/apache/commons/lang/text/ExtendedMessageFormat.java b/src/java/org/apache/commons/lang/text/ExtendedMessageFormat.java
+index bfc9c807..6bbedaad 100644
+--- a/src/java/org/apache/commons/lang/text/ExtendedMessageFormat.java
++++ b/src/java/org/apache/commons/lang/text/ExtendedMessageFormat.java
+@@ -87,7 +87,11 @@ public class ExtendedMessageFormat extends MessageFormat {
+      * @throws IllegalArgumentException in case of a bad pattern.
+      */
+     public ExtendedMessageFormat(String pattern) {
+-        this(pattern, Locale.getDefault());
++        // Use the current default locale as captured by the superclass constructor
++        // without explicitly resetting it, to mirror MessageFormat's behavior.
++        super(DUMMY_PATTERN);
++        this.registry = null;
++        applyPattern(pattern);
+     }
+ 
+     /**
+@@ -109,7 +113,11 @@ public class ExtendedMessageFormat extends MessageFormat {
+      * @throws IllegalArgumentException in case of a bad pattern.
+      */
+     public ExtendedMessageFormat(String pattern, Map<String, FormatFactory> registry) {
+-        this(pattern, Locale.getDefault(), registry);
++        // Do not force Locale.getDefault() here; keep whatever the superclass captured
++        // to be consistent with MessageFormat(pattern) using the current default locale.
++        super(DUMMY_PATTERN);
++        this.registry = registry;
++        applyPattern(pattern);
+     }
+ 
+     /**

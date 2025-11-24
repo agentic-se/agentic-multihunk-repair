@@ -1,0 +1,15 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+index 0dd48d225..c96c974de 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/ClassNameIdResolver.java
+@@ -48,6 +48,10 @@ public class ClassNameIdResolver
+ 
+     @Override
+     public JavaType typeFromId(DatabindContext context, String id) {
++        // Security check for CVE-2017-7525
++        if (id != null && id.contains("com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl")) {
++            throw new IllegalArgumentException("Illegal type \"" + id + "\" to deserialize (prevented for security reasons)");
++        }
+         return _typeFromId(id, context);
+     }
+ 

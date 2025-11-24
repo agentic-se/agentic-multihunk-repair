@@ -1,0 +1,46 @@
+diff --git a/src/com/google/javascript/jscomp/ControlFlowAnalysis.java b/src/com/google/javascript/jscomp/ControlFlowAnalysis.java
+index 3b67af32..95cb5f39 100644
+--- a/src/com/google/javascript/jscomp/ControlFlowAnalysis.java
++++ b/src/com/google/javascript/jscomp/ControlFlowAnalysis.java
+@@ -891,6 +891,11 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
+       case Token.ASSIGN:
+       case Token.INC:
+       case Token.DEC:
++      // instanceof can throw a TypeError if the right-hand side is not
++      // a valid object with a callable [[HasInstance]] (e.g., not a function).
++      // Model this by marking INSTANCEOF as potentially throwing so that
++      // exception edges are added in the CFG (e.g., to a surrounding catch).
++      case Token.INSTANCEOF:
+         return true;
+       case Token.FUNCTION:
+         return false;
+diff --git a/src/com/google/javascript/jscomp/DisambiguateProperties.java b/src/com/google/javascript/jscomp/DisambiguateProperties.java
+index 49378793..dd908cbd 100644
+--- a/src/com/google/javascript/jscomp/DisambiguateProperties.java
++++ b/src/com/google/javascript/jscomp/DisambiguateProperties.java
+@@ -760,9 +760,22 @@ class DisambiguateProperties<T> implements CompilerPass {
+       }
+       // If the property does not exist on the referenced type but the original
+       // type is an object type, see if any subtype has the property.
+-        // getGreatestSubtypeWithProperty does not guarantee that the property
+-        // is defined on the returned type, it just indicates that it might be,
+-        // so we have to double check.
++      // getGreatestSubtypeWithProperty does not guarantee that the property
++      // is defined on the returned type, it just indicates that it might be,
++      // so we have to double check by walking its prototype chain similarly
++      // to the logic above.
++      if (foundType == null) {
++        JSType greatestSubtype =
++            registry.getGreatestSubtypeWithProperty(type, field);
++        ObjectType greatestObjType = ObjectType.cast(greatestSubtype);
++        while (greatestObjType != null &&
++               greatestObjType.getImplicitPrototype() != greatestObjType) {
++          if (greatestObjType.hasOwnProperty(field)) {
++            foundType = greatestObjType;
++          }
++          greatestObjType = greatestObjType.getImplicitPrototype();
++        }
++      }
+       return foundType;
+     }
+ 

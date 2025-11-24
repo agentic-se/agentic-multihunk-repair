@@ -1,0 +1,15 @@
+diff --git a/src/main/java/org/jsoup/parser/HtmlTreeBuilderState.java b/src/main/java/org/jsoup/parser/HtmlTreeBuilderState.java
+index aaf6041..9cab61f 100644
+--- a/src/main/java/org/jsoup/parser/HtmlTreeBuilderState.java
++++ b/src/main/java/org/jsoup/parser/HtmlTreeBuilderState.java
+@@ -841,6 +841,10 @@ enum HtmlTreeBuilderState {
+                         return tb.process(t);
+                 } else if (StringUtil.in(name, "style", "script")) {
+                     return tb.process(t, InHead);
++                } else if (name.equals("template")) {
++                    // Handle template tag as a script-supporting element in table context
++                    tb.insert(t.asStartTag());
++                    return true;
+                 } else if (name.equals("input")) {
+                     if (!startTag.attributes.get("type").equalsIgnoreCase("hidden")) {
+                         return anythingElse(t, tb);

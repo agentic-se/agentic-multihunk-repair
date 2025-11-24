@@ -1,0 +1,515 @@
+--- a/run_bug_exposing_tests.sh
++++ b/run_bug_exposing_tests.sh
+@@ -1,1 +1,1 @@
+-  java -cp "$CP" org.junit.runner.JUnitCore "$cls" >> "$LOGFILE" 2>&1
++  java -cp "$CP" junit.textui.TestRunner "$cls" >> "$LOGFILE" 2>&1
+
+--- a/src/java/org/apache/commons/jxpath/ri/axes/DescendantContext.java
++++ b/src/java/org/apache/commons/jxpath/ri/axes/DescendantContext.java
+@@ -1,4 +1,4 @@
+-                        currentNodePointer.childIterator(
+-                            ELEMENT_NODE_TEST,
+-                            false,
+-                            null));
++                        currentNodePointer.childIterator(
++                            nodeTest,
++                            false,
++                            null));
+@@ -1,5 +1,5 @@
+-                        stack.push(
+-                            currentNodePointer.childIterator(
+-                                ELEMENT_NODE_TEST,
+-                                false,
+-                                null));
++                        stack.push(
++                            currentNodePointer.childIterator(
++                                nodeTest,
++                                false,
++                                null));
+
+--- a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMAttributeIterator.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMAttributeIterator.java
+@@ -1,7 +1,7 @@
+-            String lname = name.getName();
+-            if (!lname.equals("*")) {
+-                Attr attr = getAttribute((Element) node, name);
+-                if (attr != null) {
+-                    attributes.add(attr);
+-                }
+-            }
++            String lname = name.getName();
++            if (!lname.equals("*")) {
++                Attr attr = ((Element) node).getAttributeNode(lname);
++                if (attr != null) {
++                    attributes.add(attr);
++                }
++            }
+@@ -1,7 +1,7 @@
+-            String lname = name.getName();
+-            if (!lname.equals("*")) {
+-                Attr attr = ((Element) node).getAttributeNode(lname);
+-                if (attr != null) {
+-                    attributes.add(attr);
+-                }
+-            }
++            String lname = name.getName();
++            if (!lname.equals("*")) {
++                Attr attr = getAttribute((Element) node, name);
++                if (attr != null) {
++                    attributes.add(attr);
++                }
++            }
+@@ -1,7 +1,7 @@
+-            String lname = name.getName();
+-            if (!lname.equals("*")) {
+-                Attr attr = getAttribute((Element) node, name);
+-                if (attr != null) {
+-                    attributes.add(attr);
+-                }
+-            }
++            String lname = name.getName();
++            if (!lname.equals("*")) {
++                Attr attr = ((Element) node).getAttributeNode(lname);
++                if (attr != null) {
++                    attributes.add(attr);
++                }
++            }
+
+--- a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMAttributePointer.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMAttributePointer.java
+@@ -1,6 +1,6 @@
+-    public boolean testNode(NodeTest nodeTest) {
+-        return nodeTest == null
+-            || ((nodeTest instanceof NodeTypeTest)
+-                && ((NodeTypeTest) nodeTest).getNodeType()
+-                    == Compiler.NODE_TYPE_NODE);
+-    }
++    public boolean testNode(NodeTest nodeTest) {
++        return nodeTest == null
++            || ((nodeTest instanceof NodeTypeTest)
++                && (((NodeTypeTest) nodeTest).getNodeType()
++                    == Compiler.NODE_TYPE_NODE || ((NodeTypeTest) nodeTest).getNodeType() == Compiler.NODE_TYPE_TEXT));
++    }
+@@ -1,6 +1,47 @@
+-    public boolean testNode(NodeTest nodeTest) {
+-        return nodeTest == null
+-            || ((nodeTest instanceof NodeTypeTest)
+-                && ((NodeTypeTest) nodeTest).getNodeType()
+-                    == Compiler.NODE_TYPE_NODE || ((NodeTypeTest) nodeTest).getNodeType() == Compiler.NODE_TYPE_TEXT));
+-    }
++    public boolean testNode(NodeTest nodeTest) {
++        return nodeTest == null
++            || ((nodeTest instanceof NodeTypeTest)
++                && (((NodeTypeTest) nodeTest).getNodeType()
++                    == Compiler.NODE_TYPE_NODE || ((NodeTypeTest) nodeTest).getNodeType() == Compiler.NODE_TYPE_TEXT));
++    }
++
++    public NodeIterator childIterator(
++        NodeTest test,
++        boolean reverse,
++        NodePointer startWith)
++    {
++        if (test instanceof NodeTypeTest
++                && ((NodeTypeTest) test).getNodeType() == Compiler.NODE_TYPE_TEXT) {
++            return new DOMAttributeTextNodeIterator(this);
++        }
++        return null;
++    }
++
++    private static class DOMAttributeTextNodeIterator implements NodeIterator {
++        private NodePointer parent;
++        private boolean started = false;
++
++        public DOMAttributeTextNodeIterator(NodePointer parent) {
++            this.parent = parent;
++        }
++
++        public NodePointer getNodePointer() {
++            if (!started) {
++                setPosition(1);
++            }
++            return parent;
++        }
++
++        public int getPosition() {
++            return started ? 1 : 0;
++        }
++
++        public boolean setPosition(int position) {
++            if (position == 1) {
++                started = true;
++                return true;
++            }
++            started = false;
++            return false;
++        }
++    }
+@@ -1,2 +1,3 @@
+-import org.apache.commons.jxpath.ri.model.NodePointer;
+-import org.apache.commons.jxpath.util.TypeUtils;
++import org.apache.commons.jxpath.ri.model.NodePointer;
++import org.apache.commons.jxpath.ri.model.NodeIterator;
++import org.apache.commons.jxpath.util.TypeUtils;
+@@ -1,4 +1,5 @@
+-import org.apache.commons.jxpath.ri.model.NodePointer;
+-import org.apache.commons.jxpath.ri.model.NodeIterator;
+-import org.apache.commons.jxpath.util.TypeUtils;
+-import org.w3c.dom.Attr;
++import org.apache.commons.jxpath.ri.model.NodePointer;
++import org.apache.commons.jxpath.ri.model.NodeIterator;
++import org.apache.commons.jxpath.util.TypeUtils;
++import org.w3c.dom.Attr;
++import org.w3c.dom.Text;
+@@ -1,6 +1,6 @@
+-    public boolean testNode(NodeTest nodeTest) {
+-        return nodeTest == null
+-            || ((nodeTest instanceof NodeTypeTest)
+-                && ((NodeTypeTest) nodeTest).getNodeType()
+-                    == Compiler.NODE_TYPE_NODE));
+-    }
++    public boolean testNode(NodeTest nodeTest) {
++        return nodeTest == null
++            || ((nodeTest instanceof NodeTypeTest)
++                && (((NodeTypeTest) nodeTest).getNodeType()
++                    == Compiler.NODE_TYPE_NODE || ((NodeTypeTest) nodeTest).getNodeType() == Compiler.NODE_TYPE_TEXT || ((NodeTypeTest) nodeTest).getNodeType() == Compiler.NODE_TYPE_ATTRIBUTE));
++    }
+@@ -1,6 +1,6 @@
+-    public boolean testNode(NodeTest nodeTest) {
+-        return nodeTest == null
+-            || ((nodeTest instanceof NodeTypeTest)
+-                && (((NodeTypeTest) nodeTest).getNodeType()
+-                    == Compiler.NODE_TYPE_NODE || ((NodeTypeTest) nodeTest).getNodeType() == Compiler.NODE_TYPE_TEXT || ((NodeTypeTest) nodeTest).getNodeType() == Compiler.NODE_TYPE_ATTRIBUTE));
+-    }
++    public boolean testNode(NodeTest nodeTest) {
++        return nodeTest == null
++            || ((nodeTest instanceof NodeTypeTest)
++                && (((NodeTypeTest) nodeTest).getNodeType()
++                    == Compiler.NODE_TYPE_NODE || ((NodeTypeTest) nodeTest).getNodeType() == Compiler.NODE_TYPE_TEXT));
++    }
+@@ -1,6 +1,3 @@
+-    public boolean testNode(NodeTest nodeTest) {
+-        return nodeTest == null
+-            || ((nodeTest instanceof NodeTypeTest)
+-                && (((NodeTypeTest) nodeTest).getNodeType()
+-                    == Compiler.NODE_TYPE_NODE || ((NodeTypeTest) nodeTest).getNodeType() == Compiler.NODE_TYPE_TEXT));
+-    }
++    public boolean testNode(NodeTest nodeTest) {
++        return true;
++    }
+@@ -1,3 +1,6 @@
+-    public boolean testNode(NodeTest nodeTest) {
+-        return true;
+-    }
++    public boolean testNode(NodeTest nodeTest) {
++        return nodeTest == null
++            || ((nodeTest instanceof NodeTypeTest)
++                && (((NodeTypeTest) nodeTest).getNodeType()
++                    == Compiler.NODE_TYPE_NODE || ((NodeTypeTest) nodeTest).getNodeType() == Compiler.NODE_TYPE_TEXT));
++    }
+
+--- a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
+@@ -1,5 +1,10 @@
+-        if (node instanceof Document) {
+-            node = ((Document) node).getDocumentElement();
+-        }
+-
+-        Element element = (Element) node;
++        Element element = null;
++        if (node instanceof Document) {
++            element = ((Document) node).getDocumentElement();
++        }
++        else if (node instanceof Element) {
++            element = (Element) node;
++        }
++        if (element == null) {
++            return null;
++        }
+@@ -1,10 +1,5 @@
+-        Element element = null;
+-        if (node instanceof Document) {
+-            element = ((Document) node).getDocumentElement();
+-        }
+-        else if (node instanceof Element) {
+-            element = (Element) node;
+-        }
+-        if (element == null) {
+-            return null;
+-        }
++        if (node instanceof Document) {
++            node = ((Document) node).getDocumentElement();
++        }
++
++        Element element = (Element) node;
+@@ -1,5 +1,10 @@
+-        if (node instanceof Document) {
+-            node = ((Document) node).getDocumentElement();
+-        }
+-
+-        Element element = (Element) node;
++        Element element = null;
++        if (node instanceof Document) {
++            element = ((Document) node).getDocumentElement();
++        }
++        else if (node instanceof Element) {
++            element = (Element) node;
++        }
++        if (element == null) {
++            return null;
++        }
+@@ -1,2 +1,2 @@
+-                case Compiler.NODE_TYPE_NODE :
+-                    return nodeType == Node.ELEMENT_NODE;
++                case Compiler.NODE_TYPE_NODE :
++                    return nodeType == Node.ELEMENT_NODE || nodeType == Node.ATTRIBUTE_NODE;
+@@ -1,2 +1,2 @@
+-                case Compiler.NODE_TYPE_NODE :
+-                    return nodeType == Node.ELEMENT_NODE || nodeType == Node.ATTRIBUTE_NODE;
++                case Compiler.NODE_TYPE_NODE :
++                    return nodeType == Node.ELEMENT_NODE;
+@@ -1,2 +1,2 @@
+-                case Compiler.NODE_TYPE_NODE :
+-                    return nodeType == Node.ELEMENT_NODE;
++                case Compiler.NODE_TYPE_NODE :
++                    return nodeType == Node.ELEMENT_NODE || nodeType == Node.ATTRIBUTE_NODE;
+@@ -1,2 +1,2 @@
+-                case Compiler.NODE_TYPE_NODE :
+-                    return nodeType == Node.ELEMENT_NODE || nodeType == Node.ATTRIBUTE_NODE;
++                case Compiler.NODE_TYPE_NODE :
++                    return nodeType == Node.ELEMENT_NODE;
+@@ -1,2 +1,2 @@
+-                case Compiler.NODE_TYPE_NODE :
+-                    return nodeType == Node.ELEMENT_NODE;
++                case Compiler.NODE_TYPE_NODE :
++                    return nodeType == Node.ELEMENT_NODE || nodeType == Node.ATTRIBUTE_NODE;
+
+--- a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMTextPointer.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMTextPointer.java
+@@ -1,3 +1,4 @@
+-            public String substringData(int offset, int count) throws org.w3c.dom.DOMException { return null; }
+-        };
+-    }
++            public String substringData(int offset, int count) throws org.w3c.dom.DOMException { return null; }
++            public boolean isElementContentWhitespace() { return false; }
++        };
++    }
+@@ -1,4 +1,5 @@
+-            public String substringData(int offset, int count) throws org.w3c.dom.DOMException { return null; }
+-            public boolean isElementContentWhitespace() { return false; }
+-        };
+-    }
++            public String substringData(int offset, int count) throws org.w3c.dom.DOMException { return null; }
++            public boolean isElementContentWhitespace() { return false; }
++            public boolean isSupported(String feature, String version) { return false; }
++        };
++    }
+@@ -1,5 +1,5 @@
+-            public String substringData(int offset, int count) throws org.w3c.dom.DOMException { return null; }
+-            public boolean isElementContentWhitespace() { return false; }
+-            public boolean isSupported(String feature, String version) { return false; }
+-        };
+-    }
++            public String substringData(int offset, int count) throws org.w3c.dom.DOMException { return null; }
++            public boolean isElementContentWhitespace() { return false; }
++            public Object getFeature(String feature, String version) { return null; }
++        };
++    }
+
+--- a/src/test/org/apache/commons/jxpath/ri/model/dom/DOMModelTest.java
++++ b/src/test/org/apache/commons/jxpath/ri/model/dom/DOMModelTest.java
+@@ -1,4 +1,10 @@
+-        assertXPathNodeType(context, "//vendor", Element.class);
+-    }
+-    
+-    protected String getXMLSignature(
++        assertXPathNodeType(context, "//vendor", Element.class);
++    }
++    
++    public void testBuggyXPath() {
++        Document doc = DocumentContainer.createDocument("<?xml version="1.0" encoding="UTF-8"?><root id="1234"/>", DocumentContainer.MODEL_DOM);
++        JXPathContext context = JXPathContext.newContext(doc);
++        assertEquals("1234", context.selectSingleNode("//root/@id/text()"));
++    }
++    
++    protected String getXMLSignature(
+@@ -1,1 +1,1 @@
+-        Document doc = DocumentContainer.createDocument("<?xml version="1.0" encoding="UTF-8"?><root id="1234"/>", DocumentContainer.MODEL_DOM);
++        Document doc = DocumentContainer.createDocument("<?xml version=\"1.0\" encoding=\"UTF-8\"?><root id=\"1234\"/>", DocumentContainer.MODEL_DOM);
+@@ -1,3 +1,4 @@
+-import org.apache.commons.jxpath.AbstractFactory;
+-import org.apache.commons.jxpath.ri.model.XMLModelTestCase;
+-import org.apache.commons.jxpath.xml.DocumentContainer;
++import org.apache.commons.jxpath.AbstractFactory;
++import org.apache.commons.jxpath.JXPathContext;
++import org.apache.commons.jxpath.ri.model.XMLModelTestCase;
++import org.apache.commons.jxpath.xml.DocumentContainer;
+@@ -1,4 +1,5 @@
+-import org.apache.commons.jxpath.AbstractFactory;
+-import org.apache.commons.jxpath.JXPathContext;
+-import org.apache.commons.jxpath.ri.model.XMLModelTestCase;
+-import org.apache.commons.jxpath.xml.DocumentContainer;
++import org.apache.commons.jxpath.AbstractFactory;
++import org.apache.commons.jxpath.JXPathContext;
++import org.apache.commons.jxpath.ri.model.XMLModelTestCase;
++import org.apache.commons.jxpath.xml.DocumentContainer;
++import java.io.StringReader;
+@@ -1,5 +1,5 @@
+-    public void testBuggyXPath() {
+-        Document doc = DocumentContainer.createDocument("<?xml version=\"1.0\" encoding=\"UTF-8\"?><root id=\"1234\"/>", DocumentContainer.MODEL_DOM);
+-        JXPathContext context = JXPathContext.newContext(doc);
+-        assertEquals("1234", context.selectSingleNode("//root/@id/text()"));
+-    }
++    public void testBuggyXPath() {
++        DocumentContainer container = new DocumentContainer(new StringReader("<?xml version=\"1.0\" encoding=\"UTF-8\"?><root id=\"1234\"/>"), DocumentContainer.MODEL_DOM);
++        JXPathContext context = JXPathContext.newContext(container);
++        assertEquals("1234", context.selectSingleNode("//root/@id/text()"));
++    }
+@@ -1,1 +1,1 @@
+-        DocumentContainer container = new DocumentContainer(new StringReader("<?xml version="1.0" encoding="UTF-8"?><root id="1234"/>"), DocumentContainer.MODEL_DOM);
++        DocumentContainer container = new DocumentContainer(new StringReader("<?xml version=\"1.0\" encoding=\"UTF-8\"?><root id=\"1234\"/>"), DocumentContainer.MODEL_DOM);
+@@ -1,1 +1,1 @@
+-        DocumentContainer container = new DocumentContainer(new StringReader("<?xml version=\"1.0\" encoding=\"UTF-8\"?><root id=\"1234\"/>"), DocumentContainer.MODEL_DOM);
++        DocumentContainer container = new DocumentContainer(new StringReader("<root/>"), DocumentContainer.MODEL_DOM);
+@@ -1,10 +1,12 @@
+-import org.apache.commons.jxpath.AbstractFactory;
+-import org.apache.commons.jxpath.JXPathContext;
+-import org.apache.commons.jxpath.ri.model.XMLModelTestCase;
+-import org.apache.commons.jxpath.xml.DocumentContainer;
+-import java.io.StringReader;
+-import org.w3c.dom.Attr;
+-import org.w3c.dom.Document;
+-import org.w3c.dom.Element;
+-import org.w3c.dom.Node;
+-import org.w3c.dom.NodeList;
++import org.apache.commons.jxpath.AbstractFactory;
++import org.apache.commons.jxpath.JXPathContext;
++import org.apache.commons.jxpath.ri.model.XMLModelTestCase;
++import org.apache.commons.jxpath.xml.DocumentContainer;
++import org.w3c.dom.Attr;
++import org.w3c.dom.Document;
++import org.w3c.dom.Element;
++import org.w3c.dom.Node;
++import org.w3c.dom.NodeList;
++import javax.xml.parsers.DocumentBuilder;
++import javax.xml.parsers.DocumentBuilderFactory;
++import java.io.StringReader;
+@@ -1,5 +1,8 @@
+-    public void testBuggyXPath() {
+-        DocumentContainer container = new DocumentContainer(new StringReader("<root/>"), DocumentContainer.MODEL_DOM);
+-        JXPathContext context = JXPathContext.newContext(container);
+-        assertEquals("1234", context.selectSingleNode("//root/@id/text()"));
+-    }
++    public void testBuggyXPath() throws Exception {
++        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
++        factory.setNamespaceAware(true);
++        DocumentBuilder builder = factory.newDocumentBuilder();
++        org.w3c.dom.Document doc = builder.parse(new org.xml.sax.InputSource(new StringReader("<root id=\"1234\"/>")));
++        JXPathContext context = JXPathContext.newContext(doc);
++        assertEquals("1234", context.selectSingleNode("//root/@id/text()"));
++    }
+@@ -1,4 +1,8 @@
+-        assertXPathNodeType(context, "//vendor", Element.class);
+-    }
+-    
+-    public void testBuggyXPath() {
++        assertXPathNodeType(context, "//vendor", Element.class);
++    }
++    
++    public void testDirectAttributeAccess() {
++        assertXPathNodeType(context, "/vendor[1]/location[1]/@name", Attr.class);
++    }
++    
++    public void testBuggyXPath() {
+@@ -1,1 +1,1 @@
+-    public void testDirectAttributeAccess() {
++    public void testDirectAttributeAccess() throws Exception {
+@@ -1,1 +1,1 @@
+-    public void testBuggyXPath() {
++    public void testBuggyXPath() throws Exception {
+
+--- a/src/test/org/apache/commons/jxpath/ri/model/jdom/JDOMModelTest.java
++++ b/src/test/org/apache/commons/jxpath/ri/model/jdom/JDOMModelTest.java
+@@ -1,4 +1,10 @@
+-        assertXPathNodeType(context, "//vendor", Element.class); //bugzilla #38586
+-    }
+-    
+-    public void testID() {
++        assertXPathNodeType(context, "//vendor", Element.class); //bugzilla #38586
++    }
++    
++    public void testBuggyXPath() {
++        org.jdom.Document doc = DocumentContainer.createDocument("<?xml version="1.0" encoding="UTF-8"?><root id="1234"/>", DocumentContainer.MODEL_JDOM);
++        JXPathContext context = JXPathContext.newContext(doc);
++        assertEquals("1234", context.selectSingleNode("//root/@id/text()"));
++    }
++    
++    public void testID() {
+@@ -1,1 +1,1 @@
+-        org.jdom.Document doc = DocumentContainer.createDocument("<?xml version="1.0" encoding="UTF-8"?><root id="1234"/>", DocumentContainer.MODEL_JDOM);
++        org.jdom.Document doc = DocumentContainer.createDocument("<?xml version=\"1.0\" encoding=\"UTF-8\"?><root id=\"1234\"/>", DocumentContainer.MODEL_JDOM);
+@@ -1,3 +1,4 @@
+-import org.apache.commons.jxpath.AbstractFactory;
+-import org.apache.commons.jxpath.ri.model.XMLModelTestCase;
+-import org.apache.commons.jxpath.xml.DocumentContainer;
++import org.apache.commons.jxpath.AbstractFactory;
++import org.apache.commons.jxpath.JXPathContext;
++import org.apache.commons.jxpath.ri.model.XMLModelTestCase;
++import org.apache.commons.jxpath.xml.DocumentContainer;
+@@ -1,4 +1,5 @@
+-import org.apache.commons.jxpath.AbstractFactory;
+-import org.apache.commons.jxpath.JXPathContext;
+-import org.apache.commons.jxpath.ri.model.XMLModelTestCase;
+-import org.apache.commons.jxpath.xml.DocumentContainer;
++import org.apache.commons.jxpath.AbstractFactory;
++import org.apache.commons.jxpath.JXPathContext;
++import org.apache.commons.jxpath.ri.model.XMLModelTestCase;
++import org.apache.commons.jxpath.xml.DocumentContainer;
++import java.io.StringReader;
+@@ -1,5 +1,5 @@
+-    public void testBuggyXPath() {
+-        org.jdom.Document doc = DocumentContainer.createDocument("<?xml version=\"1.0\" encoding=\"UTF-8\"?><root id=\"1234\"/>", DocumentContainer.MODEL_JDOM);
+-        JXPathContext context = JXPathContext.newContext(doc);
+-        assertEquals("1234", context.selectSingleNode("//root/@id/text()"));
+-    }
++    public void testBuggyXPath() {
++        DocumentContainer container = new DocumentContainer(new StringReader("<?xml version=\"1.0\" encoding=\"UTF-8\"?><root id=\"1234\"/>"), DocumentContainer.MODEL_JDOM);
++        JXPathContext context = JXPathContext.newContext(container);
++        assertEquals("1234", context.selectSingleNode("//root/@id/text()"));
++    }
+@@ -1,1 +1,1 @@
+-        DocumentContainer container = new DocumentContainer(new StringReader("<?xml version=\"1.0\" encoding=\"UTF-8\"?><root id=\"1234"/>"), DocumentContainer.MODEL_JDOM);
++        DocumentContainer container = new DocumentContainer(new StringReader("<root/>"), DocumentContainer.MODEL_JDOM);
+@@ -1,10 +1,11 @@
+-import org.apache.commons.jxpath.AbstractFactory;
+-import org.apache.commons.jxpath.JXPathContext;
+-import org.apache.commons.jxpath.ri.model.XMLModelTestCase;
+-import org.apache.commons.jxpath.xml.DocumentContainer;
+-import java.io.StringReader;
+-import org.jdom.Attribute;
+-import org.jdom.CDATA;
+-import org.jdom.Document;
+-import org.jdom.Element;
+-import org.jdom.Text;
++import org.apache.commons.jxpath.AbstractFactory;
++import org.apache.commons.jxpath.JXPathContext;
++import org.apache.commons.jxpath.ri.model.XMLModelTestCase;
++import org.apache.commons.jxpath.xml.DocumentContainer;
++import org.jdom.Attribute;
++import org.jdom.CDATA;
++import org.jdom.Document;
++import org.jdom.Element;
++import org.jdom.Text;
++import org.jdom.input.SAXBuilder;
++import java.io.StringReader;
+@@ -1,5 +1,6 @@
+-    public void testBuggyXPath() {
+-        DocumentContainer container = new DocumentContainer(new StringReader("<root/>"), DocumentContainer.MODEL_JDOM);
+-        JXPathContext context = JXPathContext.newContext(container);
+-        assertEquals("1234", context.selectSingleNode("//root/@id/text()"));
+-    }
++    public void testBuggyXPath() throws Exception {
++        SAXBuilder builder = new SAXBuilder();
++        org.jdom.Document doc = builder.build(new StringReader("<root id=\"1234\"/>"));
++        JXPathContext context = JXPathContext.newContext(doc);
++        assertEquals("1234", context.selectSingleNode("//root/@id/text()"));
++    }

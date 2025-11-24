@@ -1,0 +1,22 @@
+diff --git a/src/main/java/org/apache/commons/codec/language/DoubleMetaphone.java b/src/main/java/org/apache/commons/codec/language/DoubleMetaphone.java
+index 125503ac..f0f0ed3d 100644
+--- a/src/main/java/org/apache/commons/codec/language/DoubleMetaphone.java
++++ b/src/main/java/org/apache/commons/codec/language/DoubleMetaphone.java
+@@ -241,7 +241,12 @@ public class DoubleMetaphone implements StringEncoder {
+      *          {@code false} otherwise.
+      */
+     public boolean isDoubleMetaphoneEqual(final String value1, final String value2, final boolean alternate) {
+-        return doubleMetaphone(value1, alternate).equals(doubleMetaphone(value2, alternate));
++        final String encoded1 = doubleMetaphone(value1, alternate);
++        final String encoded2 = doubleMetaphone(value2, alternate);
++        if (encoded1 == null) {
++            return encoded2 == null;
++        }
++        return encoded1.equals(encoded2);
+     }
+ 
+     /**
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

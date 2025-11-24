@@ -1,0 +1,117 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMAttributeIterator.java b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMAttributeIterator.java
+index f4c2ac6..f9785f6 100644
+--- a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMAttributeIterator.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMAttributeIterator.java
+@@ -19,6 +19,7 @@ package org.apache.commons.jxpath.ri.model.dom;
+ import java.util.ArrayList;
+ import java.util.List;
+ 
++import org.apache.commons.jxpath.ri.NamespaceResolver;
+ import org.apache.commons.jxpath.ri.QName;
+ import org.apache.commons.jxpath.ri.model.NodeIterator;
+ import org.apache.commons.jxpath.ri.model.NodePointer;
+@@ -108,7 +109,9 @@ public class DOMAttributeIterator implements NodeIterator {
+         String testNS = null;
+ 
+         if (testPrefix != null) {
+-            testNS = parent.getNamespaceURI(testPrefix);
++            NamespaceResolver nsr = parent.getNamespaceResolver();
++            testNS = nsr == null ? null : nsr.getNamespaceURI(testPrefix);
++            testNS = testNS == null ? parent.getNamespaceURI(testPrefix) : testNS;
+         }
+ 
+         if (testNS != null) {
+diff --git a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
+index 6393ccd..d9ac346 100644
+--- a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
+@@ -229,7 +229,7 @@ public class DOMNodePointer extends NodePointer {
+         if (namespace == UNKNOWN_NAMESPACE) {
+             return null;
+         }
+-        
++
+         // TBD: We are supposed to resolve relative URIs to absolute ones.
+         return namespace;
+     }
+@@ -408,7 +408,7 @@ public class DOMNodePointer extends NodePointer {
+         Element element = (Element) node;
+         String prefix = name.getPrefix();
+         if (prefix != null) {
+-            String ns = getNamespaceURI(prefix);
++            String ns = context.getNamespaceURI(prefix);
+             if (ns == null) {
+                 throw new JXPathException(
+                     "Unknown namespace prefix: " + prefix);
+diff --git a/src/java/org/apache/commons/jxpath/ri/model/jdom/JDOMAttributeIterator.java b/src/java/org/apache/commons/jxpath/ri/model/jdom/JDOMAttributeIterator.java
+index cfa6da3..771e01e 100644
+--- a/src/java/org/apache/commons/jxpath/ri/model/jdom/JDOMAttributeIterator.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/jdom/JDOMAttributeIterator.java
+@@ -20,6 +20,7 @@ import java.util.ArrayList;
+ import java.util.Collections;
+ import java.util.List;
+ 
++import org.apache.commons.jxpath.ri.NamespaceResolver;
+ import org.apache.commons.jxpath.ri.QName;
+ import org.apache.commons.jxpath.ri.model.NodeIterator;
+ import org.apache.commons.jxpath.ri.model.NodePointer;
+@@ -49,12 +50,21 @@ public class JDOMAttributeIterator implements NodeIterator {
+                     ns = Namespace.XML_NAMESPACE;
+                 }
+                 else {
++                    NamespaceResolver nsr = parent.getNamespaceResolver();
++                    if (nsr != null) {
++                        String uri = nsr.getNamespaceURI(prefix);
++                        if (uri != null) {
++                            ns = Namespace.getNamespace(prefix, uri);
++                        }
++                    }
++                    if (ns == null) {
+                         ns = element.getNamespace(prefix);
+                         if (ns == null) {
+                             // TBD: no attributes
+                             attributes = Collections.EMPTY_LIST;
+                             return;
+                         }
++                    }
+                 }
+             }
+             else {
+diff --git a/src/java/org/apache/commons/jxpath/ri/model/jdom/JDOMNodePointer.java b/src/java/org/apache/commons/jxpath/ri/model/jdom/JDOMNodePointer.java
+index afc0d53..cae2f1a 100644
+--- a/src/java/org/apache/commons/jxpath/ri/model/jdom/JDOMNodePointer.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/jdom/JDOMNodePointer.java
+@@ -112,12 +112,12 @@ public class JDOMNodePointer extends NodePointer {
+ 
+     public String getNamespaceURI(String prefix) {
+         if (node instanceof Document) {
+-            Element element = ((Document)node).getRootElement(); 
++            Element element = ((Document)node).getRootElement();
+             Namespace ns = element.getNamespace(prefix);
+             if (ns != null) {
+                 return ns.getURI();
+             }
+-        }        
++        }
+         else if (node instanceof Element) {
+             Element element = (Element) node;
+             Namespace ns = element.getNamespace(prefix);
+@@ -521,11 +521,12 @@ public class JDOMNodePointer extends NodePointer {
+         Element element = (Element) node;
+         String prefix = name.getPrefix();
+         if (prefix != null) {
+-            Namespace ns = element.getNamespace(prefix);
+-            if (ns == null) {
++            String nsURI = context.getNamespaceURI(prefix);
++            if (nsURI == null) {
+                 throw new JXPathException(
+                     "Unknown namespace prefix: " + prefix);
+             }
++            Namespace ns = Namespace.getNamespace(prefix, nsURI);
+             Attribute attr = element.getAttribute(name.getName(), ns);
+             if (attr == null) {
+                 element.setAttribute(name.getName(), "", ns);
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

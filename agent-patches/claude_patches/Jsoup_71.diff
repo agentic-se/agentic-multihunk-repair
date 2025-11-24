@@ -1,0 +1,218 @@
+diff --git a/src/main/java/org/jsoup/select/Collector.java b/src/main/java/org/jsoup/select/Collector.java
+index de34edd..1efaad1 100644
+--- a/src/main/java/org/jsoup/select/Collector.java
++++ b/src/main/java/org/jsoup/select/Collector.java
+@@ -2,6 +2,11 @@ package org.jsoup.select;
+ 
+ import org.jsoup.nodes.Element;
+ import org.jsoup.nodes.Node;
++import org.jsoup.nodes.PseudoTextElement;
++import org.jsoup.nodes.TextNode;
++import org.jsoup.parser.Tag;
++
++import java.util.List;
+ 
+ import static org.jsoup.select.NodeFilter.FilterResult.CONTINUE;
+ import static org.jsoup.select.NodeFilter.FilterResult.STOP;
+@@ -42,14 +47,136 @@ public class Collector {
+         public void head(Node node, int depth) {
+             if (node instanceof Element) {
+                 Element el = (Element) node;
+-                if (eval.matches(root, el))
+-                    elements.add(el);
++                // Don't match elements when :matchText is present, we'll match their text nodes instead
++                if (!hasMatchTextEvaluator(eval)) {
++                    if (eval.matches(root, el)) {
++                        elements.add(el);
++                    }
++                }
++            } else if (node instanceof TextNode && hasMatchTextEvaluator(eval)) {
++                // Handle text nodes when :matchText is in the evaluator
++                TextNode textNode = (TextNode) node;
++                if (!textNode.isBlank() && textNode.parent() instanceof Element) {
++                    Element parent = (Element) textNode.parent();
++                    // First check if the parent matches the non-:matchText, non-child-selector parts
++                    if (!elementMatchesWithoutChildSelectors(root, parent, eval)) {
++                        return; // Parent doesn't match, skip this text node
++                    }
++                    // Calculate sibling index
++                    List<Node> siblings = parent.childNodes();
++                    int pseudoIndex = 0;
++                    int nodeIndex = textNode.siblingIndex();
++                    for (int i = 0; i < nodeIndex; i++) {
++                        Node sibling = siblings.get(i);
++                        if (sibling instanceof Element || (sibling instanceof TextNode && !((TextNode) sibling).isBlank())) {
++                            pseudoIndex++;
++                        }
++                    }
++                    // Create pseudo-element and test against evaluator
++                    PseudoTextElement pseudo = new PseudoTextElement(parent, textNode, pseudoIndex, siblings);
++                    // Now test only the child-position selectors against the pseudo-element
++                    if (pseudoElementMatchesChildSelectors(root, pseudo, eval)) {
++                        elements.add(pseudo);
++                    }
++                }
++            }
++        }
++
++        /**
++         * Check if an element matches the parts of the evaluator that don't depend on the element being a child.
++         * For p:matchText:first-child, this checks if it's a p element (ignoring :first-child since that applies to the pseudo-element).
++         */
++        private boolean elementMatchesWithoutChildSelectors(Element root, Element el, Evaluator eval) {
++            // Simplified logic: for any selector with :matchText, check element without :matchText and child selectors
++            // This is done by extracting just the element-matching parts
++            if (eval instanceof CombiningEvaluator.And) {
++                CombiningEvaluator.And andEval = (CombiningEvaluator.And) eval;
++                // Check if all non-child, non-matchText evaluators match
++                for (Evaluator e : andEval.evaluators) {
++                    // Skip :matchText and child-position evaluators
++                    if (e instanceof Evaluator.MatchText) continue;
++                    if (e instanceof Evaluator.IsFirstChild) continue;
++                    if (e instanceof Evaluator.IsLastChild) continue;
++                    if (e instanceof Evaluator.IsNthChild) continue;
++                    if (e instanceof Evaluator.IsNthLastChild) continue;
++                    if (e instanceof Evaluator.IsOnlyChild) continue;
++                    if (e instanceof Evaluator.IsFirstOfType) continue;
++                    if (e instanceof Evaluator.IsLastOfType) continue;
++                    if (e instanceof Evaluator.IsOnlyOfType) continue;
++                    if (e instanceof Evaluator.IsNthOfType) continue;
++                    if (e instanceof Evaluator.IsNthLastOfType) continue;
++                    // For any other evaluator, check if it matches
++                    if (!e.matches(root, el)) {
++                        return false;
++                    }
++                }
++                return true;
++            }
++            // For MatchText alone or with child selectors, match all elements
++            return true;
++        }
++
++        /**
++         * Check if a pseudo-element matches the child-position selectors in the evaluator.
++         * For p:matchText:first-child, this checks if the pseudo-element is a first-child.
++         */
++        private boolean pseudoElementMatchesChildSelectors(Element root, PseudoTextElement pseudo, Evaluator eval) {
++            // Check if all child-position evaluators match the pseudo-element
++            if (eval instanceof CombiningEvaluator.And) {
++                CombiningEvaluator.And andEval = (CombiningEvaluator.And) eval;
++                for (Evaluator e : andEval.evaluators) {
++                    // Only check child-position evaluators
++                    if (e instanceof Evaluator.IsFirstChild ||
++                        e instanceof Evaluator.IsLastChild ||
++                        e instanceof Evaluator.IsNthChild ||
++                        e instanceof Evaluator.IsNthLastChild ||
++                        e instanceof Evaluator.IsOnlyChild ||
++                        e instanceof Evaluator.IsFirstOfType ||
++                        e instanceof Evaluator.IsLastOfType ||
++                        e instanceof Evaluator.IsOnlyOfType ||
++                        e instanceof Evaluator.IsNthOfType ||
++                        e instanceof Evaluator.IsNthLastOfType) {
++                        if (!e.matches(root, pseudo)) {
++                            return false;
++                        }
++                    }
++                }
++                return true;
++            }
++            // For non-And evaluators with child selectors
++            if (eval instanceof Evaluator.IsFirstChild ||
++                eval instanceof Evaluator.IsLastChild ||
++                eval instanceof Evaluator.IsNthChild ||
++                eval instanceof Evaluator.IsNthLastChild ||
++                eval instanceof Evaluator.IsOnlyChild ||
++                eval instanceof Evaluator.IsFirstOfType ||
++                eval instanceof Evaluator.IsLastOfType ||
++                eval instanceof Evaluator.IsOnlyOfType ||
++                eval instanceof Evaluator.IsNthOfType ||
++                eval instanceof Evaluator.IsNthLastOfType) {
++                return eval.matches(root, pseudo);
+             }
++            // No child selectors, match all
++            return true;
+         }
+ 
+         public void tail(Node node, int depth) {
+             // void
+         }
++
++        private boolean hasMatchTextEvaluator(Evaluator eval) {
++            if (eval instanceof Evaluator.MatchText) {
++                return true;
++            } else if (eval instanceof CombiningEvaluator) {
++                CombiningEvaluator ce = (CombiningEvaluator) eval;
++                for (Evaluator e : ce.evaluators) {
++                    if (hasMatchTextEvaluator(e)) {
++                        return true;
++                    }
++                }
++            }
++            return false;
++        }
+     }
+ 
+     public static Element findFirst(Evaluator eval, Element root) {
+diff --git a/src/main/java/org/jsoup/select/Evaluator.java b/src/main/java/org/jsoup/select/Evaluator.java
+index 87b1d48..72b1ecf 100644
+--- a/src/main/java/org/jsoup/select/Evaluator.java
++++ b/src/main/java/org/jsoup/select/Evaluator.java
+@@ -397,9 +397,17 @@ public abstract class Evaluator {
+ 		@Override
+ 		public boolean matches(Element root, Element element) {
+ 			final Element p = element.parent();
+-			return p != null && !(p instanceof Document) && element.elementSiblingIndex() == p.children().size()-1;
++			if (p == null || p instanceof Document) return false;
++
++			// Special handling for PseudoTextElement
++			if (element instanceof org.jsoup.nodes.PseudoTextElement) {
++				org.jsoup.nodes.PseudoTextElement pseudo = (org.jsoup.nodes.PseudoTextElement) element;
++				return element.elementSiblingIndex() == pseudo.getPseudoSiblingCount() - 1;
++			}
++
++			return element.elementSiblingIndex() == p.children().size()-1;
+ 		}
+-    	
++
+ 		@Override
+ 		public String toString() {
+ 			return ":last-child";
+@@ -631,6 +639,20 @@ public abstract class Evaluator {
+     	}
+     }
+ 
++    /**
++     * Evaluator for pseudo-selector :matchText that matches text nodes as elements
++     */
++    public static final class MatchText extends Evaluator {
++		@Override
++		public boolean matches(Element root, Element element) {
++			return true; // Special evaluator handled in Collector
++		}
++    	@Override
++    	public String toString() {
++    		return ":matchText";
++    	}
++    }
++
+     /**
+      * Abstract evaluator for sibling index matching
+      *
+diff --git a/src/main/java/org/jsoup/select/QueryParser.java b/src/main/java/org/jsoup/select/QueryParser.java
+index e00f46e..233bac9 100644
+--- a/src/main/java/org/jsoup/select/QueryParser.java
++++ b/src/main/java/org/jsoup/select/QueryParser.java
+@@ -200,6 +200,8 @@ public class QueryParser {
+         	evals.add(new Evaluator.IsEmpty());
+         else if (tq.matchChomp(":root"))
+         	evals.add(new Evaluator.IsRoot());
++        else if (tq.matchChomp(":matchText"))
++        	evals.add(new Evaluator.MatchText());
+ 		else // unhandled
+             throw new Selector.SelectorParseException("Could not parse query '%s': unexpected token at '%s'", query, tq.remainder());
+ 
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store
++ src/main/java/org/jsoup/nodes/PseudoTextElement.java

@@ -1,0 +1,22 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ObjectReader.java b/src/main/java/com/fasterxml/jackson/databind/ObjectReader.java
+index e684b10a2..180c78e77 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ObjectReader.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ObjectReader.java
+@@ -1473,7 +1473,12 @@ public class ObjectReader
+             result = NullNode.instance;
+         } else {
+             DeserializationContext ctxt = createDeserializationContext(jp, _config);
+-            JsonDeserializer<Object> deser = _findRootDeserializer(ctxt, JSON_NODE_TYPE);
++            // [databind#744]: don't use _findRootDeserializer() as it uses pre-cached
++            // deserializer which may be for different type than JsonNode
++            JsonDeserializer<Object> deser = ctxt.findRootValueDeserializer(JSON_NODE_TYPE);
++            if (deser == null) {
++                throw new JsonMappingException("Can not find a deserializer for type "+JSON_NODE_TYPE);
++            }
+             if (_unwrapRoot) {
+                 result = (JsonNode) _unwrapAndDeserialize(jp, ctxt, JSON_NODE_TYPE, deser);
+             } else {
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

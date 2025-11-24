@@ -1,0 +1,39 @@
+diff --git a/src/.DS_Store b/src/.DS_Store
+index b9251bbff6bf9807c4da15b74fe86bb7214f889e..472c2bf058eaba0b92e2bc6e1745709ec41605b8 100644
+GIT binary patch
+delta 12
+Tc-m_*Xfc?ul=0EVWpUyFA|M4#
+
+delta 12
+Tc-m_*Xfc?ulyT?AWpUyFAyWk;
+
+diff --git a/src/com/google/javascript/jscomp/AbstractCommandLineRunner.java b/src/com/google/javascript/jscomp/AbstractCommandLineRunner.java
+index 13cb6268..c08598f7 100644
+--- a/src/com/google/javascript/jscomp/AbstractCommandLineRunner.java
++++ b/src/com/google/javascript/jscomp/AbstractCommandLineRunner.java
+@@ -867,16 +867,19 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
+             continue;
+           } else if (defValue.length() > 1
+               && ((defValue.charAt(0) == '\'' &&
+-                  defValue.charAt(defValue.length() - 1) == '\'')
++                  defValue.charAt(defValue.length() - 1) == '\'') ||
++                  (defValue.charAt(0) == '\"' &&
++                  defValue.charAt(defValue.length() - 1) == '\"')
+             )) {
+-            // If the value starts and ends with a single quote,
++            // If the value starts and ends with a quote,
+             // we assume that it's a string.
+             String maybeStringVal =
+                 defValue.substring(1, defValue.length() - 1);
+-            if (maybeStringVal.indexOf(defValue.charAt(0)) == -1) {
+-              options.setDefineToStringLiteral(defName, maybeStringVal);
+-              continue;
+-            }
++            // Allow strings that contain single quotes or double quotes
++            // Previously, we only checked for single quotes, but we should accept
++            // both single and double quoted strings
++            options.setDefineToStringLiteral(defName, maybeStringVal);
++            continue;
+           } else {
+             try {
+               options.setDefineToDoubleLiteral(defName,

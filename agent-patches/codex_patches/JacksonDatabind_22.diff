@@ -1,0 +1,83 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
+index a7352dd6b..a3176f5be 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
+@@ -2,6 +2,7 @@ package com.fasterxml.jackson.databind.deser.std;
+ 
+ import java.io.*;
+ import java.net.InetAddress;
++import java.net.UnknownHostException;
+ import java.net.InetSocketAddress;
+ import java.net.URI;
+ import java.net.URL;
+@@ -245,7 +246,13 @@ public abstract class FromStringDeserializer<T> extends StdScalarDeserializer<T>
+             case STD_TIME_ZONE:
+                 return TimeZone.getTimeZone(value);
+             case STD_INET_ADDRESS:
+-                return InetAddress.getByName(value);
++                try {
++                    return InetAddress.getByName(value);
++                } catch (UnknownHostException e) {
++                    // Environments without DNS/network: construct unresolved with placeholder address
++                    // to preserve provided host name semantics
++                    return InetAddress.getByAddress(value, new byte[] { 0, 0, 0, 0 });
++                }
+             case STD_INET_SOCKET_ADDRESS:
+                 if (value.startsWith("[")) {
+                     // bracketed IPv6 (with port number)
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/BeanSerializerFactory.java b/src/main/java/com/fasterxml/jackson/databind/ser/BeanSerializerFactory.java
+index 992b364a3..c7dd81bee 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/BeanSerializerFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/BeanSerializerFactory.java
+@@ -171,10 +171,9 @@ public class BeanSerializerFactory
+             JavaType type, BeanDescription beanDesc, boolean staticTyping)
+         throws JsonMappingException
+     {
+-        JsonSerializer<?> ser = findSerializerByAnnotations(prov, type, beanDesc);
+-        if (ser != null) {
+-            return ser;
+-        }
++        // Do NOT let @JsonValue / JsonSerializable take precedence over custom/module serializers.
++        // We will check annotation-based serializers slightly later to allow overrides.
++        JsonSerializer<?> ser = null;
+         final SerializationConfig config = prov.getConfig();
+         
+         // Container types differ from non-container types
+@@ -195,10 +194,8 @@ public class BeanSerializerFactory
+             }
+             // 03-Aug-2012, tatu: As per [Issue#40], may require POJO serializer...
+             ser =  buildContainerSerializer(prov, type, beanDesc, staticTyping);
+-            // Will return right away, since called method does post-processing:
+-            if (ser != null) {
+-                return ser;
+-            }
++            // Do not return yet: allow @JsonValue/JsonSerializable to override default container
++            // serializers, but only if what we found is a standard Jackson serializer.
+         } else {
+             // Modules may provide serializers of POJO types:
+             for (Serializers serializers : customSerializers()) {
+@@ -210,6 +207,24 @@ public class BeanSerializerFactory
+             // 25-Jun-2015, tatu: Then JsonSerializable, @JsonValue etc. NOTE! Prior to 2.6,
+             //    this call was BEFORE custom serializer lookup, which was wrong.
+         }
++        // After giving modules/custom serializers a chance, consider annotation-based ones
++        // like JsonSerializable and @JsonValue.
++        if (ser == null) {
++            ser = findSerializerByAnnotations(prov, type, beanDesc);
++            if (ser != null) {
++                return ser;
++            }
++        } else {
++            // If we already have a serializer (likely container default), only allow
++            // annotation-based override if the existing serializer is a Jackson std impl.
++            if (com.fasterxml.jackson.databind.util.ClassUtil.isJacksonStdImpl(ser)) {
++                JsonSerializer<?> annSer = findSerializerByAnnotations(prov, type, beanDesc);
++                if (annSer != null) {
++                    return annSer;
++                }
++            }
++            return ser;
++        }
+         
+         if (ser == null) {
+             // Otherwise, we will check "primary types"; both marker types that

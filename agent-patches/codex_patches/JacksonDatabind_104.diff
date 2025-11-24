@@ -1,0 +1,74 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/util/StdDateFormat.java b/src/main/java/com/fasterxml/jackson/databind/util/StdDateFormat.java
+index 5ea467d0d..14dbce877 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/util/StdDateFormat.java
++++ b/src/main/java/com/fasterxml/jackson/databind/util/StdDateFormat.java
+@@ -434,16 +434,33 @@ public class StdDateFormat
+     {
+         Calendar cal = _getCalendar(tz);
+         cal.setTime(date);
+-        // [databind#2167]: handle range beyond [1, 9999]
+-        final int year = cal.get(Calendar.YEAR);
+-
+-        // Assuming GregorianCalendar, special handling needed for BCE (aka BC)
+-                // 22-Nov-2018, tatu: Handling beyond 4-digits is not well specified wrt ISO-8601, but
+-                //   it seems that plus prefix IS mandated. Padding is an open question, but since agreeement
+-                //   for max length would be needed, we ewould need to limit to arbitrary length
+-                //   like five digits (erroring out if beyond or padding to that as minimum).
+-                //   Instead, let's just print number out as is and let decoder try to make sense of it.
+-            pad4(buffer, year);
++        // [databind#2167]: handle range beyond [1, 9999] and BCE years using proleptic year
++        int prolepticYear = cal.get(Calendar.YEAR);
++        if (cal.get(Calendar.ERA) == GregorianCalendar.BC) {
++            // In proleptic Gregorian calendar, 1 BCE == year 0; 2 BCE == -1, etc.
++            prolepticYear = -prolepticYear + 1;
++        }
++
++        if (prolepticYear >= 0) {
++            // For year 0 (BCE 1) and years > 9999, include a leading '+'
++            if (prolepticYear == 0) {
++                buffer.append('+');
++                pad4(buffer, 0);
++            } else if (prolepticYear > 9999) {
++                buffer.append('+');
++                buffer.append(Integer.toString(prolepticYear));
++            } else {
++                pad4(buffer, prolepticYear);
++            }
++        } else { // negative year
++            buffer.append('-');
++            int absYear = -prolepticYear;
++            if (absYear <= 9999) {
++                pad4(buffer, absYear);
++            } else {
++                buffer.append(Integer.toString(absYear));
++            }
++        }
+         buffer.append('-');
+         pad2(buffer, cal.get(Calendar.MONTH) + 1);
+         buffer.append('-');
+@@ -488,6 +505,12 @@ public class StdDateFormat
+ 
+     private static void pad2(StringBuffer buffer, int value) {
+         int tens = value / 10;
++        // Handle values beyond 2 digits by recursively writing all higher digits
++        if (tens >= 10) {
++            pad2(buffer, tens);
++            buffer.append((char) ('0' + (value % 10)));
++            return;
++        }
+         if (tens == 0) {
+             buffer.append('0');
+         } else {
+@@ -499,6 +522,12 @@ public class StdDateFormat
+ 
+     private static void pad3(StringBuffer buffer, int value) {
+         int h = value / 100;
++        // Handle values beyond 3 digits by recursively writing all higher digits
++        if (h >= 100) {
++            pad3(buffer, h);
++            pad2(buffer, value % 100);
++            return;
++        }
+         if (h == 0) {
+             buffer.append('0');
+         } else {

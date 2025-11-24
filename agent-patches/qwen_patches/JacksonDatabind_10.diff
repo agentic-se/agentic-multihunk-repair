@@ -1,0 +1,83 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/BeanSerializerFactory.java b/src/main/java/com/fasterxml/jackson/databind/ser/BeanSerializerFactory.java
+index 25e7e3f93..ac13c3f52 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/BeanSerializerFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/BeanSerializerFactory.java
+@@ -2,6 +2,18 @@ package com.fasterxml.jackson.databind.ser;
+ 
+ import java.util.*;
+ 
++import com.fasterxml.jackson.annotation.ObjectIdGenerator;
++import com.fasterxml.jackson.annotation.ObjectIdGenerators;
++import com.fasterxml.jackson.databind.*;
++import com.fasterxml.jackson.databind.cfg.SerializerFactoryConfig;
++import com.fasterxml.jackson.databind.introspect.*;
++import com.fasterxml.jackson.databind.jsontype.NamedType;
++import com.fasterxml.jackson.databind.jsontype.TypeResolverBuilder;
++import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
++import com.fasterxml.jackson.databind.ser.impl.FilteredBeanPropertyWriter;
++import com.fasterxml.jackson.databind.ser.impl.ObjectIdWriter;
++import com.fasterxml.jackson.databind.ser.impl.PropertyBasedObjectIdGenerator;
++import com.fasterxml.jackson.annotation.JsonSerialize;
+ import com.fasterxml.jackson.annotation.ObjectIdGenerator;
+ import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+ import com.fasterxml.jackson.databind.*;
+@@ -390,15 +402,50 @@ public class BeanSerializerFactory
+             boolean staticTyping = config.isEnabled(MapperFeature.USE_STATIC_TYPING);
+             JavaType valueType = type.getContentType();
+             TypeSerializer typeSer = createTypeSerializer(config, valueType);
+-            // last 2 nulls; don't know key, value serializers (yet)
+-            // 23-Feb-2015, tatu: As per [#705], need to support custom serializers
+-            MapSerializer anySer = MapSerializer.construct(null, type, staticTyping, typeSer, null, null, null);
+-                // TODO: support '@JsonIgnoreProperties' with any setter?
+-            // TODO: can we find full PropertyName?
+-            PropertyName name = new PropertyName(anyGetter.getName());
+-            BeanProperty.Std anyProp = new BeanProperty.Std(name, valueType, null,
+-                    beanDesc.getClassAnnotations(), anyGetter, PropertyMetadata.STD_OPTIONAL);
+-            builder.setAnyGetter(new AnyGetterWriter(anyProp, anyGetter, anySer));
++            
++            // Check for @JsonSerialize annotation on the any getter method
++            // and use it if present, otherwise fall back to default MapSerializer
++            JsonSerialize jsonSerialize = anyGetter.getAnnotation(JsonSerialize.class);
++            if (jsonSerialize != null && jsonSerialize.using() != JsonSerializer.None.class) {
++                // Have custom serializer - create a proxy AnyGetterWriter that uses it
++                JsonSerializer<?> customSerializer = config.serializerInstance(anyGetter, jsonSerialize.using());
++                PropertyName name = new PropertyName(anyGetter.getName());
++                BeanProperty.Std anyProp = new BeanProperty.Std(name, type, null,
++                        beanDesc.getClassAnnotations(), anyGetter, PropertyMetadata.STD_OPTIONAL);
++                        
++                // Create proxy AnyGetterWriter that delegates to custom serializer
++                AnyGetterWriter anyGetterWriter = new AnyGetterWriter(anyProp, anyGetter, null) {
++                    @Override
++                    public void getAndSerialize(Object bean, JsonGenerator gen, SerializerProvider provider)
++                            throws Exception {
++                        Object value = _accessor.getValue(bean);
++                        if (value == null) {
++                            return;
++                        }
++                        // Serialize using the custom serializer that was specified with @JsonSerialize
++                        customSerializer.serialize(value, gen, provider);
++                    }
++
++                    @Override
++                    public void getAndFilter(Object bean, JsonGenerator gen, SerializerProvider provider,
++                            PropertyFilter filter) throws Exception {
++                        Object value = _accessor.getValue(bean);
++                        if (value == null) {
++                            return;
++                        }
++                        // Serialize using the custom serializer that was specified with @JsonSerialize
++                        customSerializer.serialize(value, gen, provider);
++                    }
++                };
++                builder.setAnyGetter(anyGetterWriter);
++            } else {
++                // No custom serializer specified or using None.class, use default MapSerializer
++                MapSerializer anySer = MapSerializer.construct(null, type, staticTyping, typeSer, null, null, null);
++                PropertyName name = new PropertyName(anyGetter.getName());
++                BeanProperty.Std anyProp = new BeanProperty.Std(name, valueType, null,
++                        beanDesc.getClassAnnotations(), anyGetter, PropertyMetadata.STD_OPTIONAL);
++                builder.setAnyGetter(new AnyGetterWriter(anyProp, anyGetter, anySer));
++            }
+         }
+         // Next: need to gather view information, if any:
+         processViews(config, builder);

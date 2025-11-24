@@ -1,0 +1,107 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index f07173c..33cfc0f 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -16,7 +16,8 @@ import java.util.Locale;
+  *
+  */
+ public class DataUtil {
+-    private static final Pattern charsetPattern = Pattern.compile("(?i)\\bcharset=\\s*\"?([^\\s;\"]*)");
++    // Match charset parameter values, optionally quoted with ' or ", and stop at delimiters ; , whitespace, or quotes
++    private static final Pattern charsetPattern = Pattern.compile("(?i)\\bcharset=\\s*[\"']?([^\\s;,'\"]*)");
+     static final String defaultCharset = "UTF-8"; // used if not found in header or meta charset
+     private static final int bufferSize = 0x20000; // ~130K.
+ 
+@@ -78,21 +79,25 @@ public class DataUtil {
+             // look for <meta http-equiv="Content-Type" content="text/html;charset=gb2312"> or HTML5 <meta charset="gb2312">
+             docData = Charset.forName(defaultCharset).decode(byteData).toString();
+             doc = parser.parseInput(docData, baseUri);
+-            Element meta = doc.select("meta[http-equiv=content-type], meta[charset]").first();
+-            if (meta != null) { // if not found, will keep utf-8 as best attempt
+-
+-                String foundCharset;
++            // Look for valid charset definitions. Prefer the first valid one encountered.
++            for (Element meta : doc.select("meta[http-equiv=content-type], meta[charset]")) {
++                String foundCharset = null;
+                 if (meta.hasAttr("http-equiv")) {
+                     foundCharset = getCharsetFromContentType(meta.attr("content"));
+-                } else {
+-                    foundCharset = meta.attr("charset");
++                } else if (meta.hasAttr("charset")) {
++                    foundCharset = cleanCharset(meta.attr("charset"));
++                    if (foundCharset != null) {
++                        foundCharset = validateCharset(foundCharset);
++                    }
+                 }
+ 
+-                if (foundCharset != null && foundCharset.length() != 0 && !foundCharset.equals(defaultCharset)) { // need to re-decode
++                if (foundCharset != null && foundCharset.length() != 0 && !foundCharset.equals(defaultCharset)) {
++                    // need to re-decode
+                     charsetName = foundCharset;
+                     byteData.rewind();
+                     docData = Charset.forName(foundCharset).decode(byteData).toString();
+                     doc = null;
++                    break;
+                 }
+             }
+         } else { // specified by content type header (or by user on file load)
+@@ -157,11 +162,54 @@ public class DataUtil {
+         if (contentType == null) return null;
+         Matcher m = charsetPattern.matcher(contentType);
+         if (m.find()) {
+-            String charset = m.group(1).trim();
+-                if (Charset.isSupported(charset)) return charset;
+-                charset = charset.toUpperCase(Locale.ENGLISH);
+-                if (Charset.isSupported(charset)) return charset;
+-                // if our advanced charset matching fails.... we just take the default
++            String charset = m.group(1);
++            if (charset != null) {
++                charset = cleanCharset(charset);
++                if (charset == null || charset.length() == 0)
++                    return null;
++                return validateCharset(charset);
++            }
++        }
++        return null;
++    }
++
++    // Remove surrounding quotes and duplicate declarations like "charset=charset=..." and trailing delimiters
++    private static String cleanCharset(String charset) {
++        String cs = charset.trim();
++        if (cs.length() == 0) return null;
++        // If value accidentally includes another assignment, take the last part
++        int eq = cs.lastIndexOf('=');
++        if (eq != -1)
++            cs = cs.substring(eq + 1);
++        cs = cs.trim();
++        // Strip surrounding or stray quotes
++        if ((cs.startsWith("\"") && cs.endsWith("\"")) || (cs.startsWith("'") && cs.endsWith("'"))) {
++            cs = cs.substring(1, cs.length() - 1);
++        } else {
++            // Remove any trailing quote or delimiter
++            while (cs.endsWith("\"") || cs.endsWith("'") || cs.endsWith(",") || cs.endsWith(";")) {
++                cs = cs.substring(0, cs.length() - 1).trim();
++            }
++        }
++        return cs.length() == 0 ? null : cs;
++    }
++
++    // Return charset if supported (case-preserving); else try upper-case alias; else null
++    private static String validateCharset(String charset) {
++        try {
++            if (Charset.isSupported(charset)) return charset;
++        } catch (IllegalArgumentException e) {
++            return null;
++        } catch (java.nio.charset.IllegalCharsetNameException e) {
++            return null;
++        }
++        String up = charset.toUpperCase(Locale.ENGLISH);
++        try {
++            if (Charset.isSupported(up)) return up;
++        } catch (IllegalArgumentException e) {
++            return null;
++        } catch (java.nio.charset.IllegalCharsetNameException e) {
++            return null;
+         }
+         return null;
+     }

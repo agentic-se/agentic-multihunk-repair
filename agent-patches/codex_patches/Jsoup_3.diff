@@ -1,0 +1,116 @@
+diff --git a/src/main/java/org/jsoup/nodes/Element.java b/src/main/java/org/jsoup/nodes/Element.java
+index 12c68ca..c48601f 100644
+--- a/src/main/java/org/jsoup/nodes/Element.java
++++ b/src/main/java/org/jsoup/nodes/Element.java
+@@ -266,8 +266,19 @@ public class Element extends Node {
+      */
+     public Element append(String html) {
+         Validate.notNull(html);
+-        
+-        Element fragment = Parser.parseBodyFragment(html, baseUri).body();
++
++        Element fragment;
++        // Parse in element context only for table-related content to avoid nested <table> when adding <tr>/<td>/<th>.
++        String name = tagName();
++        if (name.equals("table") || name.equals("thead") || name.equals("tbody") || name.equals("tfoot") || name.equals("tr")) {
++            String l = html.toLowerCase();
++            if (l.contains("<tr") || l.contains("<td") || l.contains("<th") || l.contains("<thead") || l.contains("<tbody") || l.contains("<tfoot"))
++                fragment = Parser.parseFragment(html, this, baseUri);
++            else
++                fragment = Parser.parseBodyFragment(html, baseUri).body();
++        } else {
++            fragment = Parser.parseBodyFragment(html, baseUri).body();
++        }
+         for (Node node : fragment.childNodes()) {
+             node.parentNode = null;
+             appendChild(node);
+@@ -284,7 +295,17 @@ public class Element extends Node {
+     public Element prepend(String html) {
+         Validate.notNull(html);
+         
+-        Element fragment = Parser.parseBodyFragment(html, baseUri).body();
++        Element fragment;
++        String name = tagName();
++        if (name.equals("table") || name.equals("thead") || name.equals("tbody") || name.equals("tfoot") || name.equals("tr")) {
++            String l = html.toLowerCase();
++            if (l.contains("<tr") || l.contains("<td") || l.contains("<th") || l.contains("<thead") || l.contains("<tbody") || l.contains("<tfoot"))
++                fragment = Parser.parseFragment(html, this, baseUri);
++            else
++                fragment = Parser.parseBodyFragment(html, baseUri).body();
++        } else {
++            fragment = Parser.parseBodyFragment(html, baseUri).body();
++        }
+         List<Node> nodes = fragment.childNodes();
+         for (int i = nodes.size() - 1; i >= 0; i--) {
+             Node node = nodes.get(i);
+diff --git a/src/main/java/org/jsoup/parser/Parser.java b/src/main/java/org/jsoup/parser/Parser.java
+index 0cedf8a..d6fc2ce 100644
+--- a/src/main/java/org/jsoup/parser/Parser.java
++++ b/src/main/java/org/jsoup/parser/Parser.java
+@@ -63,6 +63,27 @@ public class Parser {
+         return parser.parse();
+     }
+ 
++    /**
++     * Parse a fragment of HTML in the context of the supplied element. This allows correct implicit parent handling
++     * for context-sensitive tags (e.g., parsing a <tr> in the context of a <table> will not create an extra <table>).
++     * The parsed nodes will be added under a temporary element with the same tag as the supplied context.
++     *
++     * @param fragmentHtml fragment of HTML to parse
++     * @param context the element that will host the parsed nodes
++     * @param baseUri base URI of document (i.e. original fetch location), for resolving relative URLs.
++     * @return an element with the same tag as the context, containing the parsed nodes as children
++     */
++    public static Element parseFragment(String fragmentHtml, Element context, String baseUri) {
++        Validate.notNull(context);
++        Parser parser = new Parser(fragmentHtml, baseUri, true);
++        // Use a temporary root matching the context tag so implicit parents are created correctly for that context.
++        Element root = new Element(context.tag(), baseUri);
++        parser.stack.clear();
++        parser.stack.add(root);
++        parser.parse();
++        return root;
++    }
++
+     /**
+      Parse a fragment of HTML into the {@code body} of a Document, with relaxed parsing enabled. Relaxed, in this
+      context, means that implicit tags are not automatically created when missing.
+@@ -218,7 +239,38 @@ public class Parser {
+ 
+     private Element addChildToParent(Element child, boolean isEmptyElement) {
+         Element parent = popStackToSuitableContainer(child.tag());
++        // If starting a new table row while inside a table cell, implicitly close the cell/row to the table context
++        if (child.tag().getName().equals("tr") && parent != null) {
++            String pname = parent.tag().getName();
++            if ("td".equals(pname) || "th".equals(pname)) {
++                while (!stack.isEmpty()) {
++                    String lastName = last().tag().getName();
++                    if ("table".equals(lastName) || "tbody".equals(lastName) || "thead".equals(lastName) || "tfoot".equals(lastName))
++                        break;
++                    else
++                        stack.removeLast();
++                }
++                parent = last();
++            }
++        }
+         Tag childTag = child.tag();
++
++        // Special-case table cell placement: ensure <td>/<th> are wrapped by an implicit <tr> when added under
++        // table-related parents.
++        if (parent != null) {
++            String parentName = parent.tag().getName();
++            String childName = childTag.getName();
++            if (("td".equals(childName) || "th".equals(childName)) &&
++                    ("table".equals(parentName) || "tbody".equals(parentName) || "thead".equals(parentName) || "tfoot".equals(parentName))) {
++                Element implicit = new Element(Tag.valueOf("tr"), baseUri);
++                implicit.appendChild(child);
++                Element root = addChildToParent(implicit, false);
++                if (!isEmptyElement)
++                    stack.addLast(child);
++                return root;
++            }
++        }
++
+         boolean validAncestor = stackHasValidParent(childTag);
+ 
+         if (!validAncestor) {

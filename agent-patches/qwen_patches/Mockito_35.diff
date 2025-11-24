@@ -1,0 +1,25 @@
+diff --git a/src/org/mockito/internal/matchers/InstanceOf.java b/src/org/mockito/internal/matchers/InstanceOf.java
+index e39c45cb3..fd08fa8cf 100644
+--- a/src/org/mockito/internal/matchers/InstanceOf.java
++++ b/src/org/mockito/internal/matchers/InstanceOf.java
+@@ -18,7 +18,19 @@ public class InstanceOf extends ArgumentMatcher<Object> {
+     }
+ 
+     public boolean matches(Object actual) {
+-        return (actual != null) && clazz.isAssignableFrom(actual.getClass());
++        // Handle potential null to prevent NPE
++        if (actual == null) {
++            return false;
++        }
++        
++        // Safely handle the case where actual might be a primitive type
++        try {
++            return clazz.isAssignableFrom(actual.getClass());
++        } catch (NullPointerException e) {
++            // If we get a NPE, it means actual.getClass() failed
++            // This typically happens with primitives but we can handle it gracefully
++            return false;
++        }
+     }
+ 
+     public void describeTo(Description description) {

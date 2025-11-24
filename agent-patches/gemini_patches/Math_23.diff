@@ -1,0 +1,92 @@
+--- a/src/main/java/org/apache/commons/math3/optimization/univariate/BrentOptimizer.java
++++ b/src/main/java/org/apache/commons/math3/optimization/univariate/BrentOptimizer.java
+@@ -1,7 +1,7 @@
+-        UnivariatePointValuePair previous = null;
+-        UnivariatePointValuePair current
+-            = new UnivariatePointValuePair(x, isMinim ? fx : -fx);
+-        // Best point encountered so far (which is the initial guess).
+-
+-        int iter = 0;
+-        while (true) {
++        UnivariatePointValuePair previous = null;
++        UnivariatePointValuePair current
++            = new UnivariatePointValuePair(x, isMinim ? fx : -fx);
++        UnivariatePointValuePair best = current; // Keep track of the best point found so far.
++
++        int iter = 0;
++        while (true) {
+@@ -1,7 +1,18 @@
+-                if (checker != null) {
+-                    if (checker.converged(iter, previous, current)) {
+-                        return best(current, previous, isMinim);
+-                    }
+-                }
+-
+-                // Update a, b, v, w and x.
++                if (checker != null) {
++                    if (checker.converged(iter, previous, current)) {
++                        return best; // Return the overall best point
++                    }
++                }
++
++                // Update the best point found so far
++                if (isMinim) {
++                    if (current.getValue() < best.getValue()) {
++                        best = current;
++                    }
++                } else {
++                    if (current.getValue() > best.getValue()) {
++                        best = current;
++                    }
++                }
++
++                // Update a, b, v, w and x.
+@@ -1,7 +1,4 @@
+-            } else { // Default termination (Brent's criterion).
+-                return
+-                            best(current,
+-                                 previous,
+-                            isMinim);
+-            }
+-            ++iter;
++            } else { // Default termination (Brent's criterion).
++                return best; // Return the overall best point
++            }
++            ++iter;
+@@ -1,18 +1,18 @@
+-                if (checker != null) {
+-                    if (checker.converged(iter, previous, current)) {
+-                        return best; // Return the overall best point
+-                    }
+-                }
+-
+-                // Update the best point found so far
+-                if (isMinim) {
+-                    if (current.getValue() < best.getValue()) {
+-                        best = current;
+-                    }
+-                } else {
+-                    if (current.getValue() > best.getValue()) {
+-                        best = current;
+-                    }
+-                }
+-
+-                // Update a, b, v, w and x.
++                if (checker != null) {
++                    if (checker.converged(iter, previous, current)) {
++                        return best(current, previous, isMinim);
++                    }
++                }
++
++                // Update the best point found so far
++                if (isMinim) {
++                    if (current.getValue() < best.getValue()) {
++                        best = current;
++                    }
++                } else {
++                    if (current.getValue() > best.getValue()) {
++                        best = current;
++                    }
++                }
++
++                // Update a, b, v, w and x.

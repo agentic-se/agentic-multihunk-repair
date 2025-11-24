@@ -1,0 +1,18 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/filter/FilteringParserDelegate.java b/src/main/java/com/fasterxml/jackson/core/filter/FilteringParserDelegate.java
+index e6558fd0..0a655501 100644
+--- a/src/main/java/com/fasterxml/jackson/core/filter/FilteringParserDelegate.java
++++ b/src/main/java/com/fasterxml/jackson/core/filter/FilteringParserDelegate.java
+@@ -383,11 +383,9 @@ public class FilteringParserDelegate extends JsonParserDelegate
+                 }
+                 _headContext = _headContext.getParent();
+                 _itemFilter = _headContext.getFilter();
+-                if (returnEnd) {
+-                    return (_currToken = t);
+-                }
++                // Always return the END token, regardless of whether it was handled
++                return (_currToken = t);
+             }
+-            break;
+ 
+         case ID_FIELD_NAME:
+             {

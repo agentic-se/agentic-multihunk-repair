@@ -1,0 +1,143 @@
+diff --git a/src/com/google/javascript/jscomp/MakeDeclaredNamesUnique.java b/src/com/google/javascript/jscomp/MakeDeclaredNamesUnique.java
+index 627271f9..a41a1afc 100644
+--- a/src/com/google/javascript/jscomp/MakeDeclaredNamesUnique.java
++++ b/src/com/google/javascript/jscomp/MakeDeclaredNamesUnique.java
+@@ -75,7 +75,6 @@ class MakeDeclaredNamesUnique
+   @Override
+   public void enterScope(NodeTraversal t) {
+     Node declarationRoot = t.getScopeRoot();
+-    Renamer renamer;
+     if (nameStack.isEmpty()) {
+       // If the contextual renamer is being used the starting context can not
+       // be a function.
+@@ -83,30 +82,44 @@ class MakeDeclaredNamesUnique
+           declarationRoot.getType() != Token.FUNCTION ||
+           !(rootRenamer instanceof ContextualRenamer));
+       Preconditions.checkState(t.inGlobalScope());
+-      renamer = rootRenamer;
++      Renamer renamer = rootRenamer;
++      // Add the global declarations if the root is not a function.
++      if (declarationRoot.getType() != Token.FUNCTION) {
++        findDeclaredNames(declarationRoot, null, renamer);
++      }
++      nameStack.push(renamer);
+     } else {
+-      renamer = nameStack.peek().forChildScope();
+-    }
+-
+-    if (declarationRoot.getType() == Token.FUNCTION) {
+-      for (Node c = declarationRoot.getFirstChild().getNext().getFirstChild(); c != null; c = c.getNext()) {
+-        String name = c.getString();
+-        renamer.addDeclaredName(name);
++      // For function scopes, create a child scope for parameters and body
++      // declarations. The recursive function name is handled in
++      // shouldTraverse(FUNCTION) using a separate (outer) scope.
++      Renamer renamer = nameStack.peek().forChildScope();
++      if (declarationRoot.getType() == Token.FUNCTION) {
++        // Add the function parameters
++        for (Node c = declarationRoot.getFirstChild().getNext().getFirstChild();
++             c != null; c = c.getNext()) {
++          String name = c.getString();
++          renamer.addDeclaredName(name);
++        }
++        // Add the function body declarations
++        Node functionBody = declarationRoot.getLastChild();
++        findDeclaredNames(functionBody, null, renamer);
++
++        nameStack.push(renamer);
++      } else {
++        // Non-function scope: collect declarations.
++        findDeclaredNames(declarationRoot, null, renamer);
++        nameStack.push(renamer);
+       }
+-      Node functionBody = declarationRoot.getLastChild();
+-      findDeclaredNames(functionBody, null, renamer);
+-    }  else 
+-    if (declarationRoot.getType() != Token.FUNCTION) {
+-      // Add the block declarations
+-      findDeclaredNames(declarationRoot, null, renamer);
+-    }
+-    nameStack.push(renamer);
++    }
+   }
+ 
+   @Override
+   public void exitScope(NodeTraversal t) {
+     if (!t.inGlobalScope()) {
+-      nameStack.pop();
++      Node declarationRoot = t.getScopeRoot();
++      if (declarationRoot.getType() != Token.FUNCTION) {
++        nameStack.pop();
++      }
+     }
+   }
+ 
+@@ -127,12 +140,6 @@ class MakeDeclaredNamesUnique
+             renamer.addDeclaredName(name);
+           }
+ 
+-
+-
+-          // Add the function parameters
+-
+-          // Add the function body declarations
+-
+           nameStack.push(renamer);
+         }
+         break;
+@@ -156,7 +163,29 @@ class MakeDeclaredNamesUnique
+   public void visit(NodeTraversal t, Node n, Node parent) {
+     switch (n.getType()) {
+       case Token.NAME:
+-        String newName = getReplacementName(n.getString());
++        String newName;
++        if (nameStack.peek() instanceof ContextualRenamer) {
++          int skip = 0;
++          // If this is the name of a function (both declarations and named
++          // expressions), skip the function body scope renamer.
++          if (parent != null && parent.getType() == Token.FUNCTION
++              && n == parent.getFirstChild()) {
++            skip = 1;
++          }
++          // If this is a variable name initialized with a function
++          // expression, skip the renamers created while traversing the child
++          // function (recursive-name + body scopes).
++          if (parent != null && parent.getType() == Token.VAR
++              && n.hasChildren()
++              && n.getFirstChild().getType() == Token.FUNCTION
++              && t.inGlobalScope()) {
++            // Only skip for global VAR initialized with a function expression.
++            skip = 1;
++          }
++          newName = getReplacementNameSkipping(n.getString(), skip);
++        } else {
++          newName = getReplacementName(n.getString());
++        }
+         if (newName != null) {
+           Renamer renamer = nameStack.peek();
+           if (renamer.stripConstIfReplaced()) {
+@@ -199,6 +228,24 @@ class MakeDeclaredNamesUnique
+     return null;
+   }
+ 
++  /**
++   * Like getReplacementName, but skips the top-most scope renamers.
++   */
++  private String getReplacementNameSkipping(String oldName, int skipLevels) {
++    int skipped = 0;
++    for (Renamer names : nameStack) {
++      if (skipped < skipLevels) {
++        skipped++;
++        continue;
++      }
++      String newName = names.getReplacementName(oldName);
++      if (newName != null) {
++        return newName;
++      }
++    }
++    return null;
++  }
++
+   /**
+    * Traverses the current scope and collects declared names.  Does not
+    * decent into functions or add CATCH exceptions.

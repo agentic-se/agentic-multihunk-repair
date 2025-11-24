@@ -1,0 +1,22 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
+index 15beec89..791606e4 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
+@@ -347,6 +347,17 @@ public class TarArchiveOutputStream extends ArchiveOutputStream {
+         out.flush();
+     }
+ 
++    /**
++     * Returns the current number of bytes written to the underlying stream.
++     *
++     * Delegate to the wrapped CountingOutputStream so the value reflects
++     * all data actually written including headers and padding.
++     */
++    @Override
++    public long getBytesWritten() {
++        return ((CountingOutputStream) out).getBytesWritten();
++    }
++
+     /** {@inheritDoc} */
+     @Override
+     public ArchiveEntry createArchiveEntry(File inputFile, String entryName)

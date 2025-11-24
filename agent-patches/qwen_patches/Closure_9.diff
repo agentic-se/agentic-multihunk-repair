@@ -1,0 +1,24 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessCommonJSModules.java b/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
+index 2987bdab..52bc8e3e 100644
+--- a/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
++++ b/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
+@@ -116,9 +116,17 @@ public class ProcessCommonJSModules implements CompilerPass {
+   private String normalizeSourceName(String filename) {
+     // The DOS command shell will normalize "/" to "\", so we have to
+     // wrestle it back.
+-
+-    if (filename.indexOf(filenamePrefix) == 0) {
++    
++    // Check for both forward and backslash versions of the prefix
++    // to handle cross-platform path differences
++    if (filename.startsWith(filenamePrefix)) {
+       filename = filename.substring(filenamePrefix.length());
++    } else {
++      // Try to normalize backslashes in case they were used in the original filename
++      String normalizedFilename = filename.replace('\\', '/');
++      if (normalizedFilename.startsWith(filenamePrefix)) {
++        filename = normalizedFilename.substring(filenamePrefix.length());
++      }
+     }
+ 
+     return filename;

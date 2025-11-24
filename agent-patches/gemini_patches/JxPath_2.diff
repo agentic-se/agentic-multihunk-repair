@@ -1,0 +1,68 @@
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/Expression.java
+@@ -1,9 +1,10 @@
+-import org.apache.commons.jxpath.Pointer;
+-import org.apache.commons.jxpath.ri.EvalContext;
+-import org.apache.commons.jxpath.ri.model.NodePointer;
+-import org.apache.commons.jxpath.ri.QName;
+-import org.apache.commons.jxpath.util.ValueUtils;
+-
+-import java.util.Collections;
+-import java.util.Iterator;
+-import java.util.Locale;
++import org.apache.commons.jxpath.NodeSet;
++import org.apache.commons.jxpath.Pointer;
++import org.apache.commons.jxpath.ri.EvalContext;
++import org.apache.commons.jxpath.ri.model.NodePointer;
++import org.apache.commons.jxpath.ri.QName;
++import org.apache.commons.jxpath.util.ValueUtils;
++
++import java.util.Collections;
++import java.util.Iterator;
++import java.util.Locale;
+@@ -1,7 +1,10 @@
+-    public Iterator iterate(EvalContext context) {
+-        Object result = compute(context);
+-        if (result instanceof EvalContext) {
+-            return new ValueIterator((EvalContext) result);
+-        }
+-        return ValueUtils.iterate(result);
+-    }
++    public Iterator iterate(EvalContext context) {
++        Object result = compute(context);
++        if (result instanceof EvalContext) {
++            return new ValueIterator((EvalContext) result);
++        }
++        if (result instanceof NodeSet) {
++            return new ValueIterator(((NodeSet) result).getPointers().iterator());
++        }
++        return ValueUtils.iterate(result);
++    }
+@@ -1,12 +1,15 @@
+-    public Iterator iteratePointers(EvalContext context) {
+-        Object result = compute(context);
+-        if (result == null) {
+-            return Collections.EMPTY_LIST.iterator();
+-        }
+-        if (result instanceof EvalContext) {
+-            return (EvalContext) result;
+-        }
+-        return new PointerIterator(ValueUtils.iterate(result),
+-                new QName(null, "value"),
+-                context.getRootContext().getCurrentNodePointer().getLocale());
+-    }
++    public Iterator iteratePointers(EvalContext context) {
++        Object result = compute(context);
++        if (result == null) {
++            return Collections.EMPTY_LIST.iterator();
++        }
++        if (result instanceof EvalContext) {
++            return (EvalContext) result;
++        }
++        if (result instanceof NodeSet) {
++            return ((NodeSet) result).getPointers().iterator();
++        }
++        return new PointerIterator(ValueUtils.iterate(result),
++                new QName(null, "value"),
++                context.getRootContext().getCurrentNodePointer().getLocale());
++    }

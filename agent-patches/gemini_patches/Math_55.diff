@@ -1,0 +1,208 @@
+--- a/src/main/java/org/apache/commons/math/geometry/Vector3D.java
++++ b/src/main/java/org/apache/commons/math/geometry/Vector3D.java
+@@ -1,2 +1,39 @@
+-      // compute cross product from v3 and v2 instead of v1 and v2
+-      return new Vector3D(v1.y * v2.z - v1.z * v2.y, v1.z * v2.x - v1.x * v2.z, v1.x * v2.y - v1.y * v2.x);
++      // Use a numerically stable algorithm for cross product to avoid cancellation errors
++      // when vectors are nearly collinear.
++      // This approach is based on the idea of computing v1 x (v2 - k * v1),
++      // where k is chosen to make (v2 - k * v1) nearly orthogonal to v1.
++      // This effectively reduces the problem to computing the cross product of v1
++      // with a small vector, which is less prone to cancellation.
++
++      final double x1 = v1.x;
++      final double y1 = v1.y;
++      final double z1 = v1.z;
++
++      final double x2 = v2.x;
++      final double y2 = v2.y;
++      final double z2 = v2.z;
++
++      // Compute k = (v1 . v2) / ||v1||^2
++      // This k is the projection coefficient of v2 onto v1.
++      final double dot  = x1 * x2 + y1 * y2 + z1 * z2;
++      final double normSq = x1 * x1 + y1 * y1 + z1 * z1;
++
++      if (normSq == 0.0) {
++          // If v1 is a zero vector, the cross product is zero.
++          return ZERO;
++      }
++
++      final double k = dot / normSq;
++
++      // Compute v_diff = v2 - k * v1
++      final double dx = x2 - k * x1;
++      final double dy = y2 - k * y1;
++      final double dz = z2 - k * z1;
++
++      // Now compute v1 x v_diff
++      // This is equivalent to v1 x (v2 - k * v1) = v1 x v2 - k * (v1 x v1) = v1 x v2 - k * 0 = v1 x v2
++      // The advantage is that v_diff is small and nearly orthogonal to v1,
++      // which reduces cancellation errors in the cross product calculation.
++      return new Vector3D(y1 * dz - z1 * dy,
++                          z1 * dx - x1 * dz,
++                          x1 * dy - y1 * dx);
+@@ -1,39 +1,18 @@
+-      // Use a numerically stable algorithm for cross product to avoid cancellation errors
+-      // when vectors are nearly collinear.
+-      // This approach is based on the idea of computing v1 x (v2 - k * v1),
+-      // where k is chosen to make (v2 - k * v1) nearly orthogonal to v1.
+-      // This effectively reduces the problem to computing the cross product of v1
+-      // with a small vector, which is less prone to cancellation.
+-
+-      final double x1 = v1.x;
+-      final double y1 = v1.y;
+-      final double z1 = v1.z;
+-
+-      final double x2 = v2.x;
+-      final double y2 = v2.y;
+-      final double z2 = v2.z;
+-
+-      // Compute k = (v1 . v2) / ||v1||^2
+-      // This k is the projection coefficient of v2 onto v1.
+-      final double dot  = x1 * x2 + y1 * y2 + z1 * z2;
+-      final double normSq = x1 * x1 + y1 * y1 + z1 * z1;
+-
+-      if (normSq == 0.0) {
+-          // If v1 is a zero vector, the cross product is zero.
+-          return ZERO;
+-      }
+-
+-      final double k = dot / normSq;
+-
+-      // Compute v_diff = v2 - k * v1
+-      final double dx = x2 - k * x1;
+-      final double dy = y2 - k * y1;
+-      final double dz = z2 - k * z1;
+-
+-      // Now compute v1 x v_diff
+-      // This is equivalent to v1 x (v2 - k * v1) = v1 x v2 - k * (v1 x v1) = v1 x v2 - k * 0 = v1 x v2
+-      // The advantage is that v_diff is small and nearly orthogonal to v1,
+-      // which reduces cancellation errors in the cross product calculation.
+-      return new Vector3D(y1 * dz - z1 * dy,
+-                          z1 * dx - x1 * dz,
+-                          x1 * dy - y1 * dx);
++      // Use a numerically stable algorithm for cross product to avoid cancellation errors
++      // when vectors are nearly collinear.
++      // This approach is based on the identity: v1 x v2 = v1 x (v2 - v1).
++      // By computing the difference vector (v2 - v1) first, which is small for nearly collinear vectors,
++      // and then taking the cross product with v1, we reduce the magnitude of intermediate products
++      // and thus minimize cancellation errors.
++
++      final double x1 = v1.x;
++      final double y1 = v1.y;
++      final double z1 = v1.z;
++
++      final double dx = v2.x - x1;
++      final double dy = v2.y - y1;
++      final double dz = v2.z - z1;
++
++      return new Vector3D(y1 * dz - z1 * dy,
++                          z1 * dx - x1 * dz,
++                          x1 * dy - y1 * dx);
+@@ -1,35 +1,18 @@
+-      // Use a numerically stable algorithm for cross product to avoid cancellation errors
+-      // when vectors are nearly collinear. This is achieved by using a compensated
+-      // subtraction for each component, which helps to preserve precision when subtracting
+-      // two nearly equal large numbers.
+-
+-      final double x1 = v1.x;
+-      final double y1 = v1.y;
+-      final double z1 = v1.z;
+-
+-      final double x2 = v2.x;
+-      final double y2 = v2.y;
+-      final double z2 = v2.z;
+-
+-      // Compute x component: y1 * z2 - z1 * y2
+-      double cX_term1 = y1 * z2;
+-      double cX_term2 = z1 * y2;
+-      double cX_approx = cX_term1 - cX_term2;
+-      double cX_err = (cX_term1 - cX_approx) - cX_term2;
+-      double cX = cX_approx + cX_err;
+-
+-      // Compute y component: z1 * x2 - x1 * z2
+-      double cY_term1 = z1 * x2;
+-      double cY_term2 = x1 * z2;
+-      double cY_approx = cY_term1 - cY_term2;
+-      double cY_err = (cY_term1 - cY_approx) - cY_term2;
+-      double cY = cY_approx + cY_err;
+-
+-      // Compute z component: x1 * y2 - y1 * x2
+-      double cZ_term1 = x1 * y2;
+-      double cZ_term2 = y1 * x2;
+-      double cZ_approx = cZ_term1 - cZ_term2;
+-      double cZ_err = (cZ_term1 - cZ_approx) - cZ_term2;
+-      double cZ = cZ_approx + cZ_err;
+-
+-      return new Vector3D(cX, cY, cZ);
++      // Use a numerically stable algorithm for cross product to avoid cancellation errors
++      // when vectors are nearly collinear.
++      // This approach is based on the identity: v1 x v2 = v1 x (v2 - v1).
++      // By computing the difference vector (v2 - v1) first, which is small for nearly collinear vectors,
++      // and then taking the cross product with v1, we reduce the magnitude of intermediate products
++      // and thus minimize cancellation errors.
++
++      final double x1 = v1.x;
++      final double y1 = v1.y;
++      final double z1 = v1.z;
++
++      final double dx = v2.x - x1;
++      final double dy = v2.y - y1;
++      final double dz = v2.z - z1;
++
++      return new Vector3D(y1 * dz - z1 * dy,
++                          z1 * dx - x1 * dz,
++                          x1 * dy - y1 * dx);
+@@ -1,18 +1,33 @@
+-      // Use a numerically stable algorithm for cross product to avoid cancellation errors
+-      // when vectors are nearly collinear.
+-      // This approach is based on the identity: v1 x v2 = v1 x (v2 - v1).
+-      // By computing the difference vector (v2 - v1) first, which is small for nearly collinear vectors,
+-      // and then taking the cross product with v1, we reduce the magnitude of intermediate products
+-      // and thus minimize cancellation errors.
+-
+-      final double x1 = v1.x;
+-      final double y1 = v1.y;
+-      final double z1 = v1.z;
+-
+-      final double dx = v2.x - x1;
+-      final double dy = v2.y - y1;
+-      final double dz = v2.z - z1;
+-
+-      return new Vector3D(y1 * dz - z1 * dy,
+-                          z1 * dx - x1 * dz,
+-                          x1 * dy - y1 * dx);
++      // We reduce cancellation errors by preconditioning, as suggested by Kahan.
++      // We replace v1 by v3 = v1 - rho * v2, where rho is chosen to make v3
++      // nearly orthogonal to v2, and computed such that v3 is small and accurate.
++      // Then, v1 x v2 = (v3 + rho * v2) x v2 = v3 x v2.
++
++      final double x1 = v1.x;
++      final double y1 = v1.y;
++      final double z1 = v1.z;
++
++      final double x2 = v2.x;
++      final double y2 = v2.y;
++      final double z2 = v2.z;
++
++      // Compute rho = (v1 . v2) / ||v2||^2
++      final double dot = x1 * x2 + y1 * y2 + z1 * z2;
++      final double normSq_v2 = x2 * x2 + y2 * y2 + z2 * z2;
++
++      if (normSq_v2 == 0.0) {
++          // If v2 is a zero vector, the cross product is zero.
++          return ZERO;
++      }
++
++      final double rho = dot / normSq_v2;
++
++      // Compute v3 = v1 - rho * v2
++      final double x3 = x1 - rho * x2;
++      final double y3 = y1 - rho * y2;
++      final double z3 = z1 - rho * z2;
++
++      // Compute v3 x v2 using the naive formula. Since v3 is small, this is more accurate.
++      return new Vector3D(y3 * z2 - z3 * y2,
++                          z3 * x2 - x3 * z2,
++                          x3 * y2 - y3 * x2);

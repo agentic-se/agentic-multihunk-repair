@@ -1,0 +1,46 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
+index 3300d03..056b1fe 100644
+--- a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
+@@ -549,6 +549,29 @@ public class DOMNodePointer extends NodePointer {
+         return buffer.toString();
+     }
+ 
++    /**
++     * Determine if two element nodes are equivalent (same local name and namespace).
++     * @param node1 first node
++     * @param node2 second node
++     * @return true if nodes are equivalent
++     */
++    private static boolean areEquivalentElements(Node node1, Node node2) {
++        if (node1.getNodeType() != Node.ELEMENT_NODE || 
++            node2.getNodeType() != Node.ELEMENT_NODE) {
++            return false;
++        }
++        
++        String localName1 = DOMNodePointer.getLocalName(node1);
++        String localName2 = DOMNodePointer.getLocalName(node2);
++        String nsUri1 = DOMNodePointer.getNamespaceURI(node1);
++        String nsUri2 = DOMNodePointer.getNamespaceURI(node2);
++        
++        // Same local name and same namespace URI
++        return localName1.equals(localName2) && 
++               nsUri1 != null && nsUri2 != null && 
++               nsUri1.equals(nsUri2);
++    }
++
+     /**
+      * Get relative position of this among like-named siblings.
+      * @return 1..n
+@@ -559,8 +582,9 @@ public class DOMNodePointer extends NodePointer {
+         while (n != null) {
+             if (n.getNodeType() == Node.ELEMENT_NODE) {
+                 String nm = n.getNodeName();
+-                if (nm.equals(node.getNodeName())) {
+-                count++;
++                if (nm.equals(node.getNodeName()) || 
++                    areEquivalentElements(n, node)) {
++                    count++;
+                 }
+             }
+             n = n.getPreviousSibling();

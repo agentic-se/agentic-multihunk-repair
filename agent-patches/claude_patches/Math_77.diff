@@ -1,0 +1,45 @@
+diff --git a/src/main/java/org/apache/commons/math/linear/ArrayRealVector.java b/src/main/java/org/apache/commons/math/linear/ArrayRealVector.java
+index 37c4417e2..0bf91c305 100644
+--- a/src/main/java/org/apache/commons/math/linear/ArrayRealVector.java
++++ b/src/main/java/org/apache/commons/math/linear/ArrayRealVector.java
+@@ -713,16 +713,6 @@ public class ArrayRealVector extends AbstractRealVector implements Serializable
+         return sum;
+     }
+ 
+-    /** {@inheritDoc} */
+-    @Override
+-    public double getLInfNorm() {
+-        double max = 0;
+-        for (double a : data) {
+-            max += Math.max(max, Math.abs(a));
+-        }
+-        return max;
+-    }
+-
+     /** {@inheritDoc} */
+     public double getDistance(RealVector v)
+         throws IllegalArgumentException {
+diff --git a/src/main/java/org/apache/commons/math/linear/OpenMapRealVector.java b/src/main/java/org/apache/commons/math/linear/OpenMapRealVector.java
+index e02596003..eb5be1b68 100644
+--- a/src/main/java/org/apache/commons/math/linear/OpenMapRealVector.java
++++ b/src/main/java/org/apache/commons/math/linear/OpenMapRealVector.java
+@@ -495,15 +495,6 @@ public class OpenMapRealVector extends AbstractRealVector implements SparseRealV
+         return max;
+     }
+ 
+-    public double getLInfNorm() {
+-        double max = 0;
+-        Iterator iter = entries.iterator();
+-        while (iter.hasNext()) {
+-            iter.advance();
+-            max += iter.value();
+-        }
+-        return max;
+-    }
+     /**
+      * Optimized method to compute LInfDistance.
+      * @param v The vector to compute from
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

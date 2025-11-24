@@ -1,0 +1,26 @@
+diff --git a/src/com/google/javascript/jscomp/RemoveUnusedVars.java b/src/com/google/javascript/jscomp/RemoveUnusedVars.java
+index be72a580..379b84a7 100644
+--- a/src/com/google/javascript/jscomp/RemoveUnusedVars.java
++++ b/src/com/google/javascript/jscomp/RemoveUnusedVars.java
+@@ -732,9 +732,18 @@ class RemoveUnusedVars
+           for (Assign assign : assignsByVar.get(var)) {
+             if (assign.isPropertyAssign) {
+               hasPropertyAssign = true;
+-            } else if (!NodeUtil.isLiteralValue(
+-                assign.assignNode.getLastChild(), true)) {
+-              assignedToUnknownValue = true;
++            } else {
++              // If the assigned value is not a literal or if the assignment
++              // occurs in a context where the value may escape (i.e., the
++              // assignment is used as part of a larger expression), then
++              // treat it as an unknown value. This ensures that subsequent
++              // property assignments are considered real uses of the
++              // variable (e.g., when the assigned object is aliased via
++              // Array.push or a function call argument).
++              if (!NodeUtil.isLiteralValue(assign.assignNode.getLastChild(), true)
++                  || assign.maybeAliased) {
++                assignedToUnknownValue = true;
++              }
+             }
+           }
+ 

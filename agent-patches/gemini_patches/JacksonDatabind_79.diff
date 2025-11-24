@@ -1,0 +1,84 @@
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/BeanSerializerBase.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/BeanSerializerBase.java
+@@ -1,3 +1,3 @@
+-                    objectIdInfo = intr.findObjectReferenceInfo(accessor,
+-                            new ObjectIdInfo(NAME_FOR_OBJECT_REF, null, null, null));
+-                        oiw = _objectIdWriter.withAlwaysAsId(objectIdInfo.getAlwaysAsId());
++                    objectIdInfo = intr.findObjectReferenceInfo(accessor,
++                            new ObjectIdInfo(NAME_FOR_OBJECT_REF, null, null, null, _objectIdWriter.getAlwaysAsId()));
++                        oiw = _objectIdWriter.withAlwaysAsId(objectIdInfo.getAlwaysAsId());
+@@ -1,3 +1,3 @@
+-                    objectIdInfo = intr.findObjectReferenceInfo(accessor,
+-                            new ObjectIdInfo(NAME_FOR_OBJECT_REF, null, null, null, _objectIdWriter.getAlwaysAsId()));
+-                        oiw = _objectIdWriter.withAlwaysAsId(objectIdInfo.getAlwaysAsId());
++                    objectIdInfo = intr.findObjectReferenceInfo(accessor,
++                            new ObjectIdInfo(NAME_FOR_OBJECT_REF, null, null, null, _objectIdWriter.alwaysAsId));
++                        oiw = _objectIdWriter.withAlwaysAsId(objectIdInfo.getAlwaysAsId());
+@@ -1,3 +1,3 @@
+-                    objectIdInfo = intr.findObjectReferenceInfo(accessor,
+-                            new ObjectIdInfo(NAME_FOR_OBJECT_REF, null, null, null, _objectIdWriter.alwaysAsId));
+-                        oiw = _objectIdWriter.withAlwaysAsId(objectIdInfo.getAlwaysAsId());
++                    objectIdInfo = intr.findObjectReferenceInfo(accessor,
++                            new ObjectIdInfo(NAME_FOR_OBJECT_REF, null, null, _objectIdWriter.alwaysAsId, com.fasterxml.jackson.annotation.SimpleObjectIdResolver.class));
++                        oiw = _objectIdWriter.withAlwaysAsId(objectIdInfo.getAlwaysAsId());
+@@ -1,3 +1,4 @@
+-                    objectIdInfo = intr.findObjectReferenceInfo(accessor,
+-                            new ObjectIdInfo(NAME_FOR_OBJECT_REF, null, null, _objectIdWriter.alwaysAsId, com.fasterxml.jackson.annotation.SimpleObjectIdResolver.class));
+-                        oiw = _objectIdWriter.withAlwaysAsId(objectIdInfo.getAlwaysAsId());
++                    objectIdInfo = intr.findObjectReferenceInfo(accessor,
++                            new com.fasterxml.jackson.databind.introspect.ObjectIdInfo(NAME_FOR_OBJECT_REF, null, null, com.fasterxml.jackson.annotation.SimpleObjectIdResolver.class)
++                                .withAlwaysAsId(_objectIdWriter.alwaysAsId));
++                        oiw = _objectIdWriter.withAlwaysAsId(objectIdInfo.getAlwaysAsId());
+
+--- a/src/test/java/com/fasterxml/jackson/databind/objectid/TestObjectIdSerialization.java
++++ b/src/test/java/com/fasterxml/jackson/databind/objectid/TestObjectIdSerialization.java
+@@ -1,10 +1,39 @@
+-    public void testInvalidProp() throws Exception
+-    {
+-        try {
+-            MAPPER.writeValueAsString(new Broken());
+-            fail("Should have thrown an exception");
+-        } catch (JsonMappingException e) {
+-            verifyException(e, "can not find property with name 'id'");
+-        }
+-    }
+-}
++    @JsonIdentityInfo(generator=ObjectIdGenerators.IntSequenceGenerator.class, property="id")
++    @JsonIdentityReference(alwaysAsId=true)
++    static class ReallyAlwaysAsId
++    {
++        public int value;
++
++        public ReallyAlwaysAsId() { this(0); }
++        public ReallyAlwaysAsId(int v) {
++            value = v;
++        }
++    }
++
++    @JsonPropertyOrder(alphabetic=true)
++    static class ReallyAlwaysContainer
++    {
++
++        @JsonIdentityReference(alwaysAsId=true)
++        public AlwaysAsId a = new AlwaysAsId(13);
++
++        public ReallyAlwaysAsId b = new ReallyAlwaysAsId(13);
++
++    }
++
++    public void testReallyAlwaysAsId() throws Exception
++    {
++        String json = MAPPER.writeValueAsString(new ReallyAlwaysContainer());
++        assertEquals("{\"a\":1,\"b\":2}", json);
++    }
++
++    public void testInvalidProp() throws Exception
++    {
++        try {
++            MAPPER.writeValueAsString(new Broken());
++            fail("Should have thrown an exception");
++        } catch (JsonMappingException e) {
++            verifyException(e, "can not find property with name 'id'");
++        }
++    }
++}

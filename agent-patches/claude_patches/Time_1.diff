@@ -1,0 +1,57 @@
+diff --git a/src/main/java/org/joda/time/Partial.java b/src/main/java/org/joda/time/Partial.java
+index 3b84fdc6..cba1927f 100644
+--- a/src/main/java/org/joda/time/Partial.java
++++ b/src/main/java/org/joda/time/Partial.java
+@@ -214,6 +214,15 @@ public final class Partial
+             DateTimeFieldType loopType = types[i];
+             DurationField loopUnitField = loopType.getDurationType().getField(iChronology);
+             if (i > 0) {
++                if (loopUnitField.isSupported() == false) {
++                    if (lastUnitField.isSupported()) {
++                        throw new IllegalArgumentException("Types array must be in order largest-smallest: " +
++                                        types[i - 1].getName() + " < " + loopType.getName());
++                    } else {
++                        throw new IllegalArgumentException("Types array must not contain duplicate unsupported: " +
++                                        types[i - 1].getName() + " and " + loopType.getName());
++                    }
++                }
+                 int compare = lastUnitField.compareTo(loopUnitField);
+                 if (compare < 0) {
+                     throw new IllegalArgumentException("Types array must be in order largest-smallest: " +
+@@ -446,13 +455,25 @@ public final class Partial
+                         if (compare > 0) {
+                             break;
+                         } else if (compare == 0) {
+-                            if (fieldType.getRangeDurationType() == null) {
+-                                break;
+-                            }
+-                            DurationField rangeField = fieldType.getRangeDurationType().getField(iChronology);
+-                            DurationField loopRangeField = loopType.getRangeDurationType().getField(iChronology);
+-                            if (rangeField.compareTo(loopRangeField) > 0) {
+-                                break;
++                            DurationFieldType fieldRangeDurationType = fieldType.getRangeDurationType();
++                            DurationFieldType loopRangeDurationType = loopType.getRangeDurationType();
++                            if (fieldRangeDurationType == null) {
++                                if (loopRangeDurationType == null) {
++                                    break;
++                                }
++                                // new field has null range, but loop field has non-null range
++                                // so new field is smaller, thus should be placed after (continue loop)
++                            } else {
++                                if (loopRangeDurationType == null) {
++                                    // new field has non-null range, but loop field has null range
++                                    // so new field is larger, break here
++                                    break;
++                                }
++                                DurationField rangeField = fieldRangeDurationType.getField(iChronology);
++                                DurationField loopRangeField = loopRangeDurationType.getField(iChronology);
++                                if (rangeField.compareTo(loopRangeField) > 0) {
++                                    break;
++                                }
+                             }
+                         }
+                     }
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

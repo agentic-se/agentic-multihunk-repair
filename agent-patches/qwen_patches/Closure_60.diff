@@ -1,0 +1,41 @@
+diff --git a/src/com/google/javascript/jscomp/NodeUtil.java b/src/com/google/javascript/jscomp/NodeUtil.java
+index 7f20c2e6..2c43f0e4 100644
+--- a/src/com/google/javascript/jscomp/NodeUtil.java
++++ b/src/com/google/javascript/jscomp/NodeUtil.java
+@@ -100,6 +100,10 @@ public final class NodeUtil {
+           return TernaryValue.UNKNOWN;
+         }
+       }
++      case Token.VOID:
++        // Void expressions evaluate to false in boolean context,
++        // regardless of side effects.
++        return TernaryValue.FALSE;
+       case Token.ARRAYLIT:
+       case Token.OBJECTLIT:
+         // ignoring side-effects
+@@ -133,6 +137,11 @@ public final class NodeUtil {
+         return TernaryValue.FALSE;
+ 
+       case Token.VOID:
++          // A void expression with side effects should be considered unknown,
++          // not false, since it might have side effects.
++          if (mayHaveSideEffects(n.getFirstChild())) {
++            return TernaryValue.UNKNOWN;
++          }
+           return TernaryValue.FALSE;
+ 
+       case Token.NAME:
+@@ -807,6 +816,13 @@ public final class NodeUtil {
+         }
+         return true;
+ 
++      case Token.VOID:
++        // Void expressions have side effects if their argument does.
++        if (checkForStateChangeHelper(n.getFirstChild(), checkForNewObjects, compiler)) {
++          return true;
++        }
++        break;
++
+       default:
+         if (isSimpleOperatorType(n.getType())) {
+           break;

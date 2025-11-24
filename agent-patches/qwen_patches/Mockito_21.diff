@@ -1,0 +1,23 @@
+diff --git a/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java b/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java
+index 0cc8226d8..1211580de 100644
+--- a/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java
++++ b/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java
+@@ -21,8 +21,16 @@ public class ConstructorInstantiator implements Instantiator {
+         try {
+             //this is kind of overengineered because we don't need to support more params
+             //however, I know we will be needing it :)
+-            Constructor<T> c = cls.getDeclaredConstructor(outerClassInstance.getClass());
+-            return c.newInstance(outerClassInstance);
++            Class<?> outerClass = cls.getDeclaringClass();
++            if (outerClass != null) {
++                // For inner classes, we should look for a constructor with the declaring class type
++                Constructor<T> c = cls.getDeclaredConstructor(outerClass);
++                return c.newInstance(outerClassInstance);
++            } else {
++                // Not an inner class, fall back to original behavior
++                Constructor<T> c = cls.getDeclaredConstructor(outerClassInstance.getClass());
++                return c.newInstance(outerClassInstance);
++            }
+         } catch (Exception e) {
+             throw paramsException(cls, e);
+         }

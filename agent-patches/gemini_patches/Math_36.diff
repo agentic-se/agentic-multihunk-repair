@@ -1,0 +1,120 @@
+--- a/src/main/java/org/apache/commons/math/fraction/BigFraction.java
++++ b/src/main/java/org/apache/commons/math/fraction/BigFraction.java
+@@ -1,7 +1,11 @@
+-    @Override
+-    public double doubleValue() {
+-        double result = numerator.doubleValue() / denominator.doubleValue();
+-            // Numerator and/or denominator must be out of range:
+-            // Calculate how far to shift them to put them in range.
+-        return result;
+-    }
++    @Override
++    public double doubleValue() {
++        if (numerator.bitLength() > 62 || denominator.bitLength() > 62) {
++            // The number of bits in a long is 63 (excluding sign bit).
++            // If the number of bits is greater than 62, then the BigInteger
++            // might be too large to be converted to a double without
++            // losing precision or becoming NaN.
++            return bigDecimalValue().doubleValue();
++        }
++        return numerator.doubleValue() / denominator.doubleValue();
++    }
+@@ -1,7 +1,11 @@
+-    @Override
+-    public float floatValue() {
+-        float result = numerator.floatValue() / denominator.floatValue();
+-            // Numerator and/or denominator must be out of range:
+-            // Calculate how far to shift them to put them in range.
+-        return result;
+-    }
++    @Override
++    public float floatValue() {
++        if (numerator.bitLength() > 30 || denominator.bitLength() > 30) {
++            // The number of bits in an int is 31 (excluding sign bit).
++            // If the number of bits is greater than 30, then the BigInteger
++            // might be too large to be converted to a float without
++            // losing precision or becoming NaN.
++            return bigDecimalValue().floatValue();
++        }
++        return numerator.floatValue() / denominator.floatValue();
++    }
+@@ -1,11 +1,7 @@
+-    @Override
+-    public double doubleValue() {
+-        if (numerator.bitLength() > 62 || denominator.bitLength() > 62) {
+-            // The number of bits in a long is 63 (excluding sign bit).
+-            // If the number of bits is greater than 62, then the BigInteger
+-            // might be too large to be converted to a double without
+-            // losing precision or becoming NaN.
+-            return bigDecimalValue().doubleValue();
+-        }
+-        return numerator.doubleValue() / denominator.doubleValue();
+-    }
++    @Override
++    public double doubleValue() {
++        double result = numerator.doubleValue() / denominator.doubleValue();
++            // Numerator and/or denominator must be out of range:
++            // Calculate how far to shift them to put them in range.
++        return result;
++    }
+@@ -1,11 +1,7 @@
+-    @Override
+-    public float floatValue() {
+-        if (numerator.bitLength() > 30 || denominator.bitLength() > 30) {
+-            // The number of bits in an int is 31 (excluding sign bit).
+-            // If the number of bits is greater than 30, then the BigInteger
+-            // might be too large to be converted to a float without
+-            // losing precision or becoming NaN.
+-            return bigDecimalValue().floatValue();
+-        }
+-        return numerator.floatValue() / denominator.floatValue();
+-    }
++    @Override
++    public float floatValue() {
++        float result = numerator.floatValue() / denominator.floatValue();
++            // Numerator and/or denominator must be out of range:
++            // Calculate how far to shift them to put them in range.
++        return result;
++    }
+@@ -1,7 +1,13 @@
+-    @Override
+-    public double doubleValue() {
+-        double result = numerator.doubleValue() / denominator.doubleValue();
+-            // Numerator and/or denominator must be out of range:
+-            // Calculate how far to shift them to put them in range.
+-        return result;
+-    }
++    @Override
++    public double doubleValue() {
++        double n = numerator.doubleValue();
++        double d = denominator.doubleValue();
++
++        if (Double.isInfinite(n) || Double.isNaN(n) ||
++            Double.isInfinite(d) || Double.isNaN(d)) {
++            // Fallback to BigDecimal for very large numbers
++            return bigDecimalValue().doubleValue();
++        }
++
++        return n / d;
++    }
+@@ -1,7 +1,13 @@
+-    @Override
+-    public float floatValue() {
+-        float result = numerator.floatValue() / denominator.floatValue();
+-            // Numerator and/or denominator must be out of range:
+-            // Calculate how far to shift them to put them in range.
+-        return result;
+-    }
++    @Override
++    public float floatValue() {
++        float n = numerator.floatValue();
++        float d = denominator.floatValue();
++
++        if (Float.isInfinite(n) || Float.isNaN(n) ||
++            Float.isInfinite(d) || Float.isNaN(d)) {
++            // Fallback to BigDecimal for very large numbers
++            return bigDecimalValue().floatValue();
++        }
++
++        return n / d;
++    }

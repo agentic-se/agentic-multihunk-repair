@@ -1,0 +1,611 @@
+--- a/src/org/mockito/Answers.java
++++ b/src/org/mockito/Answers.java
+@@ -1,1 +1,1 @@
+-    RETURNS_DEEP_STUBS(new ReturnsDeepStubs()),
++    RETURNS_DEEP_STUBS(new NonSerializableReturnsDeepStubs()),
+@@ -1,8 +1,9 @@
+-package org.mockito;
+-
+-import org.mockito.internal.stubbing.answers.CallsRealMethods;
+-import org.mockito.internal.stubbing.defaultanswers.GloballyConfiguredAnswer;
+-import org.mockito.internal.stubbing.defaultanswers.ReturnsDeepStubs;
+-import org.mockito.internal.stubbing.defaultanswers.ReturnsMocks;
+-import org.mockito.internal.stubbing.defaultanswers.ReturnsSmartNulls;
+-import org.mockito.stubbing.Answer;
++package org.mockito;
++
++import org.mockito.internal.stubbing.answers.CallsRealMethods;
++import org.mockito.internal.stubbing.defaultanswers.GloballyConfiguredAnswer;
++import org.mockito.internal.stubbing.defaultanswers.ReturnsDeepStubs;
++import org.mockito.internal.stubbing.defaultanswers.ReturnsMocks;
++import org.mockito.internal.stubbing.defaultanswers.ReturnsSmartNulls;
++import org.mockito.internal.stubbing.defaultanswers.NonSerializableReturnsDeepStubs;
++import org.mockito.stubbing.Answer;
+
+--- a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
++++ b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+@@ -1,6 +1,6 @@
+-    private Object newDeepStubMock(GenericMetadataSupport returnTypeGenericMetadata) {
+-        return mockitoCore().mock(
+-                returnTypeGenericMetadata.rawType(),
+-                withSettingsUsing(returnTypeGenericMetadata)
+-        );
+-    }
++    private Object newDeepStubMock(InvocationOnMock invocation, GenericMetadataSupport returnTypeGenericMetadata) {
++        return mockitoCore().mock(
++                returnTypeGenericMetadata.rawType(),
++                withSettingsUsing(invocation.getMock(), returnTypeGenericMetadata)
++        );
++    }
+@@ -1,4 +1,4 @@
+-        return recordDeepStubAnswer(
+-                newDeepStubMock(returnTypeGenericMetadata),
+-                container
+-        );
++        return recordDeepStubAnswer(
++                newDeepStubMock(invocation, returnTypeGenericMetadata),
++                container
++        );
+@@ -1,8 +1,12 @@
+-    private MockSettings withSettingsUsing(GenericMetadataSupport returnTypeGenericMetadata) {
+-        MockSettings mockSettings = returnTypeGenericMetadata.hasRawExtraInterfaces() ?
+-                withSettings().extraInterfaces(returnTypeGenericMetadata.rawExtraInterfaces())
+-                : withSettings();
+-
+-        return mockSettings.serializable()
+-                .defaultAnswer(returnsDeepStubsAnswerUsing(returnTypeGenericMetadata));
+-    }
++    private MockSettings withSettingsUsing(Object parentMock, GenericMetadataSupport returnTypeGenericMetadata) {
++        MockSettings mockSettings = returnTypeGenericMetadata.hasRawExtraInterfaces() ?
++                withSettings().extraInterfaces(returnTypeGenericMetadata.rawExtraInterfaces())
++                : withSettings();
++
++        if (new MockUtil().getMockHandler(parentMock).getMockSettings().isSerializable()) {
++            mockSettings.serializable();
++        }
++
++        return mockSettings
++                .defaultAnswer(returnsDeepStubsAnswerUsing(returnTypeGenericMetadata));
++    }
+@@ -1,3 +1,3 @@
+-        if (new MockUtil().getMockHandler(parentMock).getMockSettings().isSerializable()) {
+-            mockSettings.serializable();
+-        }
++        if (new MockUtil().getMockHandler(parentMock).getMockSettings().isSerializable()) {
++            mockSettings = mockSettings.serializable();
++        }
+@@ -1,12 +1,11 @@
+-    private MockSettings withSettingsUsing(Object parentMock, GenericMetadataSupport returnTypeGenericMetadata) {
+-        MockSettings mockSettings = returnTypeGenericMetadata.hasRawExtraInterfaces() ?
+-                withSettings().extraInterfaces(returnTypeGenericMetadata.rawExtraInterfaces())
+-                : withSettings();
+-
+-        if (new MockUtil().getMockHandler(parentMock).getMockSettings().isSerializable()) {
+-            mockSettings = mockSettings.serializable();
+-        }
+-
+-        return mockSettings
+-                .defaultAnswer(returnsDeepStubsAnswerUsing(returnTypeGenericMetadata));
+-    }
++    private MockSettings withSettingsUsing(Object parentMock, GenericMetadataSupport returnTypeGenericMetadata) {
++        MockSettingsImpl mockSettings = (MockSettingsImpl) (returnTypeGenericMetadata.hasRawExtraInterfaces() ?
++                withSettings().extraInterfaces(returnTypeGenericMetadata.rawExtraInterfaces())
++                : withSettings());
++
++        SerializableMode parentSerializableMode = new MockUtil().getMockHandler(parentMock).getMockSettings().getSerializableMode();
++        mockSettings.serializable(parentSerializableMode);
++
++        return mockSettings
++                .defaultAnswer(returnsDeepStubsAnswerUsing(returnTypeGenericMetadata));
++    }
+@@ -1,18 +1,20 @@
+-package org.mockito.internal.stubbing.defaultanswers;
+-
+-import org.mockito.MockSettings;
+-import org.mockito.Mockito;
+-import org.mockito.internal.InternalMockHandler;
+-import org.mockito.internal.MockitoCore;
+-import org.mockito.internal.creation.settings.CreationSettings;
+-import org.mockito.internal.stubbing.InvocationContainerImpl;
+-import org.mockito.internal.stubbing.StubbedInvocationMatcher;
+-import org.mockito.internal.util.MockUtil;
+-import org.mockito.internal.util.reflection.GenericMetadataSupport;
+-import org.mockito.invocation.InvocationOnMock;
+-import org.mockito.stubbing.Answer;
+-
+-import java.io.IOException;
+-import java.io.Serializable;
+-
+-import static org.mockito.Mockito.withSettings;
++package org.mockito.internal.stubbing.defaultanswers;
++
++import org.mockito.MockSettings;
++import org.mockito.Mockito;
++import org.mockito.internal.InternalMockHandler;
++import org.mockito.internal.MockitoCore;
++import org.mockito.internal.creation.settings.CreationSettings;
++import org.mockito.internal.stubbing.InvocationContainerImpl;
++import org.mockito.internal.stubbing.StubbedInvocationMatcher;
++import org.mockito.internal.util.MockUtil;
++import org.mockito.internal.util.reflection.GenericMetadataSupport;
++import org.mockito.invocation.InvocationOnMock;
++import org.mockito.stubbing.Answer;
++import org.mockito.internal.creation.MockSettingsImpl;
++import org.mockito.mock.SerializableMode;
++
++import java.io.IOException;
++import java.io.Serializable;
++
++import static org.mockito.Mockito.withSettings;
+@@ -1,1 +1,1 @@
+-public class ReturnsDeepStubs implements Answer<Object>, Serializable {
++public class ReturnsDeepStubs implements Answer<Object> {
+@@ -1,1 +1,1 @@
+-    private static class ReturnsDeepStubsSerializationFallback extends ReturnsDeepStubs implements Serializable {
++    private static class ReturnsDeepStubsSerializationFallback extends ReturnsDeepStubs {
+@@ -1,1 +1,1 @@
+-public class ReturnsDeepStubs implements Answer<Object> {
++public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+@@ -1,1 +1,1 @@
+-    private static class ReturnsDeepStubsSerializationFallback extends ReturnsDeepStubs {
++    private static class ReturnsDeepStubsSerializationFallback extends ReturnsDeepStubs implements Serializable {
+@@ -1,11 +1,8 @@
+-    private MockSettings withSettingsUsing(Object parentMock, GenericMetadataSupport returnTypeGenericMetadata) {
+-        MockSettingsImpl mockSettings = (MockSettingsImpl) (returnTypeGenericMetadata.hasRawExtraInterfaces() ?
+-                withSettings().extraInterfaces(returnTypeGenericMetadata.rawExtraInterfaces())
+-                : withSettings());
+-
+-        SerializableMode parentSerializableMode = new MockUtil().getMockHandler(parentMock).getMockSettings().getSerializableMode();
+-        mockSettings.serializable(parentSerializableMode);
+-
+-        return mockSettings
+-                .defaultAnswer(returnsDeepStubsAnswerUsing(returnTypeGenericMetadata));
+-    }
++    private MockSettings withSettingsUsing(GenericMetadataSupport returnTypeGenericMetadata) {
++        MockSettings mockSettings = returnTypeGenericMetadata.hasRawExtraInterfaces() ?
++                withSettings().extraInterfaces(returnTypeGenericMetadata.rawExtraInterfaces())
++                : withSettings();
++
++        return mockSettings.serializable()
++                .defaultAnswer(returnsDeepStubsAnswerUsing(returnTypeGenericMetadata));
++    }
+@@ -1,6 +1,6 @@
+-    private Object newDeepStubMock(InvocationOnMock invocation, GenericMetadataSupport returnTypeGenericMetadata) {
+-        return mockitoCore().mock(
+-                returnTypeGenericMetadata.rawType(),
+-                withSettingsUsing(invocation.getMock(), returnTypeGenericMetadata)
+-        );
+-    }
++    private Object newDeepStubMock(GenericMetadataSupport returnTypeGenericMetadata) {
++        return mockitoCore().mock(
++                returnTypeGenericMetadata.rawType(),
++                withSettingsUsing(returnTypeGenericMetadata)
++        );
++    }
+@@ -1,5 +1,5 @@
+-        // record deep stub answer
+-        return recordDeepStubAnswer(
+-                newDeepStubMock(invocation, returnTypeGenericMetadata),
+-                container
+-        );
++        // record deep stub answer
++        return recordDeepStubAnswer(
++                newDeepStubMock(returnTypeGenericMetadata),
++                container
++        );
+@@ -1,20 +1,18 @@
+-package org.mockito.internal.stubbing.defaultanswers;
+-
+-import org.mockito.MockSettings;
+-import org.mockito.Mockito;
+-import org.mockito.internal.InternalMockHandler;
+-import org.mockito.internal.MockitoCore;
+-import org.mockito.internal.creation.settings.CreationSettings;
+-import org.mockito.internal.stubbing.InvocationContainerImpl;
+-import org.mockito.internal.stubbing.StubbedInvocationMatcher;
+-import org.mockito.internal.util.MockUtil;
+-import org.mockito.internal.util.reflection.GenericMetadataSupport;
+-import org.mockito.invocation.InvocationOnMock;
+-import org.mockito.stubbing.Answer;
+-import org.mockito.internal.creation.MockSettingsImpl;
+-import org.mockito.mock.SerializableMode;
+-
+-import java.io.IOException;
+-import java.io.Serializable;
+-
+-import static org.mockito.Mockito.withSettings;
++package org.mockito.internal.stubbing.defaultanswers;
++
++import org.mockito.MockSettings;
++import org.mockito.Mockito;
++import org.mockito.internal.InternalMockHandler;
++import org.mockito.internal.MockitoCore;
++import org.mockito.internal.creation.settings.CreationSettings;
++import org.mockito.internal.stubbing.InvocationContainerImpl;
++import org.mockito.internal.stubbing.StubbedInvocationMatcher;
++import org.mockito.internal.util.MockUtil;
++import org.mockito.internal.util.reflection.GenericMetadataSupport;
++import org.mockito.invocation.InvocationOnMock;
++import org.mockito.stubbing.Answer;
++
++import java.io.IOException;
++import java.io.Serializable;
++
++import static org.mockito.Mockito.withSettings;
+@@ -1,6 +1,6 @@
+-    private Object newDeepStubMock(GenericMetadataSupport returnTypeGenericMetadata) {
+-        return mockitoCore().mock(
+-                returnTypeGenericMetadata.rawType(),
+-                withSettingsUsing(returnTypeGenericMetadata)
+-        );
+-    }
++    private Object newDeepStubMock(InvocationOnMock invocation, GenericMetadataSupport returnTypeGenericMetadata) {
++        return mockitoCore().mock(
++                returnTypeGenericMetadata.rawType(),
++                withSettingsUsing(invocation.getMock(), returnTypeGenericMetadata)
++        );
++    }
+@@ -1,4 +1,4 @@
+-        return recordDeepStubAnswer(
+-                newDeepStubMock(returnTypeGenericMetadata),
+-                container
+-        );
++        return recordDeepStubAnswer(
++                newDeepStubMock(invocation, returnTypeGenericMetadata),
++                container
++        );
+@@ -1,8 +1,12 @@
+-    private MockSettings withSettingsUsing(GenericMetadataSupport returnTypeGenericMetadata) {
+-        MockSettings mockSettings = returnTypeGenericMetadata.hasRawExtraInterfaces() ?
+-                withSettings().extraInterfaces(returnTypeGenericMetadata.rawExtraInterfaces())
+-                : withSettings();
+-
+-        return mockSettings.serializable()
+-                .defaultAnswer(returnsDeepStubsAnswerUsing(returnTypeGenericMetadata));
+-    }
++    private MockSettings withSettingsUsing(Object parentMock, GenericMetadataSupport returnTypeGenericMetadata) {
++        MockSettings mockSettings = returnTypeGenericMetadata.hasRawExtraInterfaces() ?
++                withSettings().extraInterfaces(returnTypeGenericMetadata.rawExtraInterfaces())
++                : withSettings();
++
++        if (new MockUtil().getMockHandler(parentMock).getMockSettings().isSerializable()) {
++            mockSettings = mockSettings.serializable();
++        }
++
++        return mockSettings
++                .defaultAnswer(returnsDeepStubsAnswerUsing(returnTypeGenericMetadata));
++    }
+@@ -1,12 +1,8 @@
+-    private MockSettings withSettingsUsing(Object parentMock, GenericMetadataSupport returnTypeGenericMetadata) {
+-        MockSettings mockSettings = returnTypeGenericMetadata.hasRawExtraInterfaces() ?
+-                withSettings().extraInterfaces(returnTypeGenericMetadata.rawExtraInterfaces())
+-                : withSettings();
+-
+-        if (new MockUtil().getMockHandler(parentMock).getMockSettings().isSerializable()) {
+-            mockSettings = mockSettings.serializable();
+-        }
+-
+-        return mockSettings
+-                .defaultAnswer(returnsDeepStubsAnswerUsing(returnTypeGenericMetadata));
+-    }
++    private MockSettings withSettingsUsing(GenericMetadataSupport returnTypeGenericMetadata) {
++        MockSettings mockSettings = returnTypeGenericMetadata.hasRawExtraInterfaces() ?
++                withSettings().extraInterfaces(returnTypeGenericMetadata.rawExtraInterfaces())
++                : withSettings();
++
++        return mockSettings.serializable()
++                .defaultAnswer(returnsDeepStubsAnswerUsing(returnTypeGenericMetadata));
++    }
+@@ -1,18 +1,20 @@
+-package org.mockito.internal.stubbing.defaultanswers;
+-
+-import org.mockito.MockSettings;
+-import org.mockito.Mockito;
+-import org.mockito.internal.InternalMockHandler;
+-import org.mockito.internal.MockitoCore;
+-import org.mockito.internal.creation.settings.CreationSettings;
+-import org.mockito.internal.stubbing.InvocationContainerImpl;
+-import org.mockito.internal.stubbing.StubbedInvocationMatcher;
+-import org.mockito.internal.util.MockUtil;
+-import org.mockito.internal.util.reflection.GenericMetadataSupport;
+-import org.mockito.invocation.InvocationOnMock;
+-import org.mockito.stubbing.Answer;
+-
+-import java.io.IOException;
+-import java.io.Serializable;
+-
+-import static org.mockito.Mockito.withSettings;
++package org.mockito.internal.stubbing.defaultanswers;
++
++import org.mockito.MockSettings;
++import org.mockito.Mockito;
++import org.mockito.internal.InternalMockHandler;
++import org.mockito.internal.MockitoCore;
++import org.mockito.internal.creation.settings.CreationSettings;
++import org.mockito.internal.stubbing.InvocationContainerImpl;
++import org.mockito.internal.stubbing.StubbedInvocationMatcher;
++import org.mockito.internal.util.MockUtil;
++import org.mockito.internal.util.reflection.GenericMetadataSupport;
++import org.mockito.invocation.InvocationOnMock;
++import org.mockito.stubbing.Answer;
++import org.mockito.internal.creation.MockSettingsImpl;
++import org.mockito.mock.SerializableMode;
++
++import java.io.IOException;
++import java.io.Serializable;
++
++import static org.mockito.Mockito.withSettings;
+@@ -1,8 +1,11 @@
+-    private MockSettings withSettingsUsing(GenericMetadataSupport returnTypeGenericMetadata) {
+-        MockSettings mockSettings = returnTypeGenericMetadata.hasRawExtraInterfaces() ?
+-                withSettings().extraInterfaces(returnTypeGenericMetadata.rawExtraInterfaces())
+-                : withSettings();
+-
+-        return mockSettings.serializable()
+-                .defaultAnswer(returnsDeepStubsAnswerUsing(returnTypeGenericMetadata));
+-    }
++    private MockSettings withSettingsUsing(Object parentMock, GenericMetadataSupport returnTypeGenericMetadata) {
++        MockSettingsImpl mockSettings = (MockSettingsImpl) (returnTypeGenericMetadata.hasRawExtraInterfaces() ?
++                withSettings().extraInterfaces(returnTypeGenericMetadata.rawExtraInterfaces())
++                : withSettings());
++
++        SerializableMode parentSerializableMode = new MockUtil().getMockHandler(parentMock).getMockSettings().getSerializableMode();
++        mockSettings.serializable(parentSerializableMode);
++
++        return mockSettings
++                .defaultAnswer(returnsDeepStubsAnswerUsing(returnTypeGenericMetadata));
++    }
+@@ -1,11 +1,24 @@
+-    private static class DeeplyStubbedAnswer implements Answer<Object>, Serializable {
+-        @SuppressWarnings("serial") // serialization will fail with a nice message if mock not serializable
+-        private final Object mock;
+-
+-        DeeplyStubbedAnswer(Object mock) {
+-            this.mock = mock;
+-        }
+-        public Object answer(InvocationOnMock invocation) throws Throwable {
+-            return mock;
+-        }
+-    }
++    private static class DeeplyStubbedAnswer implements Answer<Object>, Serializable {
++        @SuppressWarnings("serial") // serialization will fail with a nice message if mock not serializable
++        private final Object mock;
++
++        DeeplyStubbedAnswer(Object mock) {
++            this.mock = mock;
++        }
++        public Object answer(InvocationOnMock invocation) throws Throwable {
++            return mock;
++        }
++    }
++
++    private static class NonSerializableDeepStubsAnswer extends ReturnsDeepStubs {
++        private final GenericMetadataSupport returnTypeGenericMetadata;
++
++        public NonSerializableDeepStubsAnswer(GenericMetadataSupport returnTypeGenericMetadata) {
++            this.returnTypeGenericMetadata = returnTypeGenericMetadata;
++        }
++
++        @Override
++        protected GenericMetadataSupport actualParameterizedType(Object mock) {
++            return returnTypeGenericMetadata;
++        }
++    }
+@@ -1,3 +1,7 @@
+-    private ReturnsDeepStubs returnsDeepStubsAnswerUsing(final GenericMetadataSupport returnTypeGenericMetadata) {
+-        return new ReturnsDeepStubsSerializationFallback(returnTypeGenericMetadata);
+-    }
++    private ReturnsDeepStubs returnsDeepStubsAnswerUsing(final GenericMetadataSupport returnTypeGenericMetadata, SerializableMode parentSerializableMode) {
++        if (parentSerializableMode == SerializableMode.NONE) {
++            return new NonSerializableDeepStubsAnswer(returnTypeGenericMetadata);
++        } else {
++            return new ReturnsDeepStubsSerializationFallback(returnTypeGenericMetadata);
++        }
++    }
+@@ -1,2 +1,2 @@
+-        return mockSettings
+-                .defaultAnswer(returnsDeepStubsAnswerUsing(returnTypeGenericMetadata));
++        return mockSettings
++                .defaultAnswer(returnsDeepStubsAnswerUsing(returnTypeGenericMetadata, parentSerializableMode));
+@@ -1,24 +1,11 @@
+-    private static class DeeplyStubbedAnswer implements Answer<Object>, Serializable {
+-        @SuppressWarnings("serial") // serialization will fail with a nice message if mock not serializable
+-        private final Object mock;
+-
+-        DeeplyStubbedAnswer(Object mock) {
+-            this.mock = mock;
+-        }
+-        public Object answer(InvocationOnMock invocation) throws Throwable {
+-            return mock;
+-        }
+-    }
+-
+-    private static class NonSerializableDeepStubsAnswer extends ReturnsDeepStubs {
+-        private final GenericMetadataSupport returnTypeGenericMetadata;
+-
+-        public NonSerializableDeepStubsAnswer(GenericMetadataSupport returnTypeGenericMetadata) {
+-            this.returnTypeGenericMetadata = returnTypeGenericMetadata;
+-        }
+-
+-        @Override
+-        protected GenericMetadataSupport actualParameterizedType(Object mock) {
+-            return returnTypeGenericMetadata;
+-        }
+-    }
++    private static class DeeplyStubbedAnswer implements Answer<Object>, Serializable {
++        @SuppressWarnings("serial") // serialization will fail with a nice message if mock not serializable
++        private final Object mock;
++
++        DeeplyStubbedAnswer(Object mock) {
++            this.mock = mock;
++        }
++        public Object answer(InvocationOnMock invocation) throws Throwable {
++            return mock;
++        }
++    }
+@@ -1,7 +1,3 @@
+-    private ReturnsDeepStubs returnsDeepStubsAnswerUsing(final GenericMetadataSupport returnTypeGenericMetadata, SerializableMode parentSerializableMode) {
+-        if (parentSerializableMode == SerializableMode.NONE) {
+-            return new NonSerializableDeepStubsAnswer(returnTypeGenericMetadata);
+-        } else {
+-            return new ReturnsDeepStubsSerializationFallback(returnTypeGenericMetadata);
+-        }
+-    }
++    private ReturnsDeepStubs returnsDeepStubsAnswerUsing(final GenericMetadataSupport returnTypeGenericMetadata) {
++        return new ReturnsDeepStubsSerializationFallback(returnTypeGenericMetadata);
++    }
+@@ -1,20 +1,18 @@
+-package org.mockito.internal.stubbing.defaultanswers;
+-
+-import org.mockito.MockSettings;
+-import org.mockito.Mockito;
+-import org.mockito.internal.InternalMockHandler;
+-import org.mockito.internal.MockitoCore;
+-import org.mockito.internal.creation.settings.CreationSettings;
+-import org.mockito.internal.stubbing.InvocationContainerImpl;
+-import org.mockito.internal.stubbing.StubbedInvocationMatcher;
+-import org.mockito.internal.util.MockUtil;
+-import org.mockito.internal.util.reflection.GenericMetadataSupport;
+-import org.mockito.invocation.InvocationOnMock;
+-import org.mockito.stubbing.Answer;
+-import org.mockito.internal.creation.MockSettingsImpl;
+-import org.mockito.mock.SerializableMode;
+-
+-import java.io.IOException;
+-import java.io.Serializable;
+-
+-import static org.mockito.Mockito.withSettings;
++package org.mockito.internal.stubbing.defaultanswers;
++
++import org.mockito.MockSettings;
++import org.mockito.Mockito;
++import org.mockito.internal.InternalMockHandler;
++import org.mockito.internal.MockitoCore;
++import org.mockito.internal.creation.settings.CreationSettings;
++import org.mockito.internal.stubbing.InvocationContainerImpl;
++import org.mockito.internal.stubbing.StubbedInvocationMatcher;
++import org.mockito.internal.util.MockUtil;
++import org.mockito.internal.util.reflection.GenericMetadataSupport;
++import org.mockito.invocation.InvocationOnMock;
++import org.mockito.stubbing.Answer;
++
++import java.io.IOException;
++import java.io.Serializable;
++
++import static org.mockito.Mockito.withSettings;
+@@ -1,6 +1,6 @@
+-    private Object newDeepStubMock(GenericMetadataSupport returnTypeGenericMetadata) {
+-        return mockitoCore().mock(
+-                returnTypeGenericMetadata.rawType(),
+-                withSettingsUsing(returnTypeGenericMetadata)
+-        );
+-    }
++    private Object newDeepStubMock(InvocationOnMock invocation, GenericMetadataSupport returnTypeGenericMetadata) {
++        return mockitoCore().mock(
++                returnTypeGenericMetadata.rawType(),
++                withSettingsUsing(invocation.getMock(), returnTypeGenericMetadata)
++        );
++    }
+@@ -1,4 +1,4 @@
+-        return recordDeepStubAnswer(
+-                newDeepStubMock(returnTypeGenericMetadata),
+-                container
+-        );
++        return recordDeepStubAnswer(
++                newDeepStubMock(invocation, returnTypeGenericMetadata),
++                container
++        );
+@@ -1,8 +1,11 @@
+-    private MockSettings withSettingsUsing(GenericMetadataSupport returnTypeGenericMetadata) {
+-        MockSettings mockSettings = returnTypeGenericMetadata.hasRawExtraInterfaces() ?
+-                withSettings().extraInterfaces(returnTypeGenericMetadata.rawExtraInterfaces())
+-                : withSettings();
+-
+-        return mockSettings.serializable()
+-                .defaultAnswer(returnsDeepStubsAnswerUsing(returnTypeGenericMetadata));
+-    }
++    private MockSettings withSettingsUsing(Object parentMock, GenericMetadataSupport returnTypeGenericMetadata) {
++        MockSettingsImpl mockSettings = (MockSettingsImpl) (returnTypeGenericMetadata.hasRawExtraInterfaces() ?
++                withSettings().extraInterfaces(returnTypeGenericMetadata.rawExtraInterfaces())
++                : withSettings());
++
++        SerializableMode parentSerializableMode = new MockUtil().getMockHandler(parentMock).getMockSettings().getSerializableMode();
++        mockSettings.serializable(parentSerializableMode);
++
++        return mockSettings
++                .defaultAnswer(returnsDeepStubsAnswerUsing(returnTypeGenericMetadata));
++    }
+@@ -1,18 +1,20 @@
+-package org.mockito.internal.stubbing.defaultanswers;
+-
+-import org.mockito.MockSettings;
+-import org.mockito.Mockito;
+-import org.mockito.internal.InternalMockHandler;
+-import org.mockito.internal.MockitoCore;
+-import org.mockito.internal.creation.settings.CreationSettings;
+-import org.mockito.internal.stubbing.InvocationContainerImpl;
+-import org.mockito.internal.stubbing.StubbedInvocationMatcher;
+-import org.mockito.internal.util.MockUtil;
+-import org.mockito.internal.util.reflection.GenericMetadataSupport;
+-import org.mockito.invocation.InvocationOnMock;
+-import org.mockito.stubbing.Answer;
+-
+-import java.io.IOException;
+-import java.io.Serializable;
+-
+-import static org.mockito.Mockito.withSettings;
++package org.mockito.internal.stubbing.defaultanswers;
++
++import org.mockito.MockSettings;
++import org.mockito.Mockito;
++import org.mockito.internal.InternalMockHandler;
++import org.mockito.internal.MockitoCore;
++import org.mockito.internal.creation.settings.CreationSettings;
++import org.mockito.internal.stubbing.InvocationContainerImpl;
++import org.mockito.internal.stubbing.StubbedInvocationMatcher;
++import org.mockito.internal.util.MockUtil;
++import org.mockito.internal.util.reflection.GenericMetadataSupport;
++import org.mockito.invocation.InvocationOnMock;
++import org.mockito.stubbing.Answer;
++import org.mockito.internal.creation.MockSettingsImpl;
++import org.mockito.mock.SerializableMode;
++
++import java.io.IOException;
++import java.io.Serializable;
++
++import static org.mockito.Mockito.withSettings;
+@@ -1,1 +1,1 @@
+-public class ReturnsDeepStubs implements Answer<Object>, Serializable {
++public class ReturnsDeepStubs implements Answer<Object> {
+@@ -1,1 +1,1 @@
+-    private static class ReturnsDeepStubsSerializationFallback extends ReturnsDeepStubs implements Serializable {
++    private static class ReturnsDeepStubsSerializationFallback extends ReturnsDeepStubs {
+@@ -1,1 +1,1 @@
+-    private static class DeeplyStubbedAnswer implements Answer<Object>, Serializable {
++    private static class DeeplyStubbedAnswer implements Answer<Object> {
+@@ -1,8 +1,8 @@
+-    private MockSettings withSettingsUsing(GenericMetadataSupport returnTypeGenericMetadata) {
+-        MockSettings mockSettings = returnTypeGenericMetadata.hasRawExtraInterfaces() ?
+-                withSettings().extraInterfaces(returnTypeGenericMetadata.rawExtraInterfaces())
+-                : withSettings();
+-
+-        return mockSettings.serializable()
+-                .defaultAnswer(returnsDeepStubsAnswerUsing(returnTypeGenericMetadata));
+-    }
++    private MockSettings withSettingsUsing(GenericMetadataSupport returnTypeGenericMetadata) {
++        MockSettings mockSettings = returnTypeGenericMetadata.hasRawExtraInterfaces() ?
++                withSettings().extraInterfaces(returnTypeGenericMetadata.rawExtraInterfaces())
++                : withSettings();
++
++        return mockSettings
++                .defaultAnswer(returnsDeepStubsAnswerUsing(returnTypeGenericMetadata));
++    }
+@@ -1,1 +1,1 @@
+-    private static class ReturnsDeepStubsSerializationFallback extends ReturnsDeepStubs implements Serializable {
++    private static class ReturnsDeepStubsSerializationFallback extends ReturnsDeepStubs {
+@@ -1,1 +1,1 @@
+-    private static class DeeplyStubbedAnswer implements Answer<Object>, Serializable {
++    private static class DeeplyStubbedAnswer implements Answer<Object> {
+@@ -1,1 +1,1 @@
+-public class ReturnsDeepStubs implements Answer<Object>, Serializable {
++public class ReturnsDeepStubs implements Answer<Object> {

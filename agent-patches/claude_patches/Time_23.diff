@@ -1,0 +1,34 @@
+diff --git a/src/main/java/org/joda/time/DateTimeZone.java b/src/main/java/org/joda/time/DateTimeZone.java
+index 5d89e34b..4f1319c2 100644
+--- a/src/main/java/org/joda/time/DateTimeZone.java
++++ b/src/main/java/org/joda/time/DateTimeZone.java
+@@ -561,6 +561,11 @@ public abstract class DateTimeZone implements Serializable {
+             // Backwards compatibility with TimeZone.
+             map = new HashMap<String, String>();
+             map.put("GMT", "UTC");
++            map.put("WET", "WET");
++            map.put("CET", "CET");
++            map.put("MET", "CET");
++            map.put("ECT", "CET");
++            map.put("EET", "EET");
+             map.put("MIT", "Pacific/Apia");
+             map.put("HST", "Pacific/Honolulu");  // JDK 1.1 compatible
+             map.put("AST", "America/Anchorage");
+@@ -574,13 +579,9 @@ public abstract class DateTimeZone implements Serializable {
+             map.put("CNT", "America/St_Johns");
+             map.put("AGT", "America/Buenos_Aires");
+             map.put("BET", "America/Sao_Paulo");
+-            map.put("WET", "Europe/London");
+-            map.put("ECT", "Europe/Paris");
+             map.put("ART", "Africa/Cairo");
+             map.put("CAT", "Africa/Harare");
+-            map.put("EET", "Europe/Bucharest");
+             map.put("EAT", "Africa/Addis_Ababa");
+-            map.put("MET", "Asia/Tehran");
+             map.put("NET", "Asia/Yerevan");
+             map.put("PLT", "Asia/Karachi");
+             map.put("IST", "Asia/Calcutta");
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

@@ -1,0 +1,68 @@
+diff --git a/source/org/jfree/chart/plot/XYPlot.java b/source/org/jfree/chart/plot/XYPlot.java
+index ec26162..a0d3102 100644
+--- a/source/org/jfree/chart/plot/XYPlot.java
++++ b/source/org/jfree/chart/plot/XYPlot.java
+@@ -4471,33 +4471,36 @@ public class XYPlot extends Plot implements ValueAxisPlot, Pannable,
+             XYDataset d = (XYDataset) iterator.next();
+             if (d != null) {
+                 XYItemRenderer r = getRendererForDataset(d);
+-                if (isDomainAxis) {
+-                    if (r != null) {
+-                        result = Range.combine(result, r.findDomainBounds(d));
+-                    }
+-                    else {
+-                        result = Range.combine(result,
+-                                DatasetUtilities.findDomainBounds(d));
+-                    }
+-                }
+-                else {
+-                    if (r != null) {
+-                        result = Range.combine(result, r.findRangeBounds(d));
+-                    }
+-                    else {
+-                        result = Range.combine(result,
+-                                DatasetUtilities.findRangeBounds(d));
+-                    }
+-                }
+-                
+-                    Collection c = r.getAnnotations();
+-                    Iterator i = c.iterator();
+-                    while (i.hasNext()) {
+-                        XYAnnotation a = (XYAnnotation) i.next();
+-                        if (a instanceof XYAnnotationBoundsInfo) {
+-                            includedAnnotations.add(a);
+-                        }
+-                    }
++                if (isDomainAxis) {
++                    if (r != null) {
++                        result = Range.combine(result, r.findDomainBounds(d));
++                    }
++                    else {
++                        result = Range.combine(result,
++                                DatasetUtilities.findDomainBounds(d));
++                    }
++                }
++                else {
++                    if (r != null) {
++                        result = Range.combine(result, r.findRangeBounds(d));
++                    }
++                    else {
++                        result = Range.combine(result,
++                                DatasetUtilities.findRangeBounds(d));
++                    }
++                }
++
++                // include annotations from the renderer (if any)
++                if (r != null) {
++                    Collection c = r.getAnnotations();
++                    Iterator i = c.iterator();
++                    while (i.hasNext()) {
++                        XYAnnotation a = (XYAnnotation) i.next();
++                        if (a instanceof XYAnnotationBoundsInfo) {
++                            includedAnnotations.add(a);
++                        }
++                    }
++                }
+             }
+         }
+ 

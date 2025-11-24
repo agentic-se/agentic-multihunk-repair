@@ -1,0 +1,75 @@
+diff --git a/src/java/org/apache/commons/math/fraction/ProperFractionFormat.java b/src/java/org/apache/commons/math/fraction/ProperFractionFormat.java
+index df2713da8..b2aba177c 100644
+--- a/src/java/org/apache/commons/math/fraction/ProperFractionFormat.java
++++ b/src/java/org/apache/commons/math/fraction/ProperFractionFormat.java
+@@ -152,17 +152,23 @@ public class ProperFractionFormat extends FractionFormat {
+         // parse whitespace
+         parseAndIgnoreWhitespace(source, pos);
+         
+-        // parse numerator
+-        Number num = getNumeratorFormat().parse(source, pos);
+-        if (num == null) {
+-            // invalid integer number
+-            // set index back to initial, error index should already be set
+-            // character examined.
+-            pos.setIndex(initialIndex);
+-            return null;
+-        }
+-        
+-            // minus signs should be leading, invalid expression
++        // parse numerator
++        int numStart = pos.getIndex();
++        Number num = getNumeratorFormat().parse(source, pos);
++        if (num == null) {
++            // invalid integer number
++            // set index back to initial, error index should already be set
++            // character examined.
++            pos.setIndex(initialIndex);
++            return null;
++        }
++        // In proper fraction format, any minus sign must be leading and
++        // belong to the whole part only. A negative numerator is invalid.
++        if (num.intValue() < 0) {
++            pos.setIndex(initialIndex);
++            pos.setErrorIndex(numStart);
++            return null;
++        }
+ 
+         // parse '/'
+         int startIndex = pos.getIndex();
+@@ -187,17 +193,24 @@ public class ProperFractionFormat extends FractionFormat {
+         // parse whitespace
+         parseAndIgnoreWhitespace(source, pos);
+ 
+-        // parse denominator
+-        Number den = getDenominatorFormat().parse(source, pos);
+-        if (den == null) {
+-            // invalid integer number
+-            // set index back to initial, error index should already be set
+-            // character examined.
+-            pos.setIndex(initialIndex);
+-            return null;
+-        }
+-        
+-            // minus signs must be leading, invalid
++        // parse denominator
++        int denStart = pos.getIndex();
++        Number den = getDenominatorFormat().parse(source, pos);
++        if (den == null) {
++            // invalid integer number
++            // set index back to initial, error index should already be set
++            // character examined.
++            pos.setIndex(initialIndex);
++            return null;
++        }
++        // In proper fraction format, denominator must be non-negative; any
++        // minus sign here is invalid because only the whole part may be
++        // negative.
++        if (den.intValue() < 0) {
++            pos.setIndex(initialIndex);
++            pos.setErrorIndex(denStart);
++            return null;
++        }
+ 
+         int w = whole.intValue();
+         int n = num.intValue();

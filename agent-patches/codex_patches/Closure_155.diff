@@ -1,0 +1,166 @@
+diff --git a/src/com/google/javascript/jscomp/InlineVariables.java b/src/com/google/javascript/jscomp/InlineVariables.java
+index 18c9fbe2..66e4e6e7 100644
+--- a/src/com/google/javascript/jscomp/InlineVariables.java
++++ b/src/com/google/javascript/jscomp/InlineVariables.java
+@@ -182,13 +182,160 @@ class InlineVariables implements CompilerPass {
+             Reference init = referenceInfo.getInitializingReference();
+             Node value = init.getAssignedValue();
+             if (value != null && value.getType() == Token.NAME) {
+-              aliasCandidates.put(value, new AliasCandidate(v, referenceInfo));
++              // Be conservative when aliasing function parameters if the
++              // enclosing function may modify or escape its arguments object.
++              if (!isDangerousArgumentsUsageForAlias(t, value)) {
++                aliasCandidates.put(value, new AliasCandidate(v, referenceInfo));
++              }
+             }
+           }
+         }
+       }
+     }
+ 
++    /**
++     * Returns true if aliasing the given NAME node (as an r-value) could be
++     * unsafe due to dangerous usage of the arguments object in the current
++     * function scope. Only applies to aliases of formal parameters.
++     */
++    private boolean isDangerousArgumentsUsageForAlias(NodeTraversal t, Node valueName) {
++      // Only consider when aliasing a formal parameter.
++      Var aliasedVar = t.getScope().getVar(valueName.getString());
++      if (aliasedVar == null) {
++        return false;
++      }
++      Node declParent = aliasedVar.getParentNode();
++      if (declParent == null || declParent.getType() != Token.LP) {
++        // Not a formal parameter.
++        return false;
++      }
++
++      // Find the function node for the current scope.
++      Node fn = t.getScope().getRootNode();
++      if (fn == null || fn.getType() != Token.FUNCTION) {
++        return false;
++      }
++
++      return functionHasDangerousArgumentsUsage(fn);
++    }
++
++    /**
++     * Scans the given function for dangerous uses of the arguments object that
++     * could invalidate parameter aliasing. Ignores nested functions.
++     *
++     * Dangerous patterns:
++     * - Writing to arguments[k] (assignment to an arguments element).
++     * - Passing the whole arguments object to a non-apply call.
++     * - Passing arguments[k] to a function call while the function also uses
++     *   the full arguments object somewhere (e.g., via apply).
++     */
++    private boolean functionHasDangerousArgumentsUsage(Node functionNode) {
++      final boolean[] writesArgumentsElem = new boolean[1];
++      final boolean[] passesArgumentsObject = new boolean[1];
++      final boolean[] passesArgumentsElem = new boolean[1];
++      final boolean[] usesArgumentsObjectValue = new boolean[1];
++
++      // Traverse the function body only, skipping nested functions.
++      Node body = functionNode.getLastChild();
++      scanForArgumentsUsage(body, writesArgumentsElem, passesArgumentsObject,
++          passesArgumentsElem, usesArgumentsObjectValue);
++
++      if (writesArgumentsElem[0] || passesArgumentsObject[0]) {
++        return true;
++      }
++      // Conservative: if we both pass an arguments element to a function
++      // and also use the full arguments object somewhere (e.g. apply), treat
++      // as dangerous.
++      return passesArgumentsElem[0] && usesArgumentsObjectValue[0];
++    }
++
++    private void scanForArgumentsUsage(Node n,
++        boolean[] writesArgumentsElem,
++        boolean[] passesArgumentsObject,
++        boolean[] passesArgumentsElem,
++        boolean[] usesArgumentsObjectValue) {
++      if (n == null) {
++        return;
++      }
++
++      // Do not descend into nested functions.
++      if (n.getType() == Token.FUNCTION) {
++        return;
++      }
++
++      // Detect assignments to arguments[...] (writes to arguments elements).
++      if (n.getType() == Token.ASSIGN) {
++        Node lhs = n.getFirstChild();
++        if (lhs != null && lhs.getType() == Token.GETELEM) {
++          Node base = lhs.getFirstChild();
++          if (base != null && base.getType() == Token.NAME &&
++              "arguments".equals(base.getString())) {
++            writesArgumentsElem[0] = true;
++          }
++        }
++      }
++
++      // Detect calls and inspect call arguments.
++      if (n.getType() == Token.CALL) {
++        Node callTarget = n.getFirstChild();
++        boolean isApply = false;
++        if (callTarget != null && callTarget.getType() == Token.GETPROP) {
++          Node prop = callTarget.getLastChild();
++          if (prop != null && prop.getType() == Token.STRING &&
++              "apply".equals(prop.getString())) {
++            isApply = true;
++          }
++        }
++        // Iterate over call arguments (skip first child: the callee)
++        for (Node arg = callTarget.getNext(); arg != null; arg = arg.getNext()) {
++          // arguments used directly as a value
++          if (arg.getType() == Token.NAME &&
++              "arguments".equals(arg.getString())) {
++            if (!isApply) {
++              passesArgumentsObject[0] = true;
++            } else {
++              // Using full arguments object as value (for apply) counts as a
++              // use of arguments as a value, but not an escape.
++              usesArgumentsObjectValue[0] = true;
++            }
++          }
++          // Any occurrence of arguments[...] within the argument expression
++          if (containsArgumentsElement(arg)) {
++            passesArgumentsElem[0] = true;
++          }
++        }
++      }
++
++      // Track uses of the full arguments object as a value (not as base of []).
++      if (n.getType() == Token.NAME && "arguments".equals(n.getString())) {
++        if (n.getParent() != null && n.getParent().getType() != Token.GETELEM) {
++          usesArgumentsObjectValue[0] = true;
++        }
++      }
++
++      for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
++        scanForArgumentsUsage(c, writesArgumentsElem, passesArgumentsObject,
++            passesArgumentsElem, usesArgumentsObjectValue);
++      }
++    }
++
++    private boolean containsArgumentsElement(Node n) {
++      // Search for a subtree of the form arguments[...]
++      if (n.getType() == Token.GETELEM) {
++        Node base = n.getFirstChild();
++        if (base != null && base.getType() == Token.NAME &&
++            "arguments".equals(base.getString())) {
++          return true;
++        }
++      }
++      for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
++        if (containsArgumentsElement(c)) {
++          return true;
++        }
++      }
++      return false;
++    }
++
+     /**
+      * For all variables in this scope, see if they are only used once.
+      * If it looks safe to do so, inline them.

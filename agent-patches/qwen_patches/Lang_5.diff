@@ -1,0 +1,115 @@
+diff --git a/src/main/java/org/apache/commons/lang3/LocaleUtils.java b/src/main/java/org/apache/commons/lang3/LocaleUtils.java
+index bc779d04..04782d59 100644
+--- a/src/main/java/org/apache/commons/lang3/LocaleUtils.java
++++ b/src/main/java/org/apache/commons/lang3/LocaleUtils.java
+@@ -68,6 +68,9 @@ public class LocaleUtils {
+      *   LocaleUtils.toLocale("en")         = new Locale("en", "")
+      *   LocaleUtils.toLocale("en_GB")      = new Locale("en", "GB")
+      *   LocaleUtils.toLocale("en_GB_xxx")  = new Locale("en", "GB", "xxx")   (#)
++     *   LocaleUtils.toLocale("_GB")        = new Locale("", "GB", "")       (#)
++     *   LocaleUtils.toLocale("_GB_xxx")    = new Locale("", "GB", "xxx")     (#)
++     *   LocaleUtils.toLocale("fr__P")      = new Locale("fr", "", "P")       (#)
+      * </pre>
+      *
+      * <p>(#) The behaviour of the JDK variant constructor changed between JDK1.3 and JDK1.4.
+@@ -75,7 +78,7 @@ public class LocaleUtils {
+      * Thus, the result from getVariant() may vary depending on your JDK.</p>
+      *
+      * <p>This method validates the input strictly.
+-     * The language code must be lowercase.
++     * The language code must be lowercase or empty (when starting with underscore).
+      * The country code must be uppercase.
+      * The separator must be an underscore.
+      * The length must be correct.
+@@ -93,38 +96,70 @@ public class LocaleUtils {
+         if (len < 2) {
+             throw new IllegalArgumentException("Invalid locale format: " + str);
+         }
+-        final char ch0 = str.charAt(0);
+-            final char ch1 = str.charAt(1);
+-            if (!Character.isLowerCase(ch0) || !Character.isLowerCase(ch1)) {
+-                throw new IllegalArgumentException("Invalid locale format: " + str);
+-            }
+-            if (len == 2) {
+-                return new Locale(str);
+-            }
+-            if (len < 5) {
++        
++        // Handle case where string starts with underscore (e.g., "_GB", "_GB_xxx")
++        if (str.charAt(0) == '_') {
++            if (len < 3) {
+                 throw new IllegalArgumentException("Invalid locale format: " + str);
+             }
+-            if (str.charAt(2) != '_') {
++            // Check that the next two characters are uppercase letters (country code)
++            final char ch1 = str.charAt(1);
++            final char ch2 = str.charAt(2);
++            if (!Character.isUpperCase(ch1) || !Character.isUpperCase(ch2)) {
+                 throw new IllegalArgumentException("Invalid locale format: " + str);
+             }
+-            final char ch3 = str.charAt(3);
+-            if (ch3 == '_') {
+-                return new Locale(str.substring(0, 2), "", str.substring(4));
++            if (len == 3) {
++                // Case "_GB" 
++                return new Locale("", str.substring(1, 3));
+             }
+-            final char ch4 = str.charAt(4);
+-            if (!Character.isUpperCase(ch3) || !Character.isUpperCase(ch4)) {
++            if (len < 5) {
+                 throw new IllegalArgumentException("Invalid locale format: " + str);
+             }
+-            if (len == 5) {
+-                return new Locale(str.substring(0, 2), str.substring(3, 5));
+-            }
+-            if (len < 7) {
++            if (str.charAt(3) != '_') {
+                 throw new IllegalArgumentException("Invalid locale format: " + str);
+             }
+-            if (str.charAt(5) != '_') {
++            // Case "_GB_xxx" 
++            // Note: The variant part is everything after the third underscore
++            return new Locale("", str.substring(1, 3), str.substring(4));
++        }
++        
++        // Normal case - language is present and lowercase
++        final char ch0 = str.charAt(0);
++        final char ch1 = str.charAt(1);
++        if (!Character.isLowerCase(ch0) || !Character.isLowerCase(ch1)) {
++            throw new IllegalArgumentException("Invalid locale format: " + str);
++        }
++        if (len == 2) {
++            return new Locale(str);
++        }
++        if (len < 5) {
++            throw new IllegalArgumentException("Invalid locale format: " + str);
++        }
++        if (str.charAt(2) != '_') {
++            throw new IllegalArgumentException("Invalid locale format: " + str);
++        }
++        final char ch3 = str.charAt(3);
++        if (ch3 == '_') {
++            // Special case: "fr__P" - language + empty country + variant
++            if (len < 6) {
+                 throw new IllegalArgumentException("Invalid locale format: " + str);
+             }
+-            return new Locale(str.substring(0, 2), str.substring(3, 5), str.substring(6));
++            return new Locale(str.substring(0, 2), "", str.substring(4));
++        }
++        final char ch4 = str.charAt(4);
++        if (!Character.isUpperCase(ch3) || !Character.isUpperCase(ch4)) {
++            throw new IllegalArgumentException("Invalid locale format: " + str);
++        }
++        if (len == 5) {
++            return new Locale(str.substring(0, 2), str.substring(3, 5));
++        }
++        if (len < 7) {
++            throw new IllegalArgumentException("Invalid locale format: " + str);
++        }
++        if (str.charAt(5) != '_') {
++            throw new IllegalArgumentException("Invalid locale format: " + str);
++        }
++        return new Locale(str.substring(0, 2), str.substring(3, 5), str.substring(6));
+     }
+ 
+     //-----------------------------------------------------------------------

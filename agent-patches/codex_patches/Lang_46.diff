@@ -1,0 +1,63 @@
+diff --git a/src/java/org/apache/commons/lang/StringEscapeUtils.java b/src/java/org/apache/commons/lang/StringEscapeUtils.java
+index 7b22e214..81c5b4e7 100644
+--- a/src/java/org/apache/commons/lang/StringEscapeUtils.java
++++ b/src/java/org/apache/commons/lang/StringEscapeUtils.java
+@@ -241,7 +241,10 @@ public class StringEscapeUtils {
+                         out.write('\\');
+                         break;
+                     case '/' :
++                        // Only escape forward slashes for JavaScript, not Java
++                        if (escapeSingleQuote) {
+                             out.write('\\');
++                        }
+                         out.write('/');
+                         break;
+                     default :
+diff --git a/src/java/org/apache/commons/lang/text/ExtendedMessageFormat.java b/src/java/org/apache/commons/lang/text/ExtendedMessageFormat.java
+index 404be490..c9dd795c 100644
+--- a/src/java/org/apache/commons/lang/text/ExtendedMessageFormat.java
++++ b/src/java/org/apache/commons/lang/text/ExtendedMessageFormat.java
+@@ -87,7 +87,9 @@ public class ExtendedMessageFormat extends MessageFormat {
+      * @throws IllegalArgumentException in case of a bad pattern.
+      */
+     public ExtendedMessageFormat(String pattern) {
+-        this(pattern, Locale.getDefault());
++        super(pattern);
++        this.registry = null;
++        this.toPattern = super.toPattern();
+     }
+ 
+     /**
+@@ -98,7 +100,9 @@ public class ExtendedMessageFormat extends MessageFormat {
+      * @throws IllegalArgumentException in case of a bad pattern.
+      */
+     public ExtendedMessageFormat(String pattern, Locale locale) {
+-        this(pattern, locale, null);
++        super(pattern, locale);
++        this.registry = null;
++        this.toPattern = super.toPattern();
+     }
+ 
+     /**
+@@ -109,7 +113,12 @@ public class ExtendedMessageFormat extends MessageFormat {
+      * @throws IllegalArgumentException in case of a bad pattern.
+      */
+     public ExtendedMessageFormat(String pattern, Map registry) {
+-        this(pattern, Locale.getDefault(), registry);
++        // Determine locale in the same way as MessageFormat(String)
++        super(DUMMY_PATTERN);
++        Locale providerLocale = new MessageFormat(DUMMY_PATTERN).getLocale();
++        setLocale(providerLocale);
++        this.registry = registry;
++        applyPattern(pattern);
+     }
+ 
+     /**
+@@ -121,6 +130,7 @@ public class ExtendedMessageFormat extends MessageFormat {
+      * @throws IllegalArgumentException in case of a bad pattern.
+      */
+     public ExtendedMessageFormat(String pattern, Locale locale, Map registry) {
++        // Use dummy pattern to avoid parsing unknown custom formats
+         super(DUMMY_PATTERN);
+         setLocale(locale);
+         this.registry = registry;

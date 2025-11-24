@@ -1,0 +1,17 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/filter/FilteringParserDelegate.java b/src/main/java/com/fasterxml/jackson/core/filter/FilteringParserDelegate.java
+index e6558fd0..050607a4 100644
+--- a/src/main/java/com/fasterxml/jackson/core/filter/FilteringParserDelegate.java
++++ b/src/main/java/com/fasterxml/jackson/core/filter/FilteringParserDelegate.java
+@@ -232,8 +232,10 @@ public class FilteringParserDelegate extends JsonParserDelegate
+         
+         // Check for _allowMultipleMatches - false and at least there is one token - which is _currToken
+         // check for no buffered context _exposedContext - null
+-        // If all the conditions matches then check for scalar / non-scalar property
+-        if (!_allowMultipleMatches && (_currToken != null) && (_exposedContext == null)) {
++        // Only apply this early-exit optimization when not including path tokens;
++        // when including path, we must expose matching closing END_OBJECT/END_ARRAY
++        // tokens as part of the path, so do not short-circuit.
++        if (!_allowMultipleMatches && (_currToken != null) && (_exposedContext == null) && !_includePath) {
+             //if not scalar and ended successfully, and !includePath, then return null
+                 if (_currToken.isStructEnd()) {
+                     if (_headContext.isStartHandled()) {

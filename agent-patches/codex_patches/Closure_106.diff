@@ -1,0 +1,167 @@
+diff --git a/src/com/google/javascript/jscomp/CheckSideEffects.java b/src/com/google/javascript/jscomp/CheckSideEffects.java
+index ec89ef0a..a64816db 100644
+--- a/src/com/google/javascript/jscomp/CheckSideEffects.java
++++ b/src/com/google/javascript/jscomp/CheckSideEffects.java
+@@ -85,15 +85,48 @@ final class CheckSideEffects extends AbstractPostOrderCallback {
+     }
+     if (NodeUtil.isSimpleOperatorType(n.getType()) ||
+         !NodeUtil.mayHaveSideEffects(n)) {
+-      if (n.isQualifiedName() && n.getJSDocInfo() != null) {
+-        // This no-op statement was there so that JSDoc information could
+-        // be attached to the name. This check should not complain about it.
++      // If the parent expression statement carries JSDoc, treat this as
++      // intentional no-op to allow property documentation (e.g., this.foo).
++      if (parent.getType() == Token.EXPR_RESULT &&
++          parent.getJSDocInfo() != null) {
+         return;
++      }
++      if (n.isQualifiedName() || n.getType() == Token.GETPROP) {
++        // This no-op statement may be present so that JSDoc information can
++        // be attached to the name. Treat it as intentional if any relevant
++        // node in the qualified name expression carries JSDoc.
++        if (n.getJSDocInfo() != null) {
++          return;
++        }
++        // Sometimes JSDoc is attached to the parent expression statement.
++        if (parent.getJSDocInfo() != null) {
++          return;
++        }
++        // Or it may be attached to the property node of a GETPROP.
++        if (n.getType() == Token.GETPROP) {
++          Node prop = n.getLastChild();
++          if (prop != null && prop.getJSDocInfo() != null) {
++            return;
++          }
++          Node receiver = n.getFirstChild();
++          if (receiver != null && receiver.getJSDocInfo() != null) {
++            return;
++          }
++        }
+       } else if (NodeUtil.isExpressionNode(n)) {
+         // we already reported the problem when we visited the child.
+         return;
+       }
+ 
++      // As a last resort, honor any JSDoc on ancestors up to the nearest
++      // statement boundary. Some parsers may attach the JSDoc to a parent
++      // node rather than the qualified name itself.
++      for (Node anc : n.getAncestors()) {
++        if (anc.getJSDocInfo() != null) {
++          return;
++        }
++      }
++
+       String msg = "This code lacks side-effects. Is there a bug?";
+       if (n.getType() == Token.STRING) {
+         msg = "Is there a missing '+' on the previous line?";
+diff --git a/src/com/google/javascript/jscomp/CollapseProperties.java b/src/com/google/javascript/jscomp/CollapseProperties.java
+index 881a6407..1d1cf41a 100644
+--- a/src/com/google/javascript/jscomp/CollapseProperties.java
++++ b/src/com/google/javascript/jscomp/CollapseProperties.java
+@@ -568,17 +568,48 @@ class CollapseProperties implements CompilerPass {
+    */
+   private void updateObjLitOrFunctionDeclarationAtAssignNode(
+       Name n, String alias) {
+-    // NOTE: It's important that we don't add additional nodes
+-    // (e.g. a var node before the exprstmt) because the exprstmt might be
+-    // the child of an if statement that's not inside a block).
+-
+     Ref ref = n.declaration;
+     Node rvalue = ref.node.getNext();
+-    Node varNode = new Node(Token.VAR);
+-    Node varParent = ref.node.getAncestor(3);
+     Node gramps = ref.node.getAncestor(2);
++    Node varParent = ref.node.getAncestor(3);
++    Node varNode = new Node(Token.VAR);
+     boolean isObjLit = rvalue.getType() == Token.OBJECTLIT;
+ 
++    // If the assignment is not directly under an EXPR_RESULT (e.g., it's
++    // inside a comma expression or used as a condition), we cannot replace
++    // the enclosing node with a VAR. Fall back to creating a stub variable
++    // before the containing statement, and rewrite the LHS to the collapsed
++    // name within the existing expression.
++    if (gramps.getType() != Token.EXPR_RESULT) {
++      if (rvalue.getType() == Token.FUNCTION) {
++        checkForHosedThisReferences(rvalue, n.docInfo, n);
++      }
++
++      // Find the nearest statement boundary (SCRIPT or BLOCK) to insert the
++      // stub declaration before the current statement.
++      Node current = gramps;
++      Node currentParent = gramps.getParent();
++      for (; currentParent.getType() != Token.SCRIPT &&
++             currentParent.getType() != Token.BLOCK;
++           current = currentParent,
++           currentParent = currentParent.getParent()) {}
++
++      Node nameNode = NodeUtil.newName(alias, ref.node, n.fullName());
++      if (ref.node.getLastChild().getBooleanProp(Node.IS_CONSTANT_NAME)) {
++        nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
++      }
++
++      // Insert stub var before the current statement.
++      Node stubVar = new Node(Token.VAR, nameNode.cloneTree());
++      currentParent.addChildBefore(stubVar, current);
++
++      // Rewrite the LHS of the assignment to the collapsed name.
++      ref.node.getParent().replaceChild(ref.node, nameNode);
++
++      compiler.reportCodeChange();
++      return;
++    }
++
+     if (isObjLit && n.canEliminate()) {
+       // Eliminate the object literal altogether.
+       varParent.replaceChild(gramps, varNode);
+@@ -829,9 +860,34 @@ class CollapseProperties implements CompilerPass {
+ 
+           // Determine if this is a constant var by checking the first
+           // reference to it. Don't check the declaration, as it might be null.
+-          if (p.refs.get(0).node.getLastChild().getBooleanProp(
+-                Node.IS_CONSTANT_NAME)) {
+-            nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
++          //
++          // The ref node can be one of:
++          // - GETPROP (for assignments like a.b = ...), where the property
++          //   name is the last child of the GETPROP node.
++          // - STRING (for object literal keys), where the STRING node itself
++          //   represents the property name.
++          // Guard against other node types and missing children to avoid NPEs.
++          if (p.refs != null && !p.refs.isEmpty()) {
++            Node refNode = p.refs.get(0).node;
++            Node propNameNode = null;
++            if (refNode != null) {
++              switch (refNode.getType()) {
++                case Token.GETPROP:
++                  propNameNode = refNode.getLastChild();
++                  break;
++                case Token.STRING:
++                  propNameNode = refNode;
++                  break;
++                default:
++                  // Other node types (e.g., NAME) do not carry a property
++                  // name token we can inspect for constness here.
++                  break;
++              }
++            }
++            if (propNameNode != null &&
++                propNameNode.getBooleanProp(Node.IS_CONSTANT_NAME)) {
++              nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
++            }
+           }
+         }
+       }
+diff --git a/src/com/google/javascript/jscomp/GlobalNamespace.java b/src/com/google/javascript/jscomp/GlobalNamespace.java
+index d7e85dfc..ef993712 100644
+--- a/src/com/google/javascript/jscomp/GlobalNamespace.java
++++ b/src/com/google/javascript/jscomp/GlobalNamespace.java
+@@ -904,6 +904,9 @@ class GlobalNamespace {
+       // Don't try to collapse if the one global set is a twin reference.
+       // We could theoretically handle this case in CollapseProperties, but
+       // it's probably not worth the effort.
++      if (declaration != null && declaration.getTwin() != null) {
++        return false;
++      }
+ 
+       if (isClassOrEnum) {
+         return true;

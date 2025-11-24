@@ -1,0 +1,28 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index 5fdec75e..415d4e51 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -558,8 +558,21 @@ final class TypedScopeCreator implements ScopeCreator {
+       if (propType instanceof FunctionType) {
+         return (FunctionType) propType;
+       }
+-        // If it's not, then check to see if it's implemented
+-        // on an implemented interface.
++      // If it's not, then check to see if it's implemented
++      // on any implemented interfaces.
++      FunctionType ctor = ownerType.getConstructor();
++      if (ctor != null) {
++        for (ObjectType iface : ctor.getAllImplementedInterfaces()) {
++          FunctionType interfaceCtor = iface.getConstructor();
++          if (interfaceCtor != null) {
++            JSType ifacePropType =
++                interfaceCtor.getPrototype().getPropertyType(propName);
++            if (ifacePropType instanceof FunctionType) {
++              return (FunctionType) ifacePropType;
++            }
++          }
++        }
++      }
+ 
+       return null;
+     }

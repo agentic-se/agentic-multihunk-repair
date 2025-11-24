@@ -1,0 +1,952 @@
+--- a/src/com/google/javascript/jscomp/ScopedAliases.java
++++ b/src/com/google/javascript/jscomp/ScopedAliases.java
+@@ -1,18 +1,21 @@
+-        if (parent.isVar()) {
+-          if (n.hasChildren() && n.getFirstChild().isQualifiedName()) {
+-          String name = n.getString();
+-          Var aliasVar = scope.getVar(name);
+-          aliases.put(name, aliasVar);
+-
+-          String qualifiedName =
+-              aliasVar.getInitialValue().getQualifiedName();
+-          transformation.addAlias(name, qualifiedName);
+-          // Bleeding functions already get a BAD_PARAMETERS error, so just
+-          // do nothing.
+-          // Parameters of the scope function also get a BAD_PARAMETERS
+-          // error.
+-        } else {
+-          // TODO(robbyw): Support using locals for private variables.
+-          report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
+-        }
+-        }
++        // Check for variable declarations (VAR) and function declarations (FUNCTION)
++        if (parent.isVar() || parent.isFunction()) {
++          // If it's a VAR, check if it's an alias
++          if (parent.isVar()) {
++            if (n.hasChildren() && n.getFirstChild().isQualifiedName()) {
++              String name = n.getString();
++              Var aliasVar = scope.getVar(name);
++              aliases.put(name, aliasVar);
++
++              String qualifiedName =
++                  aliasVar.getInitialValue().getQualifiedName();
++              transformation.addAlias(name, qualifiedName);
++            } else {
++              // Not an alias, report error
++              report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
++            }
++          } else if (parent.isFunction()) { // It's a function declaration
++            // Function declarations are not considered aliases in goog.scope
++            report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
++          }
++        }
+@@ -1,22 +1,26 @@
+-    private void validateScopeCall(NodeTraversal t, Node n, Node parent) {
+-      if (preprocessorSymbolTable != null) {
+-        preprocessorSymbolTable.addReference(n.getFirstChild());
+-      }
+-      if (!parent.isExprResult()) {
+-        report(t, n, GOOG_SCOPE_USED_IMPROPERLY);
+-      }
+-      if (n.getChildCount() != 2) {
+-        // The goog.scope call should have exactly 1 parameter.  The first
+-        // child is the "goog.scope" and the second should be the parameter.
+-        report(t, n, GOOG_SCOPE_HAS_BAD_PARAMETERS);
+-      } else {
+-        Node anonymousFnNode = n.getChildAtIndex(1);
+-        if (!anonymousFnNode.isFunction() ||
+-            NodeUtil.getFunctionName(anonymousFnNode) != null ||
+-            NodeUtil.getFunctionParameters(anonymousFnNode).hasChildren()) {
+-          report(t, anonymousFnNode, GOOG_SCOPE_HAS_BAD_PARAMETERS);
+-        } else {
+-          scopeCalls.add(n);
+-        }
+-      }
+-    }
++    private boolean validateScopeCall(NodeTraversal t, Node n, Node parent) {
++      if (preprocessorSymbolTable != null) {
++        preprocessorSymbolTable.addReference(n.getFirstChild());
++      }
++      if (!parent.isExprResult()) {
++        report(t, n, GOOG_SCOPE_USED_IMPROPERLY);
++        return false;
++      }
++      if (n.getChildCount() != 2) {
++        // The goog.scope call should have exactly 1 parameter.  The first
++        // child is the "goog.scope" and the second should be the parameter.
++        report(t, n, GOOG_SCOPE_HAS_BAD_PARAMETERS);
++        return false;
++      } else {
++        Node anonymousFnNode = n.getChildAtIndex(1);
++        if (!anonymousFnNode.isFunction() ||
++            NodeUtil.getFunctionName(anonymousFnNode) != null ||
++            NodeUtil.getFunctionParameters(anonymousFnNode).hasChildren()) {
++          report(t, anonymousFnNode, GOOG_SCOPE_HAS_BAD_PARAMETERS);
++          return false;
++        } else {
++          scopeCalls.add(n);
++          return true;
++        }
++      }
++    }
+@@ -1,5 +1,9 @@
+-      if (n != null && isCallToScopeMethod(n)) {
+-        transformation = transformationHandler.logAliasTransformation(
+-            n.getSourceFileName(), getSourceRegion(n));
+-        findAliases(t);
+-      }
++      if (n != null && isCallToScopeMethod(n)) {
++        // Validate the scope call first.
++        // If it's not valid, we shouldn't try to find aliases within it.
++        if (validateScopeCall(t, n, n.getParent())) {
++          transformation = transformationHandler.logAliasTransformation(
++              n.getSourceFileName(), getSourceRegion(n));
++          findAliases(t);
++        }
++      }
+@@ -1,9 +1,5 @@
+-      if (n != null && isCallToScopeMethod(n)) {
+-        // Validate the scope call first.
+-        // If it's not valid, we shouldn't try to find aliases within it.
+-        if (validateScopeCall(t, n, n.getParent())) {
+-          transformation = transformationHandler.logAliasTransformation(
+-              n.getSourceFileName(), getSourceRegion(n));
+-          findAliases(t);
+-        }
+-      }
++      if (n != null && isCallToScopeMethod(n)) {
++        transformation = transformationHandler.logAliasTransformation(
++            n.getSourceFileName(), getSourceRegion(n));
++        findAliases(t);
++      }
+@@ -1,26 +1,22 @@
+-    private boolean validateScopeCall(NodeTraversal t, Node n, Node parent) {
+-      if (preprocessorSymbolTable != null) {
+-        preprocessorSymbolTable.addReference(n.getFirstChild());
+-      }
+-      if (!parent.isExprResult()) {
+-        report(t, n, GOOG_SCOPE_USED_IMPROPERLY);
+-        return false;
+-      }
+-      if (n.getChildCount() != 2) {
+-        // The goog.scope call should have exactly 1 parameter.  The first
+-        // child is the "goog.scope" and the second should be the parameter.
+-        report(t, n, GOOG_SCOPE_HAS_BAD_PARAMETERS);
+-        return false;
+-      } else {
+-        Node anonymousFnNode = n.getChildAtIndex(1);
+-        if (!anonymousFnNode.isFunction() ||
+-            NodeUtil.getFunctionName(anonymousFnNode) != null ||
+-            NodeUtil.getFunctionParameters(anonymousFnNode).hasChildren()) {
+-          report(t, anonymousFnNode, GOOG_SCOPE_HAS_BAD_PARAMETERS);
+-          return false;
+-        } else {
+-          scopeCalls.add(n);
+-          return true;
+-        }
+-      }
+-    }
++    private void validateScopeCall(NodeTraversal t, Node n, Node parent) {
++      if (preprocessorSymbolTable != null) {
++        preprocessorSymbolTable.addReference(n.getFirstChild());
++      }
++      if (!parent.isExprResult()) {
++        report(t, n, GOOG_SCOPE_USED_IMPROPERLY);
++      }
++      if (n.getChildCount() != 2) {
++        // The goog.scope call should have exactly 1 parameter.  The first
++        // child is the "goog.scope" and the second should be the parameter.
++        report(t, n, GOOG_SCOPE_HAS_BAD_PARAMETERS);
++      } else {
++        Node anonymousFnNode = n.getChildAtIndex(1);
++        if (!anonymousFnNode.isFunction() ||
++            NodeUtil.getFunctionName(anonymousFnNode) != null ||
++            NodeUtil.getFunctionParameters(anonymousFnNode).hasChildren()) {
++          report(t, anonymousFnNode, GOOG_SCOPE_HAS_BAD_PARAMETERS);
++        } else {
++          scopeCalls.add(n);
++        }
++      }
++    }
+@@ -1,21 +1,18 @@
+-        // Check for variable declarations (VAR) and function declarations (FUNCTION)
+-        if (parent.isVar() || parent.isFunction()) {
+-          // If it's a VAR, check if it's an alias
+-          if (parent.isVar()) {
+-            if (n.hasChildren() && n.getFirstChild().isQualifiedName()) {
+-              String name = n.getString();
+-              Var aliasVar = scope.getVar(name);
+-              aliases.put(name, aliasVar);
+-
+-              String qualifiedName =
+-                  aliasVar.getInitialValue().getQualifiedName();
+-              transformation.addAlias(name, qualifiedName);
+-            } else {
+-              // Not an alias, report error
+-              report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
+-            }
+-          } else if (parent.isFunction()) { // It's a function declaration
+-            // Function declarations are not considered aliases in goog.scope
+-            report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
+-          }
+-        }
++        if (parent.isVar()) {
++          if (n.hasChildren() && n.getFirstChild().isQualifiedName()) {
++          String name = n.getString();
++          Var aliasVar = scope.getVar(name);
++          aliases.put(name, aliasVar);
++
++          String qualifiedName =
++              aliasVar.getInitialValue().getQualifiedName();
++          transformation.addAlias(name, qualifiedName);
++          // Bleeding functions already get a BAD_PARAMETERS error, so just
++          // do nothing.
++          // Parameters of the scope function also get a BAD_PARAMETERS
++          // error.
++        } else {
++          // TODO(robbyw): Support using locals for private variables.
++          report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
++        }
++        }
+@@ -1,18 +1,20 @@
+-        if (parent.isVar()) {
+-          if (n.hasChildren() && n.getFirstChild().isQualifiedName()) {
+-          String name = n.getString();
+-          Var aliasVar = scope.getVar(name);
+-          aliases.put(name, aliasVar);
+-
+-          String qualifiedName =
+-              aliasVar.getInitialValue().getQualifiedName();
+-          transformation.addAlias(name, qualifiedName);
+-          // Bleeding functions already get a BAD_PARAMETERS error, so just
+-          // do nothing.
+-          // Parameters of the scope function also get a BAD_PARAMETERS
+-          // error.
+-        } else {
+-          // TODO(robbyw): Support using locals for private variables.
+-          report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
+-        }
+-        }
++        if (v.isLocal()) { // Only consider local variables/functions within the goog.scope
++          if (v.isFunction()) {
++            // Function declarations are not allowed as aliases in goog.scope
++            report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
++          } else if (parent.isVar()) { // It's a variable declaration
++            if (n.hasChildren() && n.getFirstChild().isQualifiedName()) {
++              // This is a valid alias (e.g., var g = goog;)
++              String name = n.getString();
++              Var aliasVar = scope.getVar(name);
++              aliases.put(name, aliasVar);
++
++              String qualifiedName =
++                  aliasVar.getInitialValue().getQualifiedName();
++              transformation.addAlias(name, qualifiedName);
++            } else {
++              // This is a local variable that is not an alias (e.g., var x = 10;)
++              report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
++            }
++          }
++        }
+@@ -1,20 +1,23 @@
+-        if (v.isLocal()) { // Only consider local variables/functions within the goog.scope
+-          if (v.isFunction()) {
+-            // Function declarations are not allowed as aliases in goog.scope
+-            report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
+-          } else if (parent.isVar()) { // It's a variable declaration
+-            if (n.hasChildren() && n.getFirstChild().isQualifiedName()) {
+-              // This is a valid alias (e.g., var g = goog;)
+-              String name = n.getString();
+-              Var aliasVar = scope.getVar(name);
+-              aliases.put(name, aliasVar);
+-
+-              String qualifiedName =
+-                  aliasVar.getInitialValue().getQualifiedName();
+-              transformation.addAlias(name, qualifiedName);
+-            } else {
+-              // This is a local variable that is not an alias (e.g., var x = 10;)
+-              report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
+-            }
+-          }
+-        }
++        // Only consider local variables/functions within the goog.scope
++        // A variable is local if its scope is the current scope (the goog.scope function's scope)
++        // and it's not a parameter of that function.
++        if (v.scope == scope && !v.isParam()) {
++          if (parentOfName.isFunction()) {
++            // Function declarations are not allowed as aliases in goog.scope
++            report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
++          } else if (parentOfName.isVar()) { // It's a variable declaration
++            if (n.hasChildren() && n.getFirstChild().isQualifiedName()) {
++              // This is a valid alias (e.g., var g = goog;)
++              String name = n.getString();
++              Var aliasVar = scope.getVar(name);
++              aliases.put(name, aliasVar);
++
++              String qualifiedName =
++                  aliasVar.getInitialValue().getQualifiedName();
++              transformation.addAlias(name, qualifiedName);
++            } else {
++              // This is a local variable that is not an alias (e.g., var x = 10;)
++              report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
++            }
++          }
++        }
+@@ -1,23 +1,26 @@
+-        // Only consider local variables/functions within the goog.scope
+-        // A variable is local if its scope is the current scope (the goog.scope function's scope)
+-        // and it's not a parameter of that function.
+-        if (v.scope == scope && !v.isParam()) {
+-          if (parentOfName.isFunction()) {
+-            // Function declarations are not allowed as aliases in goog.scope
+-            report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
+-          } else if (parentOfName.isVar()) { // It's a variable declaration
+-            if (n.hasChildren() && n.getFirstChild().isQualifiedName()) {
+-              // This is a valid alias (e.g., var g = goog;)
+-              String name = n.getString();
+-              Var aliasVar = scope.getVar(name);
+-              aliases.put(name, aliasVar);
+-
+-              String qualifiedName =
+-                  aliasVar.getInitialValue().getQualifiedName();
+-              transformation.addAlias(name, qualifiedName);
+-            } else {
+-              // This is a local variable that is not an alias (e.g., var x = 10;)
+-              report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
+-            }
+-          }
+-        }
++        Node nameNode = v.getNode(); // This is the NAME node
++        Node parentOfNameNode = nameNode.getParent(); // This is VAR, FUNCTION, or PARAM_LIST
++
++        // Only consider local variables/functions declared directly within the goog.scope function's block.
++        // This means their parent should be a VAR or FUNCTION node, and they should not be parameters.
++        if (v.scope == scope && !parentOfNameNode.isParamList()) {
++          if (parentOfNameNode.isFunction()) {
++            // This is a function declaration (e.g., function f() {})
++            report(t, nameNode, GOOG_SCOPE_NON_ALIAS_LOCAL, nameNode.getString());
++          } else if (parentOfNameNode.isVar()) {
++            // This is a variable declaration (e.g., var x = 10; or var g = goog;)
++            if (nameNode.hasChildren() && nameNode.getFirstChild().isQualifiedName()) {
++              // This is a valid alias (e.g., var g = goog;)
++              String name = nameNode.getString();
++              Var aliasVar = scope.getVar(name);
++              aliases.put(name, aliasVar);
++
++              String qualifiedName =
++                  aliasVar.getInitialValue().getQualifiedName();
++              transformation.addAlias(name, qualifiedName);
++            } else {
++              // This is a local variable that is not an alias (e.g., var x = 10;)
++              report(t, nameNode, GOOG_SCOPE_NON_ALIAS_LOCAL, nameNode.getString());
++            }
++          }
++        }
+@@ -1,22 +1,26 @@
+-    private void validateScopeCall(NodeTraversal t, Node n, Node parent) {
+-      if (preprocessorSymbolTable != null) {
+-        preprocessorSymbolTable.addReference(n.getFirstChild());
+-      }
+-      if (!parent.isExprResult()) {
+-        report(t, n, GOOG_SCOPE_USED_IMPROPERLY);
+-      }
+-      if (n.getChildCount() != 2) {
+-        // The goog.scope call should have exactly 1 parameter.  The first
+-        // child is the "goog.scope" and the second should be the parameter.
+-        report(t, n, GOOG_SCOPE_HAS_BAD_PARAMETERS);
+-      } else {
+-        Node anonymousFnNode = n.getChildAtIndex(1);
+-        if (!anonymousFnNode.isFunction() ||
+-            NodeUtil.getFunctionName(anonymousFnNode) != null ||
+-            NodeUtil.getFunctionParameters(anonymousFnNode).hasChildren()) {
+-          report(t, anonymousFnNode, GOOG_SCOPE_HAS_BAD_PARAMETERS);
+-        } else {
+-          scopeCalls.add(n);
+-        }
+-      }
+-    }
++    private boolean validateScopeCall(NodeTraversal t, Node n, Node parent) {
++      if (preprocessorSymbolTable != null) {
++        preprocessorSymbolTable.addReference(n.getFirstChild());
++      }
++      if (!parent.isExprResult()) {
++        report(t, n, GOOG_SCOPE_USED_IMPROPERLY);
++        return false;
++      }
++      if (n.getChildCount() != 2) {
++        // The goog.scope call should have exactly 1 parameter.  The first
++        // child is the "goog.scope" and the second should be the parameter.
++        report(t, n, GOOG_SCOPE_HAS_BAD_PARAMETERS);
++        return false;
++      } else {
++        Node anonymousFnNode = n.getChildAtIndex(1);
++        if (!anonymousFnNode.isFunction() ||
++            NodeUtil.getFunctionName(anonymousFnNode) != null ||
++            NodeUtil.getFunctionParameters(anonymousFnNode).hasChildren()) {
++          report(t, anonymousFnNode, GOOG_SCOPE_HAS_BAD_PARAMETERS);
++          return false;
++        } else {
++          scopeCalls.add(n);
++          return true;
++        }
++      }
++    }
+@@ -1,5 +1,9 @@
+-      if (n != null && isCallToScopeMethod(n)) {
+-        transformation = transformationHandler.logAliasTransformation(
+-            n.getSourceFileName(), getSourceRegion(n));
+-        findAliases(t);
+-      }
++      if (n != null && isCallToScopeMethod(n)) {
++        // Validate the scope call first.
++        // If it's not valid, we shouldn't try to find aliases within it.
++        if (validateScopeCall(t, n, n.getParent())) {
++          transformation = transformationHandler.logAliasTransformation(
++              n.getSourceFileName(), getSourceRegion(n));
++          findAliases(t);
++        }
++      }
+@@ -1,13 +1,9 @@
+-    @Override
+-    public void enterScope(NodeTraversal t) {
+-      Node n = t.getCurrentNode().getParent();
+-      if (n != null && isCallToScopeMethod(n)) {
+-        // Validate the scope call first.
+-        // If it's not valid, we shouldn't try to find aliases within it.
+-        if (validateScopeCall(t, n, n.getParent())) {
+-          transformation = transformationHandler.logAliasTransformation(
+-              n.getSourceFileName(), getSourceRegion(n));
+-          findAliases(t);
+-        }
+-      }
+-    }
++    @Override
++    public void enterScope(NodeTraversal t) {
++      Node n = t.getCurrentNode().getParent();
++      if (n != null && isCallToScopeMethod(n)) {
++        transformation = transformationHandler.logAliasTransformation(
++            n.getSourceFileName(), getSourceRegion(n));
++        findAliases(t);
++      }
++    }
+@@ -1,26 +1,22 @@
+-    private boolean validateScopeCall(NodeTraversal t, Node n, Node parent) {
+-      if (preprocessorSymbolTable != null) {
+-        preprocessorSymbolTable.addReference(n.getFirstChild());
+-      }
+-      if (!parent.isExprResult()) {
+-        report(t, n, GOOG_SCOPE_USED_IMPROPERLY);
+-        return false;
+-      }
+-      if (n.getChildCount() != 2) {
+-        // The goog.scope call should have exactly 1 parameter.  The first
+-        // child is the "goog.scope" and the second should be the parameter.
+-        report(t, n, GOOG_SCOPE_HAS_BAD_PARAMETERS);
+-        return false;
+-      } else {
+-        Node anonymousFnNode = n.getChildAtIndex(1);
+-        if (!anonymousFnNode.isFunction() ||
+-            NodeUtil.getFunctionName(anonymousFnNode) != null ||
+-            NodeUtil.getFunctionParameters(anonymousFnNode).hasChildren()) {
+-          report(t, anonymousFnNode, GOOG_SCOPE_HAS_BAD_PARAMETERS);
+-          return false;
+-        } else {
+-          scopeCalls.add(n);
+-          return true;
+-        }
+-      }
+-    }
++    private void validateScopeCall(NodeTraversal t, Node n, Node parent) {
++      if (preprocessorSymbolTable != null) {
++        preprocessorSymbolTable.addReference(n.getFirstChild());
++      }
++      if (!parent.isExprResult()) {
++        report(t, n, GOOG_SCOPE_USED_IMPROPERLY);
++      }
++      if (n.getChildCount() != 2) {
++        // The goog.scope call should have exactly 1 parameter.  The first
++        // child is the "goog.scope" and the second should be the parameter.
++        report(t, n, GOOG_SCOPE_HAS_BAD_PARAMETERS);
++      } else {
++        Node anonymousFnNode = n.getChildAtIndex(1);
++        if (!anonymousFnNode.isFunction() ||
++            NodeUtil.getFunctionName(anonymousFnNode) != null ||
++            NodeUtil.getFunctionParameters(anonymousFnNode).hasChildren()) {
++          report(t, anonymousFnNode, GOOG_SCOPE_HAS_BAD_PARAMETERS);
++        } else {
++          scopeCalls.add(n);
++        }
++      }
++    }
+@@ -1,18 +1,21 @@
+-        if (parent.isVar()) {
+-          if (n.hasChildren() && n.getFirstChild().isQualifiedName()) {
+-          String name = n.getString();
+-          Var aliasVar = scope.getVar(name);
+-          aliases.put(name, aliasVar);
+-
+-          String qualifiedName =
+-              aliasVar.getInitialValue().getQualifiedName();
+-          transformation.addAlias(name, qualifiedName);
+-          // Bleeding functions already get a BAD_PARAMETERS error, so just
+-          // do nothing.
+-          // Parameters of the scope function also get a BAD_PARAMETERS
+-          // error.
+-        } else {
+-          // TODO(robbyw): Support using locals for private variables.
+-          report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
+-        }
+-        }
++        if (parent.isVar()) {
++          if (n.hasChildren() && n.getFirstChild().isQualifiedName()) {
++          String name = n.getString();
++          Var aliasVar = scope.getVar(name);
++          aliases.put(name, aliasVar);
++
++          String qualifiedName =
++              aliasVar.getInitialValue().getQualifiedName();
++          transformation.addAlias(name, qualifiedName);
++          // Bleeding functions already get a BAD_PARAMETERS error, so just
++          // do nothing.
++          // Parameters of the scope function also get a BAD_PARAMETERS
++          // error.
++        } else {
++          // TODO(robbyw): Support using locals for private variables.
++          report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
++        }
++        } else if (parent.isFunction()) { // Added this block
++          // Function declarations are not allowed as aliases in goog.scope
++          report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
++        }
+@@ -1,23 +1,26 @@
+-    private void validateScopeCall(NodeTraversal t, Node n, Node parent) {
+-      if (preprocessorSymbolTable != null) {
+-        preprocessorSymbolTable.addReference(n.getFirstChild());
+-      }
+-      if (!parent.isExprResult()) {
+-        report(t, n, GOOG_SCOPE_USED_IMPROPERLY);
+-      }
+-      if (n.getChildCount() != 2) {
+-        // The goog.scope call should have exactly 1 parameter.  The first
+-        // child is the "goog.scope" and the second should be the parameter.
+-        report(t, n, GOOG_SCOPE_HAS_BAD_PARAMETERS);
+-      }
+-      else {
+-        Node anonymousFnNode = n.getChildAtIndex(1);
+-        if (!anonymousFnNode.isFunction() ||
+-            NodeUtil.getFunctionName(anonymousFnNode) != null ||
+-            NodeUtil.getFunctionParameters(anonymousFnNode).hasChildren()) {
+-          report(t, anonymousFnNode, GOOG_SCOPE_HAS_BAD_PARAMETERS);
+-        } else {
+-          scopeCalls.add(n);
+-        }
+-      }
+-    }
++    private boolean validateScopeCall(NodeTraversal t, Node n, Node parent) {
++      if (preprocessorSymbolTable != null) {
++        preprocessorSymbolTable.addReference(n.getFirstChild());
++      }
++      if (!parent.isExprResult()) {
++        report(t, n, GOOG_SCOPE_USED_IMPROPERLY);
++        return false;
++      }
++      if (n.getChildCount() != 2) {
++        // The goog.scope call should have exactly 1 parameter.  The first
++        // child is the "goog.scope" and the second should be the parameter.
++        report(t, n, GOOG_SCOPE_HAS_BAD_PARAMETERS);
++        return false;
++      } else {
++        Node anonymousFnNode = n.getChildAtIndex(1);
++        if (!anonymousFnNode.isFunction() ||
++            NodeUtil.getFunctionName(anonymousFnNode) != null ||
++            NodeUtil.getFunctionParameters(anonymousFnNode).hasChildren()) {
++          report(t, anonymousFnNode, GOOG_SCOPE_HAS_BAD_PARAMETERS);
++          return false;
++        } else {
++          scopeCalls.add(n);
++          return true;
++        }
++      }
++    }
+@@ -1,9 +1,13 @@
+-    @Override
+-    public void enterScope(NodeTraversal t) {
+-      Node n = t.getCurrentNode().getParent();
+-      if (n != null && isCallToScopeMethod(n)) {
+-        transformation = transformationHandler.logAliasTransformation(
+-            n.getSourceFileName(), getSourceRegion(n));
+-        findAliases(t);
+-      }
+-    }
++    @Override
++    public void enterScope(NodeTraversal t) {
++      Node n = t.getCurrentNode().getParent();
++      if (n != null && isCallToScopeMethod(n)) {
++        // Validate the scope call first.
++        // If it's not valid, we shouldn't try to find aliases within it.
++        if (validateScopeCall(t, n, n.getParent())) {
++          transformation = transformationHandler.logAliasTransformation(
++              n.getSourceFileName(), getSourceRegion(n));
++          findAliases(t);
++        }
++      }
++    }
+@@ -1,21 +1,18 @@
+-        if (parent.isVar()) {
+-          if (n.hasChildren() && n.getFirstChild().isQualifiedName()) {
+-          String name = n.getString();
+-          Var aliasVar = scope.getVar(name);
+-          aliases.put(name, aliasVar);
+-
+-          String qualifiedName =
+-              aliasVar.getInitialValue().getQualifiedName();
+-          transformation.addAlias(name, qualifiedName);
+-          // Bleeding functions already get a BAD_PARAMETERS error, so just
+-          // do nothing.
+-          // Parameters of the scope function also get a BAD_PARAMETERS
+-          // error.
+-        } else {
+-          // TODO(robbyw): Support using locals for private variables.
+-          report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
+-        }
+-        } else if (parent.isFunction()) { // Added this block
+-          // Function declarations are not allowed as aliases in goog.scope
+-          report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
+-        }
++        if (parent.isVar()) {
++          if (n.hasChildren() && n.getFirstChild().isQualifiedName()) {
++          String name = n.getString();
++          Var aliasVar = scope.getVar(name);
++          aliases.put(name, aliasVar);
++
++          String qualifiedName =
++              aliasVar.getInitialValue().getQualifiedName();
++          transformation.addAlias(name, qualifiedName);
++          // Bleeding functions already get a BAD_PARAMETERS error, so just
++          // do nothing.
++          // Parameters of the scope function also get a BAD_PARAMETERS
++          // error.
++        } else {
++          // TODO(robbyw): Support using locals for private variables.
++          report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
++        }
++        }
+@@ -1,18 +1,21 @@
+-        if (parent.isVar()) {
+-          if (n.hasChildren() && n.getFirstChild().isQualifiedName()) {
+-          String name = n.getString();
+-          Var aliasVar = scope.getVar(name);
+-          aliases.put(name, aliasVar);
+-
+-          String qualifiedName =
+-              aliasVar.getInitialValue().getQualifiedName();
+-          transformation.addAlias(name, qualifiedName);
+-          // Bleeding functions already get a BAD_PARAMETERS error, so just
+-          // do nothing.
+-          // Parameters of the scope function also get a BAD_PARAMETERS
+-          // error.
+-        } else {
+-          // TODO(robbyw): Support using locals for private variables.
+-          report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
+-        }
+-        }
++        if (parent.isVar()) {
++          if (n.hasChildren() && n.getFirstChild().isQualifiedName()) {
++          String name = n.getString();
++          Var aliasVar = scope.getVar(name);
++          aliases.put(name, aliasVar);
++
++          String qualifiedName =
++              aliasVar.getInitialValue().getQualifiedName();
++          transformation.addAlias(name, qualifiedName);
++          // Bleeding functions already get a BAD_PARAMETERS error, so just
++          // do nothing.
++          // Parameters of the scope function also get a BAD_PARAMETERS
++          // error.
++        } else {
++          // TODO(robbyw): Support using locals for private variables.
++          report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
++        }
++        } else if (parent.isFunction()) { // Added this block
++          // Function declarations are not allowed as aliases in goog.scope
++          report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
++        }
+@@ -1,27 +1,26 @@
+-    private void findAliases(NodeTraversal t) {
+-      Scope scope = t.getScope();
+-      for (Var v : scope.getVarIterable()) {
+-        Node n = v.getNode();
+-        int type = n.getType();
+-        Node parent = n.getParent();
+-        if (parent.isVar()) {
+-          if (n.hasChildren() && n.getFirstChild().isQualifiedName()) {
+-          String name = n.getString();
+-          Var aliasVar = scope.getVar(name);
+-          aliases.put(name, aliasVar);
+-
+-          String qualifiedName =
+-              aliasVar.getInitialValue().getQualifiedName();
+-          transformation.addAlias(name, qualifiedName);
+-          // Bleeding functions already get a BAD_PARAMETERS error, so just
+-          // do nothing.
+-          // Parameters of the scope function also get a BAD_PARAMETERS
+-          // error.
+-        } else {
+-          // TODO(robbyw): Support using locals for private variables.
+-          report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
+-        }
+-        } else if (parent.isFunction()) { // Added this block
+-          // Function declarations are not allowed as aliases in goog.scope
+-          report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
+-        }
++    private void findAliases(NodeTraversal t) {
++      Scope scope = t.getScope();
++      for (Var v : scope.getVarIterable()) {
++        Node n = v.getNode();
++        int type = n.getType();
++        Node parent = n.getParent();
++        if (parent.isVar()) {
++          if (n.hasChildren() && n.getFirstChild().isQualifiedName()) {
++          String name = n.getString();
++          Var aliasVar = scope.getVar(name);
++          aliases.put(name, aliasVar);
++
++          String qualifiedName =
++              aliasVar.getInitialValue().getQualifiedName();
++          transformation.addAlias(name, qualifiedName);
++          // Bleeding functions already get a BAD_PARAMETERS error, so just
++          // do nothing.
++          // Parameters of the scope function also get a BAD_PARAMETERS
++          // error.
++        } else {
++          // TODO(robbyw): Support using locals for private variables.
++          report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
++        }
++        }
++      }
++    }
+@@ -1,26 +1,22 @@
+-    private boolean validateScopeCall(NodeTraversal t, Node n, Node parent) {
+-      if (preprocessorSymbolTable != null) {
+-        preprocessorSymbolTable.addReference(n.getFirstChild());
+-      }
+-      if (!parent.isExprResult()) {
+-        report(t, n, GOOG_SCOPE_USED_IMPROPERLY);
+-        return false;
+-      }
+-      if (n.getChildCount() != 2) {
+-        // The goog.scope call should have exactly 1 parameter.  The first
+-        // child is the "goog.scope" and the second should be the parameter.
+-        report(t, n, GOOG_SCOPE_HAS_BAD_PARAMETERS);
+-        return false;
+-      } else {
+-        Node anonymousFnNode = n.getChildAtIndex(1);
+-        if (!anonymousFnNode.isFunction() ||
+-            NodeUtil.getFunctionName(anonymousFnNode) != null ||
+-            NodeUtil.getFunctionParameters(anonymousFnNode).hasChildren()) {
+-          report(t, anonymousFnNode, GOOG_SCOPE_HAS_BAD_PARAMETERS);
+-          return false;
+-        } else {
+-          scopeCalls.add(n);
+-          return true;
+-        }
+-      }
+-    }
++    private void validateScopeCall(NodeTraversal t, Node n, Node parent) {
++      if (preprocessorSymbolTable != null) {
++        preprocessorSymbolTable.addReference(n.getFirstChild());
++      }
++      if (!parent.isExprResult()) {
++        report(t, n, GOOG_SCOPE_USED_IMPROPERLY);
++      }
++      if (n.getChildCount() != 2) {
++        // The goog.scope call should have exactly 1 parameter.  The first
++        // child is the "goog.scope" and the second should be the parameter.
++        report(t, n, GOOG_SCOPE_HAS_BAD_PARAMETERS);
++      } else {
++        Node anonymousFnNode = n.getChildAtIndex(1);
++        if (!anonymousFnNode.isFunction() ||
++            NodeUtil.getFunctionName(anonymousFnNode) != null ||
++            NodeUtil.getFunctionParameters(anonymousFnNode).hasChildren()) {
++          report(t, anonymousFnNode, GOOG_SCOPE_HAS_BAD_PARAMETERS);
++        } else {
++          scopeCalls.add(n);
++        }
++      }
++    }
+@@ -1,13 +1,9 @@
+-    @Override
+-    public void enterScope(NodeTraversal t) {
+-      Node n = t.getCurrentNode().getParent();
+-      if (n != null && isCallToScopeMethod(n)) {
+-        // Validate the scope call first.
+-        // If it's not valid, we shouldn't try to find aliases within it.
+-        if (validateScopeCall(t, n, n.getParent())) {
+-          transformation = transformationHandler.logAliasTransformation(
+-              n.getSourceFileName(), getSourceRegion(n));
+-          findAliases(t);
+-        }
+-      }
+-    }
++    @Override
++    public void enterScope(NodeTraversal t) {
++      Node n = t.getCurrentNode().getParent();
++      if (n != null && isCallToScopeMethod(n)) {
++        transformation = transformationHandler.logAliasTransformation(
++            n.getSourceFileName(), getSourceRegion(n));
++        findAliases(t);
++      }
++    }
+@@ -1,18 +1,21 @@
+-        if (parent.isVar()) {
+-          if (n.hasChildren() && n.getFirstChild().isQualifiedName()) {
+-          String name = n.getString();
+-          Var aliasVar = scope.getVar(name);
+-          aliases.put(name, aliasVar);
+-
+-          String qualifiedName =
+-              aliasVar.getInitialValue().getQualifiedName();
+-          transformation.addAlias(name, qualifiedName);
+-          // Bleeding functions already get a BAD_PARAMETERS error, so just
+-          // do nothing.
+-          // Parameters of the scope function also get a BAD_PARAMETERS
+-          // error.
+-        } else {
+-          // TODO(robbyw): Support using locals for private variables.
+-          report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
+-        }
+-        }
++        if (parent.isVar()) {
++          if (n.hasChildren() && n.getFirstChild().isQualifiedName()) {
++          String name = n.getString();
++          Var aliasVar = scope.getVar(name);
++          aliases.put(name, aliasVar);
++
++          String qualifiedName =
++              aliasVar.getInitialValue().getQualifiedName();
++          transformation.addAlias(name, qualifiedName);
++          // Bleeding functions already get a BAD_PARAMETERS error, so just
++          // do nothing.
++          // Parameters of the scope function also get a BAD_PARAMETERS
++          // error.
++        } else {
++          // TODO(robbyw): Support using locals for private variables.
++          report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
++        }
++        } else if (parent.isFunction()) { // Added this block
++          // Function declarations are not allowed as aliases in goog.scope
++          report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
++        }
+@@ -1,22 +1,26 @@
+-    private void validateScopeCall(NodeTraversal t, Node n, Node parent) {
+-      if (preprocessorSymbolTable != null) {
+-        preprocessorSymbolTable.addReference(n.getFirstChild());
+-      }
+-      if (!parent.isExprResult()) {
+-        report(t, n, GOOG_SCOPE_USED_IMPROPERLY);
+-      }
+-      if (n.getChildCount() != 2) {
+-        // The goog.scope call should have exactly 1 parameter.  The first
+-        // child is the "goog.scope" and the second should be the parameter.
+-        report(t, n, GOOG_SCOPE_HAS_BAD_PARAMETERS);
+-      } else {
+-        Node anonymousFnNode = n.getChildAtIndex(1);
+-        if (!anonymousFnNode.isFunction() ||
+-            NodeUtil.getFunctionName(anonymousFnNode) != null ||
+-            NodeUtil.getFunctionParameters(anonymousFnNode).hasChildren()) {
+-          report(t, anonymousFnNode, GOOG_SCOPE_HAS_BAD_PARAMETERS);
+-        } else {
+-          scopeCalls.add(n);
+-        }
+-      }
+-    }
++    private boolean validateScopeCall(NodeTraversal t, Node n, Node parent) {
++      if (preprocessorSymbolTable != null) {
++        preprocessorSymbolTable.addReference(n.getFirstChild());
++      }
++      if (!parent.isExprResult()) {
++        report(t, n, GOOG_SCOPE_USED_IMPROPERLY);
++        return false;
++      }
++      if (n.getChildCount() != 2) {
++        // The goog.scope call should have exactly 1 parameter.  The first
++        // child is the "goog.scope" and the second should be the parameter.
++        report(t, n, GOOG_SCOPE_HAS_BAD_PARAMETERS);
++        return false;
++      } else {
++        Node anonymousFnNode = n.getChildAtIndex(1);
++        if (!anonymousFnNode.isFunction() ||
++            NodeUtil.getFunctionName(anonymousFnNode) != null ||
++            NodeUtil.getFunctionParameters(anonymousFnNode).hasChildren()) {
++          report(t, anonymousFnNode, GOOG_SCOPE_HAS_BAD_PARAMETERS);
++          return false;
++        } else {
++          scopeCalls.add(n);
++          return true;
++        }
++      }
++    }
+@@ -1,9 +1,13 @@
+-    @Override
+-    public void enterScope(NodeTraversal t) {
+-      Node n = t.getCurrentNode().getParent();
+-      if (n != null && isCallToScopeMethod(n)) {
+-        transformation = transformationHandler.logAliasTransformation(
+-            n.getSourceFileName(), getSourceRegion(n));
+-        findAliases(t);
+-      }
+-    }
++    @Override
++    public void enterScope(NodeTraversal t) {
++      Node n = t.getCurrentNode().getParent();
++      if (n != null && isCallToScopeMethod(n)) {
++        // Validate the scope call first.
++        // If it's not valid, we shouldn't try to find aliases within it.
++        if (validateScopeCall(t, n, n.getParent())) {
++          transformation = transformationHandler.logAliasTransformation(
++              n.getSourceFileName(), getSourceRegion(n));
++          findAliases(t);
++        }
++      }
++    }
+@@ -1,21 +1,20 @@
+-        if (parent.isVar()) {
+-          if (n.hasChildren() && n.getFirstChild().isQualifiedName()) {
+-          String name = n.getString();
+-          Var aliasVar = scope.getVar(name);
+-          aliases.put(name, aliasVar);
+-
+-          String qualifiedName =
+-              aliasVar.getInitialValue().getQualifiedName();
+-          transformation.addAlias(name, qualifiedName);
+-          // Bleeding functions already get a BAD_PARAMETERS error, so just
+-          // do nothing.
+-          // Parameters of the scope function also get a BAD_PARAMETERS
+-          // error.
+-        } else {
+-          // TODO(robbyw): Support using locals for private variables.
+-          report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
+-        }
+-        } else if (parent.isFunction()) { // Added this block
+-          // Function declarations are not allowed as aliases in goog.scope
+-          report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
+-        }
++        if (parent.isVar()) {
++          if (n.hasChildren() && n.getFirstChild().isQualifiedName()) {
++          String name = n.getString();
++          Var aliasVar = scope.getVar(name);
++          aliases.put(name, aliasVar);
++
++          String qualifiedName =
++              aliasVar.getInitialValue().getQualifiedName();
++          transformation.addAlias(name, qualifiedName);
++          // Bleeding functions already get a BAD_PARAMETERS error, so just
++          // do nothing.
++          // Parameters of the scope function also get a BAD_PARAMETERS
++          // error.
++        } else {
++          // TODO(robbyw): Support using locals for private variables.
++          report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
++        }
++        }
++      }
++    }

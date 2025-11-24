@@ -1,0 +1,42 @@
+diff --git a/src/com/google/javascript/jscomp/FoldConstants.java b/src/com/google/javascript/jscomp/FoldConstants.java
+index f6d6a27f..924ee08a 100644
+--- a/src/com/google/javascript/jscomp/FoldConstants.java
++++ b/src/com/google/javascript/jscomp/FoldConstants.java
+@@ -1475,21 +1475,25 @@ class FoldConstants extends AbstractPostOrderCallback
+     String joinString = NodeUtil.getStringValue(right);
+     List<Node> arrayFoldedChildren = Lists.newLinkedList();
+     StringBuilder sb = new StringBuilder();
++    // Track number of immutable elements in the current merge group.
++    int immutableCount = 0;
+     int foldedSize = 0;
+     Node elem = arrayNode.getFirstChild();
+-    // Merges adjacent String nodes.
++    // Merges adjacent String nodes (including empty strings correctly).
+     while (elem != null) {
+       if (NodeUtil.isImmutableValue(elem)) {
+-        if (sb.length() > 0) {
++        if (immutableCount > 0) {
+           sb.append(joinString);
+         }
+         sb.append(NodeUtil.getStringValue(elem));
++        immutableCount++;
+       } else {
+-        if (sb.length() > 0) {
++        if (immutableCount > 0) {
+           // + 2 for the quotes.
+           foldedSize += sb.length() + 2;
+           arrayFoldedChildren.add(Node.newString(sb.toString()));
+           sb = new StringBuilder();
++          immutableCount = 0;
+         }
+         foldedSize += InlineCostEstimator.getCost(elem);
+         arrayFoldedChildren.add(elem);
+@@ -1497,7 +1501,7 @@ class FoldConstants extends AbstractPostOrderCallback
+       elem = elem.getNext();
+     }
+ 
+-    if (sb.length() > 0) {
++    if (immutableCount > 0) {
+       // + 2 for the quotes.
+       foldedSize += sb.length() + 2;
+       arrayFoldedChildren.add(Node.newString(sb.toString()));

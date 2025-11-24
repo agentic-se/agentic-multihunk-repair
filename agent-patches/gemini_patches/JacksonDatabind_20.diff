@@ -1,0 +1,51 @@
+--- a/src/main/java/com/fasterxml/jackson/databind/introspect/POJOPropertiesCollector.java
++++ b/src/main/java/com/fasterxml/jackson/databind/introspect/POJOPropertiesCollector.java
+@@ -1,5 +1,11 @@
+-    protected void _renameUsing(PropertyNamingStrategy naming)
+-    {
+-        POJOPropertyBuilder[] props = _properties.values().toArray(new POJOPropertyBuilder[_properties.size()]);
+-        _properties.clear();
+-        for (POJOPropertyBuilder prop : props) {
++    protected void _renameUsing(PropertyNamingStrategy naming)
++    {
++        // [databind#795]: Do not apply naming strategy for JsonNode/ObjectNode
++        // (or other tree model types), as their properties are not POJO properties
++        if (_type.isContainerType() && JsonNode.class.isAssignableFrom(_type.getRawClass())) {
++            return;
++        }
++
++        POJOPropertyBuilder[] props = _properties.values().toArray(new POJOPropertyBuilder[_properties.size()]);
++        _properties.clear();
++        for (POJOPropertyBuilder prop : props) {
+@@ -1,11 +1,5 @@
+-    protected void _renameUsing(PropertyNamingStrategy naming)
+-    {
+-        // [databind#795]: Do not apply naming strategy for JsonNode/ObjectNode
+-        // (or other tree model types), as their properties are not POJO properties
+-        if (_type.isContainerType() && JsonNode.class.isAssignableFrom(_type.getRawClass())) {
+-            return;
+-        }
+-
+-        POJOPropertyBuilder[] props = _properties.values().toArray(new POJOPropertyBuilder[_properties.size()]);
+-        _properties.clear();
+-        for (POJOPropertyBuilder prop : props) {
++    protected void _renameUsing(PropertyNamingStrategy naming)
++    {
++        POJOPropertyBuilder[] props = _properties.values().toArray(new POJOPropertyBuilder[_properties.size()]);
++        _properties.clear();
++        for (POJOPropertyBuilder prop : props) {
+@@ -1,4 +1,10 @@
+-    private PropertyNamingStrategy _findNamingStrategy()
+-    {
+-        Object namingDef = (_annotationIntrospector == null)? null
+-                : _annotationIntrospector.findNamingStrategy(_classDef);
++    private PropertyNamingStrategy _findNamingStrategy()
++    {
++        // [databind#795]: Do not apply naming strategy for JsonNode/ObjectNode
++        // (or other tree model types), as their properties are not POJO properties
++        if (JsonNode.class.isAssignableFrom(_type.getRawClass())) {
++            return null;
++        }
++
++        Object namingDef = (_annotationIntrospector == null)? null
++                : _annotationIntrospector.findNamingStrategy(_classDef);

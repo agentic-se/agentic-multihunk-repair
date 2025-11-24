@@ -1,0 +1,19 @@
+diff --git a/src/main/java/org/apache/commons/math/optimization/linear/SimplexSolver.java b/src/main/java/org/apache/commons/math/optimization/linear/SimplexSolver.java
+index 16d3baea1..545335543 100644
+--- a/src/main/java/org/apache/commons/math/optimization/linear/SimplexSolver.java
++++ b/src/main/java/org/apache/commons/math/optimization/linear/SimplexSolver.java
+@@ -78,7 +78,7 @@ public class SimplexSolver extends AbstractLinearOptimizer {
+         Integer minRatioPos = null;
+         for (int i = tableau.getNumObjectiveFunctions(); i < tableau.getHeight(); i++) {
+             double rhs = tableau.getEntry(i, tableau.getWidth() - 1);
+-            if (MathUtils.compareTo(tableau.getEntry(i, col), 0, epsilon) >= 0) {
++            if (MathUtils.compareTo(tableau.getEntry(i, col), 0, epsilon) > 0) {
+                 double ratio = rhs / tableau.getEntry(i, col);
+                 if (ratio < minRatio) {
+                     minRatio = ratio;
+
+
+# Untracked source files (not included in patch):
++ src/main/java/org/apache/commons/math/optimization/linear/SimplexSolver.class
++ src/main/java/org/apache/commons/math/optimization/linear/SimplexSolver.java.backup
++ src/main/java/org/apache/commons/math/optimization/linear/SimplexSolver.java.bak

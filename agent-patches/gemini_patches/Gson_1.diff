@@ -1,0 +1,23 @@
+--- a/gson/src/main/java/com/google/gson/TypeInfoFactory.java
++++ b/gson/src/main/java/com/google/gson/TypeInfoFactory.java
+@@ -1,5 +1,15 @@
+-      }
+-
+-      throw new UnsupportedOperationException("Expecting parameterized type, got " + parentType
+-          + ".\n Are you missing the use of TypeToken idiom?\n See "
+-          + "http://sites.google.com/site/gson/gson-user-guide#TOC-Serializing-and-Deserializing-Gener");
++        TypeVariable<?> fieldTypeVariable = (TypeVariable<?>) typeToEvaluate;
++        Type superclass = rawParentClass.getGenericSuperclass();
++        if (superclass instanceof ParameterizedType) {
++          ParameterizedType superParameterizedType = (ParameterizedType) superclass;
++          Class<?> rawSuperclass = TypeUtils.toRawClass(superParameterizedType);
++          TypeVariable<?>[] superclassTypeVariables = rawSuperclass.getTypeParameters();
++          int indexOfActualTypeArgument = getIndex(superclassTypeVariables, fieldTypeVariable);
++          Type[] actualTypeArguments = superParameterizedType.getActualTypeArguments();
++          return actualTypeArguments[indexOfActualTypeArgument];
++        }
++      }
++
++      throw new UnsupportedOperationException("Expecting parameterized type, got " + parentType
++          + ".\n Are you missing the use of TypeToken idiom?\n See "
++          + "http://sites.google.com/site/gson/gson-user-guide#TOC-Serializing-and-Deserializing-Gener");

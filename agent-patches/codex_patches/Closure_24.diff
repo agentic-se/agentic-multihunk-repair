@@ -1,0 +1,26 @@
+diff --git a/src/com/google/javascript/jscomp/ScopedAliases.java b/src/com/google/javascript/jscomp/ScopedAliases.java
+index 30d29d0a..1bbdf744 100644
+--- a/src/com/google/javascript/jscomp/ScopedAliases.java
++++ b/src/com/google/javascript/jscomp/ScopedAliases.java
+@@ -292,6 +292,21 @@ class ScopedAliases implements HotSwapCompilerPass {
+           // TODO(robbyw): Support using locals for private variables.
+           report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
+         }
++        } else if (parent != null && parent.isFunction()) {
++          // If this is the named function expression passed directly to
++          // goog.scope, skip reporting here. That case is handled as a
++          // bad-parameters error in validateScopeCall.
++          Node grandparent = parent.getParent();
++          boolean isScopeFunctionParam =
++              grandparent != null && grandparent.isCall() &&
++              SCOPING_METHOD_NAME.equals(
++                  grandparent.getFirstChild().getQualifiedName());
++
++          if (!isScopeFunctionParam) {
++            // Function declarations inside goog.scope are not aliases
++            // and should be reported as non-alias locals.
++            report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
++          }
+         }
+       }
+     }

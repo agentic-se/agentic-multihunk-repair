@@ -1,0 +1,69 @@
+diff --git a/src/main/java/org/apache/commons/csv/CSVParser.java b/src/main/java/org/apache/commons/csv/CSVParser.java
+index a6a6d49..a1b1809 100644
+--- a/src/main/java/org/apache/commons/csv/CSVParser.java
++++ b/src/main/java/org/apache/commons/csv/CSVParser.java
+@@ -1,5 +1,4 @@
+-/*
+- * Licensed to the Apache Software Foundation (ASF) under one or more
++/* Licensed to the Apache Software Foundation (ASF) under one or more
+  * contributor license agreements.  See the NOTICE file distributed with
+  * this work for additional information regarding copyright ownership.
+  * The ASF licenses this file to You under the Apache License, Version 2.0
+@@ -35,6 +34,8 @@ import java.util.LinkedHashMap;
+ import java.util.List;
+ import java.util.Map;
+ import java.util.NoSuchElementException;
++import java.util.HashSet;
++import java.util.Set;
+ 
+ /**
+  * Parses CSV files according to the specified format.
+@@ -70,7 +71,7 @@ import java.util.NoSuchElementException;
+  * </p>
+  *
+  * <pre>
+- * File csvData = new File(&quot;/path/to/csv&quot;);
++ * File csvData = new File("/path/to/csv");
+  * CSVParser parser = CSVParser.parse(csvData, CSVFormat.RFC4180);
+  * for (CSVRecord csvRecord : parser) {
+  *     ...
+@@ -104,9 +105,9 @@ import java.util.NoSuchElementException;
+  * </p>
+  *
+  * <pre>
+- * Reader in = new StringReader(&quot;a;b\nc;d&quot;);
++ * Reader in = new StringReader("a;b\nc;d");
+  * CSVParser parser = new CSVParser(in, CSVFormat.EXCEL);
+- * List&lt;CSVRecord&gt; list = parser.getRecords();
++ * List<CSVRecord> list = parser.getRecords();
+  * </pre>
+  *
+  * <p>
+@@ -367,8 +368,15 @@ public final class CSVParser implements Iterable<CSVRecord>, Closeable {
+ 
+             // build the name to index mappings
+             if (header != null) {
++                // Check for duplicate header names
++                final Set<String> seen = new HashSet<String>();
+                 for (int i = 0; i < header.length; i++) {
+-                    hdrMap.put(header[i], Integer.valueOf(i));
++                    final String columnName = header[i];
++                    if (seen.contains(columnName)) {
++                        throw new IllegalStateException("Duplicate header name: " + columnName);
++                    }
++                    seen.add(columnName);
++                    hdrMap.put(columnName, Integer.valueOf(i));
+                 }
+             }
+         }
+@@ -486,4 +494,4 @@ public final class CSVParser implements Iterable<CSVRecord>, Closeable {
+         return result;
+     }
+ 
+-}
++}
+\ No newline at end of file
+
+
+# Untracked source files (not included in patch):
++ src/test/java/org/apache/commons/csv/DuplicateHeadersTest.java

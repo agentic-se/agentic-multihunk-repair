@@ -1,0 +1,34 @@
+diff --git a/src/com/google/javascript/jscomp/PeepholeFoldConstants.java b/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
+index a61bb6c8..2e17bb23 100644
+--- a/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
++++ b/src/com/google/javascript/jscomp/PeepholeFoldConstants.java
+@@ -890,6 +890,14 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
+         !NodeUtil.isLiteralValue(right, false)) {
+       // We only handle non-literal operands for LT and GT.
+       if (n.getType() != Token.GT && n.getType() != Token.LT) {
++        // Try to evaluate based on numeric value if possible
++        Boolean result = compareAsNumbers(n.getType(), left, right);
++        if (result != null) {
++          Node newNode = new Node(result ? Token.TRUE : Token.FALSE);
++          n.getParent().replaceChild(n, newNode);
++          reportCodeChange();
++          return newNode;
++        }
+         return n;
+       }
+     }
+@@ -1093,14 +1101,10 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
+     switch (op) {
+       case Token.SHEQ:
+       case Token.EQ:
+-        Preconditions.checkState(
+-            left.getType() == Token.NUMBER && right.getType() == Token.NUMBER);
+         result = lv == rv;
+         break;
+       case Token.SHNE:
+       case Token.NE:
+-        Preconditions.checkState(
+-            left.getType() == Token.NUMBER && right.getType() == Token.NUMBER);
+         result = lv != rv;
+         break;
+       case Token.LE: result = lv <= rv; break;

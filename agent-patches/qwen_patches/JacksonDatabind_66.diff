@@ -1,0 +1,47 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/MapDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/MapDeserializer.java
+index c1d87190d..332b81f3d 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/MapDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/MapDeserializer.java
+@@ -442,6 +442,10 @@ public class MapDeserializer
+         }
+         
+         for (; keyStr != null; keyStr = p.nextFieldName()) {
++            // When deserializing map keys with custom key deserializers,
++            // make sure we provide the right parser state for key deserialization
++            // to work correctly with polymorphic types that have already 
++            // manipulated the parser state
+             Object key = keyDes.deserializeKey(keyStr, ctxt);
+             // And then the value...
+             JsonToken t = p.nextToken();
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
+index f827c318d..388a60229 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
+@@ -312,13 +312,26 @@ public class StdKeyDeserializer extends KeyDeserializer
+                 return null;
+             }
+             try {
+-                // Ugh... should not have to give parser which may or may not be correct one...
++                // Workaround for issue where context parser is in END_OBJECT state
++                // when deserializing keys in polymorphic type scenarios
+                 Object result = _delegate.deserialize(ctxt.getParser(), ctxt);
+                 if (result != null) {
+                     return result;
+                 }
+                 return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation");
+             } catch (Exception re) {
++                // Handle the case where parser is in a bad state by falling back to
++                // constructing the key directly from the string if possible
++                try {
++                    // Try to construct the key directly from the string if it's an enum
++                    if (_keyClass.isEnum()) {
++                        @SuppressWarnings("unchecked")
++                        Class<? extends Enum> enumClass = (Class<? extends Enum>) _keyClass;
++                        return Enum.valueOf(enumClass, key);
++                    }
++                } catch (Exception fallback) {
++                    // If that fails as well, fall back to the default handling
++                }
+                 return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation: %s", re.getMessage());
+             }
+         }

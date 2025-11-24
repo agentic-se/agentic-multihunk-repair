@@ -1,0 +1,17 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/util/StdDateFormat.java b/src/main/java/com/fasterxml/jackson/databind/util/StdDateFormat.java
+index b1086041d..5e241f9e7 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/util/StdDateFormat.java
++++ b/src/main/java/com/fasterxml/jackson/databind/util/StdDateFormat.java
+@@ -532,8 +532,11 @@ public class StdDateFormat
+                     // 10-Jun-2017, tatu: As per [databind#1651], when using this format,
+                     //    must use UTC, not whatever is configured as default timezone
+                     //    (because we know `Z` identifier is used)
++                    // But for dates without timezone info, we should respect the configured timezone
++                    // Instead of forcing DEFAULT_TIMEZONE, we should use _timezone if available
++                    TimeZone tzToUse = (_timezone != null) ? _timezone : DEFAULT_TIMEZONE;
+                     df = _formatISO8601_z = _cloneFormat(DATE_FORMAT_ISO8601_Z, formatStr,
+-                            DEFAULT_TIMEZONE, _locale, _lenient);
++                            tzToUse, _locale, _lenient);
+                 }
+             }
+         }

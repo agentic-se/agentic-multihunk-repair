@@ -1,0 +1,28 @@
+diff --git a/src/org/mockito/internal/MockitoCore.java b/src/org/mockito/internal/MockitoCore.java
+index 532156676..08d666e65 100755
+--- a/src/org/mockito/internal/MockitoCore.java
++++ b/src/org/mockito/internal/MockitoCore.java
+@@ -29,7 +29,15 @@ public class MockitoCore {
+     private final MockUtil mockUtil = new MockUtil();
+     private final MockingProgress mockingProgress = new ThreadSafeMockingProgress();
+     
+-    public <T> T mock(Class<T> classToMock, MockSettings mockSettings, boolean shouldResetOngoingStubbing) { return mock(classToMock, mockSettings); }
++    public <T> T mock(Class<T> classToMock, MockSettings mockSettings, boolean shouldResetOngoingStubbing) {
++        // Honor the flag to avoid clearing ongoing stubbing when creating nested mocks
++        // (e.g., when default answer RETURNS_MOCKS creates return mocks during stubbing).
++        mockingProgress.validateState();
++        if (shouldResetOngoingStubbing) {
++            mockingProgress.resetOngoingStubbing();
++        }
++        return mockUtil.createMock(classToMock, (MockSettingsImpl) mockSettings);
++    }
+     public <T> T mock(Class<T> classToMock, MockSettings mockSettings) {
+         mockingProgress.validateState();
+             mockingProgress.resetOngoingStubbing();
+@@ -137,4 +145,4 @@ public class MockitoCore {
+         List<Invocation> allInvocations = ongoingStubbing.getRegisteredInvocations();
+         return allInvocations.get(allInvocations.size()-1);
+     }
+-}
+\ No newline at end of file
++}

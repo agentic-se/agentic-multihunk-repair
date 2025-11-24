@@ -1,0 +1,48 @@
+diff --git a/src/com/google/debugging/sourcemap/SourceMapConsumerV3.java b/src/com/google/debugging/sourcemap/SourceMapConsumerV3.java
+index d67dc106..966f5003 100644
+--- a/src/com/google/debugging/sourcemap/SourceMapConsumerV3.java
++++ b/src/com/google/debugging/sourcemap/SourceMapConsumerV3.java
+@@ -483,11 +483,11 @@ public class SourceMapConsumerV3 implements SourceMapConsumer,
+     if (entry.getSourceFileId() == UNMAPPED) {
+       return null;
+     } else {
+-      // Adjust the line/column here to be start at 1.
++      // Adjust the line/column here to be 1-based for callers.
+       Builder x = OriginalMapping.newBuilder()
+         .setOriginalFile(sources[entry.getSourceFileId()])
+-        .setLineNumber(entry.getSourceLine())
+-        .setColumnPosition(entry.getSourceColumn());
++        .setLineNumber(entry.getSourceLine() + 1)
++        .setColumnPosition(entry.getSourceColumn() + 1);
+       if (entry.getNameId() != UNMAPPED) {
+         x.setIdentifier(names[entry.getNameId()]);
+       }
+diff --git a/src/com/google/javascript/jscomp/SourceMap.java b/src/com/google/javascript/jscomp/SourceMap.java
+index 835dfa49..a5e39ca2 100644
+--- a/src/com/google/javascript/jscomp/SourceMap.java
++++ b/src/com/google/javascript/jscomp/SourceMap.java
+@@ -131,14 +131,19 @@ public class SourceMap {
+ 
+     String originalName = (String) node.getProp(Node.ORIGINALNAME_PROP);
+ 
+-    // Strangely, Rhino source lines are one based but columns are
+-    // zero based.
+-    // We don't change this for the v1 or v2 source maps but for
+-    // v3 we make them both 0 based.
++    // Strangely, Rhino source lines are one based but columns are zero based.
++    // We don't change this for the v1 or v2 source maps but for v3 we
++    // make the original source line 0 based to match the V3 spec.
++    int originalLine = node.getLineno();
++    int originalColumn = node.getCharno();
++    if (generator instanceof com.google.debugging.sourcemap.SourceMapGeneratorV3) {
++      // Convert original line to 0-based indexing for V3 source maps.
++      originalLine = originalLine - 1;
++    }
+ 
+     generator.addMapping(
+         sourceFile, originalName,
+-        new FilePosition(node.getLineno(), node.getCharno()),
++        new FilePosition(originalLine, originalColumn),
+         outputStartPosition, outputEndPosition);
+   }
+ 

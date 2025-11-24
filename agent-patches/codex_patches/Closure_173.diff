@@ -1,0 +1,85 @@
+diff --git a/src/com/google/javascript/jscomp/CodeGenerator.java b/src/com/google/javascript/jscomp/CodeGenerator.java
+index 35a93af9..d9ac0199 100644
+--- a/src/com/google/javascript/jscomp/CodeGenerator.java
++++ b/src/com/google/javascript/jscomp/CodeGenerator.java
+@@ -127,12 +127,7 @@ class CodeGenerator {
+       // the IN_FOR_INIT_CLAUSE one.
+       Context rhsContext = getContextForNoInOperator(context);
+ 
+-      if (last.getType() == type &&
+-          NodeUtil.isAssociative(type)) {
+-        addExpr(first, p, context);
+-        cc.addOp(opstr, true);
+-        addExpr(last, p, rhsContext);
+-      } else if (NodeUtil.isAssignmentOp(n) && NodeUtil.isAssignmentOp(last)) {
++      if (NodeUtil.isAssignmentOp(n) && NodeUtil.isAssignmentOp(last)) {
+         // Assignments are the only right-associative binary operators
+         addExpr(first, p, context);
+         cc.addOp(opstr, true);
+diff --git a/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java b/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java
+index 2c137245..a4df73ad 100644
+--- a/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java
++++ b/src/com/google/javascript/jscomp/PeepholeSubstituteAlternateSyntax.java
+@@ -66,6 +66,14 @@ class PeepholeSubstituteAlternateSyntax
+   @SuppressWarnings("fallthrough")
+   public Node optimizeSubtree(Node node) {
+     switch(node.getType()) {
++      case Token.OR:
++      case Token.AND:
++      case Token.BITOR:
++      case Token.BITXOR:
++      case Token.BITAND:
++      case Token.MUL:
++        // Reassociate right-deep trees to be left-deep for associative ops.
++        return tryReassociate(node);
+       case Token.TRUE:
+       case Token.FALSE:
+         return reduceTrueFalse(node);
+@@ -105,6 +113,47 @@ class PeepholeSubstituteAlternateSyntax
+     }
+   }
+ 
++  /**
++   * For associative binary operators, transform a op (b op c) into
++   * (a op b) op c to normalize trees to a left-deep shape. This does not
++   * change semantics for the supported operators.
++   */
++  private Node tryReassociate(Node n) {
++    if (!late) {
++      return n;
++    }
++    int opType = n.getType();
++    Node left = n.getFirstChild();
++    if (left == null) {
++      return n;
++    }
++    Node right = left.getNext();
++    if (right == null) {
++      return n;
++    }
++
++    if (right.getType() == opType && NodeUtil.isAssociative(opType)) {
++      // n: (a op (b op c))  ==>  ((a op b) op c)
++      Node a = left.detachFromParent();
++      Node b = right.removeFirstChild();
++      // Right now 'right' holds only 'c'
++      Node c = right.removeFirstChild();
++      Node newLeft = new Node(opType, a, b);
++      newLeft.copyInformationFromForTree(n);
++      // Insert the new left node before the old right child.
++      n.addChildBefore(newLeft, right);
++      // Replace the old right op node with its remaining child 'c'.
++      if (c != null) {
++        n.replaceChild(right, c);
++      } else {
++        // Should not happen, but guard against malformed trees.
++        n.removeChild(right);
++      }
++      reportCodeChange();
++    }
++    return n;
++  }
++
+ 
+   private Node tryFoldSimpleFunctionCall(Node n) {
+     Preconditions.checkState(n.isCall());

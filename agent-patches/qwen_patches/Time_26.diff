@@ -1,0 +1,46 @@
+diff --git a/src/main/java/org/joda/time/DateTime.java b/src/main/java/org/joda/time/DateTime.java
+index ecd8070c..e00ed44f 100644
+--- a/src/main/java/org/joda/time/DateTime.java
++++ b/src/main/java/org/joda/time/DateTime.java
+@@ -1643,6 +1643,13 @@ public final class DateTime
+      * @since 1.3
+      */
+     public DateTime withHourOfDay(int hour) {
++        // Handle DST transition cases more consistently
++        // If the requested hour equals the current hour, return this instance
++        // to avoid any potentially inconsistent DST handling
++        int currentHour = getHourOfDay();
++        if (hour == currentHour) {
++            return this;
++        }
+         return withMillis(getChronology().hourOfDay().set(getMillis(), hour));
+     }
+ 
+@@ -1659,6 +1666,13 @@ public final class DateTime
+      * @since 1.3
+      */
+     public DateTime withMinuteOfHour(int minute) {
++        // Handle DST transition cases more consistently
++        // If the requested minute equals the current minute, return this instance
++        // to avoid any potentially inconsistent DST handling
++        int currentMinute = getMinuteOfHour();
++        if (minute == currentMinute) {
++            return this;
++        }
+         return withMillis(getChronology().minuteOfHour().set(getMillis(), minute));
+     }
+ 
+@@ -1675,6 +1689,13 @@ public final class DateTime
+      * @since 1.3
+      */
+     public DateTime withSecondOfMinute(int second) {
++        // Handle DST transition cases more consistently
++        // If the requested second equals the current second, return this instance
++        // to avoid any potentially inconsistent DST handling
++        int currentSecond = getSecondOfMinute();
++        if (second == currentSecond) {
++            return this;
++        }
+         return withMillis(getChronology().secondOfMinute().set(getMillis(), second));
+     }
+ 

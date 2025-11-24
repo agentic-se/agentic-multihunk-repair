@@ -1,0 +1,126 @@
+diff --git a/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java b/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java
+index 63a7f29f..a5c3ca4d 100644
+--- a/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java
++++ b/src/com/google/javascript/jscomp/DeadAssignmentsElimination.java
+@@ -294,30 +294,72 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
+       switch (n.getParent().getType()) {
+         case Token.OR:
+         case Token.AND:
+-          // If the currently node is the first child of
+-          // AND/OR, be conservative only consider the READs
+-          // of the second operand.
++          // If the current node is the first child of AND/OR, only the
++          // second operand might execute. A READ in the second operand must
++          // be honored, but a KILL in the second operand is not guaranteed
++          // to happen due to short-circuiting and should be ignored here.
++          if (n == n.getParent().getFirstChild()) {
++            Node second = n.getNext();
++            if (second != null &&
++                !ControlFlowGraph.isEnteringNewCfgNode(second)) {
++              state = isVariableReadBeforeKill(second, variable);
++              if (state == VariableLiveness.READ) {
++                return true;
++              }
++              // Ignore KILL for AND/OR second operand.
++            }
++            // Continue walking up the tree.
++            break;
++          }
++          // Otherwise, fall through to default behavior which checks
++          // following siblings (if any) and continues upward.
++          // fall-through
+ 
+         case Token.HOOK:
+-          // If current node is the condition, check each following
+-          // branch, otherwise it is a conditional branch and the
+-          // other branch can be ignored.
++          // If current node is the condition, check each following branch.
++          // A READ in either branch should be considered a READ. A KILL is
++          // only considered if both branches KILL.
++          if (n == n.getParent().getFirstChild()) {
++            Node trueCase = n.getNext();
++            Node falseCase = n.getParent().getLastChild();
++            VariableLiveness v1 = VariableLiveness.MAYBE_LIVE;
++            VariableLiveness v2 = VariableLiveness.MAYBE_LIVE;
++            if (trueCase != null &&
++                !ControlFlowGraph.isEnteringNewCfgNode(trueCase)) {
++              v1 = isVariableReadBeforeKill(trueCase, variable);
++            }
++            if (falseCase != null &&
++                !ControlFlowGraph.isEnteringNewCfgNode(falseCase)) {
++              v2 = isVariableReadBeforeKill(falseCase, variable);
++            }
++            if (v1 == VariableLiveness.READ || v2 == VariableLiveness.READ) {
++              return true;
++            } else if (v1 == VariableLiveness.KILL &&
++                       v2 == VariableLiveness.KILL) {
++              return false;
++            }
++            // Otherwise, continue walking up the tree.
++            break;
++          }
++          // If we're in one of the branches, ignore the other branch at this
++          // level and continue walking up the tree without considering
++          // siblings here.
++          break;
+ 
+         default:
+-          for(Node sibling = n.getNext(); sibling != null;
+-              sibling = sibling.getNext()) {
++          for (Node sibling = n.getNext(); sibling != null;
++               sibling = sibling.getNext()) {
+             if (!ControlFlowGraph.isEnteringNewCfgNode(sibling)) {
+-            state = isVariableReadBeforeKill(sibling, variable);
+-
+-      // If we see a READ or KILL there is no need to continue.
+-      if (state == VariableLiveness.READ) {
+-        return true;
+-      } else if (state == VariableLiveness.KILL) {
+-        return false;
++              state = isVariableReadBeforeKill(sibling, variable);
++              // If we see a READ or KILL there is no need to continue.
++              if (state == VariableLiveness.READ) {
++                return true;
++              } else if (state == VariableLiveness.KILL) {
++                return false;
++              }
+             }
+           }
+       }
+-      }
+       n = n.getParent();
+     }
+     return false;
+@@ -358,9 +400,12 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
+     switch (n.getType()) {
+       // Conditionals
+       case Token.OR:
+-      case Token.AND:
+-        // With a AND/OR the first branch always runs, but the second is
+-        // may not.
++      case Token.AND: {
++        // With AND/OR the first branch always runs, but the second may not.
++        // So only the first branch can definitively determine READ/KILL.
++        Node first = n.getFirstChild();
++        return isVariableReadBeforeKill(first, variable);
++      }
+       case Token.HOOK:
+         return checkHookBranchReadBeforeKill(
+             n.getFirstChild().getNext(), n.getLastChild(), variable);
+@@ -370,12 +415,12 @@ class DeadAssignmentsElimination extends AbstractPostOrderCallback implements
+         for (Node child = n.getFirstChild();
+             child != null; child = child.getNext()) {
+           if (!ControlFlowGraph.isEnteringNewCfgNode(child)) { // Not a FUNCTION
+-          VariableLiveness state = isVariableReadBeforeKill(child, variable);
+-          if (state != VariableLiveness.MAYBE_LIVE) {
+-            return state;
++            VariableLiveness state = isVariableReadBeforeKill(child, variable);
++            if (state != VariableLiveness.MAYBE_LIVE) {
++              return state;
++            }
+           }
+         }
+-      }
+     }
+ 
+     return VariableLiveness.MAYBE_LIVE;

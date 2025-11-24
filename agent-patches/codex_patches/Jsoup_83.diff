@@ -1,0 +1,115 @@
+diff --git a/src/main/java/org/jsoup/parser/CharacterReader.java b/src/main/java/org/jsoup/parser/CharacterReader.java
+index 80dffcd..52ce115 100644
+--- a/src/main/java/org/jsoup/parser/CharacterReader.java
++++ b/src/main/java/org/jsoup/parser/CharacterReader.java
+@@ -242,7 +242,7 @@ public final class CharacterReader {
+     }
+ 
+     String consumeTagName() {
+-        // '\t', '\n', '\r', '\f', ' ', '/', '>', nullChar
++        // '\t', '\n', '\r', '\f', ' ', '/', '>', '<', nullChar
+         // NOTE: out of spec, added '<' to fix common author bugs
+         bufferUp();
+         final int start = bufPos;
+@@ -251,7 +251,7 @@ public final class CharacterReader {
+ 
+         while (bufPos < remaining) {
+             final char c = val[bufPos];
+-            if (c == '\t'|| c ==  '\n'|| c ==  '\r'|| c ==  '\f'|| c ==  ' '|| c ==  '/'|| c ==  '>'|| c ==  TokeniserState.nullChar)
++            if (c == '\t'|| c ==  '\n'|| c ==  '\r'|| c ==  '\f'|| c ==  ' '|| c ==  '/'|| c ==  '>'|| c ==  '<'|| c ==  TokeniserState.nullChar)
+                 break;
+             bufPos++;
+         }
+diff --git a/src/main/java/org/jsoup/parser/TokeniserState.java b/src/main/java/org/jsoup/parser/TokeniserState.java
+index 4980f15..b5c7f3c 100644
+--- a/src/main/java/org/jsoup/parser/TokeniserState.java
++++ b/src/main/java/org/jsoup/parser/TokeniserState.java
+@@ -163,6 +163,12 @@ enum TokeniserState {
+                     t.emitTagPending();
+                     t.transition(Data);
+                     break;
++                case '<':
++                    // If a new tag starts before closing the current, close current and start new
++                    t.error(this);
++                    t.emitTagPending();
++                    t.transition(TagOpen);
++                    break;
+                 case nullChar: // replacement
+                     t.tagPending.appendTagName(replacementStr);
+                     break;
+@@ -578,13 +584,18 @@ enum TokeniserState {
+                     break;
+                 case '"':
+                 case '\'':
+-                case '<':
+                 case '=':
+                     t.error(this);
+                     t.tagPending.newAttribute();
+                     t.tagPending.appendAttributeName(c);
+                     t.transition(AttributeName);
+                     break;
++                case '<':
++                    // Treat a new tag start as an implicit close of the current tag
++                    t.error(this);
++                    t.emitTagPending();
++                    t.transition(TagOpen);
++                    break;
+                 default: // A-Z, anything else
+                     t.tagPending.newAttribute();
+                     r.unconsume();
+@@ -627,10 +638,15 @@ enum TokeniserState {
+                     break;
+                 case '"':
+                 case '\'':
+-                case '<':
+                     t.error(this);
+                     t.tagPending.appendAttributeName(c);
+                     break;
++                case '<':
++                    // Implicitly close the current tag and start a new one
++                    t.error(this);
++                    t.emitTagPending();
++                    t.transition(TagOpen);
++                    break;
+                 default: // buffer underrun
+                     t.tagPending.appendAttributeName(c);
+             }
+@@ -668,12 +684,17 @@ enum TokeniserState {
+                     break;
+                 case '"':
+                 case '\'':
+-                case '<':
+                     t.error(this);
+                     t.tagPending.newAttribute();
+                     t.tagPending.appendAttributeName(c);
+                     t.transition(AttributeName);
+                     break;
++                case '<':
++                    // Implicitly end current tag and handle the new tag
++                    t.error(this);
++                    t.emitTagPending();
++                    t.transition(TagOpen);
++                    break;
+                 default: // A-Z, anything else
+                     t.tagPending.newAttribute();
+                     r.unconsume();
+@@ -832,12 +853,18 @@ enum TokeniserState {
+                     break;
+                 case '"':
+                 case '\'':
+-                case '<':
+                 case '=':
+                 case '`':
+                     t.error(this);
+                     t.tagPending.appendAttributeValue(c);
+                     break;
++                case '<':
++                    // New tag start encountered in unquoted attribute value:
++                    // close the current tag and reprocess as a new tag open
++                    t.error(this);
++                    t.emitTagPending();
++                    t.transition(TagOpen);
++                    break;
+                 default: // hit end of buffer in first read, still in attribute
+                     t.tagPending.appendAttributeValue(c);
+             }

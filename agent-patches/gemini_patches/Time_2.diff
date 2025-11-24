@@ -1,0 +1,67 @@
+--- a/src/main/java/org/joda/time/Partial.java
++++ b/src/main/java/org/joda/time/Partial.java
+@@ -1,6 +1,21 @@
+-                        } else if (compare == 0) {
+-                            DurationField rangeField = fieldType.getRangeDurationType().getField(iChronology);
+-                            DurationField loopRangeField = loopType.getRangeDurationType().getField(iChronology);
+-                            if (rangeField.compareTo(loopRangeField) > 0) {
+-                                break;
+-                            }
++                        } else if (compare == 0) {
++                            // unit fields are the same, so compare range fields
++                            DurationFieldType rangeType = fieldType.getRangeDurationType();
++                            DurationFieldType loopRangeType = loopType.getRangeDurationType();
++
++                            if (rangeType == null) {
++                                if (loopRangeType != null) {
++                                    // New field has null range, existing field has non-null range.
++                                    // New field is "larger" (less specific), so insert before.
++                                    break;
++                                }
++                                // If both are null, or new field has non-null and existing has null, continue.
++                            } else { // rangeType is NOT null
++                                if (loopRangeType != null) {
++                                    // Both have non-null range duration, compare them
++                                    int rangeCompare = rangeType.getField(iChronology).compareTo(loopRangeType.getField(iChronology));
++                                    if (rangeCompare > 0) { // new field's range is larger, insert before
++                                        break;
++                                    }
++                                }
++                            }
+@@ -1,7 +1,29 @@
+-                        } else if (compare == 0) {
+-                            DurationField rangeField = fieldType.getRangeDurationType().getField(iChronology);
+-                            DurationField loopRangeField = loopType.getRangeDurationType().getField(iChronology);
+-                            if (rangeField.compareTo(loopRangeField) > 0) {
+-                                break;
+-                            }
+-                        }
++                        } else if (compare == 0) { // unit fields are the same, so compare range fields
++                            DurationFieldType rangeType = fieldType.getRangeDurationType();
++                            DurationFieldType loopRangeType = loopType.getRangeDurationType();
++
++                            if (rangeType == null) {
++                                if (loopRangeType != null) {
++                                    // New field has null range, existing field has non-null range.
++                                    // New field is "larger" (less specific), so insert before.
++                                    break;
++                                }
++                                // If both are null, continue. The constructor will handle duplicates.
++                            } else { // rangeType is NOT null
++                                if (loopRangeType == null) {
++                                    // New field has non-null range, existing field has null range.
++                                    // New field is "smaller" (more specific), so continue the loop.
++                                } else {
++                                    // Both have non-null range duration, compare them
++                                    int rangeCompare = rangeType.getField(iChronology).compareTo(loopRangeType.getField(iChronology));
++                                    if (rangeCompare > 0) { // new field's range is larger, insert before
++                                        break;
++                                    } else if (rangeCompare == 0) {
++                                        // If both unit and range are the same, it's a duplicate.
++                                        // The constructor will throw an IllegalArgumentException.
++                                        // We can break here to insert it, and let the constructor validate.
++                                        break;
++                                    }
++                                }
++                            }
++                        }

@@ -1,0 +1,110 @@
+diff --git a/src/main/java/org/apache/commons/csv/CSVParser.java b/src/main/java/org/apache/commons/csv/CSVParser.java
+index 1e3106e..2ef16dd 100644
+--- a/src/main/java/org/apache/commons/csv/CSVParser.java
++++ b/src/main/java/org/apache/commons/csv/CSVParser.java
+@@ -303,6 +303,11 @@ public final class CSVParser implements Iterable<CSVRecord>, Closeable {
+ 
+     private final Token reusableToken = new Token();
+ 
++    // Holds a lookahead record visible across iterators created from this parser.
++    // This ensures that calling hasNext() on any iterator does not "lose" a record
++    // when a different iterator is used to continue iteration.
++    private CSVRecord nextRecordCache;
++
+     /**
+      * Customized CSV parser using the given {@link CSVFormat}
+      *
+@@ -521,53 +526,51 @@ public final class CSVParser implements Iterable<CSVRecord>, Closeable {
+     @Override
+     public Iterator<CSVRecord> iterator() {
+         return new Iterator<CSVRecord>() {
+-        private CSVRecord current;
+-  
+-        private CSVRecord getNextRecord() {
+-            try {
+-                return CSVParser.this.nextRecord();
+-            } catch (final IOException e) {
+-                throw new IllegalStateException(
+-                        e.getClass().getSimpleName() + " reading next record: " + e.toString(), e);
+-            }
+-        }
+-  
+-        @Override
+-        public boolean hasNext() {
+-            if (CSVParser.this.isClosed()) {
+-                return false;
+-            }
+-            if (this.current == null) {
+-                this.current = this.getNextRecord();
++
++            private CSVRecord getNextRecord() {
++                try {
++                    return CSVParser.this.nextRecord();
++                } catch (final IOException e) {
++                    throw new IllegalStateException(
++                            e.getClass().getSimpleName() + " reading next record: " + e.toString(), e);
++                }
+             }
+-  
+-            return this.current != null;
+-        }
+-  
+-        @Override
+-        public CSVRecord next() {
+-            if (CSVParser.this.isClosed()) {
+-                throw new NoSuchElementException("CSVParser has been closed");
++
++            @Override
++            public boolean hasNext() {
++                if (CSVParser.this.isClosed()) {
++                    return false;
++                }
++                if (CSVParser.this.nextRecordCache == null) {
++                    CSVParser.this.nextRecordCache = this.getNextRecord();
++                }
++                return CSVParser.this.nextRecordCache != null;
+             }
+-            CSVRecord next = this.current;
+-            this.current = null;
+-  
+-            if (next == null) {
+-                // hasNext() wasn't called before
+-                next = this.getNextRecord();
++
++            @Override
++            public CSVRecord next() {
++                if (CSVParser.this.isClosed()) {
++                    throw new NoSuchElementException("CSVParser has been closed");
++                }
++                CSVRecord next = CSVParser.this.nextRecordCache;
++                CSVParser.this.nextRecordCache = null;
++
+                 if (next == null) {
+-                    throw new NoSuchElementException("No more CSV records available");
++                    // hasNext() wasn't called before; fetch now
++                    next = this.getNextRecord();
++                    if (next == null) {
++                        throw new NoSuchElementException("No more CSV records available");
++                    }
+                 }
++
++                return next;
+             }
+-  
+-            return next;
+-        }
+-  
+-        @Override
+-        public void remove() {
+-            throw new UnsupportedOperationException();
+-        }
+-    };
++
++            @Override
++            public void remove() {
++                throw new UnsupportedOperationException();
++            }
++        };
+     }
+ 
+     /**

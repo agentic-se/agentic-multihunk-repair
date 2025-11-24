@@ -1,0 +1,25 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
+index c27ea729e..a88f99b1f 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
+@@ -229,12 +229,20 @@ public abstract class FromStringDeserializer<T> extends StdScalarDeserializer<T>
+             case STD_LOCALE:
+                 {
+                     int ix = value.indexOf('_');
++                    // Also check for hyphen separator (RFC 5646 compliant)
++                    if (ix < 0) {
++                        ix = value.indexOf('-');
++                    }
+                     if (ix < 0) { // single argument
+                         return new Locale(value);
+                     }
+                     String first = value.substring(0, ix);
+                     value = value.substring(ix+1);
+                     ix = value.indexOf('_');
++                    // Also check for hyphen separator (RFC 5646 compliant)
++                    if (ix < 0) {
++                        ix = value.indexOf('-');
++                    }
+                     if (ix < 0) { // two pieces
+                         return new Locale(first, value);
+                     }

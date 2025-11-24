@@ -1,0 +1,90 @@
+diff --git a/src/main/java/org/jsoup/nodes/Element.java b/src/main/java/org/jsoup/nodes/Element.java
+index fd2b542..0ce6ef6 100644
+--- a/src/main/java/org/jsoup/nodes/Element.java
++++ b/src/main/java/org/jsoup/nodes/Element.java
+@@ -431,8 +431,16 @@ public class Element extends Node {
+      * @return sibling elements
+      */
+     public Elements siblingElements() {
++        if (parent() == null)
++            return new Elements();
+ 
+-        return parent().children();
++        List<Element> siblings = parent().children();
++        List<Element> elements = new ArrayList<Element>(Math.max(0, siblings.size() - 1));
++        for (Element el : siblings) {
++            if (el != this)
++                elements.add(el);
++        }
++        return new Elements(elements);
+     }
+ 
+     /**
+@@ -444,6 +452,8 @@ public class Element extends Node {
+      * @see #previousElementSibling()
+      */
+     public Element nextElementSibling() {
++        if (parent() == null)
++            return null;
+         List<Element> siblings = parent().children();
+         Integer index = indexInList(this, siblings);
+         Validate.notNull(index);
+@@ -459,6 +469,8 @@ public class Element extends Node {
+      * @see #nextElementSibling()
+      */
+     public Element previousElementSibling() {
++        if (parent() == null)
++            return null;
+         List<Element> siblings = parent().children();
+         Integer index = indexInList(this, siblings);
+         Validate.notNull(index);
+@@ -474,6 +486,8 @@ public class Element extends Node {
+      */
+     public Element firstElementSibling() {
+         // todo: should firstSibling() exclude this?
++        if (parent() == null)
++            return null;
+         List<Element> siblings = parent().children();
+         return siblings.size() > 1 ? siblings.get(0) : null;
+     }
+@@ -493,6 +507,8 @@ public class Element extends Node {
+      * @return the last sibling that is an element (aka the parent's last element child) 
+      */
+     public Element lastElementSibling() {
++        if (parent() == null)
++            return null;
+         List<Element> siblings = parent().children();
+         return siblings.size() > 1 ? siblings.get(siblings.size() - 1) : null;
+     }
+diff --git a/src/main/java/org/jsoup/nodes/Node.java b/src/main/java/org/jsoup/nodes/Node.java
+index 92a2f8f..abd715f 100644
+--- a/src/main/java/org/jsoup/nodes/Node.java
++++ b/src/main/java/org/jsoup/nodes/Node.java
+@@ -441,8 +441,16 @@ public abstract class Node implements Cloneable {
+      @return node siblings. If the node has no parent, returns an empty list.
+      */
+     public List<Node> siblingNodes() {
++        if (parentNode == null)
++            return Collections.emptyList();
+ 
+-        return parent().childNodes();
++        List<Node> siblings = parentNode.childNodes;
++        List<Node> nodes = new ArrayList<Node>(Math.max(0, siblings.size() - 1));
++        for (Node sibling : siblings) {
++            if (sibling != this)
++                nodes.add(sibling);
++        }
++        return Collections.unmodifiableList(nodes);
+     }
+ 
+     /**
+@@ -467,7 +475,8 @@ public abstract class Node implements Cloneable {
+      @return the previous sibling, or null if this is the first sibling
+      */
+     public Node previousSibling() {
+-
++        if (parentNode == null)
++            return null; // root
+         List<Node> siblings = parentNode.childNodes;
+         Integer index = siblingIndex();
+         Validate.notNull(index);

@@ -1,0 +1,89 @@
+diff --git a/src/main/java/org/apache/commons/lang3/builder/HashCodeBuilder.java b/src/main/java/org/apache/commons/lang3/builder/HashCodeBuilder.java
+index 4ae351da..eea68322 100644
+--- a/src/main/java/org/apache/commons/lang3/builder/HashCodeBuilder.java
++++ b/src/main/java/org/apache/commons/lang3/builder/HashCodeBuilder.java
+@@ -98,15 +98,10 @@ public class HashCodeBuilder {
+      * <p>
+      * A registry of objects used by reflection methods to detect cyclical object references and avoid infinite loops.
+      * </p>
+-     * 
++     *
+      * @since 2.3
+      */
+-    private static final ThreadLocal<Set<IDKey>> REGISTRY = new ThreadLocal<Set<IDKey>>() {
+-        @Override
+-        protected Set<IDKey> initialValue() {
+-            return new HashSet<IDKey>();
+-        }
+-    };
++    private static final ThreadLocal<Set<IDKey>> REGISTRY = new ThreadLocal<Set<IDKey>>();
+ 
+     /*
+      * N.B. we cannot store the actual objects in a HashSet, as that would use the very hashCode()
+@@ -142,14 +137,15 @@ public class HashCodeBuilder {
+      * Returns <code>true</code> if the registry contains the given object. Used by the reflection methods to avoid
+      * infinite loops.
+      * </p>
+-     * 
++     *
+      * @param value
+      *            The object to lookup in the registry.
+      * @return boolean <code>true</code> if the registry contains the given object.
+      * @since 2.3
+      */
+     static boolean isRegistered(Object value) {
+-        return getRegistry().contains(new IDKey(value));
++        Set<IDKey> registry = getRegistry();
++        return registry != null && registry.contains(new IDKey(value));
+     }
+ 
+     /**
+@@ -514,28 +510,39 @@ public class HashCodeBuilder {
+      * <p>
+      * Registers the given object. Used by the reflection methods to avoid infinite loops.
+      * </p>
+-     * 
++     *
+      * @param value
+      *            The object to register.
+      */
+     static void register(Object value) {
+-        getRegistry().add(new IDKey(value));
++        Set<IDKey> registry = getRegistry();
++        if (registry == null) {
++            registry = new HashSet<IDKey>();
++            REGISTRY.set(registry);
++        }
++        registry.add(new IDKey(value));
+     }
+ 
+     /**
+      * <p>
+      * Unregisters the given object.
+      * </p>
+-     * 
++     *
+      * <p>
+      * Used by the reflection methods to avoid infinite loops.
+-     * 
++     *
+      * @param value
+      *            The object to unregister.
+      * @since 2.3
+      */
+     static void unregister(Object value) {
+-        getRegistry().remove(new IDKey(value));
++        Set<IDKey> registry = getRegistry();
++        if (registry != null) {
++            registry.remove(new IDKey(value));
++            if (registry.isEmpty()) {
++                REGISTRY.remove();
++            }
++        }
+     }
+ 
+     /**
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

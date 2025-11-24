@@ -1,0 +1,20 @@
+diff --git a/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java b/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java
+index 0cc8226d8..a72a5b0c0 100644
+--- a/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java
++++ b/src/org/mockito/internal/creation/instance/ConstructorInstantiator.java
+@@ -21,7 +21,14 @@ public class ConstructorInstantiator implements Instantiator {
+         try {
+             //this is kind of overengineered because we don't need to support more params
+             //however, I know we will be needing it :)
+-            Constructor<T> c = cls.getDeclaredConstructor(outerClassInstance.getClass());
++            //For inner classes, we need to use the enclosing class, not the runtime type of the instance
++            //If this is a CGLIB proxy, the enclosing class will be null, so we need to check the superclass
++            Class<?> enclosingClass = cls.getEnclosingClass();
++            if (enclosingClass == null) {
++                // This might be a CGLIB proxy - try to get the enclosing class from the superclass
++                enclosingClass = cls.getSuperclass().getEnclosingClass();
++            }
++            Constructor<T> c = cls.getDeclaredConstructor(enclosingClass);
+             return c.newInstance(outerClassInstance);
+         } catch (Exception e) {
+             throw paramsException(cls, e);

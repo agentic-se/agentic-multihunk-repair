@@ -1,0 +1,24 @@
+diff --git a/src/com/google/javascript/jscomp/TypeInference.java b/src/com/google/javascript/jscomp/TypeInference.java
+index c43a7d1a..bba0a105 100644
+--- a/src/com/google/javascript/jscomp/TypeInference.java
++++ b/src/com/google/javascript/jscomp/TypeInference.java
+@@ -545,7 +545,19 @@ class TypeInference
+         // sure we back-infer the <string> element constraint on
+         // the left hand side, so we use the left hand side.
+ 
++        // Prefer the declared type for VAR initializers with declared types,
++        // except when the initializer value is strictly null/undefined.
++        // In that case, the current flow type should reflect the actual
++        // initialized value so that immediate uses (e.g., x.push()) are
++        // properly type-checked against null/undefined.
+         boolean isVarTypeBetter = !isVarDeclaration || var == null || var.isTypeInferred();
++        if (!isVarTypeBetter && resultType != null) {
++          // If the declared variable is initialized to null, use the
++          // initializer type for the current flow.
++          if (resultType.isSubtype(getNativeType(NULL_TYPE))) {
++            isVarTypeBetter = true;
++          }
++        }
+             // Makes it easier to check for NPEs.
+ 
+         // TODO(nicksantos): This might be a better check once we have

@@ -1,0 +1,88 @@
+diff --git a/src/java/org/apache/commons/lang/time/DateUtils.java b/src/java/org/apache/commons/lang/time/DateUtils.java
+index 531e73fc..eb374bd8 100644
+--- a/src/java/org/apache/commons/lang/time/DateUtils.java
++++ b/src/java/org/apache/commons/lang/time/DateUtils.java
+@@ -628,16 +628,53 @@ public class DateUtils {
+         // Manually truncate milliseconds, seconds and minutes, rather than using
+         // Calendar methods.
+ 
++        Date date = val.getTime();
++        long time = date.getTime();
++        boolean done = false;
+ 
+         // truncate milliseconds
++        int millisecs = val.get(Calendar.MILLISECOND);
++        if (field == Calendar.MILLISECOND) {
++            done = true;
++        }
++        if (!done) {
++            time = time - millisecs;
++        }
+ 
+         // truncate seconds
++        int seconds = val.get(Calendar.SECOND);
++        if (!done && field == Calendar.SECOND) {
++            done = true;
++        }
++        if (!done) {
++            time = time - (seconds * 1000L);
++        }
+ 
+         // truncate minutes
++        int minutes = val.get(Calendar.MINUTE);
++        if (!done && field == Calendar.MINUTE) {
++            done = true;
++        }
++        if (!done) {
++            time = time - (minutes * 60000L);
++        }
+ 
+         // reset time
++        if (date.getTime() != time) {
++            date.setTime(time);
++            val.setTime(date);
++        }
+         // ----------------- Fix for LANG-59 ----------------------- END ----------------
+ 
++        // If we're done truncating and not rounding, return early
++        // If we're rounding, we need to continue to check if we should round up
++        if (done && !round) {
++            return;
++        }
++
++        // For fields >= HOUR, continue with normal processing but skip modifying the first 3 field indices
++        // since we've already handled MILLISECOND, SECOND, and MINUTE
++
+         boolean roundUp = false;
+         for (int i = 0; i < fields.length; i++) {
+             for (int j = 0; j < fields[i].length; j++) {
+@@ -701,12 +738,24 @@ public class DateUtils {
+                 int min = val.getActualMinimum(fields[i][0]);
+                 int max = val.getActualMaximum(fields[i][0]);
+                 //Calculate the offset from the minimum allowed value
+-                offset = val.get(fields[i][0]) - min;
++                // For fields 0-2, use the original values we captured, not val.get() which returns 0 after truncation
++                if (i == 0) {
++                    offset = millisecs - min;
++                } else if (i == 1) {
++                    offset = seconds - min;
++                } else if (i == 2) {
++                    offset = minutes - min;
++                } else {
++                    offset = val.get(fields[i][0]) - min;
++                }
+                 //Set roundUp if this is more than half way between the minimum and maximum
+                 roundUp = offset > ((max - min) / 2);
+             }
+             //We need to remove this field
++            // Don't use val.set for MILLISECOND, SECOND, or MINUTE as we've already handled them above
++            if (i >= 3) {
+                 val.set(fields[i][0], val.get(fields[i][0]) - offset);
++            }
+         }
+         throw new IllegalArgumentException("The field " + field + " is not supported");
+ 
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

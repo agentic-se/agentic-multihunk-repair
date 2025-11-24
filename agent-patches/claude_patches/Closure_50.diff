@@ -1,0 +1,26 @@
+diff --git a/src/com/google/javascript/jscomp/PeepholeReplaceKnownMethods.java b/src/com/google/javascript/jscomp/PeepholeReplaceKnownMethods.java
+index ffe47d3d..d8fc72c1 100644
+--- a/src/com/google/javascript/jscomp/PeepholeReplaceKnownMethods.java
++++ b/src/com/google/javascript/jscomp/PeepholeReplaceKnownMethods.java
+@@ -376,6 +376,10 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
+       if (!NodeUtil.isImmutableValue(right)) {
+         return n;
+       }
++      // If there are more than one argument, bail out
++      if (right.getNext() != null) {
++        return n;
++      }
+     }
+ 
+     Node arrayNode = callTarget.getFirstChild();
+@@ -468,6 +472,10 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
+         for (Node node : arrayFoldedChildren) {
+           arrayNode.addChildToBack(node);
+         }
++        // If the separator is ",", remove it since that's the default
++        if (right != null && ",".equals(joinString)) {
++          n.removeChild(right);
++        }
+         reportCodeChange();
+         break;
+     }

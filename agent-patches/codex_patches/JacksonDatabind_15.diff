@@ -1,0 +1,18 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/std/StdDelegatingSerializer.java b/src/main/java/com/fasterxml/jackson/databind/ser/std/StdDelegatingSerializer.java
+index 3aeb4f306..1676ac04e 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/StdDelegatingSerializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/StdDelegatingSerializer.java
+@@ -158,7 +158,12 @@ public class StdDelegatingSerializer
+             return;
+         }
+         // 02-Apr-2015, tatu: As per [databind#731] may need to do dynamic lookup
+-        _delegateSerializer.serialize(delegateValue, gen, provider);
++        JsonSerializer<Object> ser = _delegateSerializer;
++        if (ser == null || (ser instanceof com.fasterxml.jackson.databind.ser.impl.UnknownSerializer)) {
++            // dynamically find serializer based on actual value type
++            ser = provider.findValueSerializer(delegateValue.getClass());
++        }
++        ser.serialize(delegateValue, gen, provider);
+     }
+ 
+     @Override

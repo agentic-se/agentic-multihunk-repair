@@ -1,0 +1,32 @@
+diff --git a/src/com/google/javascript/jscomp/TypeInference.java b/src/com/google/javascript/jscomp/TypeInference.java
+index 7e218d88..13df2270 100644
+--- a/src/com/google/javascript/jscomp/TypeInference.java
++++ b/src/com/google/javascript/jscomp/TypeInference.java
+@@ -1038,12 +1038,13 @@ class TypeInference
+     scope = traverse(constructor, scope);
+     JSType constructorType = constructor.getJSType();
+     JSType type = null;
++    FunctionType ct = null;
+     if (constructorType != null) {
+       constructorType = constructorType.restrictByNotNullOrUndefined();
+       if (constructorType.isUnknownType()) {
+         type = getNativeType(UNKNOWN_TYPE);
+       } else {
+-        FunctionType ct = constructorType.toMaybeFunctionType();
++        ct = constructorType.toMaybeFunctionType();
+         if (ct == null && constructorType instanceof FunctionType) {
+           // If constructorType is a NoObjectType, then toMaybeFunctionType will
+           // return null. But NoObjectType implements the FunctionType
+@@ -1059,6 +1060,12 @@ class TypeInference
+     for (Node arg = constructor.getNext(); arg != null; arg = arg.getNext()) {
+       scope = traverse(arg, scope);
+     }
++    // Perform backwards type inference similar to function calls so that
++    // constructor parameter types can inform argument types (e.g., anonymous
++    // object literals passed to constructors).
++    if (ct != null) {
++      backwardsInferenceFromCallSite(n, ct);
++    }
+     return scope;
+   }
+ 

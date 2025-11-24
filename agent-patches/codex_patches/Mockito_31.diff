@@ -1,0 +1,50 @@
+diff --git a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsSmartNulls.java b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsSmartNulls.java
+index 10d3b0fc8..b0a063290 100644
+--- a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsSmartNulls.java
++++ b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsSmartNulls.java
+@@ -47,19 +47,32 @@ public class ReturnsSmartNulls implements Answer<Object>, Serializable {
+             this.invocation = invocation;
+         }
+ 
+-        public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
+-            if (new ObjectMethodsGuru().isToString(method)) {
+-                return "SmartNull returned by unstubbed " + formatMethodCall()  + " method on mock";
+-            }
+-
+-            new Reporter().smartNullPointerException(location);
+-            return null;
+-        }
+-
+-		private String formatMethodCall() {
+-			return invocation.getMethod().getName() + "()";
+-		}
+-    }
++        public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
++            if (new ObjectMethodsGuru().isToString(method)) {
++                return "SmartNull returned by unstubbed " + formatMethodCall()  + " method on mock";
++            }
++
++            new Reporter().smartNullPointerException(location);
++            return null;
++        }
++
++		private String formatMethodCall() {
++            StringBuilder sb = new StringBuilder();
++            sb.append(invocation.getMethod().getName()).append('(');
++            Object[] arguments = invocation.getArguments();
++            if (arguments != null && arguments.length > 0) {
++                for (int i = 0; i < arguments.length; i++) {
++                    Object arg = arguments[i];
++                    sb.append(String.valueOf(arg));
++                    if (i < arguments.length - 1) {
++                        sb.append(", ");
++                    }
++                }
++            }
++            sb.append(')');
++            return sb.toString();
++		}
++    }
+ 
+     private final Answer<Object> delegate = new ReturnsMoreEmptyValues();
+ 

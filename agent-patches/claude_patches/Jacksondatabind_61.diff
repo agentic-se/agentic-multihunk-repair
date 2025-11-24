@@ -1,0 +1,25 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+index b8acda873..5e60f736d 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+@@ -356,8 +356,18 @@ public final class TypeFactory
+                 break;
+             }
+             if (!rawBase.isAssignableFrom(subclass)) {
+-                throw new IllegalArgumentException(String.format(
+-                        "Class %s not subtype of %s", subclass.getName(), baseType));
++                // [databind#1395]: Check if we're trying to specialize primitive with wrapper
++                // (or vice versa), which should be allowed
++                Class<?> rawBasePrimitive = ClassUtil.primitiveType(rawBase);
++                Class<?> subclassPrimitive = ClassUtil.primitiveType(subclass);
++                if (rawBasePrimitive == null || subclassPrimitive == null
++                        || rawBasePrimitive != subclassPrimitive) {
++                    throw new IllegalArgumentException(String.format(
++                            "Class %s not subtype of %s", subclass.getName(), baseType));
++                }
++                // They are primitive/wrapper pair, so just construct the subclass type
++                newType = _fromClass(null, subclass, TypeBindings.emptyBindings());
++                break;
+             }
+             // A few special cases where we can simplify handling:
+ 

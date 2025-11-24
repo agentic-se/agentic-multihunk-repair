@@ -1,0 +1,44 @@
+diff --git a/src/main/java/org/apache/commons/lang3/text/translate/LookupTranslator.java b/src/main/java/org/apache/commons/lang3/text/translate/LookupTranslator.java
+index 8ed51bc3..1bf4b9d6 100644
+--- a/src/main/java/org/apache/commons/lang3/text/translate/LookupTranslator.java
++++ b/src/main/java/org/apache/commons/lang3/text/translate/LookupTranslator.java
+@@ -28,7 +28,8 @@ import java.util.HashMap;
+  */
+ public class LookupTranslator extends CharSequenceTranslator {
+ 
+-    private final HashMap<CharSequence, CharSequence> lookupMap;
++    // Use String for keys to ensure reliable equals/hashCode behavior across CharSequence implementations
++    private final HashMap<String, CharSequence> lookupMap;
+     private final int shortest;
+     private final int longest;
+ 
+@@ -43,12 +44,13 @@ public class LookupTranslator extends CharSequenceTranslator {
+      * @param lookup CharSequence[][] table of size [*][2]
+      */
+     public LookupTranslator(final CharSequence[]... lookup) {
+-        lookupMap = new HashMap<CharSequence, CharSequence>();
++        lookupMap = new HashMap<String, CharSequence>();
+         int _shortest = Integer.MAX_VALUE;
+         int _longest = 0;
+         if (lookup != null) {
+             for (final CharSequence[] seq : lookup) {
+-                this.lookupMap.put(seq[0], seq[1]);
++                // Convert key to String to support consistent Map lookups (see LANG-882)
++                this.lookupMap.put(seq[0].toString(), seq[1]);
+                 final int sz = seq[0].length();
+                 if (sz < _shortest) {
+                     _shortest = sz;
+@@ -74,7 +76,12 @@ public class LookupTranslator extends CharSequenceTranslator {
+         // descend so as to get a greedy algorithm
+         for (int i = max; i >= shortest; i--) {
+             final CharSequence subSeq = input.subSequence(index, index + i);
+-            final CharSequence result = lookupMap.get(subSeq);
++            // First try direct lookup (fast path when subSeq is a String)
++            CharSequence result = lookupMap.get(subSeq);
++            // If not found, fall back to String key to support other CharSequence types
++            if (result == null) {
++                result = lookupMap.get(subSeq.toString());
++            }
+             if (result != null) {
+                 out.write(result.toString());
+                 return i;

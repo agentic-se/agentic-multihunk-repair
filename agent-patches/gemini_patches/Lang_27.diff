@@ -1,0 +1,20 @@
+--- a/src/main/java/org/apache/commons/lang3/math/NumberUtils.java
++++ b/src/main/java/org/apache/commons/lang3/math/NumberUtils.java
+@@ -1,2 +1,15 @@
+-        int decPos = str.indexOf('.');
+-        int expPos = str.indexOf('e') + str.indexOf('E') + 1;
++        int decPos = str.indexOf('.');
++        int expPos = -1;
++        int expPosE = str.indexOf('E');
++        int expPose = str.indexOf('e');
++        if (expPosE > -1) {
++            expPos = expPosE;
++        }
++        if (expPose > -1 && expPose < expPos) {
++            expPos = expPose;
++        }
++        if (expPos == -1 && expPose == -1) {
++            expPos = -1;
++        } else if (expPos == -1) {
++            expPos = expPose;
++        }

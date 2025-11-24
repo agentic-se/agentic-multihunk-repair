@@ -1,0 +1,277 @@
+--- a/src/org/mockito/internal/MockHandler.java
++++ b/src/org/mockito/internal/MockHandler.java
+@@ -1,11 +1,18 @@
+-        } else {
+-            Object ret = mockSettings.getDefaultAnswer().answer(invocation);
+-
+-            // redo setting invocation for potential stubbing in case of partial
+-            // mocks / spies.
+-            // Without it, the real method inside 'when' might have delegated
+-            // to other self method and overwrite the intended stubbed method
+-            // with a different one.
+-            invocationContainerImpl.resetInvocationForPotentialStubbing(invocationMatcher);
+-            return ret;
+-        }
++        } else {
++            Object ret;
++            // If stubbing is in progress and no stubbed invocation is found,
++            // return an empty value to prevent RETURNS_MOCKS from creating new mocks.
++            if (mockingProgress.is  StubbingStarted() && stubbedInvocation == null) {
++                ret = new org.mockito.internal.stubbing.defaultanswers.ReturnsEmptyValues().answer(invocation);
++            } else {
++                ret = mockSettings.getDefaultAnswer().answer(invocation);
++            }
++
++            // redo setting invocation for potential stubbing in case of partial
++            // mocks / spies.
++            // Without it, the real method inside 'when' might have delegated
++            // to other self method and overwrite the intended stubbed method
++            // with a different one.
++            invocationContainerImpl.resetInvocationForPotentialStubbing(invocationMatcher);
++            return ret;
++        }
+@@ -1,1 +1,1 @@
+-            if (mockingProgress.is  StubbingStarted() && stubbedInvocation == null) {
++            if (mockingProgress.isStubbingStarted() && stubbedInvocation == null) {
+@@ -1,1 +1,1 @@
+-            if (mockingProgress.isStubbingStarted() && stubbedInvocation == null) {
++            if (((MockingProgressImpl) mockingProgress).stubbingInProgress != null && stubbedInvocation == null) {
+@@ -1,1 +1,1 @@
+-            if (((MockingProgressImpl) mockingProgress).stubbingInProgress != null && stubbedInvocation == null) {
++            if (mockingProgress.isStubbingStarted() && stubbedInvocation == null) {
+@@ -1,1 +1,1 @@
+-            return new org.mockito.internal.stubbing.defaultanswers.ReturnsEmptyValues().answer(invocation);
++            return invocation.getMock();
+@@ -1,9 +1,1 @@
+-        }
+-        
+-        mockingProgress.validateState();
+-
+-        if (verificationMode != null) {
+-            VerificationDataImpl data = new VerificationDataImpl(invocationContainerImpl.getInvocations(), invocationMatcher);
+-            verificationMode.verify(data);
+-            return null;
+-        }
++        }
+@@ -1,8 +1,9 @@
+-        // If stubbing is in progress, we should only record the invocation
+-        // and return a safe default value, without invoking the default answer.
+-        if (mockingProgress.isStubbingStarted()) {
+-            invocationContainerImpl.setInvocationForPotentialStubbing(invocationMatcher);
+-            // The OngoingStubbing is reported by MockitoCore.when()
+-            // We just need to return a safe value here.
+-            return invocation.getMock();
+-        }
++        // If stubbing is in progress, we should record the invocation,
++        // report the ongoing stubbing, and return the original mock itself.
++        // The default answer should NOT be called.
++        if (mockingProgress.isStubbingStarted()) {
++            invocationContainerImpl.setInvocationForPotentialStubbing(invocationMatcher);
++            OngoingStubbingImpl<T> ongoingStubbing = new OngoingStubbingImpl<T>(invocationContainerImpl);
++            mockingProgress.reportOngoingStubbing(ongoingStubbing);
++            return invocation.getMock();
++        }
+@@ -1,2 +1,1 @@
+-        mockingProgress.validateState();
+-
++
+@@ -1,2 +1,1 @@
+-            invocationContainerImpl.resetInvocationForPotentialStubbing(invocationMatcher);
+-            return ret;
++            return ret;
+@@ -1,2 +1,1 @@
+-        mockingProgress.validateState();
+-
++
+
+--- a/src/org/mockito/internal/MockitoCore.java
++++ b/src/org/mockito/internal/MockitoCore.java
+@@ -1,5 +1,9 @@
+-    public Invocation getLastInvocation() {
+-        OngoingStubbingImpl ongoingStubbing = ((OngoingStubbingImpl) mockingProgress.pullOngoingStubbing());
+-        List<Invocation> allInvocations = ongoingStubbing.getRegisteredInvocations();
+-        return allInvocations.get(allInvocations.size()-1);
+-    }
++    public Invocation getLastInvocation() {
++        OngoingStubbingImpl ongoingStubbing = ((OngoingStubbingImpl) mockingProgress.pullOngoingStubbing());
++        List<Invocation> allInvocations = ongoingStubbing.getRegisteredInvocations();
++        return allInvocations.get(allInvocations.size()-1);
++    }
++
++    public MockingProgress getMockingProgress() {
++        return mockingProgress;
++    }
+
+--- a/src/org/mockito/internal/progress/MockingProgress.java
++++ b/src/org/mockito/internal/progress/MockingProgress.java
+@@ -1,1 +1,3 @@
+-    void resetOngoingStubbing();
++    void resetOngoingStubbing();
++
++    boolean isStubbingStarted();
+@@ -1,3 +1,1 @@
+-    void resetOngoingStubbing();
+-
+-    boolean isStubbingStarted();
++    void resetOngoingStubbing();
+@@ -1,1 +1,3 @@
+-    void resetOngoingStubbing();
++    void resetOngoingStubbing();
++
++    boolean isStubbingStarted();
+@@ -1,1 +1,3 @@
+-    void resetOngoingStubbing();
++    void resetOngoingStubbing();
++
++    boolean isStubbingStarted();
+
+--- a/src/org/mockito/internal/progress/MockingProgressImpl.java
++++ b/src/org/mockito/internal/progress/MockingProgressImpl.java
+@@ -1,7 +1,11 @@
+-    public ArgumentMatcherStorage getArgumentMatcherStorage() {
+-        return argumentMatcherStorage;
+-    }
+-
+-    public DebuggingInfo getDebuggingInfo() {
+-        return debuggingInfo;
+-    }
++    public ArgumentMatcherStorage getArgumentMatcherStorage() {
++        return argumentMatcherStorage;
++    }
++
++    public DebuggingInfo getDebuggingInfo() {
++        return debuggingInfo;
++    }
++
++    public boolean isStubbingStarted() {
++        return stubbingInProgress != null;
++    }
+@@ -1,7 +1,3 @@
+-    public DebuggingInfo getDebuggingInfo() {
+-        return debuggingInfo;
+-    }
+-
+-    public boolean isStubbingStarted() {
+-        return stubbingInProgress != null;
+-    }
++    public DebuggingInfo getDebuggingInfo() {
++        return debuggingInfo;
++    }
+@@ -1,3 +1,7 @@
+-    public DebuggingInfo getDebuggingInfo() {
+-        return debuggingInfo;
+-    }
++    public DebuggingInfo getDebuggingInfo() {
++        return debuggingInfo;
++    }
++
++    public boolean isStubbingStarted() {
++        return stubbingInProgress != null;
++    }
+@@ -1,3 +1,7 @@
+-    public DebuggingInfo getDebuggingInfo() {
+-        return debuggingInfo;
+-    }
++    public DebuggingInfo getDebuggingInfo() {
++        return debuggingInfo;
++    }
++
++    public boolean isStubbingStarted() {
++        return stubbingInProgress != null;
++    }
+
+--- a/src/org/mockito/internal/progress/ThreadSafeMockingProgress.java
++++ b/src/org/mockito/internal/progress/ThreadSafeMockingProgress.java
+@@ -1,3 +1,7 @@
+-    public DebuggingInfo getDebuggingInfo() {
+-        return threadSafely().getDebuggingInfo();
+-    }
++    public DebuggingInfo getDebuggingInfo() {
++        return threadSafely().getDebuggingInfo();
++    }
++
++    public boolean isStubbingStarted() {
++        return threadSafely().isStubbingStarted();
++    }
+@@ -1,7 +1,3 @@
+-    public DebuggingInfo getDebuggingInfo() {
+-        return threadSafely().getDebuggingInfo();
+-    }
+-
+-    public boolean isStubbingStarted() {
+-        return threadSafely().isStubbingStarted();
+-    }
++    public DebuggingInfo getDebuggingInfo() {
++        return threadSafely().getDebuggingInfo();
++    }
+@@ -1,3 +1,7 @@
+-    public DebuggingInfo getDebuggingInfo() {
+-        return threadSafely().getDebuggingInfo();
+-    }
++    public DebuggingInfo getDebuggingInfo() {
++        return threadSafely().getDebuggingInfo();
++    }
++
++    public boolean isStubbingStarted() {
++        return threadSafely().isStubbingStarted();
++    }
+@@ -1,3 +1,7 @@
+-    public DebuggingInfo getDebuggingInfo() {
+-        return threadSafely().getDebuggingInfo();
+-    }
++    public DebuggingInfo getDebuggingInfo() {
++        return threadSafely().getDebuggingInfo();
++    }
++
++    public boolean isStubbingStarted() {
++        return threadSafely().isStubbingStarted();
++    }
+
+--- a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsMocks.java
++++ b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsMocks.java
+@@ -1,8 +1,14 @@
+-    public Object answer(InvocationOnMock invocation) throws Throwable {
+-        Object ret = delegate.answer(invocation);
+-        if (ret != null) {
+-            return ret;
+-        }
+-            
+-        return returnValueFor(invocation.getMethod().getReturnType());
+-    }
++    public Object answer(InvocationOnMock invocation) throws Throwable {
++        // If stubbing is in progress, we should not create a new mock.
++        // Instead, return a safe default value.
++        if (mockitoCore.getMockingProgress().isStubbingStarted()) {
++            return new ReturnsEmptyValues().answer(invocation);
++        }
++
++        Object ret = delegate.answer(invocation);
++        if (ret != null) {
++            return ret;
++        }
++            
++        return returnValueFor(invocation.getMethod().getReturnType());
++    }
+@@ -1,14 +1,8 @@
+-    public Object answer(InvocationOnMock invocation) throws Throwable {
+-        // If stubbing is in progress, we should not create a new mock.
+-        // Instead, return a safe default value.
+-        if (mockitoCore.getMockingProgress().isStubbingStarted()) {
+-            return new ReturnsEmptyValues().answer(invocation);
+-        }
+-
+-        Object ret = delegate.answer(invocation);
+-        if (ret != null) {
+-            return ret;
+-        }
+-            
+-        return returnValueFor(invocation.getMethod().getReturnType());
+-    }
++    public Object answer(InvocationOnMock invocation) throws Throwable {
++        Object ret = delegate.answer(invocation);
++        if (ret != null) {
++            return ret;
++        }
++            
++        return returnValueFor(invocation.getMethod().getReturnType());
++    }

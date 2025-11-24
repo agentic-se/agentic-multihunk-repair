@@ -1,0 +1,51 @@
+diff --git a/src/com/google/javascript/rhino/jstype/JSTypeRegistry.java b/src/com/google/javascript/rhino/jstype/JSTypeRegistry.java
+index 6c6fcd45..5b8893d6 100644
+--- a/src/com/google/javascript/rhino/jstype/JSTypeRegistry.java
++++ b/src/com/google/javascript/rhino/jstype/JSTypeRegistry.java
+@@ -622,6 +622,15 @@ public class JSTypeRegistry implements Serializable {
+     }
+ 
+     typeSet.addAlternate(type);
++    // If the property is defined on a constructor's prototype, also index
++    // the corresponding instance type for property lookups.
++    ObjectType objTypeForInstance = ObjectType.cast(type);
++    if (objTypeForInstance != null && objTypeForInstance.isFunctionPrototypeType()) {
++      FunctionType ownerFn = objTypeForInstance.getOwnerFunction();
++      if (ownerFn != null && ownerFn.hasInstanceType()) {
++        typeSet.addAlternate(ownerFn.getInstanceType());
++      }
++    }
+     addReferenceTypeIndexedByProperty(propertyName, type);
+ 
+     // Clear cached values that depend on typesIndexedByProperty.
+@@ -639,6 +648,16 @@ public class JSTypeRegistry implements Serializable {
+       }
+       ObjectType objType = (ObjectType) type;
+       typeSet.put(objType.getReferenceName(), objType);
++      // If this is a prototype object, also index the instance type.
++      if (objType.isFunctionPrototypeType()) {
++        FunctionType ownerFn = objType.getOwnerFunction();
++        if (ownerFn != null && ownerFn.hasInstanceType()) {
++          ObjectType instance = ownerFn.getInstanceType();
++          if (instance != null && instance.hasReferenceName()) {
++            typeSet.put(instance.getReferenceName(), instance);
++          }
++        }
++      }
+     } else if (type instanceof NamedType) {
+       addReferenceTypeIndexedByProperty(
+           propertyName, ((NamedType) type).getReferencedType());
+@@ -691,6 +710,13 @@ public class JSTypeRegistry implements Serializable {
+     if (typesIndexedByProperty.containsKey(propertyName)) {
+       for (JSType alt :
+                typesIndexedByProperty.get(propertyName).getAlternates()) {
++        // When checking a record type, do not consider properties that are
++        // only declared on other record types. Record types are structural,
++        // and unrelated record types should not imply that a property exists
++        // on another record type.
++        if (type.isRecordType() && alt.isRecordType()) {
++          continue;
++        }
+         JSType greatestSubtype = alt.getGreatestSubtype(type);
+         if (!greatestSubtype.isEmptyType()) {
+           // We've found a type with this property. Now we just have to make

@@ -1,0 +1,78 @@
+diff --git a/src/org/mockito/internal/configuration/injection/filter/NameBasedCandidateFilter.java b/src/org/mockito/internal/configuration/injection/filter/NameBasedCandidateFilter.java
+index b95f31a36..0355b3d51 100644
+--- a/src/org/mockito/internal/configuration/injection/filter/NameBasedCandidateFilter.java
++++ b/src/org/mockito/internal/configuration/injection/filter/NameBasedCandidateFilter.java
+@@ -19,27 +19,50 @@ public class NameBasedCandidateFilter implements MockCandidateFilter {
+ 		this.next = next;
+ 	}
+ 
+-	public OngoingInjecter filterCandidate(Collection<Object> mocks,
+-			Field field, Object fieldInstance) {
+-		List<Object> mockNameMatches = new ArrayList<Object>();
+-		if (mocks.size() > 1) {
+-			for (Object mock : mocks) {
+-				if (field.getName().equals(mockUtil.getMockName(mock).toString())) {
+-					mockNameMatches.add(mock);
+-				}
+-			}
+-			return next.filterCandidate(mockNameMatches, field,
+-					fieldInstance);
+-			/*
+-			 * In this case we have to check whether we have conflicting naming
+-			 * fields. E.g. 2 fields of the same type, but we have to make sure
+-			 * we match on the correct name.
+-			 * 
+-			 * Therefore we have to go through all other fields and make sure
+-			 * whenever we find a field that does match its name with the mock
+-			 * name, we should take that field instead.
+-			 */
+-		}
+-		return next.filterCandidate(mocks, field, fieldInstance);
+-	}
++    public OngoingInjecter filterCandidate(Collection<Object> mocks,
++            Field field, Object fieldInstance) {
++        List<Object> mockNameMatches = new ArrayList<Object>();
++        if (mocks.size() > 1) {
++            for (Object mock : mocks) {
++                if (field.getName().equals(mockUtil.getMockName(mock).toString())) {
++                    mockNameMatches.add(mock);
++                }
++            }
++            return next.filterCandidate(mockNameMatches, field, fieldInstance);
++        }
++
++        // When there is only a single mock candidate, prefer name-based matching
++        // if there exists another field that matches the mock name. This avoids
++        // injecting into the first type-compatible field when multiple fields of
++        // the same type are present.
++        if (mocks.size() == 1) {
++            Object soleMock = mocks.iterator().next();
++            String mockName = mockUtil.getMockName(soleMock).toString();
++
++            // If current field name matches the mock name, keep the candidate
++            if (field.getName().equals(mockName)) {
++                return next.filterCandidate(mocks, field, fieldInstance);
++            }
++
++            // Otherwise, if another field in the instance matches the mock name
++            // and is type-compatible, skip injection for the current field to
++            // let the correct named field receive the mock.
++            if (fieldInstance != null) {
++                Class<?> c = fieldInstance.getClass();
++                while (c != Object.class) {
++                    Field[] fields = c.getDeclaredFields();
++                    for (Field f : fields) {
++                        if (f == field) continue;
++                        if (f.getName().equals(mockName)
++                                && f.getType().isAssignableFrom(soleMock.getClass())) {
++                            // Do not inject here; another field is a better match
++                            return next.filterCandidate(mockNameMatches, field, fieldInstance);
++                        }
++                    }
++                    c = c.getSuperclass();
++                }
++            }
++        }
++        return next.filterCandidate(mocks, field, fieldInstance);
++    }
+ }

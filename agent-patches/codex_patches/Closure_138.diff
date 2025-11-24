@@ -1,0 +1,122 @@
+diff --git a/src/com/google/javascript/jscomp/ClosureReverseAbstractInterpreter.java b/src/com/google/javascript/jscomp/ClosureReverseAbstractInterpreter.java
+index 720b60b7..7bfbae52 100644
+--- a/src/com/google/javascript/jscomp/ClosureReverseAbstractInterpreter.java
++++ b/src/com/google/javascript/jscomp/ClosureReverseAbstractInterpreter.java
+@@ -205,7 +205,6 @@ class ClosureReverseAbstractInterpreter
+       Node param = condition.getLastChild();
+       if (callee.getType() == GETPROP && param.isQualifiedName()) {
+         JSType paramType =  getTypeIfRefinable(param, blindScope);
+-        if (paramType != null) {
+         Node left = callee.getFirstChild();
+         Node right = callee.getLastChild();
+         if (left.getType() == NAME && "goog".equals(left.getString()) &&
+@@ -215,7 +214,6 @@ class ClosureReverseAbstractInterpreter
+           if (restricter != null) {
+             return restrictParameter(param, paramType, blindScope, restricter,
+                 outcome);
+-            }
+           }
+         }
+       }
+diff --git a/src/com/google/javascript/jscomp/TypeCheck.java b/src/com/google/javascript/jscomp/TypeCheck.java
+index f93b8fa0..6c538819 100644
+--- a/src/com/google/javascript/jscomp/TypeCheck.java
++++ b/src/com/google/javascript/jscomp/TypeCheck.java
+@@ -579,6 +579,46 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
+         leftType = getJSType(n.getFirstChild());
+         rightType = getJSType(n.getLastChild());
+ 
++        // Special-case comparisons against null to better model the common
++        // (x == null)/(x != null) idiom with undefined.
++        // If we can confirm within the same function that the compared name
++        // also takes on the value 'undefined', then treat its effective type
++        // as (null|undefined) for determinism reporting. Otherwise, fall back
++        // to the existing restricted comparison.
++        boolean leftIsName = n.getFirstChild().getType() == Token.NAME;
++        boolean rightIsName = n.getLastChild().getType() == Token.NAME;
++        boolean leftIsNullLiteral =
++            n.getFirstChild().getType() == Token.NULL;
++        boolean rightIsNullLiteral =
++            n.getLastChild().getType() == Token.NULL;
++
++        if (n.getType() == Token.NE &&
++            ((leftIsName && rightIsNullLiteral) || (rightIsName && leftIsNullLiteral))) {
++          Node nameNode = leftIsName ? n.getFirstChild() : n.getLastChild();
++          String varName = nameNode.getString();
++
++          if (isAssignedUndefinedInEnclosingFunction(n, varName)) {
++            // Report determinism using (null|undefined) for the compared name.
++            JSType nameNullOrUndef = typeRegistry.createUnionType(
++                JSTypeNative.NULL_TYPE, JSTypeNative.VOID_TYPE);
++            String leftStr = leftIsName ? nameNullOrUndef.toString() : leftType.toString();
++            String rightStr = rightIsName ? nameNullOrUndef.toString() : rightType.toString();
++
++            // For == or != with null when the name can only be null/undefined,
++            // the result is deterministic: == is true, != is false.
++            String resultStr = (n.getType() == Token.NE) ? Boolean.FALSE.toString()
++                                                        : Boolean.TRUE.toString();
++            t.report(n, DETERMINISTIC_TEST, leftStr, rightStr, resultStr);
++            ensureTyped(t, n, BOOLEAN_TYPE);
++            break;
++          }
++          // If we can't prove undefined is also possible, do not report a
++          // deterministic test solely based on an early null value in a
++          // non-strict inequality comparison.
++          ensureTyped(t, n, BOOLEAN_TYPE);
++          break;
++        }
++
+         JSType leftTypeRestricted = leftType.restrictByNotNullOrUndefined();
+         JSType rightTypeRestricted = rightType.restrictByNotNullOrUndefined();
+         TernaryValue result =
+@@ -778,6 +818,50 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
+     }
+   }
+ 
++  /**
++   * Returns true if the given variable name is assigned the value 'undefined'
++   * anywhere within the enclosing function of the provided node.
++   */
++  private boolean isAssignedUndefinedInEnclosingFunction(Node n, String varName) {
++    // Find the nearest enclosing function node.
++    Node cursor = n;
++    while (cursor != null && cursor.getType() != Token.FUNCTION) {
++      cursor = cursor.getParent();
++    }
++    if (cursor == null) {
++      return false;
++    }
++
++    // Scan the function subtree for simple assignments of the form
++    //   <varName> = undefined
++    // We purposefully keep this conservative and only look for direct NAME
++    // assignments to the 'undefined' identifier.
++    for (Node child = cursor.getFirstChild(); child != null; child = child.getNext()) {
++      if (isAssignedUndefinedInSubtree(child, varName)) {
++        return true;
++      }
++    }
++    return false;
++  }
++
++  private boolean isAssignedUndefinedInSubtree(Node root, String varName) {
++    if (root.getType() == Token.ASSIGN) {
++      Node lhs = root.getFirstChild();
++      Node rhs = root.getLastChild();
++      if (lhs.getType() == Token.NAME && varName.equals(lhs.getString())) {
++        if (rhs.getType() == Token.NAME && "undefined".equals(rhs.getString())) {
++          return true;
++        }
++      }
++    }
++    for (Node c = root.getFirstChild(); c != null; c = c.getNext()) {
++      if (isAssignedUndefinedInSubtree(c, varName)) {
++        return true;
++      }
++    }
++    return false;
++  }
++
+   /**
+    * Counts the given node in the typed statistics.
+    * @param n a node that should be typed

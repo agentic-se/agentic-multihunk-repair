@@ -1,0 +1,262 @@
+diff --git a/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java b/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
+index d53a8f8a..6a92d465 100644
+--- a/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
++++ b/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
+@@ -78,25 +78,53 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
+   private MustBeReachingVariableDef reachingDef;
+   private MaybeReachingVariableUse reachingUses;
+ 
+-  private static final Predicate<Node> SIDE_EFFECT_PREDICATE =
+-    new Predicate<Node>() {
++  // Builds a predicate that identifies barriers between a definition and use.
++  // Barriers include:
++  // - Any CALL/NEW (even if marked no-side-effects) because calls may
++  //   change bindings of referenced names or globals in unknown ways.
++  // - Any modification (assign/inc/dec/var init) to names referenced by
++  //   the RHS of the definition.
++  private static Predicate<Node> buildBarrierPredicate(
++      final java.util.Set<String> dependentNames) {
++    return new Predicate<Node>() {
+       @Override
+       public boolean apply(Node n) {
+-        // When the node is null it means, we reached the implicit return
+-        // where the function returns (possibly without an return statement)
+         if (n == null) {
+           return false;
+         }
+ 
+-        // TODO(user): We only care about calls to functions that
+-        // passes one of the dependent variable to a non-sideeffect free
+-        // function.
+-        if (n.isCall() && NodeUtil.functionCallHasSideEffects(n)) {
++        // Treat any function or constructor call as a barrier.
++        if (n.isCall() || n.isNew()) {
+           return true;
+         }
+ 
+-        if (n.isNew() && NodeUtil.constructorCallHasSideEffects(n)) {
+-          return true;
++        // Direct modifications to dependent names are barriers.
++        switch (n.getType()) {
++          case Token.ASSIGN: {
++            Node lhs = n.getFirstChild();
++            if (lhs.isName() && dependentNames.contains(lhs.getString())) {
++              return true;
++            }
++            break;
++          }
++          case Token.INC:
++          case Token.DEC: {
++            Node target = n.getFirstChild();
++            if (target != null && target.isName() &&
++                dependentNames.contains(target.getString())) {
++              return true;
++            }
++            break;
++          }
++          case Token.VAR: {
++            for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
++              if (c.isName() && dependentNames.contains(c.getString()) &&
++                  c.hasChildren()) { // initialized
++                return true;
++              }
++            }
++            break;
++          }
+         }
+ 
+         for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+@@ -106,7 +134,8 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
+         }
+         return false;
+       }
+-  };
++    };
++  }
+ 
+   public FlowSensitiveInlineVariables(AbstractCompiler compiler) {
+     this.compiler = compiler;
+@@ -272,14 +301,16 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
+       // The right of the definition has side effect:
+       // Example, for x:
+       // x = readProp(b), modifyProp(b); print(x);
+-      if (checkRightOf(def, defCfgNode, SIDE_EFFECT_PREDICATE)) {
++      java.util.Set<String> dependentNames = collectDependentNames(def);
++      Predicate<Node> barrierPredicate = buildBarrierPredicate(dependentNames);
++      if (checkRightOf(def, defCfgNode, barrierPredicate)) {
+         return false;
+       }
+ 
+       // Similar check as the above but this time, all the sub-expressions
+       // left of the use of the variable.
+       // x = readProp(b); modifyProp(b), print(x);
+-      if (checkLeftOf(use, useCfgNode, SIDE_EFFECT_PREDICATE)) {
++      if (checkLeftOf(use, useCfgNode, barrierPredicate)) {
+         return false;
+       }
+ 
+@@ -357,7 +388,7 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
+                  cfg,
+                  cfg.getDirectedGraphNode(defCfgNode),
+                  cfg.getDirectedGraphNode(useCfgNode),
+-                 SIDE_EFFECT_PREDICATE,
++                 barrierPredicate,
+                  Predicates.
+                      <DiGraphEdge<Node, ControlFlowGraph.Branch>>alwaysTrue(),
+                  false);
+@@ -366,6 +397,25 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
+         }
+       }
+ 
++      // Linear AST sweep within the same block as a conservative fallback.
++      if (hasBarrierBetweenInSameBlock(defCfgNode, useCfgNode, barrierPredicate)) {
++        return false;
++      }
++
++      // Avoid inlining self-referential assignments into a return statement.
++      if (def.isAssign() && rhsReferencesVar(def, varName) &&
++          isWithinReturn(use, useCfgNode)) {
++        return false;
++      }
++
++      // If the use occurs within a CALL/NEW expression itself, be conservative
++      // and do not inline across it ONLY when the RHS may be impacted by
++      // calls (e.g. it depends on names or is itself a call/new).
++      if (isWithinCallOrNew(use, useCfgNode) &&
++          rhsMayBeImpactedByCalls(def.getLastChild(), dependentNames)) {
++        return false;
++      }
++
+       return true;
+     }
+ 
+@@ -449,6 +499,129 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
+     }
+   }
+ 
++  /** Collects names referenced by the RHS of the definition. */
++  private static java.util.Set<String> collectDependentNames(Node defNode) {
++    final java.util.Set<String> names = new java.util.HashSet<String>();
++    Node rhs = defNode.getLastChild();
++    if (rhs == null) {
++      return names;
++    }
++    NodeTraversal.traverse(
++        null,
++        rhs,
++        new AbstractShallowCallback() {
++          @Override
++          public void visit(NodeTraversal t, Node n, Node parent) {
++            if (n.isName()) {
++              String s = n.getString();
++              if (s != null && s.length() > 0) {
++                names.add(s);
++              }
++            }
++          }
++        });
++    return names;
++  }
++
++  /** Returns true if node n is within a CALL or NEW up to (and not including) root. */
++  private static boolean isWithinCallOrNew(Node n, Node root) {
++    for (Node p = n.getParent(); p != null; p = p.getParent()) {
++      if (p.isCall() || p.isNew()) {
++        return true;
++      }
++      if (p == root) break;
++    }
++    return false;
++  }
++
++  private static boolean rhsMayBeImpactedByCalls(Node rhs,
++      java.util.Set<String> dependentNames) {
++    if (rhs == null) {
++      return false;
++    }
++    // Be conservative only when the RHS contains calls/news.
++    if (rhs.isCall() || rhs.isNew()) {
++      return true;
++    }
++    // Also consider nested calls/news inside RHS.
++    return NodeUtil.has(rhs,
++        new Predicate<Node>() {
++          @Override
++          public boolean apply(Node n) {
++            return n.isCall() || n.isNew();
++          }
++        },
++        new Predicate<Node>() {
++          @Override
++          public boolean apply(Node n) {
++            return !n.isFunction();
++          }
++        });
++  }
++
++  private static boolean rhsReferencesVar(Node def, final String varName) {
++    final boolean[] found = new boolean[] { false };
++    Node rhs = def.getLastChild();
++    if (rhs == null) {
++      return false;
++    }
++    NodeTraversal.traverse(
++        null,
++        rhs,
++        new AbstractShallowCallback() {
++          @Override
++          public void visit(NodeTraversal t, Node n, Node parent) {
++            if (!found[0] && n.isName() && varName.equals(n.getString())) {
++              found[0] = true;
++            }
++          }
++        });
++    return found[0];
++  }
++
++  private static boolean isWithinReturn(Node n, Node root) {
++    for (Node p = n.getParent(); p != null; p = p.getParent()) {
++      if (p.isReturn()) {
++        return true;
++      }
++      if (p == root) break;
++    }
++    return false;
++  }
++
++  /** Returns the statement node whose parent is a BLOCK for a given node. */
++  private static Node getEnclosingStatement(Node n) {
++    for (Node p = n; p != null; p = p.getParent()) {
++      if (p.getParent() != null && NodeUtil.isStatementBlock(p.getParent())) {
++        return p;
++      }
++    }
++    return null;
++  }
++
++  /**
++   * Conservative barrier detection by scanning sibling statements when both
++   * def and use reside under the same BLOCK.
++   */
++  private static boolean hasBarrierBetweenInSameBlock(
++      Node defCfgNode, Node useCfgNode, Predicate<Node> barrier) {
++    Node defStmt = getEnclosingStatement(defCfgNode);
++    Node useStmt = getEnclosingStatement(useCfgNode);
++    if (defStmt == null || useStmt == null) {
++      return false;
++    }
++    if (defStmt.getParent() != useStmt.getParent()) {
++      return false;
++    }
++    // Iterate forward from defStmt to useStmt (exclusive)
++    for (Node cur = defStmt.getNext(); cur != null && cur != useStmt; cur = cur.getNext()) {
++      if (barrier.apply(cur)) {
++        return true;
++      }
++    }
++    return false;
++  }
++
+   /**
+    * Given an expression by its root and sub-expression n, return true if there
+    * the predicate is true for some expression on the right of n.

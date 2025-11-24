@@ -1,0 +1,47 @@
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerBase.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BeanDeserializerBase.java
+@@ -1,4 +1,13 @@
+-                    extTypes.addExternal(prop, typeDeser);
+-                    // In fact, remove from list of known properties to simplify later handling
+-                    _beanProperties.remove(prop);
+-                    continue;
++                    extTypes.addExternal(prop, typeDeser);
++                    // [databind#999]: If type id property is also a creator property, need to link it
++                    if (creatorProps != null) {
++                        for (SettableBeanProperty cp : creatorProps) {
++                            if (cp.getName().equals(typeDeser.getPropertyName())) {
++                                extTypes.linkTypeProperty(cp, typeDeser.getPropertyName());
++                                break;
++                            }
++                        }
++                    }
++                    // In fact, remove from list of known properties to simplify later handling
++                    _beanProperties.remove(prop);
++                    continue;
+
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
+@@ -1,6 +1,17 @@
+-        @Deprecated // since 2.8; may be removed as early as 2.9
+-        public ExternalTypeHandler build() {
+-            return new ExternalTypeHandler(_properties.toArray(new ExtTypedProperty[_properties.size()]),
+-                    _nameToPropertyIndex, null, null);
+-        }
+-    }
++        @Deprecated // since 2.8; may be removed as early as 2.9
++        public ExternalTypeHandler build() {
++            return new ExternalTypeHandler(_properties.toArray(new ExtTypedProperty[_properties.size()]),
++                    _nameToPropertyIndex, null, null);
++        }
++
++        /**
++         * @since 2.8
++         */
++        public void linkTypeProperty(SettableBeanProperty typeProp, String typePropertyName) {
++            Integer ix = _nameToPropertyIndex.get(typePropertyName);
++            if (ix == null) { // should not happen, but just in case
++                throw new IllegalArgumentException("Type id property '"+typePropertyName+"' not in external type id list");
++            }
++            _properties.get(ix).linkTypeProperty(typeProp);
++        }
++    }

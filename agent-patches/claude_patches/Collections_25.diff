@@ -1,0 +1,26 @@
+diff --git a/src/main/java/org/apache/commons/collections4/iterators/CollatingIterator.java b/src/main/java/org/apache/commons/collections4/iterators/CollatingIterator.java
+index 1c6cb9fe..cb7d2598 100644
+--- a/src/main/java/org/apache/commons/collections4/iterators/CollatingIterator.java
++++ b/src/main/java/org/apache/commons/collections4/iterators/CollatingIterator.java
+@@ -362,10 +362,15 @@ public class CollatingIterator<E> implements Iterator<E> {
+                     leastObject = values.get(i);
+                 } else {
+                     final E curObject = values.get(i);
++                    final int comparison;
+                     if (comparator == null) {
+-                        throw new NullPointerException("You must invoke setComparator() to set a comparator first.");
++                        @SuppressWarnings("unchecked")
++                        final Comparable<? super E> comp = (Comparable<? super E>) curObject;
++                        comparison = comp.compareTo(leastObject);
++                    } else {
++                        comparison = comparator.compare(curObject, leastObject);
+                     }
+-                    if (comparator.compare(curObject, leastObject) < 0) {
++                    if (comparison < 0) {
+                         leastObject = curObject;
+                         leastIndex = i;
+                     }
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

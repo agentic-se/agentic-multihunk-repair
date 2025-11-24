@@ -1,0 +1,44 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveOutputStream.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveOutputStream.java
+index 5aa7c87c..0de56cd4 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveOutputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveOutputStream.java
+@@ -226,6 +226,11 @@ public class ZipArchiveOutputStream extends ArchiveOutputStream {
+     private UnicodeExtraFieldPolicy createUnicodeExtraFields =
+         UnicodeExtraFieldPolicy.NEVER;
+ 
++    /**
++     * Whether finish() has been called.
++     */
++    private boolean finished = false;
++
+     /**
+      * Creates a new ZIP OutputStream filtering the underlying stream.
+      * @param out the outputstream to zip
+@@ -332,10 +337,14 @@ public class ZipArchiveOutputStream extends ArchiveOutputStream {
+      * @see org.apache.commons.compress.archivers.ArchiveOutputStream#finish()
+      */
+     public void finish() throws IOException {
++        if(finished) {
++            return;
++        }
++
+         if(entry != null) {
+             throw new IOException("This archives contains unclosed entries.");
+         }
+-        
++
+         cdOffset = written;
+         for (Iterator i = entries.iterator(); i.hasNext(); ) {
+             writeCentralFileHeader((ZipArchiveEntry) i.next());
+@@ -344,6 +353,7 @@ public class ZipArchiveOutputStream extends ArchiveOutputStream {
+         writeCentralDirectoryEnd();
+         offsets.clear();
+         entries.clear();
++        finished = true;
+     }
+ 
+     /**
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

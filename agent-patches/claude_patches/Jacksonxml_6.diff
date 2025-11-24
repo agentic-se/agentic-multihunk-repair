@@ -1,0 +1,129 @@
+diff --git a/src/main/java/com/fasterxml/jackson/dataformat/xml/ser/ToXmlGenerator.java b/src/main/java/com/fasterxml/jackson/dataformat/xml/ser/ToXmlGenerator.java
+index 63e42a1..c1088b9 100644
+--- a/src/main/java/com/fasterxml/jackson/dataformat/xml/ser/ToXmlGenerator.java
++++ b/src/main/java/com/fasterxml/jackson/dataformat/xml/ser/ToXmlGenerator.java
+@@ -840,16 +840,48 @@ public final class ToXmlGenerator
+         }
+     }
+ 
+-                // Stax2 API only has 'full buffer' write method:
+-              // should we consider pretty-printing or not?
+-
+-
+-
+-        // base64 encodes up to 3 bytes into a 4 bytes string
+-
+-        // we still have < 3 bytes in the buffer
++    @Override
++    public int writeBinary(Base64Variant b64variant,
++            InputStream data, int dataLength) throws IOException
++    {
++        if (data == null) {
++            writeNull();
++            return 0;
++        }
++        _verifyValueWrite("write Binary value");
++        if (_nextName == null) {
++            handleMissingName();
++        }
++        try {
++            if (_nextIsAttribute) {
++                // Stax2 API only has 'full buffer' write method, so we need to read all data
++                byte[] fullBuffer = _readAll(data, dataLength);
++                _xmlWriter.writeBinaryAttribute("", _nextName.getNamespaceURI(), _nextName.getLocalPart(), fullBuffer);
++                return fullBuffer.length;
++            } else if (checkNextIsUnwrapped()) {
++                // should we consider pretty-printing or not?
++                return _writeBinary(_xmlWriter, data, dataLength);
++            } else {
++                if (_xmlPrettyPrinter != null) {
++                    // For pretty printing, we need to read all data into a buffer
++                    byte[] fullBuffer = _readAll(data, dataLength);
++                    _xmlPrettyPrinter.writeLeafElement(_xmlWriter,
++                            _nextName.getNamespaceURI(), _nextName.getLocalPart(),
++                            fullBuffer, 0, fullBuffer.length);
++                    return fullBuffer.length;
++                } else {
++                    _xmlWriter.writeStartElement(_nextName.getNamespaceURI(), _nextName.getLocalPart());
++                    int totalRead = _writeBinary(_xmlWriter, data, dataLength);
++                    _xmlWriter.writeEndElement();
++                    return totalRead;
++                }
++            }
++        } catch (XMLStreamException e) {
++            StaxUtil.throwAsGenerationException(e, this);
++        }
++        return 0; // should never reach here
++    }
+ 
+-    
+     private byte[] toFullBuffer(byte[] data, int offset, int len)
+     {
+         // might already be ok:
+@@ -863,6 +895,66 @@ public final class ToXmlGenerator
+         return result;
+     }
+ 
++    /**
++     * Helper method to read all data from InputStream into a byte array.
++     */
++    private byte[] _readAll(InputStream in, int expectedLength) throws IOException
++    {
++        // If length is known and reasonable, allocate exact size
++        if (expectedLength > 0) {
++            byte[] buffer = new byte[expectedLength];
++            int offset = 0;
++            int remaining = expectedLength;
++            while (remaining > 0) {
++                int count = in.read(buffer, offset, remaining);
++                if (count < 0) {
++                    break;
++                }
++                offset += count;
++                remaining -= count;
++            }
++            if (offset == expectedLength) {
++                return buffer;
++            }
++            // Fewer bytes read than expected, need to trim
++            byte[] result = new byte[offset];
++            if (offset > 0) {
++                System.arraycopy(buffer, 0, result, 0, offset);
++            }
++            return result;
++        }
++        // Length unknown or negative, use ByteArrayOutputStream
++        java.io.ByteArrayOutputStream bytes = new java.io.ByteArrayOutputStream(4000);
++        byte[] buffer = new byte[4000];
++        int count;
++        while ((count = in.read(buffer)) >= 0) {
++            bytes.write(buffer, 0, count);
++        }
++        return bytes.toByteArray();
++    }
++
++    /**
++     * Helper method to write binary data from InputStream to the XML writer.
++     */
++    private int _writeBinary(XMLStreamWriter2 writer, InputStream data, int dataLength)
++            throws IOException, XMLStreamException
++    {
++        // Read and write in chunks to save memory
++        byte[] buffer = new byte[4000];
++        int totalRead = 0;
++        int count;
++
++        while ((count = data.read(buffer)) >= 0) {
++            writer.writeBinary(buffer, 0, count);
++            totalRead += count;
++            // If we know the length, stop when we've read enough
++            if (dataLength > 0 && totalRead >= dataLength) {
++                break;
++            }
++        }
++        return totalRead;
++    }
++
+ 
+ 
+     /*

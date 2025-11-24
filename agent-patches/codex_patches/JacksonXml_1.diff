@@ -1,0 +1,43 @@
+diff --git a/src/main/java/com/fasterxml/jackson/dataformat/xml/deser/FromXmlParser.java b/src/main/java/com/fasterxml/jackson/dataformat/xml/deser/FromXmlParser.java
+index 91b14dd..9cac1c1 100644
+--- a/src/main/java/com/fasterxml/jackson/dataformat/xml/deser/FromXmlParser.java
++++ b/src/main/java/com/fasterxml/jackson/dataformat/xml/deser/FromXmlParser.java
+@@ -509,8 +509,16 @@ public class FromXmlParser
+             // Simple, except that if this is a leaf, need to suppress end:
+             if (_mayBeLeaf) {
+                 _mayBeLeaf = false;
+-                    // 06-Jan-2015, tatu: as per [dataformat-xml#180], need to
+-                    //    expose as empty Object, not null
++                // If we are closing an empty element that represents an item within
++                // an array (unwrapped list), expose it as an empty Object value so
++                // that a placeholder element is added to the collection
++                if (_parsingContext.inArray()) {
++                    _parsingContext = _parsingContext.createChildObjectContext(-1, -1);
++                    _currToken = JsonToken.START_OBJECT;
++                    _nextToken = JsonToken.END_OBJECT;
++                    return _currToken;
++                }
++                // Otherwise, expose as null (legacy behavior for non-array contexts)
+                 return (_currToken = JsonToken.VALUE_NULL);
+             }
+             _currToken = _parsingContext.inArray() ? JsonToken.END_ARRAY : JsonToken.END_OBJECT;
+@@ -544,12 +552,13 @@ public class FromXmlParser
+                 _xmlTokens.skipEndElement();
+                 if (_parsingContext.inArray()) {
+                     if (_isEmpty(_currText)) {
+-                        // 06-Jan-2015, tatu: as per [dataformat-xml#180], need to
+-                        //    expose as empty Object, not null (or, worse, as used to
+-                        //    be done, by swallowing the token)
+-                        _currToken = JsonToken.END_ARRAY;
+-                        _parsingContext = _parsingContext.getParent();
+-                        _namesToWrap = _parsingContext.getNamesToWrap();
++                        // For empty text within an array element (e.g. <elem></elem>)
++                        // treat it as an empty Object value so that a placeholder
++                        // entry is added to the List, instead of prematurely
++                        // closing the array or swallowing the element.
++                        _parsingContext = _parsingContext.createChildObjectContext(-1, -1);
++                        _currToken = JsonToken.START_OBJECT;
++                        _nextToken = JsonToken.END_OBJECT;
+                         return _currToken;
+                     }
+                 }

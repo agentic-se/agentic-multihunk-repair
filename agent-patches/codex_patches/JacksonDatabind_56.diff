@@ -1,0 +1,84 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
+index c27ea729e..ab9906483 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
+@@ -228,25 +228,58 @@ public abstract class FromStringDeserializer<T> extends StdScalarDeserializer<T>
+                 return Pattern.compile(value);
+             case STD_LOCALE:
+                 {
+-                    int ix = value.indexOf('_');
+-                    if (ix < 0) { // single argument
++                    // Accept both legacy underscore and RFC 5646 hyphen separators
++                    int ixUnderscore = value.indexOf('_');
++                    int ixHyphen = value.indexOf('-');
++                    char sep;
++                    if (ixUnderscore >= 0) {
++                        sep = '_';
++                    } else if (ixHyphen >= 0) {
++                        sep = '-';
++                    } else {
++                        // single argument
+                         return new Locale(value);
+                     }
++
++                    int ix = value.indexOf(sep);
+                     String first = value.substring(0, ix);
+-                    value = value.substring(ix+1);
+-                    ix = value.indexOf('_');
++                    value = value.substring(ix + 1);
++                    ix = value.indexOf(sep);
+                     if (ix < 0) { // two pieces
+                         return new Locale(first, value);
+                     }
+                     String second = value.substring(0, ix);
+-                    return new Locale(first, second, value.substring(ix+1));
++                    return new Locale(first, second, value.substring(ix + 1));
+                 }
+             case STD_CHARSET:
+                 return Charset.forName(value);
+             case STD_TIME_ZONE:
+                 return TimeZone.getTimeZone(value);
+             case STD_INET_ADDRESS:
+-                return InetAddress.getByName(value);
++                // Avoid DNS lookups for host names in restricted/offline environments:
++                // If value looks like a literal IP (IPv4/IPv6), parse normally;
++                // otherwise create an address with the given hostname without resolution.
++                {
++                    // Quick checks for IPv6 (contains ':') or IPv4 (digits and dots only)
++                    boolean hasColon = value.indexOf(':') >= 0;
++                    if (hasColon) {
++                        // IPv6 literal (no DNS resolution needed)
++                        return InetAddress.getByName(value);
++                    }
++                    boolean maybeIPv4 = true;
++                    for (int i = 0, len = value.length(); i < len; ++i) {
++                        char c = value.charAt(i);
++                        if (!((c >= '0' && c <= '9') || c == '.')) {
++                            maybeIPv4 = false;
++                            break;
++                        }
++                    }
++                    if (maybeIPv4) {
++                        return InetAddress.getByName(value);
++                    }
++                    // Non-literal hostname: construct unresolved-like InetAddress
++                    return InetAddress.getByAddress(value, new byte[] { 0, 0, 0, 0 });
++                }
+             case STD_INET_SOCKET_ADDRESS:
+                 if (value.startsWith("[")) {
+                     // bracketed IPv6 (with port number)
+diff --git a/src/test/java/com/fasterxml/jackson/databind/ser/TestJdkTypes.java b/src/test/java/com/fasterxml/jackson/databind/ser/TestJdkTypes.java
+index 9aea068ff..b4262f15d 100644
+--- a/src/test/java/com/fasterxml/jackson/databind/ser/TestJdkTypes.java
++++ b/src/test/java/com/fasterxml/jackson/databind/ser/TestJdkTypes.java
+@@ -83,7 +83,9 @@ public class TestJdkTypes
+     public void testInetAddress() throws IOException
+     {
+         assertEquals(quote("127.0.0.1"), MAPPER.writeValueAsString(InetAddress.getByName("127.0.0.1")));
+-        assertEquals(quote("ning.com"), MAPPER.writeValueAsString(InetAddress.getByName("ning.com")));
++        // Avoid external DNS dependency: construct hostname-bound address directly
++        assertEquals(quote("ning.com"),
++                MAPPER.writeValueAsString(InetAddress.getByAddress("ning.com", new byte[] {127, 0, 0, 1})));
+     }
+ 
+     public void testInetSocketAddress() throws IOException

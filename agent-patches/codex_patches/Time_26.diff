@@ -1,0 +1,32 @@
+diff --git a/src/main/java/org/joda/time/chrono/ZonedChronology.java b/src/main/java/org/joda/time/chrono/ZonedChronology.java
+index f165f3dd..7bee211a 100644
+--- a/src/main/java/org/joda/time/chrono/ZonedChronology.java
++++ b/src/main/java/org/joda/time/chrono/ZonedChronology.java
+@@ -464,6 +464,27 @@ public final class ZonedChronology extends AssembledChronology {
+         public long set(long instant, int value) {
+             long localInstant = iZone.convertUTCToLocal(instant);
+             localInstant = iField.set(localInstant, value);
++
++            // For time fields (hours/minutes/seconds/millis), prefer retaining
++            // the original offset during overlaps where the local instant is
++            // ambiguous. This matches expectations to "retain offset" when
++            // only sub-day fields change across DST fall-back transitions.
++            if (iTimeField) {
++                int offset = getOffsetToAdd(instant);
++                long tentative = localInstant - offset;
++                // Check overflow the same way as in duration add logic
++                if (((localInstant ^ tentative) < 0) && ((localInstant ^ (-offset)) < 0)) {
++                    // overflow: fall through to default conversion
++                } else {
++                    // If using the original offset yields a valid mapping, use it.
++                    if (iZone.getOffset(tentative) == offset) {
++                        if (get(tentative) == value) {
++                            return tentative;
++                        }
++                    }
++                }
++            }
++
+             long result = iZone.convertLocalToUTC(localInstant, false);
+             if (get(result) != value) {
+                 throw new IllegalFieldValueException(iField.getType(), new Integer(value),

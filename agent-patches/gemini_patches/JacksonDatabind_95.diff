@@ -1,0 +1,25 @@
+--- a/src/main/java/com/fasterxml/jackson/databind/type/TypeParser.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/TypeParser.java
+@@ -1,4 +1,15 @@
+-        // can be comma that separates types, or closing '>'
+-            tokens.pushBack(token);
+-        }
+-        return _factory._fromClass(null, base, null);
++        // can be comma that separates types, or closing '>'
++            tokens.pushBack(token);
++        }
++        // [databind#95]: need to ensure that generic types are handled correctly
++        // even if no explicit type parameters are given.
++        // For example, "java.util.List" should be List<Object>
++        if (Map.class.isAssignableFrom(base)) {
++            return _factory._fromClass(null, base,
++                    TypeBindings.create(base, _factory._unknownType(), _factory._unknownType()));
++        }
++        if (Collection.class.isAssignableFrom(base)) {
++            return _factory._fromClass(null, base,
++                    TypeBindings.create(base, _factory._unknownType()));
++        }
++        return _factory._fromClass(null, base, EMPTY_BINDINGS);
+@@ -1,1 +1,1 @@
+-        return _factory._fromClass(null, base, EMPTY_BINDINGS);
++        return _factory._fromClass(null, base, TypeFactory.EMPTY_BINDINGS);

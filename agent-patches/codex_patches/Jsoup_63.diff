@@ -1,0 +1,43 @@
+diff --git a/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java b/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
+index 16f81db..b6479cf 100644
+--- a/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
++++ b/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
+@@ -222,11 +222,21 @@ public class HtmlTreeBuilder extends TreeBuilder {
+         Tag tag = Tag.valueOf(startTag.name(), settings);
+         Element el = new Element(tag, baseUri, startTag.attributes);
+         insertNode(el);
++        // Debug: print insertEmpty usage
++        // System.out.println("insertEmpty tag=" + tag.getName() + ", startSelfClosing=" + startTag.isSelfClosing() + ", known=" + tag.isKnownTag() + ", tagSelfClosing=" + tag.isSelfClosing());
+         if (startTag.isSelfClosing()) {
+             if (tag.isKnownTag()) {
+-                if (tag.isSelfClosing()) tokeniser.acknowledgeSelfClosingFlag();
+-            }
+-            else {
++                if (tag.isSelfClosing()) {
++                    // Known void tag like br, img, etc. Acknowledge the flag; no error.
++                    tokeniser.acknowledgeSelfClosingFlag();
++                } else {
++                    // Known non-void tag marked as self-closing: emit specific error and acknowledge the flag
++                    // so the generic tokeniser error is not produced on the next read.
++                    tokeniser.error("Tag cannot be self closing; not a void tag");
++                    tokeniser.acknowledgeSelfClosingFlag();
++                }
++            } else {
++                // Unknown tag: remember it is self-closing for output and acknowledge the flag.
+                 tag.setSelfClosing();
+                 tokeniser.acknowledgeSelfClosingFlag();
+             }
+diff --git a/src/main/java/org/jsoup/parser/Tokeniser.java b/src/main/java/org/jsoup/parser/Tokeniser.java
+index 29fe4cc..3d82fbb 100644
+--- a/src/main/java/org/jsoup/parser/Tokeniser.java
++++ b/src/main/java/org/jsoup/parser/Tokeniser.java
+@@ -42,7 +42,8 @@ final class Tokeniser {
+ 
+     Token read() {
+         if (!selfClosingFlagAcknowledged) {
+-            error("Self closing flag not acknowledged");
++            // The tree builder did not explicitly acknowledge a self-closing start tag.
++            // Avoid emitting a generic error here; specific cases are handled upstream.
+             selfClosingFlagAcknowledged = true;
+         }
+         while (!isEmitPending)

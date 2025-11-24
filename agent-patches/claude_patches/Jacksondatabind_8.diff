@@ -1,0 +1,39 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
+index 39514f63f..94c388869 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
+@@ -294,11 +294,27 @@ public class CreatorCollector
+             if (oldOne.getClass() == newOne.getClass()) {
+                 // [databind#667]: avoid one particular class of bogus problems
+ 
++                // 28-Jan-2015, tatu: [databind#667] Actually allow this for now to avoid
++                //   bogus conflict for single-arg String vs CharSequence constructors
++                if (typeIndex == C_STRING) {
++                    // With String constructors, we can choose more specific over more generic
++                    Class<?> oldType = oldOne.getRawParameterType(0);
++                    Class<?> newType = newOne.getRawParameterType(0);
++                    if (oldType == newType) {
++                        // Same type, actual conflict
++                        throw new IllegalArgumentException("Conflicting "+TYPE_DESCS[typeIndex]
++                                +" creators: already had explicitly marked "+oldOne+", encountered "+newOne);
++                    }
++                    // Otherwise: prefer String over CharSequence (more specific)
++                    if (oldType == String.class || newType == CharSequence.class) {
++                        // Old one is more specific (String), keep it
++                        return;
++                    }
++                    // New one is more specific (String), use it
++                } else {
+                     throw new IllegalArgumentException("Conflicting "+TYPE_DESCS[typeIndex]
+                             +" creators: already had explicitly marked "+oldOne+", encountered "+newOne);
+-                // otherwise, which one to choose?
+-                    // new type more generic, use old
+-                // new type more specific, use it
++                }
+             }
+         }
+         if (explicit) {
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

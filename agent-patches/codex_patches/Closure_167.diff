@@ -1,0 +1,93 @@
+diff --git a/src/com/google/javascript/jscomp/TypeInference.java b/src/com/google/javascript/jscomp/TypeInference.java
+index 80a9510f..7ea1553d 100644
+--- a/src/com/google/javascript/jscomp/TypeInference.java
++++ b/src/com/google/javascript/jscomp/TypeInference.java
+@@ -1235,14 +1235,57 @@ class TypeInference
+     if (propertyType == null) {
+       return getNativeType(UNKNOWN_TYPE);
+     } else if (propertyType.equals(unknownType) && isLocallyInferred) {
+-      // If the type has been checked in this scope,
+-      // then use CHECKED_UNKNOWN_TYPE instead to indicate that.
+-      return getNativeType(CHECKED_UNKNOWN_TYPE);
++      // Only mark as CHECKED_UNKNOWN under two conditions:
++      // 1) This access is a property-test context, or
++      // 2) The qualified name has a non-unknown declared/bottom type in the
++      //    syntactic scope (e.g., established by assignment), so it’s not
++      //    purely a flow refinement from an unknown.
++      StaticSlot<JSType> declVar = syntacticScope.getSlot(qualifiedName);
++      boolean bottomIsUnknown = declVar == null ||
++          declVar.getType() == null || declVar.getType().isUnknownType();
++      if (isPropertyTest(n) || !bottomIsUnknown) {
++        return getNativeType(CHECKED_UNKNOWN_TYPE);
++      }
++      return propertyType;
+     } else {
+       return propertyType;
+     }
+   }
+ 
++  /**
++   * Determines whether this node is testing for the existence of a property.
++   * Mirrors the logic in TypeCheck#isPropertyTest for the cases relevant here.
++   * If true, we upgrade locally-inferred UNKNOWNs to CHECKED_UNKNOWN.
++   */
++  private boolean isPropertyTest(Node getProp) {
++    Node parent = getProp.getParent();
++    if (parent == null) {
++      return false;
++    }
++    switch (parent.getType()) {
++      case Token.IF:
++      case Token.WHILE:
++      case Token.DO:
++      case Token.FOR:
++        return NodeUtil.getConditionExpression(parent) == getProp;
++
++      case Token.INSTANCEOF:
++      case Token.TYPEOF:
++        return true;
++
++      case Token.AND:
++      case Token.HOOK:
++        return parent.getFirstChild() == getProp;
++
++      case Token.NOT:
++        return parent.getParent() != null && parent.getParent().isOr() &&
++            parent.getParent().getFirstChild() == parent;
++
++      default:
++        return false;
++    }
++  }
++
+   private BooleanOutcomePair traverseOr(Node n, FlowScope scope) {
+     return traverseShortCircuitingBinOp(n, scope, false);
+   }
+diff --git a/src/com/google/javascript/rhino/jstype/JSType.java b/src/com/google/javascript/rhino/jstype/JSType.java
+index 8f0a1f69..69a266ef 100644
+--- a/src/com/google/javascript/rhino/jstype/JSType.java
++++ b/src/com/google/javascript/rhino/jstype/JSType.java
+@@ -880,9 +880,22 @@ public abstract class JSType implements Serializable {
+    * method of types to get the restricted type.
+    */
+   public JSType getRestrictedTypeGivenToBooleanOutcome(boolean outcome) {
+-
+     BooleanLiteralSet literals = getPossibleToBooleanOutcomes();
+     if (literals.contains(outcome)) {
++      // Special handling for unknown types: when restricting an unknown by a
++      // truthy outcome, return CHECKED_UNKNOWN to indicate we've tested it.
++      // When restricting by a falsy outcome, treat it as plain UNKNOWN so
++      // other analyses (like missing property checks) still run.
++      if (this.equals(getNativeType(JSTypeNative.CHECKED_UNKNOWN_TYPE))) {
++        return outcome
++            ? getNativeType(JSTypeNative.CHECKED_UNKNOWN_TYPE)
++            : getNativeType(JSTypeNative.UNKNOWN_TYPE);
++      }
++      if (this.equals(getNativeType(JSTypeNative.UNKNOWN_TYPE))) {
++        return outcome
++            ? getNativeType(JSTypeNative.CHECKED_UNKNOWN_TYPE)
++            : getNativeType(JSTypeNative.UNKNOWN_TYPE);
++      }
+       return this;
+     } else {
+       return getNativeType(JSTypeNative.NO_TYPE);

@@ -1,0 +1,20 @@
+diff --git a/src/main/java/org/jsoup/parser/XmlTreeBuilder.java b/src/main/java/org/jsoup/parser/XmlTreeBuilder.java
+index 11eae8b..758fdbc 100644
+--- a/src/main/java/org/jsoup/parser/XmlTreeBuilder.java
++++ b/src/main/java/org/jsoup/parser/XmlTreeBuilder.java
+@@ -64,6 +64,11 @@ public class XmlTreeBuilder extends TreeBuilder {
+     void insert(Token.Comment commentToken) {
+         Comment comment = new Comment(commentToken.getData(), baseUri);
+         Node insert = comment;
++        if (commentToken.getData().startsWith("?xml")) {
++            // Handle XML declaration
++            String data = commentToken.getData().substring(1); // strip leading '?'
++            insert = new XmlDeclaration(data, baseUri, false);
++        }
+         insertNode(insert);
+     }
+ 
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

@@ -1,0 +1,57 @@
+diff --git a/src/com/google/javascript/jscomp/NodeUtil.java b/src/com/google/javascript/jscomp/NodeUtil.java
+index 044bdd93..d9e800ce 100644
+--- a/src/com/google/javascript/jscomp/NodeUtil.java
++++ b/src/com/google/javascript/jscomp/NodeUtil.java
+@@ -589,6 +589,12 @@ public final class NodeUtil {
+         // TODO(johnlenz): Add some mechanism for determining that functions
+         // are unaffected by side effects.
+         return true;
++      case Token.FUNCTION:
++        // Function literals (anonymous or named) themselves are not affected
++        // by side effects. Their internal NAME nodes represent declaration
++        // constructs, not references whose values can change between
++        // evaluation points.
++        return false;
+       case Token.NAME:
+         // Non-constant names values may have been changed.
+         return !NodeUtil.isConstantName(n)
+diff --git a/src/com/google/javascript/jscomp/PureFunctionIdentifier.java b/src/com/google/javascript/jscomp/PureFunctionIdentifier.java
+index 55afa607..99c4f62c 100644
+--- a/src/com/google/javascript/jscomp/PureFunctionIdentifier.java
++++ b/src/com/google/javascript/jscomp/PureFunctionIdentifier.java
+@@ -176,6 +176,35 @@ class PureFunctionIdentifier implements CompilerPass {
+       DefinitionProvider definitionProvider, Node name) {
+       List<Definition> result = Lists.newArrayList();
+ 
++      // Support composite callees formed via logical OR and the hook operator.
++      // e.g. (f || g)() or (cond ? f : g)()
++      int type = name.getType();
++      if (type == Token.OR) {
++        Collection<Definition> left =
++            getCallableDefinitions(definitionProvider, name.getFirstChild());
++        Collection<Definition> right =
++            getCallableDefinitions(definitionProvider, name.getLastChild());
++        if (left == null || right == null) {
++          return null;
++        }
++        result.addAll(left);
++        result.addAll(right);
++        return result;
++      } else if (type == Token.HOOK) {
++        Node thenExpr = name.getFirstChild().getNext();
++        Node elseExpr = name.getLastChild();
++        Collection<Definition> thenDefs =
++            getCallableDefinitions(definitionProvider, thenExpr);
++        Collection<Definition> elseDefs =
++            getCallableDefinitions(definitionProvider, elseExpr);
++        if (thenDefs == null || elseDefs == null) {
++          return null;
++        }
++        result.addAll(thenDefs);
++        result.addAll(elseDefs);
++        return result;
++      }
++
+       if (!NodeUtil.isGetProp(name) && !NodeUtil.isName(name)) {
+         return null;
+       }

@@ -1,0 +1,12 @@
+--- a/src/java/org/apache/commons/cli/PosixParser.java
++++ b/src/java/org/apache/commons/cli/PosixParser.java
+@@ -1,4 +1,5 @@
+-        else if (stopAtNonOption)
+-        {
+-            eatTheRest = true;
+-        }
++        else if (stopAtNonOption)
++        {
++            tokens.add(token);
++            eatTheRest = true;
++        }

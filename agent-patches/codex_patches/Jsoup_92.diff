@@ -1,0 +1,111 @@
+diff --git a/src/main/java/org/jsoup/nodes/Attributes.java b/src/main/java/org/jsoup/nodes/Attributes.java
+index a716abc..78fd26b 100644
+--- a/src/main/java/org/jsoup/nodes/Attributes.java
++++ b/src/main/java/org/jsoup/nodes/Attributes.java
+@@ -11,6 +11,7 @@ import java.util.ArrayList;
+ import java.util.Arrays;
+ import java.util.Collections;
+ import java.util.Iterator;
++import java.util.HashSet;
+ import java.util.List;
+ import java.util.Map;
+ import java.util.Set;
+@@ -394,6 +395,26 @@ public class Attributes implements Iterable<Attribute>, Cloneable {
+      * @param settings case sensitivity
+      * @return number of removed dupes
+      */
++    public int deduplicate() {
++        // Remove duplicate attributes by exact key match, preserving the first occurrence.
++        // Typical attribute lists are small, so a HashSet-based approach is fine.
++        int removed = 0;
++        if (size <= 1) return 0;
++
++        HashSet<String> seen = new HashSet<>(size * 2);
++        int i = 0;
++        while (i < size) {
++            String key = keys[i];
++            if (seen.contains(key)) {
++                remove(i); // don't increment i; next item is now at position i
++                removed++;
++            } else {
++                seen.add(key);
++                i++;
++            }
++        }
++        return removed;
++    }
+ 
+     private static class Dataset extends AbstractMap<String, String> {
+         private final Attributes attributes;
+diff --git a/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java b/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
+index e51f5f3..2f7fba4 100644
+--- a/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
++++ b/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
+@@ -10,6 +10,7 @@ import org.jsoup.nodes.Element;
+ import org.jsoup.nodes.FormElement;
+ import org.jsoup.nodes.Node;
+ import org.jsoup.nodes.TextNode;
++import org.jsoup.nodes.Attributes;
+ import org.jsoup.select.Elements;
+ 
+ import java.io.Reader;
+@@ -195,7 +196,15 @@ public class HtmlTreeBuilder extends TreeBuilder {
+     }
+ 
+     Element insert(final Token.StartTag startTag) {
+-        // cleanup duplicate attributes:
++        // cleanup duplicate attributes: normalize keys and drop dupes; record a single error if present
++        Attributes attrs = startTag.getAttributes();
++        int before = attrs != null ? attrs.size() : 0;
++        if (attrs != null)
++            settings.normalizeAttributes(attrs);
++        int after = attrs != null ? attrs.size() : 0;
++        if (after < before) {
++            error("Duplicate attribute");
++        }
+ 
+         // handle empty unknown tags
+         // when the spec expects an empty tag, will directly hit insertEmpty, so won't generate this fake end tag.
+@@ -207,7 +216,7 @@ public class HtmlTreeBuilder extends TreeBuilder {
+             return el;
+         }
+ 
+-        Element el = new Element(Tag.valueOf(startTag.name(), settings), baseUri, settings.normalizeAttributes(startTag.attributes));
++        Element el = new Element(Tag.valueOf(startTag.name(), settings), baseUri, attrs);
+         insert(el);
+         return el;
+     }
+diff --git a/src/main/java/org/jsoup/parser/ParseSettings.java b/src/main/java/org/jsoup/parser/ParseSettings.java
+index 1378978..d6b1787 100644
+--- a/src/main/java/org/jsoup/parser/ParseSettings.java
++++ b/src/main/java/org/jsoup/parser/ParseSettings.java
+@@ -68,8 +68,9 @@ public class ParseSettings {
+ 
+     Attributes normalizeAttributes(Attributes attributes) {
+         if (!preserveAttributeCase) {
+-            attributes.normalize();
++            attributes.normalize(); // lower-case keys for HTML
+         }
++        attributes.deduplicate(); // drop any duplicate attributes, preserving first occurrence
+         return attributes;
+     }
+ }
+diff --git a/src/main/java/org/jsoup/parser/Token.java b/src/main/java/org/jsoup/parser/Token.java
+index 9b0b7c2..8c1bb94 100644
+--- a/src/main/java/org/jsoup/parser/Token.java
++++ b/src/main/java/org/jsoup/parser/Token.java
+@@ -112,8 +112,12 @@ abstract class Token {
+                         value = "";
+                     else
+                         value = null;
+-                    // note that we add, not put. So that the first is kept, and rest are deduped, once in a context where case sensitivity is known (the appropriate tree builder).
+-                    attributes.put(pendingAttributeName, value);
++                    // Keep the first seen attribute with this exact key (case-sensitive here),
++                    // and allow later duplicates to be dropped when case-sensitivity is known
++                    // in the tree builder. This matches browser behavior (keep first occurrence).
++                    if (!attributes.hasKey(pendingAttributeName))
++                        attributes.put(pendingAttributeName, value);
++                    // else: duplicate attribute of the exact same name; ignore this one here
+                 }
+             }
+             pendingAttributeName = null;

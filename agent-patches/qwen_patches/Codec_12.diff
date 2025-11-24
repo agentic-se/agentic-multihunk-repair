@@ -1,0 +1,83 @@
+diff --git a/src/main/java/org/apache/commons/codec/binary/Base32InputStream.java b/src/main/java/org/apache/commons/codec/binary/Base32InputStream.java
+index 2d984620..3404cb3c 100644
+--- a/src/main/java/org/apache/commons/codec/binary/Base32InputStream.java
++++ b/src/main/java/org/apache/commons/codec/binary/Base32InputStream.java
+@@ -17,6 +17,7 @@
+ 
+ package org.apache.commons.codec.binary;
+ 
++import java.io.IOException;
+ import java.io.InputStream;
+ 
+ /**
+@@ -80,5 +81,26 @@ public class Base32InputStream extends BaseNCodecInputStream {
+     public Base32InputStream(InputStream in, boolean doEncode, int lineLength, byte[] lineSeparator) {
+         super(in, new Base32(lineLength, lineSeparator), doEncode);
+     }
+-
++    
++    /**
++     * {@inheritDoc}
++     * 
++     * Skip over and discard n bytes of data from the input stream.
++     * 
++     * @param n number of bytes to skip
++     * @return the actual number of bytes skipped
++     * @throws IOException if an I/O error occurs
++     */
++    @Override
++    public long skip(long n) throws IOException {
++        // Delegate to read() to skip decoded characters, not encoded bytes
++        if (n < 0) {
++            throw new IllegalArgumentException("Number of bytes to skip must be non-negative");
++        }
++        long bytesRead = 0;
++        while ((bytesRead < n) && (read() != -1)) {
++            bytesRead++;
++        }
++        return bytesRead;
++    }
+ }
+diff --git a/src/main/java/org/apache/commons/codec/binary/Base64InputStream.java b/src/main/java/org/apache/commons/codec/binary/Base64InputStream.java
+index 28404cda..750e3297 100644
+--- a/src/main/java/org/apache/commons/codec/binary/Base64InputStream.java
++++ b/src/main/java/org/apache/commons/codec/binary/Base64InputStream.java
+@@ -17,6 +17,7 @@
+ 
+ package org.apache.commons.codec.binary;
+ 
++import java.io.IOException;
+ import java.io.InputStream;
+ 
+ /**
+@@ -85,4 +86,26 @@ public class Base64InputStream extends BaseNCodecInputStream {
+     public Base64InputStream(InputStream in, boolean doEncode, int lineLength, byte[] lineSeparator) {
+         super(in, new Base64(lineLength, lineSeparator), doEncode);
+     }
++    
++    /**
++     * {@inheritDoc}
++     * 
++     * Skip over and discard n bytes of data from the input stream.
++     * 
++     * @param n number of bytes to skip
++     * @return the actual number of bytes skipped
++     * @throws IOException if an I/O error occurs
++     */
++    @Override
++    public long skip(long n) throws IOException {
++        // Delegate to read() to skip decoded characters, not encoded bytes
++        if (n < 0) {
++            throw new IllegalArgumentException("Number of bytes to skip must be non-negative");
++        }
++        long bytesRead = 0;
++        while ((bytesRead < n) && (read() != -1)) {
++            bytesRead++;
++        }
++        return bytesRead;
++    }
+ }
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

@@ -1,0 +1,32 @@
+diff --git a/src/com/google/javascript/jscomp/NodeUtil.java b/src/com/google/javascript/jscomp/NodeUtil.java
+index 7f20c2e6..7869beac 100644
+--- a/src/com/google/javascript/jscomp/NodeUtil.java
++++ b/src/com/google/javascript/jscomp/NodeUtil.java
+@@ -80,6 +80,11 @@ public final class NodeUtil {
+       case Token.NOT:
+         TernaryValue value = getImpureBooleanValue(n.getLastChild());
+         return value.not();
++      case Token.VOID:
++        // The result of a void-expression is always undefined which casts
++        // to false in boolean context. For the impure evaluation we ignore
++        // any side effects of the operand when determining the boolean value.
++        return TernaryValue.FALSE;
+       case Token.AND: {
+         TernaryValue lhs = getImpureBooleanValue(n.getFirstChild());
+         TernaryValue rhs = getImpureBooleanValue(n.getLastChild());
+@@ -133,7 +138,14 @@ public final class NodeUtil {
+         return TernaryValue.FALSE;
+ 
+       case Token.VOID:
+-          return TernaryValue.FALSE;
++        // The result of a void-expression is always undefined which is a
++        // falsy value. However, if the operand may have side effects,
++        // we cannot treat the overall expression as a pure boolean value.
++        // In that case, return UNKNOWN to signal side effects are present.
++        if (mayHaveSideEffects(n.getFirstChild())) {
++          return TernaryValue.UNKNOWN;
++        }
++        return TernaryValue.FALSE;
+ 
+       case Token.NAME:
+         String name = n.getString();

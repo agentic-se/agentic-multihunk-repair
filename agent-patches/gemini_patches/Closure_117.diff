@@ -1,0 +1,251 @@
+--- a/src/com/google/javascript/jscomp/TypeCheck.java
++++ b/src/com/google/javascript/jscomp/TypeCheck.java
+@@ -1,6 +1,6 @@
+-          report(t, n, INEXISTENT_PROPERTY_WITH_SUGGESTION, propName,
+-              validator.getReadableJSTypeName(n.getFirstChild(), true),
+-              pair.suggestion);
+-        } else {
+-          report(t, n, INEXISTENT_PROPERTY, propName,
+-              validator.getReadableJSTypeName(n.getFirstChild(), true));
++          report(t, n, INEXISTENT_PROPERTY_WITH_SUGGESTION, propName,
++              objectType.toString(),
++              pair.suggestion);
++        } else {
++          report(t, n, INEXISTENT_PROPERTY, propName,
++              objectType.toString());
+@@ -1,6 +1,6 @@
+-          report(t, n, INEXISTENT_PROPERTY_WITH_SUGGESTION, propName,
+-              objectType.toString(),
+-              pair.suggestion);
+-        } else {
+-          report(t, n, INEXISTENT_PROPERTY, propName,
+-              objectType.toString());
++          report(t, n, INEXISTENT_PROPERTY_WITH_SUGGESTION, propName,
++              validator.getReadableJSTypeName(n.getFirstChild(), true),
++              pair.suggestion);
++        } else {
++          report(t, n, INEXISTENT_PROPERTY, propName,
++              validator.getReadableJSTypeName(n.getFirstChild(), true));
+
+--- a/src/com/google/javascript/jscomp/TypeValidator.java
++++ b/src/com/google/javascript/jscomp/TypeValidator.java
+@@ -1,16 +1,20 @@
+-        } else {
+-          // classes
+-          while (objectType != null && !objectType.hasOwnProperty(propName)) {
+-            objectType = objectType.getImplicitPrototype();
+-          }
+-        }
+-
+-        // Don't show complex function names or anonymous types.
+-        // Instead, try to get a human-readable type name.
+-        if (objectType != null &&
+-            (objectType.getConstructor() != null ||
+-             objectType.isFunctionPrototypeType())) {
+-          return objectType.toString() + "." + propName;
+-        }
+-      }
+-    }
++        } else {
++          // classes
++          ObjectType originalObjectType = objectType;
++          while (objectType != null && !objectType.hasOwnProperty(propName)) {
++            objectType = objectType.getImplicitPrototype();
++          }
++          if (objectType == null) {
++            objectType = originalObjectType;
++          }
++        }
++
++        // Don't show complex function names or anonymous types.
++        // Instead, try to get a human-readable type name.
++        if (objectType != null &&
++            (objectType.getConstructor() != null ||
++             objectType.isFunctionPrototypeType())) {
++          return objectType.toString() + "." + propName;
++        }
++      }
++    }
+@@ -1,20 +1,16 @@
+-        } else {
+-          // classes
+-          ObjectType originalObjectType = objectType;
+-          while (objectType != null && !objectType.hasOwnProperty(propName)) {
+-            objectType = objectType.getImplicitPrototype();
+-          }
+-          if (objectType == null) {
+-            objectType = originalObjectType;
+-          }
+-        }
+-
+-        // Don't show complex function names or anonymous types.
+-        // Instead, try to get a human-readable type name.
+-        if (objectType != null &&
+-            (objectType.getConstructor() != null ||
+-             objectType.isFunctionPrototypeType())) {
+-          return objectType.toString() + "." + propName;
+-        }
+-      }
+-    }
++        } else {
++          // classes
++          while (objectType != null && !objectType.hasOwnProperty(propName)) {
++            objectType = objectType.getImplicitPrototype();
++          }
++        }
++
++        // Don't show complex function names or anonymous types.
++        // Instead, try to get a human-readable type name.
++        if (objectType != null &&
++            (objectType.getConstructor() != null ||
++             objectType.isFunctionPrototypeType())) {
++          return objectType.toString() + "." + propName;
++        }
++      }
++    }
+@@ -1,16 +1,19 @@
+-        } else {
+-          // classes
+-          while (objectType != null && !objectType.hasOwnProperty(propName)) {
+-            objectType = objectType.getImplicitPrototype();
+-          }
+-        }
+-
+-        // Don't show complex function names or anonymous types.
+-        // Instead, try to get a human-readable type name.
+-        if (objectType != null &&
+-            (objectType.getConstructor() != null ||
+-             objectType.isFunctionPrototypeType())) {
+-          return objectType.toString() + "." + propName;
+-        }
+-      }
+-    }
++        } else {
++          // classes
++          ObjectType ownerTypeForMessage = objectType;
++          while (objectType != null && !objectType.hasOwnProperty(propName)) {
++            objectType = objectType.getImplicitPrototype();
++          }
++
++          // Don't show complex function names or anonymous types.
++          // Instead, try to get a human-readable type name.
++          if (objectType != null &&
++              (objectType.getConstructor() != null ||
++               objectType.isFunctionPrototypeType())) {
++            return objectType.toString() + "." + propName;
++          } else if (ownerTypeForMessage != null) {
++            return ownerTypeForMessage.toString();
++          }
++        }
++      }
++    }
+@@ -1,19 +1,18 @@
+-        } else {
+-          // classes
+-          ObjectType ownerTypeForMessage = objectType;
+-          while (objectType != null && !objectType.hasOwnProperty(propName)) {
+-            objectType = objectType.getImplicitPrototype();
+-          }
+-
+-          // Don't show complex function names or anonymous types.
+-          // Instead, try to get a human-readable type name.
+-          if (objectType != null &&
+-              (objectType.getConstructor() != null ||
+-               objectType.isFunctionPrototypeType())) {
+-            return objectType.toString() + "." + propName;
+-          } else if (ownerTypeForMessage != null) {
+-            return ownerTypeForMessage.toString();
+-          }
+-        }
+-      }
+-    }
++        } else {
++          // classes
++          while (objectType != null && !objectType.hasOwnProperty(propName)) {
++            objectType = objectType.getImplicitPrototype();
++          }
++
++          // Don't show complex function names or anonymous types.
++          // Instead, try to get a human-readable type name.
++          if (objectType != null &&
++              (objectType.getConstructor() != null ||
++               objectType.isFunctionPrototypeType())) {
++            return objectType.toString() + "." + propName;
++          } else if (ownerTypeForMessage != null) {
++            return ownerTypeForMessage.toString();
++          }
++        }
++      }
++    }
+@@ -1,16 +1,19 @@
+-        } else {
+-          // classes
+-          while (objectType != null && !objectType.hasOwnProperty(propName)) {
+-            objectType = objectType.getImplicitPrototype();
+-          }
+-
+-          // Don't show complex function names or anonymous types.
+-          // Instead, try to get a human-readable type name.
+-          if (objectType != null &&
+-              (objectType.getConstructor() != null ||
+-               objectType.isFunctionPrototypeType())) {
+-            return objectType.toString() + "." + propName;
+-          }
+-        }
+-      }
+-    }
++        } else {
++          // classes
++          ObjectType ownerTypeForMessage = getJSType(n.getFirstChild()).dereference();
++          while (objectType != null && !objectType.hasOwnProperty(propName)) {
++            objectType = objectType.getImplicitPrototype();
++          }
++
++          // Don't show complex function names or anonymous types.
++          // Instead, try to get a human-readable type name.
++          if (objectType != null &&
++              (objectType.getConstructor() != null ||
++               objectType.isFunctionPrototypeType())) {
++            return objectType.toString() + "." + propName;
++          } else if (ownerTypeForMessage != null) {
++            return ownerTypeForMessage.toString();
++          }
++        }
++      }
++    }
+@@ -1,19 +1,16 @@
+-        } else {
+-          // classes
+-          ObjectType ownerTypeForMessage = getJSType(n.getFirstChild()).dereference();
+-          while (objectType != null && !objectType.hasOwnProperty(propName)) {
+-            objectType = objectType.getImplicitPrototype();
+-          }
+-
+-          // Don't show complex function names or anonymous types.
+-          // Instead, try to get a human-readable type name.
+-          if (objectType != null &&
+-              (objectType.getConstructor() != null ||
+-               objectType.isFunctionPrototypeType())) {
+-            return objectType.toString() + "." + propName;
+-          } else if (ownerTypeForMessage != null) {
+-            return ownerTypeForMessage.toString();
+-          }
+-        }
+-      }
+-    }
++        } else {
++          // classes
++          while (objectType != null && !objectType.hasOwnProperty(propName)) {
++            objectType = objectType.getImplicitPrototype();
++          }
++
++          // Don't show complex function names or anonymous types.
++          // Instead, try to get a human-readable type name.
++          if (objectType != null &&
++              (objectType.getConstructor() != null ||
++               objectType.isFunctionPrototypeType())) {
++            return objectType.toString() + "." + propName;
++          }
++        }
++      }
++    }

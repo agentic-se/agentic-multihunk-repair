@@ -1,0 +1,60 @@
+diff --git a/src/main/java/org/apache/commons/math3/linear/OpenMapRealVector.java b/src/main/java/org/apache/commons/math3/linear/OpenMapRealVector.java
+index 821482744..e2ae7baa2 100644
+--- a/src/main/java/org/apache/commons/math3/linear/OpenMapRealVector.java
++++ b/src/main/java/org/apache/commons/math3/linear/OpenMapRealVector.java
+@@ -341,16 +341,24 @@ public class OpenMapRealVector extends SparseRealVector
+     public OpenMapRealVector ebeDivide(RealVector v) {
+         checkVectorDimensions(v.getDimension());
+         OpenMapRealVector res = new OpenMapRealVector(this);
+-        /*
+-         * MATH-803: it is not sufficient to loop through non zero entries of
+-         * this only. Indeed, if this[i] = 0d and v[i] = 0d, then
+-         * this[i] / v[i] = NaN, and not 0d.
+-         */
++        // First handle non-zero entries of this vector as usual.
+         Iterator iter = entries.iterator();
+         while (iter.hasNext()) {
+             iter.advance();
+             res.setEntry(iter.key(), iter.value() / v.getEntry(iter.key()));
+         }
++
++        // Now handle indices where this[i] is implicitly 0.0. For these, the
++        // result differs from 0.0 when v[i] is 0.0 or NaN (0/0 => NaN, 0/NaN => NaN).
++        final int dim = getDimension();
++        for (int i = 0; i < dim; i++) {
++            if (!entries.containsKey(i)) {
++                final double vi = v.getEntry(i);
++                if (vi == 0.0 || Double.isNaN(vi)) {
++                    res.setEntry(i, 0.0 / vi);
++                }
++            }
++        }
+         return res;
+     }
+ 
+@@ -364,13 +372,18 @@ public class OpenMapRealVector extends SparseRealVector
+             iter.advance();
+             res.setEntry(iter.key(), iter.value() * v.getEntry(iter.key()));
+         }
+-        /*
+-         * MATH-803: the above loop assumes that 0d * x  = 0d for any double x,
+-         * which allows to consider only the non-zero entries of this. However,
+-         * this fails if this[i] == 0d and (v[i] = NaN or v[i] = Infinity).
+-         *
+-         * These special cases are handled below.
+-         */
++        // Handle indices where this[i] is implicitly 0.0. For most finite vi,
++        // 0.0 * vi == 0.0 which matches the default. However, for vi = NaN or
++        // vi = Infinity, IEEE rules give NaN; we must set those explicitly.
++        final int dim = getDimension();
++        for (int i = 0; i < dim; i++) {
++            if (!entries.containsKey(i)) {
++                final double vi = v.getEntry(i);
++                if (Double.isNaN(vi) || Double.isInfinite(vi)) {
++                    res.setEntry(i, 0.0 * vi);
++                }
++            }
++        }
+         return res;
+     }
+ 

@@ -1,0 +1,43 @@
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index 92d8715c..a833daf1 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -417,6 +417,7 @@ final class TypedScopeCreator implements ScopeCreator {
+      * For more information, see
+      * http://code.google.com/p/closure-compiler/issues/detail?id=314
+      */
++    private final List<Node> lendsObjectLiterals = Lists.newArrayList();
+ 
+     /**
+      * Type-less stubs.
+@@ -543,7 +544,14 @@ final class TypedScopeCreator implements ScopeCreator {
+           break;
+       }
+ 
+-      // Analyze any @lends object literals in this statement.
++      // Analyze any @lends object literals after finishing the statement.
++      if (n.getParent() != null &&
++          NodeUtil.isStatement(n) && !lendsObjectLiterals.isEmpty()) {
++        for (Node objLit : lendsObjectLiterals) {
++          defineObjectLiteral(objLit);
++        }
++        lendsObjectLiterals.clear();
++      }
+     }
+ 
+     private void attachLiteralTypes(NodeTraversal t, Node n) {
+@@ -577,7 +585,14 @@ final class TypedScopeCreator implements ScopeCreator {
+           break;
+ 
+         case Token.OBJECTLIT:
++          // Defer analysis of object literals with @lends until we finish
++          // the enclosing statement, to ensure referenced types are declared.
++          JSDocInfo objInfo = n.getJSDocInfo();
++          if (objInfo != null && objInfo.getLendsName() != null) {
++            lendsObjectLiterals.add(n);
++          } else {
+             defineObjectLiteral(n);
++          }
+           break;
+ 
+           // NOTE(nicksantos): If we ever support Array tuples,

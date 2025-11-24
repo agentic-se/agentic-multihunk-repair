@@ -1,0 +1,64 @@
+diff --git a/src/com/google/javascript/jscomp/ScopedAliases.java b/src/com/google/javascript/jscomp/ScopedAliases.java
+index 26fb2307..0f649363 100644
+--- a/src/com/google/javascript/jscomp/ScopedAliases.java
++++ b/src/com/google/javascript/jscomp/ScopedAliases.java
+@@ -457,15 +457,51 @@ class ScopedAliases implements HotSwapCompilerPass {
+     private void fixTypeNode(Node typeNode) {
+       if (typeNode.isString()) {
+         String name = typeNode.getString();
+-        int endIndex = name.indexOf('.');
+-        if (endIndex == -1) {
+-          endIndex = name.length();
++        String resolvedName = name;
++        
++        // Try to resolve the type annotation by replacing the leading parts with their aliases
++        // For example: c.MyType -> a.b.c.MyType if c is alias to a.b.c
++        
++        // Split into components
++        String[] components = name.split("\\.");
++        if (components.length > 0) {
++          // Look for the longest sequence of components that are aliases
++          int prefixLength = 0;
++          for (int i = 0; i < components.length; i++) {
++            String component = components[i];
++            Var aliasVar = aliases.get(component);
++            if (aliasVar != null) {
++              prefixLength = i + 1;
++            } else {
++              break; // Stop at first component that is not an alias
++            }
++          }
++          
++          // If we found any aliases at the beginning, resolve them
++          if (prefixLength > 0) {
++            // Build the resolved prefix
++            StringBuilder prefixBuilder = new StringBuilder();
++            for (int i = 0; i < prefixLength; i++) {
++              if (i > 0) prefixBuilder.append(".");
++              String component = components[i];
++              Var aliasVar = aliases.get(component);
++              Node aliasNode = aliasVar.getInitialValue();
++              prefixBuilder.append(aliasNode.getQualifiedName());
++            }
++            
++            // Add the remaining components
++            for (int i = prefixLength; i < components.length; i++) {
++              prefixBuilder.append(".");
++              prefixBuilder.append(components[i]);
++            }
++            
++            resolvedName = prefixBuilder.toString();
++          }
+         }
+-        String baseName = name.substring(0, endIndex);
+-        Var aliasVar = aliases.get(baseName);
+-        if (aliasVar != null) {
+-          Node aliasedNode = aliasVar.getInitialValue();
+-          aliasUsages.add(new AliasedTypeNode(typeNode, aliasedNode.getQualifiedName() + name.substring(endIndex)));
++        
++        // Only apply the change if we actually resolved something
++        if (!resolvedName.equals(name)) {
++          aliasUsages.add(new AliasedTypeNode(typeNode, resolvedName));
+         }
+       }
+ 

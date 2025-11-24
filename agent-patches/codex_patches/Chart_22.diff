@@ -1,0 +1,189 @@
+diff --git a/source/org/jfree/data/KeyedObjects2D.java b/source/org/jfree/data/KeyedObjects2D.java
+index d0e832f..36dcb36 100644
+--- a/source/org/jfree/data/KeyedObjects2D.java
++++ b/source/org/jfree/data/KeyedObjects2D.java
+@@ -211,31 +211,33 @@ public class KeyedObjects2D implements Cloneable, Serializable {
+      * @throws UnknownKeyException if <code>rowKey</code> or 
+      *         <code>columnKey</code> is not recognised.
+      */
+-    public Object getObject(Comparable rowKey, Comparable columnKey) {
+-        if (rowKey == null) {
+-            throw new IllegalArgumentException("Null 'rowKey' argument.");
+-        }
+-        if (columnKey == null) {
+-            throw new IllegalArgumentException("Null 'columnKey' argument.");
+-        }
+-        int row = this.rowKeys.indexOf(rowKey);
+-        if (row < 0) {
+-            throw new UnknownKeyException("Row key (" + rowKey 
+-                    + ") not recognised.");
+-        }
+-        int column = this.columnKeys.indexOf(columnKey);
+-        if (column < 0) {
+-            throw new UnknownKeyException("Column key (" + columnKey 
+-                    + ") not recognised.");
+-        }
+-        if (row >= 0) {
+-        KeyedObjects rowData = (KeyedObjects) this.rows.get(row);
+-            return rowData.getObject(columnKey);
+-        }
+-        else {
+-            return null;
+-        }
+-    }
++    public Object getObject(Comparable rowKey, Comparable columnKey) {
++        if (rowKey == null) {
++            throw new IllegalArgumentException("Null 'rowKey' argument.");
++        }
++        if (columnKey == null) {
++            throw new IllegalArgumentException("Null 'columnKey' argument.");
++        }
++        int row = this.rowKeys.indexOf(rowKey);
++        if (row < 0) {
++            throw new UnknownKeyException("Row key (" + rowKey 
++                    + ") not recognised.");
++        }
++        int column = this.columnKeys.indexOf(columnKey);
++        if (column < 0) {
++            throw new UnknownKeyException("Column key (" + columnKey 
++                    + ") not recognised.");
++        }
++        // if the specified row exists, return the value for the column key
++        // from that row (may be null). If the row does not contain the
++        // column key, return null (do not throw UnknownKeyException).
++        KeyedObjects rowData = (KeyedObjects) this.rows.get(row);
++        int index = rowData.getIndex(columnKey);
++        if (index >= 0) {
++            return rowData.getObject(index);
++        }
++        return null;
++    }
+ 
+     /**
+      * Adds an object to the table.  Performs the same function as setObject().
+@@ -293,13 +295,13 @@ public class KeyedObjects2D implements Cloneable, Serializable {
+      * 
+      * @see #addObject(Object, Comparable, Comparable)
+      */
+-    public void removeObject(Comparable rowKey, Comparable columnKey) {
+-        setObject(null, rowKey, columnKey);
+-        
+-        // 1. check whether the row is now empty.
+-        boolean allNull = true;
+-        int rowIndex = getRowIndex(rowKey);
+-        KeyedObjects row = (KeyedObjects) this.rows.get(rowIndex);
++    public void removeObject(Comparable rowKey, Comparable columnKey) {
++        setObject(null, rowKey, columnKey);
++        
++        // 1. check whether the row is now empty.
++        boolean allNull = true;
++        int rowIndex = getRowIndex(rowKey);
++        KeyedObjects row = (KeyedObjects) this.rows.get(rowIndex);
+ 
+         for (int item = 0, itemCount = row.getItemCount(); item < itemCount; 
+              item++) {
+@@ -309,15 +311,34 @@ public class KeyedObjects2D implements Cloneable, Serializable {
+             }
+         }
+         
+-        if (allNull) {
+-            this.rowKeys.remove(rowIndex);
+-            this.rows.remove(rowIndex);
+-        }
+-        
+-        // 2. check whether the column is now empty.
+-        
+-        
+-    }
++        if (allNull) {
++            this.rowKeys.remove(rowIndex);
++            this.rows.remove(rowIndex);
++        }
++        
++        // 2. check whether the column is now empty.
++        boolean columnAllNull = true;
++        int colIndex = getColumnIndex(columnKey);
++        for (int r = 0; r < this.rows.size(); r++) {
++            KeyedObjects rdata = (KeyedObjects) this.rows.get(r);
++            int idx = rdata.getIndex(columnKey);
++            if (idx >= 0 && rdata.getObject(idx) != null) {
++                columnAllNull = false;
++                break;
++            }
++        }
++        if (columnAllNull) {
++            // remove the column key and any entries for that key in each row
++            this.columnKeys.remove(colIndex);
++            for (int r = 0; r < this.rows.size(); r++) {
++                KeyedObjects rdata = (KeyedObjects) this.rows.get(r);
++                int idx = rdata.getIndex(columnKey);
++                if (idx >= 0) {
++                    rdata.removeValue(idx);
++                }
++            }
++        }
++    }
+ 
+     /**
+      * Removes an entire row from the table.
+@@ -340,10 +361,17 @@ public class KeyedObjects2D implements Cloneable, Serializable {
+      * 
+      * @see #removeColumn(Comparable)
+      */
+-    public void removeRow(Comparable rowKey) {
+-        int index = getRowIndex(rowKey);
+-        removeRow(index);
+-    }
++    public void removeRow(Comparable rowKey) {
++        if (rowKey == null) {
++            throw new IllegalArgumentException("Null 'rowKey' argument.");
++        }
++        int index = getRowIndex(rowKey);
++        if (index < 0) {
++            throw new UnknownKeyException("Row key (" + rowKey 
++                    + ") not recognised.");
++        }
++        removeRow(index);
++    }
+ 
+     /**
+      * Removes an entire column from the table.
+@@ -366,19 +394,25 @@ public class KeyedObjects2D implements Cloneable, Serializable {
+      * 
+      * @see #removeRow(Comparable)
+      */
+-    public void removeColumn(Comparable columnKey) {
+-        int index = getColumnIndex(columnKey);
+-        if (index < 0) {
+-            throw new UnknownKeyException("Column key (" + columnKey 
+-                    + ") not recognised.");
+-        }
+-        Iterator iterator = this.rows.iterator();
+-        while (iterator.hasNext()) {
+-            KeyedObjects rowData = (KeyedObjects) iterator.next();
+-                rowData.removeValue(columnKey);
+-        }
+-        this.columnKeys.remove(columnKey);
+-    }
++    public void removeColumn(Comparable columnKey) {
++        if (columnKey == null) {
++            throw new IllegalArgumentException("Null 'columnKey' argument.");
++        }
++        int index = getColumnIndex(columnKey);
++        if (index < 0) {
++            throw new UnknownKeyException("Column key (" + columnKey 
++                    + ") not recognised.");
++        }
++        Iterator iterator = this.rows.iterator();
++        while (iterator.hasNext()) {
++            KeyedObjects rowData = (KeyedObjects) iterator.next();
++                int idx = rowData.getIndex(columnKey);
++                if (idx >= 0) {
++                    rowData.removeValue(idx);
++                }
++        }
++        this.columnKeys.remove(columnKey);
++    }
+ 
+     /**
+      * Tests this object for equality with an arbitrary object.

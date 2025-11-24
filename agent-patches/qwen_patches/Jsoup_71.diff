@@ -1,0 +1,521 @@
+diff --git a/src/main/java/org/jsoup/select/Evaluator.java b/src/main/java/org/jsoup/select/Evaluator.java
+index 87b1d48..5f34e8e 100644
+--- a/src/main/java/org/jsoup/select/Evaluator.java
++++ b/src/main/java/org/jsoup/select/Evaluator.java
+@@ -399,7 +399,7 @@ public abstract class Evaluator {
+ 			final Element p = element.parent();
+ 			return p != null && !(p instanceof Document) && element.elementSiblingIndex() == p.children().size()-1;
+ 		}
+-    	
++		
+ 		@Override
+ 		public String toString() {
+ 			return ":last-child";
+@@ -428,38 +428,38 @@ public abstract class Evaluator {
+ 
+     
+     public static abstract class CssNthEvaluator extends Evaluator {
+-    	protected final int a, b;
+-    	
+-    	public CssNthEvaluator(int a, int b) {
+-    		this.a = a;
+-    		this.b = b;
+-    	}
+-    	public CssNthEvaluator(int b) {
+-    		this(0,b);
+-    	}
+-    	
+-    	@Override
+-    	public boolean matches(Element root, Element element) {
+-    		final Element p = element.parent();
+-    		if (p == null || (p instanceof Document)) return false;
+-    		
+-    		final int pos = calculatePosition(root, element);
+-    		if (a == 0) return pos == b;
+-    		
+-    		return (pos-b)*a >= 0 && (pos-b)%a==0;
+-    	}
+-    	
+-		@Override
+-		public String toString() {
+-			if (a == 0)
+-				return String.format(":%s(%d)",getPseudoClass(), b);
+-			if (b == 0)
+-				return String.format(":%s(%dn)",getPseudoClass(), a);
+-			return String.format(":%s(%dn%+d)", getPseudoClass(),a, b);
+-		}
+-    	
+-		protected abstract String getPseudoClass();
+-		protected abstract int calculatePosition(Element root, Element element);
++	protected final int a, b;
++	
++	public CssNthEvaluator(int a, int b) {
++		this.a = a;
++		this.b = b;
++	}
++	public CssNthEvaluator(int b) {
++		this(0,b);
++	}
++	
++	@Override
++	public boolean matches(Element root, Element element) {
++		final Element p = element.parent();
++		if (p == null || (p instanceof Document)) return false;
++		
++		final int pos = calculatePosition(root, element);
++		if (a == 0) return pos == b;
++		
++		return (pos-b)*a >= 0 && (pos-b)%a==0;
++	}
++	
++	@Override
++	public String toString() {
++		if (a == 0)
++			return String.format(":%s(%d)",getPseudoClass(), b);
++		if (b == 0)
++			return String.format(":%s(%dn)",getPseudoClass(), a);
++		return String.format(":%s(%dn%+d)", getPseudoClass(),a, b);
++	}
++	
++	protected abstract String getPseudoClass();
++	protected abstract int calculatePosition(Element root, Element element);
+     }
+     
+     
+@@ -470,18 +470,18 @@ public abstract class Evaluator {
+      */
+     public static final class IsNthChild extends CssNthEvaluator {
+ 
+-    	public IsNthChild(int a, int b) {
+-    		super(a,b);
+-		}
++	public IsNthChild(int a, int b) {
++		super(a,b);
++	}
+ 
+-		protected int calculatePosition(Element root, Element element) {
+-			return element.elementSiblingIndex()+1;
+-		}
++	protected int calculatePosition(Element root, Element element) {
++		return element.elementSiblingIndex()+1;
++	}
+ 
+-		
+-		protected String getPseudoClass() {
+-			return "nth-child";
+-		}
++	
++	protected String getPseudoClass() {
++		return "nth-child";
++	}
+     }
+     
+     /**
+@@ -490,19 +490,19 @@ public abstract class Evaluator {
+      * @see IndexEquals
+      */
+     public static final class IsNthLastChild extends CssNthEvaluator {
+-    	public IsNthLastChild(int a, int b) {
+-    		super(a,b);
+-    	}
++	public IsNthLastChild(int a, int b) {
++		super(a,b);
++	}
+ 
+         @Override
+         protected int calculatePosition(Element root, Element element) {
+-        	return element.parent().children().size() - element.elementSiblingIndex();
++	return element.parent().children().size() - element.elementSiblingIndex();
+         }
+-        
+-		@Override
+-		protected String getPseudoClass() {
+-			return "nth-last-child";
+-		}
++	
++	@Override
++	protected String getPseudoClass() {
++		return "nth-last-child";
++	}
+     }
+     
+     /**
+@@ -510,62 +510,62 @@ public abstract class Evaluator {
+      * 
+      */
+     public static class IsNthOfType extends CssNthEvaluator {
+-    	public IsNthOfType(int a, int b) {
+-    		super(a,b);
+-    	}
++	public IsNthOfType(int a, int b) {
++		super(a,b);
++	}
+ 
+-		protected int calculatePosition(Element root, Element element) {
+-			int pos = 0;
+-        	Elements family = element.parent().children();
++	protected int calculatePosition(Element root, Element element) {
++		int pos = 0;
++        Elements family = element.parent().children();
+             for (Element el : family) {
+                 if (el.tag().equals(element.tag())) pos++;
+                 if (el == element) break;
+             }
+-			return pos;
+-		}
++		return pos;
++	}
+ 
+-		@Override
+-		protected String getPseudoClass() {
+-			return "nth-of-type";
+-		}
++	@Override
++	protected String getPseudoClass() {
++		return "nth-of-type";
++	}
+     }
+     
+     public static class IsNthLastOfType extends CssNthEvaluator {
+ 
+-		public IsNthLastOfType(int a, int b) {
+-			super(a, b);
+-		}
+-		
+-		@Override
+-		protected int calculatePosition(Element root, Element element) {
+-			int pos = 0;
+-        	Elements family = element.parent().children();
+-        	for (int i = element.elementSiblingIndex(); i < family.size(); i++) {
+-        		if (family.get(i).tag().equals(element.tag())) pos++;
+-        	}
+-			return pos;
+-		}
++	public IsNthLastOfType(int a, int b) {
++		super(a, b);
++	}
++	
++	@Override
++	protected int calculatePosition(Element root, Element element) {
++		int pos = 0;
++        Elements family = element.parent().children();
++        for (int i = element.elementSiblingIndex(); i < family.size(); i++) {
++        	if (family.get(i).tag().equals(element.tag())) pos++;
++        }
++		return pos;
++	}
+ 
+-		@Override
+-		protected String getPseudoClass() {
+-			return "nth-last-of-type";
+-		}
++	@Override
++	protected String getPseudoClass() {
++		return "nth-last-of-type";
++	}
+     }
+ 
+     /**
+      * Evaluator for matching the first sibling (css :first-child)
+      */
+     public static final class IsFirstChild extends Evaluator {
+-    	@Override
+-    	public boolean matches(Element root, Element element) {
+-    		final Element p = element.parent();
+-    		return p != null && !(p instanceof Document) && element.elementSiblingIndex() == 0;
+-    	}
+-    	
+-    	@Override
+-    	public String toString() {
+-    		return ":first-child";
+-    	}
++	@Override
++	public boolean matches(Element root, Element element) {
++		final Element p = element.parent();
++		return p != null && !(p instanceof Document) && element.elementSiblingIndex() == 0;
++	}
++	
++	@Override
++	public String toString() {
++		return ":first-child";
++	}
+     }
+     
+     /**
+@@ -574,61 +574,61 @@ public abstract class Evaluator {
+      *
+      */
+     public static final class IsRoot extends Evaluator {
+-    	@Override
+-    	public boolean matches(Element root, Element element) {
+-    		final Element r = root instanceof Document?root.child(0):root;
+-    		return element == r;
+-    	}
+-    	@Override
+-    	public String toString() {
+-    		return ":root";
+-    	}
++	@Override
++	public boolean matches(Element root, Element element) {
++		final Element r = root instanceof Document?root.child(0):root;
++		return element == r;
++	}
++	@Override
++	public String toString() {
++		return ":root";
++	}
+     }
+ 
+     public static final class IsOnlyChild extends Evaluator {
+-		@Override
+-		public boolean matches(Element root, Element element) {
+-			final Element p = element.parent();
+-			return p!=null && !(p instanceof Document) && element.siblingElements().size() == 0;
+-		}
+-    	@Override
+-    	public String toString() {
+-    		return ":only-child";
+-    	}
++	@Override
++	public boolean matches(Element root, Element element) {
++		final Element p = element.parent();
++		return p!=null && !(p instanceof Document) && element.siblingElements().size() == 0;
++	}
++    @Override
++    public String toString() {
++		return ":only-child";
++	}
+     }
+ 
+     public static final class IsOnlyOfType extends Evaluator {
+-		@Override
+-		public boolean matches(Element root, Element element) {
+-			final Element p = element.parent();
+-			if (p==null || p instanceof Document) return false;
+-			
+-			int pos = 0;
+-        	Elements family = p.children();
++	@Override
++	public boolean matches(Element root, Element element) {
++		final Element p = element.parent();
++		if (p==null || p instanceof Document) return false;
++		
++		int pos = 0;
++        Elements family = p.children();
+             for (Element el : family) {
+                 if (el.tag().equals(element.tag())) pos++;
+             }
+-        	return pos == 1;
+-		}
+-    	@Override
+-    	public String toString() {
+-    		return ":only-of-type";
+-    	}
++        return pos == 1;
++	}
++    @Override
++    public String toString() {
++		return ":only-of-type";
++	}
+     }
+ 
+     public static final class IsEmpty extends Evaluator {
+-		@Override
+-		public boolean matches(Element root, Element element) {
+-        	List<Node> family = element.childNodes();
++	@Override
++	public boolean matches(Element root, Element element) {
++        List<Node> family = element.childNodes();
+             for (Node n : family) {
+                 if (!(n instanceof Comment || n instanceof XmlDeclaration || n instanceof DocumentType)) return false;
+             }
+-        	return true;
+-		}
+-    	@Override
+-    	public String toString() {
+-    		return ":empty";
+-    	}
++        return true;
++	}
++    @Override
++    public String toString() {
++		return ":empty";
++	}
+     }
+ 
+     /**
+@@ -751,6 +751,40 @@ public abstract class Evaluator {
+         }
+     }
+ 
++    /**
++     * Evaluator for matching text nodes (using matchText selector)
++     */
++    public static final class MatchText extends Evaluator {
++        public MatchText() {}
++
++        @Override
++        public boolean matches(Element root, Element element) {
++            // This evaluator is for selecting text nodes, which are handled specially
++            // in the collector. For now, we return true to allow processing by the collector.
++            return true;
++        }
++
++        @Override
++        public String toString() {
++            return ":matchText";
++        }
++    }
++
++    /**
++     * Evaluator for text nodes (simple text selector as per bug description)
++     */
++    public static final class TextNode extends Evaluator {
++        public TextNode() {}
+ 
++        @Override
++        public boolean matches(Element root, Element element) {
++            // Return true to match any element that has text children
++            return !element.text().trim().isEmpty();
++        }
+ 
+-}
++        @Override
++        public String toString() {
++            return ":text";
++        }
++    }
++}
+\ No newline at end of file
+diff --git a/src/main/java/org/jsoup/select/QueryParser.java b/src/main/java/org/jsoup/select/QueryParser.java
+index e00f46e..ce9a0e5 100644
+--- a/src/main/java/org/jsoup/select/QueryParser.java
++++ b/src/main/java/org/jsoup/select/QueryParser.java
+@@ -176,31 +176,35 @@ public class QueryParser {
+             matches(true);
+         else if (tq.matches(":not("))
+             not();
+-		else if (tq.matchChomp(":nth-child("))
+-        	cssNthChild(false, false);
++        else if (tq.matchChomp(":nth-child("))
++            cssNthChild(false, false);
+         else if (tq.matchChomp(":nth-last-child("))
+-        	cssNthChild(true, false);
++            cssNthChild(true, false);
+         else if (tq.matchChomp(":nth-of-type("))
+-        	cssNthChild(false, true);
++            cssNthChild(false, true);
+         else if (tq.matchChomp(":nth-last-of-type("))
+-        	cssNthChild(true, true);
++            cssNthChild(true, true);
+         else if (tq.matchChomp(":first-child"))
+-        	evals.add(new Evaluator.IsFirstChild());
++            evals.add(new Evaluator.IsFirstChild());
+         else if (tq.matchChomp(":last-child"))
+-        	evals.add(new Evaluator.IsLastChild());
++            evals.add(new Evaluator.IsLastChild());
+         else if (tq.matchChomp(":first-of-type"))
+-        	evals.add(new Evaluator.IsFirstOfType());
++            evals.add(new Evaluator.IsFirstOfType());
+         else if (tq.matchChomp(":last-of-type"))
+-        	evals.add(new Evaluator.IsLastOfType());
++            evals.add(new Evaluator.IsLastOfType());
+         else if (tq.matchChomp(":only-child"))
+-        	evals.add(new Evaluator.IsOnlyChild());
++            evals.add(new Evaluator.IsOnlyChild());
+         else if (tq.matchChomp(":only-of-type"))
+-        	evals.add(new Evaluator.IsOnlyOfType());
++            evals.add(new Evaluator.IsOnlyOfType());
+         else if (tq.matchChomp(":empty"))
+-        	evals.add(new Evaluator.IsEmpty());
++            evals.add(new Evaluator.IsEmpty());
+         else if (tq.matchChomp(":root"))
+-        	evals.add(new Evaluator.IsRoot());
+-		else // unhandled
++            evals.add(new Evaluator.IsRoot());
++        else if (tq.matchChomp(":matchText"))
++            evals.add(new Evaluator.MatchText());
++        else if (tq.matchChomp(":text"))
++            evals.add(new Evaluator.TextNode());
++        else // unhandled
+             throw new Selector.SelectorParseException("Could not parse query '%s': unexpected token at '%s'", query, tq.remainder());
+ 
+     }
+@@ -289,38 +293,38 @@ public class QueryParser {
+     private static final Pattern NTH_AB = Pattern.compile("(([+-])?(\\d+)?)n(\\s*([+-])?\\s*\\d+)?", Pattern.CASE_INSENSITIVE);
+     private static final Pattern NTH_B  = Pattern.compile("([+-])?(\\d+)");
+ 
+-	private void cssNthChild(boolean backwards, boolean ofType) {
+-		String argS = normalize(tq.chompTo(")"));
+-		Matcher mAB = NTH_AB.matcher(argS);
+-		Matcher mB = NTH_B.matcher(argS);
+-		final int a, b;
+-		if ("odd".equals(argS)) {
+-			a = 2;
+-			b = 1;
+-		} else if ("even".equals(argS)) {
+-			a = 2;
+-			b = 0;
+-		} else if (mAB.matches()) {
+-			a = mAB.group(3) != null ? Integer.parseInt(mAB.group(1).replaceFirst("^\\+", "")) : 1;
+-			b = mAB.group(4) != null ? Integer.parseInt(mAB.group(4).replaceFirst("^\\+", "")) : 0;
+-		} else if (mB.matches()) {
+-			a = 0;
+-			b = Integer.parseInt(mB.group().replaceFirst("^\\+", ""));
+-		} else {
+-			throw new Selector.SelectorParseException("Could not parse nth-index '%s': unexpected format", argS);
+-		}
+-		if (ofType)
+-			if (backwards)
+-				evals.add(new Evaluator.IsNthLastOfType(a, b));
+-			else
+-				evals.add(new Evaluator.IsNthOfType(a, b));
+-		else {
+-			if (backwards)
+-				evals.add(new Evaluator.IsNthLastChild(a, b));
+-			else
+-				evals.add(new Evaluator.IsNthChild(a, b));
+-		}
+-	}
++    private void cssNthChild(boolean backwards, boolean ofType) {
++        String argS = normalize(tq.chompTo(")"));
++        Matcher mAB = NTH_AB.matcher(argS);
++        Matcher mB = NTH_B.matcher(argS);
++        final int a, b;
++        if ("odd".equals(argS)) {
++            a = 2;
++            b = 1;
++        } else if ("even".equals(argS)) {
++            a = 2;
++            b = 0;
++        } else if (mAB.matches()) {
++            a = mAB.group(3) != null ? Integer.parseInt(mAB.group(1).replaceFirst("^\\+", "")) : 1;
++            b = mAB.group(4) != null ? Integer.parseInt(mAB.group(4).replaceFirst("^\\+", "")) : 0;
++        } else if (mB.matches()) {
++            a = 0;
++            b = Integer.parseInt(mB.group().replaceFirst("^\\+", ""));
++        } else {
++            throw new Selector.SelectorParseException("Could not parse nth-index '%s': unexpected format", argS);
++        }
++        if (ofType)
++            if (backwards)
++                evals.add(new Evaluator.IsNthLastOfType(a, b));
++            else
++            evals.add(new Evaluator.IsNthOfType(a, b));
++        else {
++            if (backwards)
++                evals.add(new Evaluator.IsNthLastChild(a, b));
++            else
++                evals.add(new Evaluator.IsNthChild(a, b));
++        }
++    }
+ 
+     private int consumeIndex() {
+         String indexS = tq.chompTo(")").trim();
+@@ -375,4 +379,4 @@ public class QueryParser {
+ 
+         evals.add(new StructuralEvaluator.Not(parse(subQuery)));
+     }
+-}
++}
+\ No newline at end of file

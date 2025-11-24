@@ -1,0 +1,21 @@
+diff --git a/src/com/google/javascript/jscomp/CollapseProperties.java b/src/com/google/javascript/jscomp/CollapseProperties.java
+index 881a6407..7c1b46cf 100644
+--- a/src/com/google/javascript/jscomp/CollapseProperties.java
++++ b/src/com/google/javascript/jscomp/CollapseProperties.java
+@@ -810,7 +810,10 @@ class CollapseProperties implements CompilerPass {
+    */
+   private int addStubsForUndeclaredProperties(
+       Name n, String alias, Node parent, Node addAfter) {
+-    Preconditions.checkArgument(NodeUtil.isStatementBlock(parent));
++    // Ensure parent is a statement block before proceeding
++    if (!NodeUtil.isStatementBlock(parent)) {
++      return 0;
++    }
+     int numStubs = 0;
+     if (n.props != null) {
+       for (Name p : n.props) {
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store
++ src/com/google/javascript/jscomp/CollapseProperties.java.bak

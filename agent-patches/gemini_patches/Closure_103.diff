@@ -1,0 +1,254 @@
+--- a/src/com/google/javascript/jscomp/ControlFlowAnalysis.java
++++ b/src/com/google/javascript/jscomp/ControlFlowAnalysis.java
+@@ -1,3 +1,4 @@
+-      case Token.INC:
+-      case Token.DEC:
+-        return true;
++      case Token.INC:
++      case Token.DEC:
++      case Token.INSTANCEOF:
++        return true;
+
+--- a/src/com/google/javascript/jscomp/DisambiguateProperties.java
++++ b/src/com/google/javascript/jscomp/DisambiguateProperties.java
+@@ -1,1 +1,14 @@
+-      return foundType;
++      if (foundType != null) {
++        return foundType;
++      }
++
++      // If the property does not exist on the referenced type but the original
++      // type is an object type, see if any subtype has the property.
++      ObjectType greatestSubtype = objType.getGreatestSubtypeWithProperty(field);
++      // getGreatestSubtypeWithProperty does not guarantee that the property
++      // is defined on the returned type, it just indicates that it might be,
++      // so we have to double check.
++      if (greatestSubtype != null && greatestSubtype.hasOwnProperty(field)) {
++        return greatestSubtype;
++      }
++      return null;
+@@ -1,1 +1,1 @@
+-      ObjectType greatestSubtype = objType.getGreatestSubtypeWithProperty(field);
++      ObjectType greatestSubtype = registry.getGreatestSubtypeWithProperty(field, objType);
+@@ -1,1 +1,1 @@
+-      ObjectType greatestSubtype = registry.getGreatestSubtypeWithProperty(field, objType);
++      ObjectType greatestSubtype = registry.getGreatestSubtypeWithProperty(objType, field);
+@@ -1,1 +1,1 @@
+-      ObjectType greatestSubtype = registry.getGreatestSubtypeWithProperty(objType, field);
++      ObjectType greatestSubtype = registry.getGreatestSubtypeWithProperty((JSType) objType, field);
+@@ -1,1 +1,1 @@
+-      ObjectType greatestSubtype = registry.getGreatestSubtypeWithProperty((JSType) objType, field);
++      ObjectType greatestSubtype = (ObjectType) registry.getGreatestSubtypeWithProperty(objType, field);
+@@ -1,1 +1,4 @@
+-      ObjectType greatestSubtype = (ObjectType) registry.getGreatestSubtypeWithProperty(objType, field);
++      ObjectType greatestSubtype = null;
++      if (objType != null) {
++        greatestSubtype = (ObjectType) registry.getGreatestSubtypeWithProperty(objType, field);
++      }
+@@ -1,4 +1,1 @@
+-      ObjectType greatestSubtype = null;
+-      if (objType != null) {
+-        greatestSubtype = (ObjectType) registry.getGreatestSubtypeWithProperty(objType, field);
+-      }
++      ObjectType greatestSubtype = (ObjectType) registry.getGreatestSubtypeWithProperty(type, field);
+@@ -1,7 +1,17 @@
+-      ObjectType greatestSubtype = (ObjectType) registry.getGreatestSubtypeWithProperty(type, field);
+-      // getGreatestSubtypeWithProperty does not guarantee that the property
+-      // is defined on the returned type, it just indicates that it might be,
+-      // so we have to double check.
+-      if (greatestSubtype != null && greatestSubtype.hasOwnProperty(field)) {
+-        return greatestSubtype;
+-      }
++      JSType greatestSubtype = registry.getGreatestSubtypeWithProperty(type, field);
++      ObjectType resultType = null;
++      if (greatestSubtype != null) {
++        if (greatestSubtype.isUnionType()) {
++          for (JSType alt : ((UnionType) greatestSubtype).getAlternates()) {
++            if (alt.toObjectType() != null && alt.toObjectType().hasOwnProperty(field)) {
++              resultType = alt.toObjectType();
++              break;
++            }
++          }
++        } else if (greatestSubtype.toObjectType() != null && greatestSubtype.toObjectType().hasOwnProperty(field)) {
++          resultType = greatestSubtype.toObjectType();
++        }
++      }
++      if (resultType != null && resultType.hasOwnProperty(field)) {
++        return resultType;
++      }
+@@ -1,14 +1,29 @@
+-      ObjectType foundType = null;
+-      ObjectType objType = ObjectType.cast(type);
+-      while (objType != null && objType.getImplicitPrototype() != objType) {
+-        if (objType.hasOwnProperty(field)) {
+-          foundType = objType;
+-        }
+-        objType = objType.getImplicitPrototype();
+-      }
+-      // If the property does not exist on the referenced type but the original
+-      // type is an object type, see if any subtype has the property.
+-        // getGreatestSubtypeWithProperty does not guarantee that the property
+-        // is defined on the returned type, it just indicates that it might be,
+-        // so we have to double check.
+-      return foundType;
++      ObjectType foundType = null;
++      ObjectType objType = ObjectType.cast(type);
++      while (objType != null && objType.getImplicitPrototype() != objType) {
++        if (objType.hasOwnProperty(field)) {
++          foundType = objType;
++          break;
++        }
++        objType = objType.getImplicitPrototype();
++      }
++
++      if (foundType == null) {
++        // If the property does not exist on the referenced type but the original
++        // type is an object type, see if any subtype has the property.
++        JSType greatestSubtype = registry.getGreatestSubtypeWithProperty(type, field);
++        if (greatestSubtype != null) {
++          if (greatestSubtype.isUnionType()) {
++            for (JSType alt : ((UnionType) greatestSubtype).getAlternates()) {
++              if (alt.toObjectType() != null && alt.toObjectType().hasOwnProperty(field)) {
++                foundType = alt.toObjectType();
++                break;
++              }
++            }
++          } else if (greatestSubtype.toObjectType() != null && greatestSubtype.toObjectType().hasOwnProperty(field)) {
++            foundType = greatestSubtype.toObjectType();
++          }
++        }
++      }
++
++      return foundType;
+@@ -1,14 +1,29 @@
+-      ObjectType foundType = null;
+-      ObjectType objType = ObjectType.cast(type);
+-      while (objType != null && objType.getImplicitPrototype() != objType) {
+-        if (objType.hasOwnProperty(field)) {
+-          foundType = objType;
+-        }
+-        objType = objType.getImplicitPrototype();
+-      }
+-      // If the property does not exist on the referenced type but the original
+-      // type is an object type, see if any subtype has the property.
+-        // getGreatestSubtypeWithProperty does not guarantee that the property
+-        // is defined on the returned type, it just indicates that it might be,
+-        // so we have to double check.
+-      return foundType;
++      ObjectType foundType = null;
++      ObjectType objType = ObjectType.cast(type);
++      while (objType != null && objType.getImplicitPrototype() != objType) {
++        if (objType.hasOwnProperty(field)) {
++          foundType = objType;
++          break;
++        }
++        objType = objType.getImplicitPrototype();
++      }
++
++      if (foundType == null) {
++        // If the property does not exist on the referenced type but the original
++        // type is an object type, see if any subtype has the property.
++        JSType greatestSubtype = registry.getGreatestSubtypeWithProperty(type, field);
++        if (greatestSubtype != null) {
++          if (greatestSubtype.isUnionType()) {
++            for (JSType alt : ((UnionType) greatestSubtype).getAlternates()) {
++              if (alt.toObjectType() != null && alt.toObjectType().hasOwnProperty(field)) {
++                foundType = alt.toObjectType();
++                break;
++              }
++            }
++          } else if (greatestSubtype.toObjectType() != null && greatestSubtype.toObjectType().hasOwnProperty(field)) {
++            foundType = greatestSubtype.toObjectType();
++          }
++        }
++      }
++
++      return foundType;
+@@ -1,14 +1,29 @@
+-      ObjectType foundType = null;
+-      ObjectType objType = ObjectType.cast(type);
+-      while (objType != null && objType.getImplicitPrototype() != objType) {
+-        if (objType.hasOwnProperty(field)) {
+-          foundType = objType;
+-        }
+-        objType = objType.getImplicitPrototype();
+-      }
+-      // If the property does not exist on the referenced type but the original
+-      // type is an object type, see if any subtype has the property.
+-        // getGreatestSubtypeWithProperty does not guarantee that the property
+-        // is defined on the returned type, it just indicates that it might be,
+-        // so we have to double check.
+-      return foundType;
++      ObjectType foundType = null;
++      ObjectType objType = ObjectType.cast(type);
++      while (objType != null && objType.getImplicitPrototype() != objType) {
++        if (objType.hasOwnProperty(field)) {
++          foundType = objType;
++          break;
++        }
++        objType = objType.getImplicitPrototype();
++      }
++
++      if (foundType == null) {
++        // If the property does not exist on the referenced type but the original
++        // type is an object type, see if any subtype has the property.
++        JSType greatestSubtype = registry.getGreatestSubtypeWithProperty(type, field);
++        if (greatestSubtype != null) {
++          if (greatestSubtype.isUnionType()) {
++            for (JSType alt : ((UnionType) greatestSubtype).getAlternates()) {
++              if (alt.toObjectType() != null && alt.toObjectType().hasOwnProperty(field)) {
++                foundType = alt.toObjectType();
++                break;
++              }
++            }
++          } else if (greatestSubtype.toObjectType() != null && greatestSubtype.toObjectType().hasOwnProperty(field)) {
++            foundType = greatestSubtype.toObjectType();
++          }
++        }
++      }
++
++      return foundType;
+@@ -1,14 +1,29 @@
+-      ObjectType foundType = null;
+-      ObjectType objType = ObjectType.cast(type);
+-      while (objType != null && objType.getImplicitPrototype() != objType) {
+-        if (objType.hasOwnProperty(field)) {
+-          foundType = objType;
+-        }
+-        objType = objType.getImplicitPrototype();
+-      }
+-      // If the property does not exist on the referenced type but the original
+-      // type is an object type, see if any subtype has the property.
+-        // getGreatestSubtypeWithProperty does not guarantee that the property
+-        // is defined on the returned type, it just indicates that it might be,
+-        // so we have to double check.
+-      return foundType;
++      ObjectType foundType = null;
++      ObjectType objType = ObjectType.cast(type);
++      while (objType != null && objType.getImplicitPrototype() != objType) {
++        if (objType.hasOwnProperty(field)) {
++          foundType = objType;
++          break;
++        }
++        objType = objType.getImplicitPrototype();
++      }
++
++      if (foundType == null) {
++        // If the property does not exist on the referenced type but the original
++        // type is an object type, see if any subtype has the property.
++        JSType greatestSubtype = registry.getGreatestSubtypeWithProperty(type, field);
++        if (greatestSubtype != null) {
++          if (greatestSubtype.isUnionType()) {
++            for (JSType alt : ((UnionType) greatestSubtype).getAlternates()) {
++              if (alt.toObjectType() != null && alt.toObjectType().hasOwnProperty(field)) {
++                foundType = alt.toObjectType();
++                break;
++              }
++            }
++          } else if (greatestSubtype.toObjectType() != null && greatestSubtype.toObjectType().hasOwnProperty(field)) {
++            foundType = greatestSubtype.toObjectType();
++          }
++        }
++      }
++
++      return foundType;

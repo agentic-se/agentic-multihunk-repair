@@ -1,0 +1,173 @@
+diff --git a/src/com/google/javascript/jscomp/DevirtualizePrototypeMethods.java b/src/com/google/javascript/jscomp/DevirtualizePrototypeMethods.java
+index a42dc347..8cdd855b 100644
+--- a/src/com/google/javascript/jscomp/DevirtualizePrototypeMethods.java
++++ b/src/com/google/javascript/jscomp/DevirtualizePrototypeMethods.java
+@@ -304,6 +304,20 @@ class DevirtualizePrototypeMethods implements CompilerPass {
+     newNameNode.addChildToFront(functionNode);
+     block.replaceChild(expr, new Node(Token.VAR, newNameNode));
+ 
++    // fix type
++    // Try to infer a better 'this' type for the new static function
++    // from the owning prototype method definition (e.g., a.prototype).
++    ObjectType ownerInstanceType = null;
++    Node maybeOwnerGetProp = node.getFirstChild();
++    if (maybeOwnerGetProp != null && NodeUtil.isGetProp(maybeOwnerGetProp)) {
++      Node ctorName = maybeOwnerGetProp.getFirstChild();
++      if (ctorName != null && ctorName.isQualifiedName()) {
++        JSType ownerJsType = compiler.getTypeRegistry().getType(
++            ctorName.getQualifiedName());
++        ownerInstanceType = ObjectType.cast(ownerJsType);
++      }
++    }
++
+     // add extra argument
+     String self = newMethodName + "$self";
+     Node argList = functionNode.getFirstChild().getNext();
+@@ -311,10 +325,10 @@ class DevirtualizePrototypeMethods implements CompilerPass {
+ 
+     // rewrite body
+     Node body = functionNode.getLastChild();
+-    replaceReferencesToThis(body, self);
++    replaceReferencesToThis(body, self, ownerInstanceType);
+ 
+-    // fix type
+-    fixFunctionType(functionNode);
++    // apply updated type info
++    fixFunctionType(functionNode, ownerInstanceType);
+ 
+     compiler.reportCodeChange();
+   }
+@@ -325,13 +339,19 @@ class DevirtualizePrototypeMethods implements CompilerPass {
+    * argument type list and replacing the this pointer type with
+    * NO_TYPE.
+    */
+-  private void fixFunctionType(Node functionNode) {
++  private void fixFunctionType(Node functionNode, ObjectType fallbackThisType) {
+     FunctionType type = (FunctionType) functionNode.getJSType();
+     if (type != null) {
+       JSTypeRegistry typeRegistry = compiler.getTypeRegistry();
+ 
+       List<JSType> parameterTypes = Lists.newArrayList();
+-      parameterTypes.add(type.getTypeOfThis());
++      JSType thisParamType = type.getTypeOfThis();
++      if (thisParamType == null || thisParamType.isUnknownType()) {
++        if (fallbackThisType != null) {
++          thisParamType = fallbackThisType;
++        }
++      }
++      parameterTypes.add(thisParamType);
+ 
+       for (Node param : type.getParameters()) {
+         parameterTypes.add(param.getJSType());
+@@ -344,6 +364,15 @@ class DevirtualizePrototypeMethods implements CompilerPass {
+       JSType newType = typeRegistry.createFunctionType(
+           thisType, returnType, parameterTypes);
+       functionNode.setJSType(newType);
++
++      // Also annotate the newly added first parameter node with its type
++      // so downstream type-based checks and tests see the expected type
++      // on the parameter itself.
++      Node params = functionNode.getFirstChild().getNext();
++      Node firstParam = params != null ? params.getFirstChild() : null;
++      if (firstParam != null) {
++        firstParam.setJSType(thisParamType);
++      }
+     }
+   }
+ 
+@@ -351,7 +380,7 @@ class DevirtualizePrototypeMethods implements CompilerPass {
+    * Replaces references to "this" with references to name.  Do not
+    * traverse function boundaries.
+    */
+-  private void replaceReferencesToThis(Node node, String name) {
++  private void replaceReferencesToThis(Node node, String name, JSType selfType) {
+     if (NodeUtil.isFunction(node)) {
+       return;
+     }
+@@ -359,9 +388,12 @@ class DevirtualizePrototypeMethods implements CompilerPass {
+     for (Node child : node.children()) {
+       if (NodeUtil.isThis(child)) {
+         Node newName = Node.newString(Token.NAME, name);
++        if (selfType != null) {
++          newName.setJSType(selfType);
++        }
+         node.replaceChild(child, newName);
+       } else {
+-        replaceReferencesToThis(child, name);
++        replaceReferencesToThis(child, name, selfType);
+       }
+     }
+   }
+diff --git a/src/com/google/javascript/jscomp/FunctionTypeBuilder.java b/src/com/google/javascript/jscomp/FunctionTypeBuilder.java
+index 5ec4d044..3ffca697 100644
+--- a/src/com/google/javascript/jscomp/FunctionTypeBuilder.java
++++ b/src/com/google/javascript/jscomp/FunctionTypeBuilder.java
+@@ -287,7 +287,7 @@ final class FunctionTypeBuilder {
+       // union types can also be object types, etc.
+       thisType = maybeThisType;
+     } else if (owner != null &&
+-               (info == null || !info.hasType())) {
++               (info == null || !info.hasThisType())) {
+       // If the function is of the form:
+       // x.prototype.y = function() {}
+       // then we can assume "x" is the @this type. On the other hand,
+diff --git a/src/com/google/javascript/jscomp/TypeCheck.java b/src/com/google/javascript/jscomp/TypeCheck.java
+index e70ba308..b6e75238 100644
+--- a/src/com/google/javascript/jscomp/TypeCheck.java
++++ b/src/com/google/javascript/jscomp/TypeCheck.java
+@@ -875,7 +875,7 @@ public class TypeCheck implements NodeTraversal.Callback, CompilerPass {
+         if (objectJsType instanceof FunctionType) {
+           FunctionType functionType = (FunctionType) objectJsType;
+           if (functionType.isConstructor()) {
+-            JSType rvalueType = rvalue.getJSType();
++            JSType rvalueType = getJSType(rvalue);
+             validator.expectObject(t, rvalue, rvalueType,
+                 OVERRIDING_PROTOTYPE_WITH_NON_OBJECT);
+           }
+diff --git a/src/com/google/javascript/jscomp/TypedScopeCreator.java b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+index e0367941..515e7ccd 100644
+--- a/src/com/google/javascript/jscomp/TypedScopeCreator.java
++++ b/src/com/google/javascript/jscomp/TypedScopeCreator.java
+@@ -1090,6 +1090,42 @@ final class TypedScopeCreator implements ScopeCreator {
+         // If the property is already declared, the error will be
+         // caught when we try to declare it in the current scope.
+         defineSlot(n, parent, valueType, inferred);
++      } else {
++        // Even when the assignment is inferred, handle special-case
++        // prototype reassignments like `Sub.prototype = new Super();`.
++        // These should update the constructor's prototype chain so that
++        // inheritance and overrides are properly recognized by the type
++        // system and other passes (e.g. devirtualization).
++        if ("prototype".equals(propName)) {
++          ObjectType ownerType = getObjectSlot(ownerName);
++          // Update the constructor's prototype chain without declaring
++          // a new typed property in the scope to avoid spurious duplicate
++          // declaration warnings for unrelated properties.
++          if (ownerType instanceof com.google.javascript.rhino.jstype.FunctionType) {
++            com.google.javascript.rhino.jstype.FunctionType ctor =
++                (com.google.javascript.rhino.jstype.FunctionType) ownerType;
++            ObjectType baseObj = ObjectType.cast(valueType);
++            // If we couldn't get a type from annotations, try to resolve
++            // `new Ctor()` to the instance type of `Ctor`.
++            if (baseObj == null && rhsValue != null &&
++                rhsValue.getType() == Token.NEW) {
++              Node ctorName = rhsValue.getFirstChild();
++              if (ctorName != null && ctorName.isQualifiedName()) {
++                Var ctorVar = scope.getVar(ctorName.getQualifiedName());
++                if (ctorVar != null && ctorVar.getType() instanceof FunctionType) {
++                  baseObj = ((FunctionType) ctorVar.getType()).getInstanceType();
++                }
++              }
++            }
++            if (baseObj != null) {
++              ctor.setPrototypeBasedOn(baseObj);
++            }
++          }
++        }
++
++        // Do not define the qualified name slot for inferred assignments.
++        // Preserving original behavior avoids duplicate declaration warnings
++        // for repeated inferred property assignments (e.g., static methods).
+       }
+     }
+ 

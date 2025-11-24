@@ -1,0 +1,15 @@
+diff --git a/src/main/java/org/apache/commons/math/analysis/solvers/BrentSolver.java b/src/main/java/org/apache/commons/math/analysis/solvers/BrentSolver.java
+index e0cb42714..52501d865 100644
+--- a/src/main/java/org/apache/commons/math/analysis/solvers/BrentSolver.java
++++ b/src/main/java/org/apache/commons/math/analysis/solvers/BrentSolver.java
+@@ -194,8 +194,10 @@ public class BrentSolver extends UnivariateRealSolverImpl {
+         } else {
+             // either min or max is a root
+             if (yMin == 0.0) {
++                setResult(min, 0);
+                 ret = min;
+             } else {
++                setResult(max, 0);
+                 ret = max;
+             }
+         }

@@ -1,0 +1,47 @@
+diff --git a/src/org/mockito/internal/invocation/InvocationMatcher.java b/src/org/mockito/internal/invocation/InvocationMatcher.java
+index a3a7c08df..53c95ace6 100644
+--- a/src/org/mockito/internal/invocation/InvocationMatcher.java
++++ b/src/org/mockito/internal/invocation/InvocationMatcher.java
+@@ -118,16 +118,41 @@ public class InvocationMatcher implements DescribedInvocation, CapturesArgumensF
+     public void captureArgumentsFrom(Invocation invocation) {
+         if (invocation.getMethod().isVarArgs()) {
+             int indexOfVararg = invocation.getRawArguments().length - 1;
++            // Handle regular parameters (before varargs)
+             for (int position = 0; position < indexOfVararg; position++) {
+                 Matcher m = matchers.get(position);
+                 if (m instanceof CapturesArguments) {
+                     ((CapturesArguments) m).captureFrom(invocation.getArgumentAt(position, Object.class));
+                 }
+             }
++            // Handle varargs parameters
+             for (int position = indexOfVararg; position < matchers.size(); position++) {
+                 Matcher m = matchers.get(position);
+                 if (m instanceof CapturesArguments) {
+-                    ((CapturesArguments) m).captureFrom(invocation.getRawArguments()[position - indexOfVararg]);
++                    // For varargs, we need to properly access the varargs elements
++                    int varargIndex = position - indexOfVararg;
++                    // Check if we have enough arguments for this vararg element
++                    if (indexOfVararg + varargIndex < invocation.getRawArguments().length) {
++                        Object arg = invocation.getRawArguments()[indexOfVararg + varargIndex];
++                        // If the argument is an array, it means it's a varargs array
++                        if (arg != null && arg.getClass().isArray()) {
++                            // Extract elements from the varargs array
++                            int arrayLength = java.lang.reflect.Array.getLength(arg);
++                            if (arrayLength > 0) {
++                                // For varargs, we're supposed to capture individual elements
++                                for (int i = 0; i < arrayLength; i++) {
++                                    Object element = java.lang.reflect.Array.get(arg, i);
++                                    ((CapturesArguments) m).captureFrom(element);
++                                }
++                            } else {
++                                // Empty varargs array, capture empty array
++                                ((CapturesArguments) m).captureFrom(arg);
++                            }
++                        } else {
++                            // Not an array, capture directly
++                            ((CapturesArguments) m).captureFrom(arg);
++                        }
++                    }
+                 }
+             }
+         } else {

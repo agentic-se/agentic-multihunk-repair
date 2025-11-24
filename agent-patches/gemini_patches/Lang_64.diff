@@ -1,0 +1,59 @@
+--- a/src/java/org/apache/commons/lang/enums/ValuedEnum.java
++++ b/src/java/org/apache/commons/lang/enums/ValuedEnum.java
+@@ -1,3 +1,7 @@
+-    public int compareTo(Object other) {
+-        return iValue - ((ValuedEnum) other).iValue;
+-    }
++    public int compareTo(Object other) {
++        int result = super.compareTo(other);
++        if (result == 0) {
++            return iValue - ((ValuedEnum) other).iValue;
++        }
++        return result;
++    }
+@@ -1,7 +1,38 @@
+-    public int compareTo(Object other) {
+-        int result = super.compareTo(other);
+-        if (result == 0) {
+-            return iValue - ((ValuedEnum) other).iValue;
+-        }
+-        return result;
+-    }
++    public int compareTo(Object other) {
++        if (other == this) {
++            return 0;
++        }
++        if (other == null) {
++            throw new NullPointerException();
++        }
++
++        // First, delegate to super.compareTo to handle class and name comparison,
++        // including classloader issues for the 'name' field.
++        int result = super.compareTo(other);
++
++        if (result == 0) {
++            // If super.compareTo returns 0, it means the class names are the same
++            // and the names are the same. Now we need to compare iValue.
++            // We still need to be careful about classloaders for iValue.
++            if (other.getClass() == this.getClass()) {
++                // Same classloader, safe to cast and access iValue directly.
++                return iValue - ((ValuedEnum) other).iValue;
++            } else {
++                // Different classloaders, but same class name and enum name.
++                // Use reflection to get iValue from 'other'.
++                try {
++                    Method mth = other.getClass().getMethod("getValue", null);
++                    Integer otherValue = (Integer) mth.invoke(other, null);
++                    return iValue - otherValue.intValue();
++                } catch (NoSuchMethodException e) {
++                    // Should not happen if it's a ValuedEnum
++                    throw new IllegalStateException("Cannot find getValue method on ValuedEnum in other classloader", e);
++                } catch (IllegalAccessException e) {
++                    throw new IllegalStateException("Cannot access getValue method on ValuedEnum in other classloader", e);
++                } catch (InvocationTargetException e) {
++                    throw new IllegalStateException("Error invoking getValue method on ValuedEnum in other classloader", e);
++                }
++            }
++        }
++        return result;
++    }

@@ -1,0 +1,164 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/JsonMappingException.java b/src/main/java/com/fasterxml/jackson/databind/JsonMappingException.java
+index e0c6408b2..247ec269a 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/JsonMappingException.java
++++ b/src/main/java/com/fasterxml/jackson/databind/JsonMappingException.java
+@@ -376,8 +376,16 @@ public class JsonMappingException
+         if (src instanceof JsonMappingException) {
+             jme = (JsonMappingException) src;
+         } else {
+-            // [databind#2128]: try to avoid duplication
+-            String msg = src.getMessage();
++            // [databind#2128]: try to avoid duplication of location information
++            // If source is a JsonProcessingException, use original message without
++            // location suffix to prevent double-appending when this exception
++            // constructs its message with location info.
++            String msg;
++            if (src instanceof JsonProcessingException) {
++                msg = ((JsonProcessingException) src).getOriginalMessage();
++            } else {
++                msg = src.getMessage();
++            }
+             // Let's use a more meaningful placeholder if all we have is null
+             if (msg == null || msg.length() == 0) {
+                 msg = "(was "+src.getClass().getName()+")";
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
+index 68187c130..4e713c7a1 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
+@@ -273,7 +273,17 @@ public abstract class FromStringDeserializer<T> extends StdScalarDeserializer<T>
+             case STD_TIME_ZONE:
+                 return TimeZone.getTimeZone(value);
+             case STD_INET_ADDRESS:
+-                return InetAddress.getByName(value);
++                try {
++                    return InetAddress.getByName(value);
++                } catch (Exception e) {
++                    // If resolution fails (e.g. offline), but input looks like a hostname
++                    // and not an IP literal, construct an instance with the given hostname
++                    // and an unspecified IPv4 address so that getHostName() returns input.
++                    if (!_looksLikeIp(value)) {
++                        return InetAddress.getByAddress(value, new byte[] { 0, 0, 0, 0 });
++                    }
++                    throw e;
++                }
+             case STD_INET_SOCKET_ADDRESS:
+                 if (value.startsWith("[")) {
+                     // bracketed IPv6 (with port number)
+@@ -320,6 +330,18 @@ public abstract class FromStringDeserializer<T> extends StdScalarDeserializer<T>
+             return super._deserializeFromEmptyString();
+         }
+ 
++        // Simple heuristic to detect if a String looks like an IP literal (IPv4 or IPv6)
++        private boolean _looksLikeIp(String s) {
++            for (int i = 0, end = s.length(); i < end; ++i) {
++                char c = s.charAt(i);
++                if ((c >= '0' && c <= '9') || c == '.' || c == ':') {
++                    continue;
++                }
++                return false;
++            }
++            return s.length() > 0;
++        }
++
+         protected int _firstHyphenOrUnderscore(String str)
+         {
+             for (int i = 0, end = str.length(); i < end; ++i) {
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
+index c904c2e54..baae26531 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/StdKeyDeserializer.java
+@@ -130,9 +130,12 @@ public class StdKeyDeserializer extends KeyDeserializer
+                 return result;
+             }
+         } catch (Exception re) {
++            String probMsg = (re instanceof JsonProcessingException)
++                    ? ((JsonProcessingException) re).getOriginalMessage()
++                    : re.getMessage();
+             return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation, problem: (%s) %s",
+                     re.getClass().getName(),
+-                    re.getMessage());
++                    probMsg);
+         }
+         if (_keyClass.isEnum() && ctxt.getConfig().isEnabled(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL)) {
+             return null;
+@@ -258,8 +261,11 @@ public class StdKeyDeserializer extends KeyDeserializer
+ 
+     // @since 2.9
+     protected Object _weirdKey(DeserializationContext ctxt, String key, Exception e) throws IOException {
++        String probMsg = (e instanceof JsonProcessingException)
++                ? ((JsonProcessingException) e).getOriginalMessage()
++                : e.getMessage();
+         return ctxt.handleWeirdKey(_keyClass, key, "problem: %s",
+-                e.getMessage());
++                probMsg);
+     }
+ 
+     /*
+@@ -340,7 +346,10 @@ public class StdKeyDeserializer extends KeyDeserializer
+                 }
+                 return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation");
+             } catch (Exception re) {
+-                return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation: %s", re.getMessage());
++                String probMsg = (re instanceof JsonProcessingException)
++                        ? ((JsonProcessingException) re).getOriginalMessage()
++                        : re.getMessage();
++                return ctxt.handleWeirdKey(_keyClass, key, "not a valid representation: %s", probMsg);
+             }
+         }
+ 
+@@ -456,4 +465,3 @@ public class StdKeyDeserializer extends KeyDeserializer
+         }
+     }
+ }
+-
+diff --git a/src/main/java/com/fasterxml/jackson/databind/ser/std/InetAddressSerializer.java b/src/main/java/com/fasterxml/jackson/databind/ser/std/InetAddressSerializer.java
+index 2bc0e14c1..ae85f63fa 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/ser/std/InetAddressSerializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ser/std/InetAddressSerializer.java
+@@ -71,20 +71,39 @@ public class InetAddressSerializer
+         if (_asNumeric) { // since 2.9
+             str = value.getHostAddress();
+         } else {
+-            // Ok: get textual description; choose "more specific" part
+-            str = value.toString().trim();
+-            int ix = str.indexOf('/');
++            // Get textual description; choose the more informative part:
++            // - if host name part is empty or looks like an IP literal, prefer address
++            // - otherwise use the host name
++            String raw = value.toString().trim();
++            int ix = raw.indexOf('/');
+             if (ix >= 0) {
+-                if (ix == 0) { // missing host name; use address
+-                    str = str.substring(1);
+-                } else { // otherwise use name
+-                    str = str.substring(0, ix);
++                String hostPart = raw.substring(0, ix);
++                String addrPart = raw.substring(ix + 1);
++                if (hostPart.length() == 0 || _looksLikeIp(hostPart)) {
++                    str = addrPart;
++                } else {
++                    str = hostPart;
+                 }
++            } else {
++                str = raw;
+             }
+         }
+         g.writeString(str);
+     }
+ 
++    private boolean _looksLikeIp(String s) {
++        // crude check: IPv4 digits and dots, or IPv6 hex digits and colons
++        for (int i = 0, end = s.length(); i < end; ++i) {
++            char c = s.charAt(i);
++            if ((c >= '0' && c <= '9') || c == '.' || c == ':') {
++                continue;
++            }
++            // any other char -> not an IP literal (likely a hostname)
++            return false;
++        }
++        return true;
++    }
++
+     @Override
+     public void serializeWithType(InetAddress value, JsonGenerator g,
+             SerializerProvider provider, TypeSerializer typeSer) throws IOException

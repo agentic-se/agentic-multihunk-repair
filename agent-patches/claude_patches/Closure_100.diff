@@ -1,0 +1,44 @@
+diff --git a/src/com/google/javascript/jscomp/CheckGlobalThis.java b/src/com/google/javascript/jscomp/CheckGlobalThis.java
+index 6390687e..4f70a869 100644
+--- a/src/com/google/javascript/jscomp/CheckGlobalThis.java
++++ b/src/com/google/javascript/jscomp/CheckGlobalThis.java
+@@ -96,6 +96,13 @@ final class CheckGlobalThis implements Callback {
+       // var a = function() { }; // or
+       // function a() {} // or
+       // a.x = function() {};
++      int parentType = parent.getType();
++      if (!(parentType == Token.BLOCK ||
++            parentType == Token.SCRIPT ||
++            parentType == Token.NAME ||
++            parentType == Token.ASSIGN)) {
++        return false;
++      }
+     }
+ 
+     if (parent != null && parent.getType() == Token.ASSIGN) {
+@@ -137,13 +144,21 @@ final class CheckGlobalThis implements Callback {
+   }
+ 
+   private boolean shouldReportThis(Node n, Node parent) {
+-    if (assignLhsChild != null) {
+-      // Always report a THIS on the left side of an assign.
++    if (parent != null &&
++        (parent.getType() == Token.GETPROP ||
++         parent.getType() == Token.GETELEM)) {
++      // Always report a property access on 'this'.
+       return true;
+     }
+ 
+-    // Also report a THIS with a property access.
+-    return false;
++    // Don't report a direct assignment to 'this'.
++    if (assignLhsChild != null && assignLhsChild == n) {
++      return false;
++    }
++
++    // Report 'this' if it's on the left side of an assignment (but not
++    // a direct assignment, which was handled above).
++    return assignLhsChild != null;
+   }
+ 
+   /**

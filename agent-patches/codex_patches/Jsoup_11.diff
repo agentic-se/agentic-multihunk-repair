@@ -1,0 +1,48 @@
+diff --git a/src/main/java/org/jsoup/select/Selector.java b/src/main/java/org/jsoup/select/Selector.java
+index 13341ce..7ff456a 100644
+--- a/src/main/java/org/jsoup/select/Selector.java
++++ b/src/main/java/org/jsoup/select/Selector.java
+@@ -170,6 +170,8 @@ public class Selector {
+             return indexEquals();
+         } else if (tq.matches(":has(")) {
+             return has();
++        } else if (tq.matches(":not(")) {
++            return not();
+         } else if (tq.matches(":contains(")) {
+             return contains(false);
+         } else if (tq.matches(":containsOwn(")) {
+@@ -280,7 +282,9 @@ public class Selector {
+         String subQuery = tq.chompBalanced('(',')');
+         Validate.notEmpty(subQuery, ":has(el) subselect must not be empty");
+ 
+-        return filterForParentsOfDescendants(elements, select(subQuery, elements));
++        // If this is the first selector (no current elements), operate over all elements under root
++        Collection<Element> parents = elements.isEmpty() ? allElements() : elements;
++        return filterForParentsOfDescendants(parents, select(subQuery, parents));
+     }
+     
+     // pseudo selector :contains(text), containsOwn(text)
+@@ -302,6 +306,23 @@ public class Selector {
+     }
+ 
+     // :not(selector)
++    private Elements not() {
++        tq.consume(":not");
++        String subQuery = tq.chompBalanced('(', ')');
++        Validate.notEmpty(subQuery, ":not(selector) subselect must not be empty");
++
++        // Base set to apply :not to: current elements if present, otherwise all elements under root
++        Collection<Element> parents = elements.isEmpty() ? allElements() : elements;
++        Elements out = new Elements();
++
++        // Elements that match the subquery within the current context
++        Elements matches = select(subQuery, parents);
++        for (Element el : parents) {
++            if (!matches.contains(el))
++                out.add(el);
++        }
++        return out;
++    }
+ 
+ 
+     // direct child descendants

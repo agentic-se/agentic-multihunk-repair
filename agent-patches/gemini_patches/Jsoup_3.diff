@@ -1,0 +1,1792 @@
+--- a/src/main/java/org/jsoup/nodes/Element.java
++++ b/src/main/java/org/jsoup/nodes/Element.java
+@@ -1,5 +1,5 @@
+-        Element fragment = Parser.parseBodyFragment(html, baseUri).body();
+-        for (Node node : fragment.childNodes()) {
+-            node.parentNode = null;
+-            appendChild(node);
+-        }
++        List<Node> nodes = Parser.parseFragment(html, this, baseUri());
++        for (Node node : nodes) {
++            node.parentNode = null;
++            appendChild(node);
++        }
+@@ -1,7 +1,6 @@
+-        Element fragment = Parser.parseBodyFragment(html, baseUri).body();
+-        List<Node> nodes = fragment.childNodes();
+-        for (int i = nodes.size() - 1; i >= 0; i--) {
+-            Node node = nodes.get(i);
+-            node.parentNode = null;
+-            prependChild(node);
+-        }
++        List<Node> nodes = Parser.parseFragment(html, this, baseUri());
++        for (int i = nodes.size() - 1; i >= 0; i--) {
++            Node node = nodes.get(i);
++            node.parentNode = null;
++            prependChild(node);
++        }
+@@ -1,5 +1,5 @@
+-        List<Node> nodes = Parser.parseFragment(html, this, baseUri());
+-        for (Node node : nodes) {
+-            node.parentNode = null;
+-            appendChild(node);
+-        }
++        Element fragment = Parser.parseBodyFragment(html, baseUri).body();
++        for (Node node : fragment.childNodes()) {
++            node.parentNode = null;
++            appendChild(node);
++        }
+@@ -1,6 +1,7 @@
+-        List<Node> nodes = Parser.parseFragment(html, this, baseUri());
+-        for (int i = nodes.size() - 1; i >= 0; i--) {
+-            Node node = nodes.get(i);
+-            node.parentNode = null;
+-            prependChild(node);
+-        }
++        Element fragment = Parser.parseBodyFragment(html, baseUri).body();
++        List<Node> nodes = fragment.childNodes();
++        for (int i = nodes.size() - 1; i >= 0; i--) {
++            Node node = nodes.get(i);
++            node.parentNode = null;
++            prependChild(node);
++        }
+@@ -1,5 +1,13 @@
+-        Element fragment = Parser.parseBodyFragment(html, baseUri).body();
+-        for (Node node : fragment.childNodes()) {
+-            node.parentNode = null;
+-            appendChild(node);
+-        }
++        Element fragment = Parser.parseBodyFragment(html, baseUri).body();
++        List<Node> nodes;
++        if (tag.getName().equals("table") && fragment.children().size() > 0 && fragment.children().get(0).tagName().equals("table")) {
++            // if we are appending to a table, and the fragment is a table (e.g. <tr> parsed into <table>), get the inner nodes
++            nodes = fragment.children().get(0).children().get(0).childNodes(); // get the trs from the tbody
++        } else {
++            nodes = fragment.childNodes();
++        }
++
++        for (Node node : nodes) {
++            node.parentNode = null;
++            appendChild(node);
++        }
+@@ -1,7 +1,14 @@
+-        Element fragment = Parser.parseBodyFragment(html, baseUri).body();
+-        List<Node> nodes = fragment.childNodes();
+-        for (int i = nodes.size() - 1; i >= 0; i--) {
+-            Node node = nodes.get(i);
+-            node.parentNode = null;
+-            prependChild(node);
+-        }
++        Element fragment = Parser.parseBodyFragment(html, baseUri).body();
++        List<Node> nodes;
++        if (tag.getName().equals("table") && fragment.children().size() > 0 && fragment.children().get(0).tagName().equals("table")) {
++            // if we are prepending to a table, and the fragment is a table (e.g. <tr> parsed into <table>), get the inner nodes
++            nodes = fragment.children().get(0).children().get(0).childNodes(); // get the trs from the tbody
++        } else {
++            nodes = fragment.childNodes();
++        }
++
++        for (int i = nodes.size() - 1; i >= 0; i--) {
++            Node node = nodes.get(i);
++            node.parentNode = null;
++            prependChild(node);
++        }
+@@ -1,13 +1,13 @@
+-        Element fragment = Parser.parseBodyFragment(html, baseUri).body();
+-        List<Node> nodes;
+-        if (tag.getName().equals("table") && fragment.children().size() > 0 && fragment.children().get(0).tagName().equals("table")) {
+-            // if we are appending to a table, and the fragment is a table (e.g. <tr> parsed into <table>), get the inner nodes
+-            nodes = fragment.children().get(0).children().get(0).childNodes(); // get the trs from the tbody
+-        } else {
+-            nodes = fragment.childNodes();
+-        }
+-
+-        for (Node node : nodes) {
+-            node.parentNode = null;
+-            appendChild(node);
+-        }
++        Element fragment = Parser.parseBodyFragment(html, baseUri).body();
++        List<Node> nodes;
++        if (tag.getName().equals("table") && fragment.children().size() > 0 && fragment.children().get(0).tagName().equals("table")) {
++            // if we are appending to a table, and the fragment is a table (e.g. <tr> parsed into <table>), get the inner nodes
++            nodes = fragment.children().get(0).children().get(0).children(); // get the trs from the tbody
++        } else {
++            nodes = fragment.childNodes();
++        }
++
++        for (Node node : nodes) {
++            node.parentNode = null;
++            appendChild(node);
++        }
+@@ -1,14 +1,14 @@
+-        Element fragment = Parser.parseBodyFragment(html, baseUri).body();
+-        List<Node> nodes;
+-        if (tag.getName().equals("table") && fragment.children().size() > 0 && fragment.children().get(0).tagName().equals("table")) {
+-            // if we are prepending to a table, and the fragment is a table (e.g. <tr> parsed into <table>), get the inner nodes
+-            nodes = fragment.children().get(0).children().get(0).childNodes(); // get the trs from the tbody
+-        } else {
+-            nodes = fragment.childNodes();
+-        }
+-
+-        for (int i = nodes.size() - 1; i >= 0; i--) {
+-            Node node = nodes.get(i);
+-            node.parentNode = null;
+-            prependChild(node);
+-        }
++        Element fragment = Parser.parseBodyFragment(html, baseUri).body();
++        List<Node> nodes;
++        if (tag.getName().equals("table") && fragment.children().size() > 0 && fragment.children().get(0).tagName().equals("table")) {
++            // if we are prepending to a table, and the fragment is a table (e.g. <tr> parsed into <table>), get the inner nodes
++            nodes = fragment.children().get(0).children().get(0).children(); // get the trs from the tbody
++        } else {
++            nodes = fragment.childNodes();
++        }
++
++        for (int i = nodes.size() - 1; i >= 0; i--) {
++            Node node = nodes.get(i);
++            node.parentNode = null;
++            prependChild(node);
++        }
+@@ -1,13 +1,13 @@
+-        Element fragment = Parser.parseBodyFragment(html, baseUri).body();
+-        List<Node> nodes;
+-        if (tag.getName().equals("table") && fragment.children().size() > 0 && fragment.children().get(0).tagName().equals("table")) {
+-            // if we are appending to a table, and the fragment is a table (e.g. <tr> parsed into <table>), get the inner nodes
+-            nodes = fragment.children().get(0).children().get(0).children(); // get the trs from the tbody
+-        } else {
+-            nodes = fragment.childNodes();
+-        }
+-
+-        for (Node node : nodes) {
+-            node.parentNode = null;
+-            appendChild(node);
+-        }
++        Element fragment = Parser.parseBodyFragment(html, baseUri).body();
++        List<Element> nodesToAppend;
++        if (tag.getName().equals("table") && fragment.children().size() > 0 && fragment.children().get(0).tagName().equals("table")) {
++            // if we are appending to a table, and the fragment is a table (e.g. <tr> parsed into <table>), get the inner nodes
++            nodesToAppend = fragment.children().get(0).children().get(0).children(); // get the trs from the tbody
++        } else {
++            nodesToAppend = fragment.children();
++        }
++
++        for (Element node : nodesToAppend) {
++            node.parentNode = null;
++            appendChild(node);
++        }
+@@ -1,14 +1,14 @@
+-        Element fragment = Parser.parseBodyFragment(html, baseUri).body();
+-        List<Node> nodes;
+-        if (tag.getName().equals("table") && fragment.children().size() > 0 && fragment.children().get(0).tagName().equals("table")) {
+-            // if we are prepending to a table, and the fragment is a table (e.g. <tr> parsed into <table>), get the inner nodes
+-            nodes = fragment.children().get(0).children().get(0).children(); // get the trs from the tbody
+-        } else {
+-            nodes = fragment.childNodes();
+-        }
+-
+-        for (int i = nodes.size() - 1; i >= 0; i--) {
+-            Node node = nodes.get(i);
+-            node.parentNode = null;
+-            prependChild(node);
+-        }
++        Element fragment = Parser.parseBodyFragment(html, baseUri).body();
++        List<Element> nodesToPrepend;
++        if (tag.getName().equals("table") && fragment.children().size() > 0 && fragment.children().get(0).tagName().equals("table")) {
++            // if we are prepending to a table, and the fragment is a table (e.g. <tr> parsed into <table>), get the inner nodes
++            nodesToPrepend = fragment.children().get(0).children().get(0).children(); // get the trs from the tbody
++        } else {
++            nodesToPrepend = fragment.children();
++        }
++
++        for (int i = nodesToPrepend.size() - 1; i >= 0; i--) {
++            Node node = nodesToPrepend.get(i);
++            node.parentNode = null;
++            prependChild(node);
++        }
+@@ -1,5 +1,5 @@
+-        List<Node> nodes = Parser.parseFragment(html, this, baseUri());
+-        for (Node node : nodes) {
+-            node.parentNode = null;
+-            appendChild(node);
+-        }
++        Element fragment = Parser.parseBodyFragment(html, baseUri).body();
++        for (Node node : fragment.childNodes()) {
++            node.parentNode = null;
++            appendChild(node);
++        }
+@@ -1,6 +1,7 @@
+-        List<Node> nodes = Parser.parseFragment(html, this, baseUri());
+-        for (int i = nodes.size() - 1; i >= 0; i--) {
+-            Node node = nodes.get(i);
+-            node.parentNode = null;
+-            prependChild(node);
+-        }
++        Element fragment = Parser.parseBodyFragment(html, baseUri).body();
++        List<Node> nodes = fragment.childNodes();
++        for (int i = nodes.size() - 1; i >= 0; i--) {
++            Node node = nodes.get(i);
++            node.parentNode = null;
++            prependChild(node);
++        }
+@@ -1,10 +1,17 @@
+-    public Element append(String html) {
+-        Validate.notNull(html);
+-        
+-        Element fragment = Parser.parseBodyFragment(html, baseUri).body();
+-        for (Node node : fragment.childNodes()) {
+-            node.parentNode = null;
+-            appendChild(node);
+-        }
+-        return this;
+-    }
++    public Element append(String html) {
++        Validate.notNull(html);
++        
++        Document doc = Parser.parseBodyFragment(html, baseUri);
++        Elements nodes = doc.body().children();
++
++        // if the context is a table, and the fragment was parsed into a table, extract the inner trs
++        if (tag.getName().equals("table") && nodes.size() == 1 && nodes.get(0).tagName().equals("table")) {
++            nodes = nodes.get(0).children().get(0).children(); // get the trs from the tbody
++        }
++
++        for (Node node : nodes) {
++            node.parentNode = null;
++            appendChild(node);
++        }
++        return this;
++    }
+@@ -1,12 +1,18 @@
+-    public Element prepend(String html) {
+-        Validate.notNull(html);
+-        
+-        Element fragment = Parser.parseBodyFragment(html, baseUri).body();
+-        List<Node> nodes = fragment.childNodes();
+-        for (int i = nodes.size() - 1; i >= 0; i--) {
+-            Node node = nodes.get(i);
+-            node.parentNode = null;
+-            prependChild(node);
+-        }
+-        return this;
+-    }
++    public Element prepend(String html) {
++        Validate.notNull(html);
++        
++        Document doc = Parser.parseBodyFragment(html, baseUri);
++        Elements nodes = doc.body().children();
++
++        // if the context is a table, and the fragment was parsed into a table, extract the inner trs
++        if (tag.getName().equals("table") && nodes.size() == 1 && nodes.get(0).tagName().equals("table")) {
++            nodes = nodes.get(0).children().get(0).children(); // get the trs from the tbody
++        }
++
++        for (int i = nodes.size() - 1; i >= 0; i--) {
++            Node node = nodes.get(i);
++            node.parentNode = null;
++            prependChild(node);
++        }
++        return this;
++    }
+@@ -1,10 +1,17 @@
+-    public Element append(String html) {
+-        Validate.notNull(html);
+-        
+-        Element fragment = Parser.parseBodyFragment(html, baseUri).body();
+-        for (Node node : fragment.childNodes()) {
+-            node.parentNode = null;
+-            appendChild(node);
+-        }
+-        return this;
+-    }
++    public Element append(String html) {
++        Validate.notNull(html);
++        
++        Document doc = Parser.parseBodyFragment(html, baseUri);
++        Elements nodes = doc.body().children();
++
++        // if the context is a table, and the fragment was parsed into a table, extract the inner trs
++        if (tag.getName().equals("table") && nodes.size() == 1 && nodes.get(0).tagName().equals("table")) {
++            nodes = nodes.get(0).children().get(0).children(); // get the trs from the tbody
++        }
++
++        for (Element node : nodes) {
++            node.parentNode = null;
++            appendChild(node);
++        }
++        return this;
++    }
+@@ -1,17 +1,22 @@
+-    public Element append(String html) {
+-        Validate.notNull(html);
+-        
+-        Document doc = Parser.parseBodyFragment(html, baseUri);
+-        Elements nodes = doc.body().children();
+-
+-        // if the context is a table, and the fragment was parsed into a table, extract the inner trs
+-        if (tag.getName().equals("table") && nodes.size() == 1 && nodes.get(0).tagName().equals("table")) {
+-            nodes = nodes.get(0).children().get(0).children(); // get the trs from the tbody
+-        }
+-
+-        for (Element node : nodes) {
+-            node.parentNode = null;
+-            appendChild(node);
+-        }
+-        return this;
+-    }
++    public Element append(String html) {
++        Validate.notNull(html);
++        
++        Document doc = Parser.parseBodyFragment(html, baseUri);
++        Elements nodes = doc.body().children();
++
++        System.out.println("Before unwrapping (append): " + nodes.outerHtml());
++
++        // if the context is a table, and the fragment was parsed into a table, extract the inner trs
++        if (tag.getName().equals("table") && nodes.size() == 1 && nodes.get(0).tagName().equals("table")) {
++            nodes = nodes.get(0).children().get(0).children(); // get the trs from the tbody
++        }
++        System.out.println("After unwrapping (append): " + nodes.outerHtml());
++        System.out.println("Before append (this.outerHtml()): " + this.outerHtml());
++
++        for (Element node : nodes) {
++            node.parentNode = null;
++            appendChild(node);
++        }
++        System.out.println("After append (this.outerHtml()): " + this.outerHtml());
++        return this;
++    }
+@@ -1,18 +1,23 @@
+-    public Element prepend(String html) {
+-        Validate.notNull(html);
+-        
+-        Document doc = Parser.parseBodyFragment(html, baseUri);
+-        Elements nodes = doc.body().children();
+-
+-        // if the context is a table, and the fragment was parsed into a table, extract the inner trs
+-        if (tag.getName().equals("table") && nodes.size() == 1 && nodes.get(0).tagName().equals("table")) {
+-            nodes = nodes.get(0).children().get(0).children(); // get the trs from the tbody
+-        }
+-
+-        for (int i = nodes.size() - 1; i >= 0; i--) {
+-            Node node = nodes.get(i);
+-            node.parentNode = null;
+-            prependChild(node);
+-        }
+-        return this;
+-    }
++    public Element prepend(String html) {
++        Validate.notNull(html);
++        
++        Document doc = Parser.parseBodyFragment(html, baseUri);
++        Elements nodes = doc.body().children();
++
++        System.out.println("Before unwrapping (prepend): " + nodes.outerHtml());
++
++        // if the context is a table, and the fragment was parsed into a table, extract the inner trs
++        if (tag.getName().equals("table") && nodes.size() == 1 && nodes.get(0).tagName().equals("table")) {
++            nodes = nodes.get(0).children().get(0).children(); // get the trs from the tbody
++        }
++        System.out.println("After unwrapping (prepend): " + nodes.outerHtml());
++        System.out.println("Before prepend (this.outerHtml()): " + this.outerHtml());
++
++        for (int i = nodes.size() - 1; i >= 0; i--) {
++            Node node = nodes.get(i);
++            node.parentNode = null;
++            prependChild(node);
++        }
++        System.out.println("After prepend (this.outerHtml()): " + this.outerHtml());
++        return this;
++    }
+@@ -1,22 +1,26 @@
+-    public Element append(String html) {
+-        Validate.notNull(html);
+-        
+-        Document doc = Parser.parseBodyFragment(html, baseUri);
+-        Elements nodes = doc.body().children();
+-
+-        System.out.println("Before unwrapping (append): " + nodes.outerHtml());
+-
+-        // if the context is a table, and the fragment was parsed into a table, extract the inner trs
+-        if (tag.getName().equals("table") && nodes.size() == 1 && nodes.get(0).tagName().equals("table")) {
+-            nodes = nodes.get(0).children().get(0).children(); // get the trs from the tbody
+-        }
+-        System.out.println("After unwrapping (append): " + nodes.outerHtml());
+-        System.out.println("Before append (this.outerHtml()): " + this.outerHtml());
+-
+-        for (Element node : nodes) {
+-            node.parentNode = null;
+-            appendChild(node);
+-        }
+-        System.out.println("After append (this.outerHtml()): " + this.outerHtml());
+-        return this;
+-    }
++    public Element append(String html) {
++        Validate.notNull(html);
++        
++        Document doc = Parser.parseBodyFragment(html, baseUri);
++        Elements nodes = doc.body().children();
++
++        System.out.println("Before unwrapping (append): " + nodes.outerHtml());
++
++        // if the context is a table, and the fragment was parsed into a table, extract the inner trs
++        if (tag.getName().equals("table") && nodes.size() == 1 && nodes.get(0).tagName().equals("table")) {
++            Elements tableChildren = nodes.get(0).children(); // should be tbody
++            System.out.println("Table children (tbody): " + tableChildren.outerHtml());
++            Elements tbodyChildren = tableChildren.get(0).children(); // should be tr
++            System.out.println("Tbody children (tr): " + tbodyChildren.outerHtml());
++            nodes = tbodyChildren; // get the trs from the tbody
++        }
++        System.out.println("After unwrapping (append): " + nodes.outerHtml());
++        System.out.println("Before append (this.outerHtml()): " + this.outerHtml());
++
++        for (Element node : nodes) {
++            node.parentNode = null;
++            appendChild(node);
++        }
++        System.out.println("After append (this.outerHtml()): " + this.outerHtml());
++        return this;
++    }
+@@ -1,26 +1,17 @@
+-    public Element append(String html) {
+-        Validate.notNull(html);
+-        
+-        Document doc = Parser.parseBodyFragment(html, baseUri);
+-        Elements nodes = doc.body().children();
+-
+-        System.out.println("Before unwrapping (append): " + nodes.outerHtml());
+-
+-        // if the context is a table, and the fragment was parsed into a table, extract the inner trs
+-        if (tag.getName().equals("table") && nodes.size() == 1 && nodes.get(0).tagName().equals("table")) {
+-            Elements tableChildren = nodes.get(0).children(); // should be tbody
+-            System.out.println("Table children (tbody): " + tableChildren.outerHtml());
+-            Elements tbodyChildren = tableChildren.get(0).children(); // should be tr
+-            System.out.println("Tbody children (tr): " + tbodyChildren.outerHtml());
+-            nodes = tbodyChildren; // get the trs from the tbody
+-        }
+-        System.out.println("After unwrapping (append): " + nodes.outerHtml());
+-        System.out.println("Before append (this.outerHtml()): " + this.outerHtml());
+-
+-        for (Element node : nodes) {
+-            node.parentNode = null;
+-            appendChild(node);
+-        }
+-        System.out.println("After append (this.outerHtml()): " + this.outerHtml());
+-        return this;
+-    }
++    public Element append(String html) {
++        Validate.notNull(html);
++        
++        Document doc = Parser.parseBodyFragment(html, baseUri);
++        Elements nodes = doc.body().children();
++
++        // if the context is a table, and the fragment was parsed into a table, extract the inner trs
++        if (tag.getName().equals("table") && nodes.size() == 1 && nodes.get(0).tagName().equals("table")) {
++            nodes = nodes.get(0).children().get(0).children(); // get the trs from the tbody
++        }
++
++        for (Element node : nodes) {
++            node.parentNode = null;
++            appendChild(node);
++        }
++        return this;
++    }
+@@ -1,27 +1,18 @@
+-    public Element prepend(String html) {
+-        Validate.notNull(html);
+-        
+-        Document doc = Parser.parseBodyFragment(html, baseUri);
+-        Elements nodes = doc.body().children();
+-
+-        System.out.println("Before unwrapping (prepend): " + nodes.outerHtml());
+-
+-        // if the context is a table, and the fragment was parsed into a table, extract the inner trs
+-        if (tag.getName().equals("table") && nodes.size() == 1 && nodes.get(0).tagName().equals("table")) {
+-            Elements tableChildren = nodes.get(0).children(); // should be tbody
+-            System.out.println("Table children (tbody): " + tableChildren.outerHtml());
+-            Elements tbodyChildren = tableChildren.get(0).children(); // should be tr
+-            System.out.println("Tbody children (tr): " + tbodyChildren.outerHtml());
+-            nodes = tbodyChildren; // get the trs from the tbody
+-        }
+-        System.out.println("After unwrapping (prepend): " + nodes.outerHtml());
+-        System.out.println("Before prepend (this.outerHtml()): " + this.outerHtml());
+-
+-        for (int i = nodes.size() - 1; i >= 0; i--) {
+-            Node node = nodes.get(i);
+-            node.parentNode = null;
+-            prependChild(node);
+-        }
+-        System.out.println("After prepend (this.outerHtml()): " + this.outerHtml());
+-        return this;
+-    }
++    public Element prepend(String html) {
++        Validate.notNull(html);
++        
++        Document doc = Parser.parseBodyFragment(html, baseUri);
++        Elements nodes = doc.body().children();
++
++        // if the context is a table, and the fragment was parsed into a table, extract the inner trs
++        if (tag.getName().equals("table") && nodes.size() == 1 && nodes.get(0).tagName().equals("table")) {
++            nodes = nodes.get(0).children().get(0).children(); // get the trs from the tbody
++        }
++
++        for (int i = nodes.size() - 1; i >= 0; i--) {
++            Node node = nodes.get(i);
++            node.parentNode = null;
++            prependChild(node);
++        }
++        return this;
++    }
+@@ -1,17 +1,38 @@
+-    public Element append(String html) {
+-        Validate.notNull(html);
+-        
+-        Document doc = Parser.parseBodyFragment(html, baseUri);
+-        Elements nodes = doc.body().children();
+-
+-        // if the context is a table, and the fragment was parsed into a table, extract the inner trs
+-        if (tag.getName().equals("table") && nodes.size() == 1 && nodes.get(0).tagName().equals("table")) {
+-            nodes = nodes.get(0).children().get(0).children(); // get the trs from the tbody
+-        }
+-
+-        for (Element node : nodes) {
+-            node.parentNode = null;
+-            appendChild(node);
+-        }
+-        return this;
+-    }
++    public Element append(String html) {
++        Validate.notNull(html);
++        
++        Document doc = Parser.parseBodyFragment(html, baseUri);
++        Elements nodes = doc.body().children();
++
++        System.out.println("Before unwrapping (append): " + nodes.outerHtml());
++        for (Element node : nodes) {
++            System.out.println("  Node (before unwrapping): " + node.tagName());
++        }
++
++        // if the context is a table, and the fragment was parsed into a table, extract the inner trs
++        if (tag.getName().equals("table") && nodes.size() == 1 && nodes.get(0).tagName().equals("table")) {
++            Elements tableChildren = nodes.get(0).children(); // should be tbody
++            System.out.println("Table children (tbody): " + tableChildren.outerHtml());
++            for (Element node : tableChildren) {
++                System.out.println("  Node (tableChildren): " + node.tagName());
++            }
++            Elements tbodyChildren = tableChildren.get(0).children(); // should be tr
++            System.out.println("Tbody children (tr): " + tbodyChildren.outerHtml());
++            for (Element node : tbodyChildren) {
++                System.out.println("  Node (tbodyChildren): " + node.tagName());
++            }
++            nodes = tbodyChildren; // get the trs from the tbody
++        }
++        System.out.println("After unwrapping (append): " + nodes.outerHtml());
++        for (Element node : nodes) {
++            System.out.println("  Node (after unwrapping): " + node.tagName());
++        }
++        System.out.println("Before append (this.outerHtml()): " + this.outerHtml());
++
++        for (Element node : nodes) {
++            node.parentNode = null;
++            appendChild(node);
++        }
++        System.out.println("After append (this.outerHtml()): " + this.outerHtml());
++        return this;
++    }
+@@ -1,38 +1,17 @@
+-    public Element append(String html) {
+-        Validate.notNull(html);
+-        
+-        Document doc = Parser.parseBodyFragment(html, baseUri);
+-        Elements nodes = doc.body().children();
+-
+-        System.out.println("Before unwrapping (append): " + nodes.outerHtml());
+-        for (Element node : nodes) {
+-            System.out.println("  Node (before unwrapping): " + node.tagName());
+-        }
+-
+-        // if the context is a table, and the fragment was parsed into a table, extract the inner trs
+-        if (tag.getName().equals("table") && nodes.size() == 1 && nodes.get(0).tagName().equals("table")) {
+-            Elements tableChildren = nodes.get(0).children(); // should be tbody
+-            System.out.println("Table children (tbody): " + tableChildren.outerHtml());
+-            for (Element node : tableChildren) {
+-                System.out.println("  Node (tableChildren): " + node.tagName());
+-            }
+-            Elements tbodyChildren = tableChildren.get(0).children(); // should be tr
+-            System.out.println("Tbody children (tr): " + tbodyChildren.outerHtml());
+-            for (Element node : tbodyChildren) {
+-                System.out.println("  Node (tbodyChildren): " + node.tagName());
+-            }
+-            nodes = tbodyChildren; // get the trs from the tbody
+-        }
+-        System.out.println("After unwrapping (append): " + nodes.outerHtml());
+-        for (Element node : nodes) {
+-            System.out.println("  Node (after unwrapping): " + node.tagName());
+-        }
+-        System.out.println("Before append (this.outerHtml()): " + this.outerHtml());
+-
+-        for (Element node : nodes) {
+-            node.parentNode = null;
+-            appendChild(node);
+-        }
+-        System.out.println("After append (this.outerHtml()): " + this.outerHtml());
+-        return this;
+-    }
++    public Element append(String html) {
++        Validate.notNull(html);
++        
++        Document doc = Parser.parseBodyFragment(html, baseUri);
++        Elements nodes = doc.body().children();
++
++        // if the context is a table, and the fragment was parsed into a table, extract the inner trs
++        if (tag.getName().equals("table") && nodes.size() == 1 && nodes.get(0).tagName().equals("table")) {
++            nodes = nodes.get(0).children().get(0).children(); // get the trs from the tbody
++        }
++
++        for (Element node : nodes) {
++            node.parentNode = null;
++            appendChild(node);
++        }
++        return this;
++    }
+@@ -1,17 +1,38 @@
+-    public Element append(String html) {
+-        Validate.notNull(html);
+-        
+-        Document doc = Parser.parseBodyFragment(html, baseUri);
+-        Elements nodes = doc.body().children();
+-
+-        // if the context is a table, and the fragment was parsed into a table, extract the inner trs
+-        if (tag.getName().equals("table") && nodes.size() == 1 && nodes.get(0).tagName().equals("table")) {
+-            nodes = nodes.get(0).children().get(0).children(); // get the trs from the tbody
+-        }
+-
+-        for (Element node : nodes) {
+-            node.parentNode = null;
+-            appendChild(node);
+-        }
+-        return this;
+-    }
++    public Element append(String html) {
++        Validate.notNull(html);
++        
++        Document doc = Parser.parseBodyFragment(html, baseUri);
++        Elements nodes = doc.body().children();
++
++        System.out.println("Before unwrapping (append): " + nodes.outerHtml());
++        for (Element node : nodes) {
++            System.out.println("  Node (before unwrapping): " + node.tagName());
++        }
++
++        // if the context is a table, and the fragment was parsed into a table, extract the inner trs
++        if (tag.getName().equals("table") && nodes.size() == 1 && nodes.get(0).tagName().equals("table")) {
++            Elements tableChildren = nodes.get(0).children(); // should be tbody
++            System.out.println("Table children (tbody): " + tableChildren.outerHtml());
++            for (Element node : tableChildren) {
++                System.out.println("  Node (tableChildren): " + node.tagName());
++            }
++            Elements tbodyChildren = tableChildren.get(0).children(); // should be tr
++            System.out.println("Tbody children (tr): " + tbodyChildren.outerHtml());
++            for (Element node : tbodyChildren) {
++                System.out.println("  Node (tbodyChildren): " + node.tagName());
++            }
++            nodes = tbodyChildren; // get the trs from the tbody
++        }
++        System.out.println("After unwrapping (append): " + nodes.outerHtml());
++        for (Element node : nodes) {
++            System.out.println("  Node (after unwrapping): " + node.tagName());
++        }
++        System.out.println("Before append (this.outerHtml()): " + this.outerHtml());
++
++        for (Element node : nodes) {
++            node.parentNode = null;
++            appendChild(node);
++        }
++        System.out.println("After append (this.outerHtml()): " + this.outerHtml());
++        return this;
++    }
+@@ -1,38 +1,10 @@
+-    public Element append(String html) {
+-        Validate.notNull(html);
+-        
+-        Document doc = Parser.parseBodyFragment(html, baseUri);
+-        Elements nodes = doc.body().children();
+-
+-        System.out.println("Before unwrapping (append): " + nodes.outerHtml());
+-        for (Element node : nodes) {
+-            System.out.println("  Node (before unwrapping): " + node.tagName());
+-        }
+-
+-        // if the context is a table, and the fragment was parsed into a table, extract the inner trs
+-        if (tag.getName().equals("table") && nodes.size() == 1 && nodes.get(0).tagName().equals("table")) {
+-            Elements tableChildren = nodes.get(0).children(); // should be tbody
+-            System.out.println("Table children (tbody): " + tableChildren.outerHtml());
+-            for (Element node : tableChildren) {
+-                System.out.println("  Node (tableChildren): " + node.tagName());
+-            }
+-            Elements tbodyChildren = tableChildren.get(0).children(); // should be tr
+-            System.out.println("Tbody children (tr): " + tbodyChildren.outerHtml());
+-            for (Element node : tbodyChildren) {
+-                System.out.println("  Node (tbodyChildren): " + node.tagName());
+-            }
+-            nodes = tbodyChildren; // get the trs from the tbody
+-        }
+-        System.out.println("After unwrapping (append): " + nodes.outerHtml());
+-        for (Element node : nodes) {
+-            System.out.println("  Node (after unwrapping): " + node.tagName());
+-        }
+-        System.out.println("Before append (this.outerHtml()): " + this.outerHtml());
+-
+-        for (Element node : nodes) {
+-            node.parentNode = null;
+-            appendChild(node);
+-        }
+-        System.out.println("After append (this.outerHtml()): " + this.outerHtml());
+-        return this;
+-    }
++    public Element append(String html) {
++        Validate.notNull(html);
++        
++        Element fragment = Parser.parseBodyFragment(html, baseUri).body();
++        for (Node node : fragment.childNodes()) {
++            node.parentNode = null;
++            appendChild(node);
++        }
++        return this;
++    }
+@@ -1,39 +1,12 @@
+-    public Element prepend(String html) {
+-        Validate.notNull(html);
+-        
+-        Document doc = Parser.parseBodyFragment(html, baseUri);
+-        Elements nodes = doc.body().children();
+-
+-        System.out.println("Before unwrapping (prepend): " + nodes.outerHtml());
+-        for (Element node : nodes) {
+-            System.out.println("  Node (before unwrapping): " + node.tagName());
+-        }
+-
+-        // if the context is a table, and the fragment was parsed into a table, extract the inner trs
+-        if (tag.getName().equals("table") && nodes.size() == 1 && nodes.get(0).tagName().equals("table")) {
+-            Elements tableChildren = nodes.get(0).children(); // should be tbody
+-            System.out.println("Table children (tbody): " + tableChildren.outerHtml());
+-            for (Element node : tableChildren) {
+-                System.out.println("  Node (tableChildren): " + node.tagName());
+-            }
+-            Elements tbodyChildren = tableChildren.get(0).children(); // should be tr
+-            System.out.println("Tbody children (tr): " + tbodyChildren.outerHtml());
+-            for (Element node : tbodyChildren) {
+-                System.out.println("  Node (tbodyChildren): " + node.tagName());
+-            }
+-            nodes = tbodyChildren; // get the trs from the tbody
+-        }
+-        System.out.println("After unwrapping (prepend): " + nodes.outerHtml());
+-        for (Element node : nodes) {
+-            System.out.println("  Node (after unwrapping): " + node.tagName());
+-        }
+-        System.out.println("Before prepend (this.outerHtml()): " + this.outerHtml());
+-
+-        for (int i = nodes.size() - 1; i >= 0; i--) {
+-            Node node = nodes.get(i);
+-            node.parentNode = null;
+-            prependChild(node);
+-        }
+-        System.out.println("After prepend (this.outerHtml()): " + this.outerHtml());
+-        return this;
+-    }
++    public Element prepend(String html) {
++        Validate.notNull(html);
++        
++        Element fragment = Parser.parseBodyFragment(html, baseUri).body();
++        List<Node> nodes = fragment.childNodes();
++        for (int i = nodes.size() - 1; i >= 0; i--) {
++            Node node = nodes.get(i);
++            node.parentNode = null;
++            prependChild(node);
++        }
++        return this;
++    }
+@@ -1,10 +1,17 @@
+-    public Element append(String html) {
+-        Validate.notNull(html);
+-        
+-        Element fragment = Parser.parseBodyFragment(html, baseUri).body();
+-        for (Node node : fragment.childNodes()) {
+-            node.parentNode = null;
+-            appendChild(node);
+-        }
+-        return this;
+-    }
++    public Element append(String html) {
++        Validate.notNull(html);
++        
++        Document doc = Parser.parseBodyFragment(html, baseUri);
++        Elements nodes = doc.body().children();
++
++        // if the context is a table, and the fragment was parsed into a table, extract the inner trs
++        if (tag.getName().equals("table") && nodes.size() == 1 && nodes.get(0).tagName().equals("table")) {
++            nodes = nodes.get(0).children().get(0).children(); // get the trs from the tbody
++        }
++
++        for (Element node : nodes) {
++            node.parentNode = null;
++            appendChild(node);
++        }
++        return this;
++    }
+@@ -1,12 +1,18 @@
+-    public Element prepend(String html) {
+-        Validate.notNull(html);
+-        
+-        Element fragment = Parser.parseBodyFragment(html, baseUri).body();
+-        List<Node> nodes = fragment.childNodes();
+-        for (int i = nodes.size() - 1; i >= 0; i--) {
+-            Node node = nodes.get(i);
+-            node.parentNode = null;
+-            prependChild(node);
+-        }
+-        return this;
+-    }
++    public Element prepend(String html) {
++        Validate.notNull(html);
++        
++        Document doc = Parser.parseBodyFragment(html, baseUri);
++        Elements nodes = doc.body().children();
++
++        // if the context is a table, and the fragment was parsed into a table, extract the inner trs
++        if (tag.getName().equals("table") && nodes.size() == 1 && nodes.get(0).tagName().equals("table")) {
++            nodes = nodes.get(0).children().get(0).children(); // get the trs from the tbody
++        }
++
++        for (int i = nodes.size() - 1; i >= 0; i--) {
++            Node node = nodes.get(i);
++            node.parentNode = null;
++            prependChild(node);
++        }
++        return this;
++    }
+@@ -1,4 +1,9 @@
+-        // if the context is a table, and the fragment was parsed into a table, extract the inner trs
+-        if (tag.getName().equals("table") && nodes.size() == 1 && nodes.get(0).tagName().equals("table")) {
+-            nodes = nodes.get(0).children().get(0).children(); // get the trs from the tbody
+-        }
++        // if the context is a table, and the fragment was parsed into a table, extract the inner trs
++        if (tag.getName().equals("table") && nodes.size() == 1 && nodes.get(0).tagName().equals("table")) {
++            Elements tableChildren = nodes.get(0).children();
++            if (tableChildren.size() > 0 && tableChildren.get(0).tagName().equals("tbody")) {
++                nodes = tableChildren.get(0).children(); // get the trs from the tbody
++            } else {
++                nodes = tableChildren; // get the trs directly from the table
++            }
++        }
+
+--- a/src/main/java/org/jsoup/parser/Parser.java
++++ b/src/main/java/org/jsoup/parser/Parser.java
+@@ -1,4 +1,29 @@
+-    public static Document parseBodyFragment(String bodyHtml, String baseUri) {
+-        Parser parser = new Parser(bodyHtml, baseUri, true);
+-        return parser.parse();
+-    }
++    public static Document parseBodyFragment(String bodyHtml, String baseUri) {
++        Parser parser = new Parser(bodyHtml, baseUri, true);
++        return parser.parse();
++    }
++
++    /**
++     Parse a fragment of HTML into a list of nodes. The context element is used to ensure correct parsing, for example
++     if the fragment is supplied into a table, will ensure that the parse stack is initialised with appropriate
++     table elements.
++     @param fragmentHtml HTML fragment to parse
++     @param context context of fragment (e.g. parent element, to get appropriate parse logic)
++     @param baseUri base URI of document (i.e. original fetch location), for resolving relative URLs.
++     @return list of nodes parsed from the fragment
++     */
++    public static List<Node> parseFragment(String fragmentHtml, Element context, String baseUri) {
++        Tag contextTag = context.tag();
++        Document doc = Document.createShell(baseUri);
++        Parser parser = new Parser(fragmentHtml, baseUri, false); // don't want to create a body, will be created by normalise
++        if (contextTag.isBlock()) {
++            doc.body().appendElement(contextTag.getName());
++            parser.stack.add(doc.body().child(0));
++        } else {
++            doc.body().appendElement("body"); // make sure there's a body for normalise
++            parser.stack.add(doc.body());
++        }
++        parser.parse();
++        List<Node> nodes = doc.body().childNodes();
++        return nodes;
++    }
+@@ -1,29 +1,4 @@
+-    public static Document parseBodyFragment(String bodyHtml, String baseUri) {
+-        Parser parser = new Parser(bodyHtml, baseUri, true);
+-        return parser.parse();
+-    }
+-
+-    /**
+-     Parse a fragment of HTML into a list of nodes. The context element is used to ensure correct parsing, for example
+-     if the fragment is supplied into a table, will ensure that the parse stack is initialised with appropriate
+-     table elements.
+-     @param fragmentHtml HTML fragment to parse
+-     @param context context of fragment (e.g. parent element, to get appropriate parse logic)
+-     @param baseUri base URI of document (i.e. original fetch location), for resolving relative URLs.
+-     @return list of nodes parsed from the fragment
+-     */
+-    public static List<Node> parseFragment(String fragmentHtml, Element context, String baseUri) {
+-        Tag contextTag = context.tag();
+-        Document doc = Document.createShell(baseUri);
+-        Parser parser = new Parser(fragmentHtml, baseUri, false); // don't want to create a body, will be created by normalise
+-        if (contextTag.isBlock()) {
+-            doc.body().appendElement(contextTag.getName());
+-            parser.stack.add(doc.body().child(0));
+-        } else {
+-            doc.body().appendElement("body"); // make sure there's a body for normalise
+-            parser.stack.add(doc.body());
+-        }
+-        parser.parse();
+-        List<Node> nodes = doc.body().childNodes();
+-        return nodes;
+-    }
++    public static Document parseBodyFragment(String bodyHtml, String baseUri) {
++        Parser parser = new Parser(bodyHtml, baseUri, true);
++        return parser.parse();
++    }
+@@ -1,16 +1,32 @@
+-    private Parser(String html, String baseUri, boolean isBodyFragment) {
+-        Validate.notNull(html);
+-        Validate.notNull(baseUri);
+-
+-        stack = new LinkedList<Element>();
+-        tq = new TokenQueue(html);
+-        this.baseUri = baseUri;
+-
+-        if (isBodyFragment) {
+-            doc = Document.createShell(baseUri);
+-            stack.add(doc.body());
+-        } else {
+-            doc = new Document(baseUri);
+-            stack.add(doc);
+-        }
+-    }
++    private Parser(String html, String baseUri, boolean isBodyFragment) {
++        Validate.notNull(html);
++        Validate.notNull(baseUri);
++
++        stack = new LinkedList<Element>();
++        tq = new TokenQueue(html);
++        this.baseUri = baseUri;
++
++        if (isBodyFragment) {
++            doc = Document.createShell(baseUri);
++            stack.add(doc.body());
++        } else {
++            doc = new Document(baseUri);
++            stack.add(doc);
++        }
++    }
++
++    private Parser(String html, Element context, String baseUri) {
++        Validate.notNull(html);
++        Validate.notNull(baseUri);
++        Validate.notNull(context);
++
++        stack = new LinkedList<Element>();
++        tq = new TokenQueue(html);
++        this.baseUri = baseUri;
++        this.doc = context.ownerDocument();
++        if (this.doc == null) { // context is not part of a document yet
++            this.doc = Document.createShell(baseUri);
++            this.doc.body().appendChild(context);
++        }
++        stack.add(context);
++    }
+@@ -1,4 +1,19 @@
+-    public static Document parseBodyFragment(String bodyHtml, String baseUri) {
+-        Parser parser = new Parser(bodyHtml, baseUri, true);
+-        return parser.parse();
+-    }
++    public static Document parseBodyFragment(String bodyHtml, String baseUri) {
++        Parser parser = new Parser(bodyHtml, baseUri, true);
++        return parser.parse();
++    }
++
++    /**
++     Parse a fragment of HTML into a list of nodes. The context element is used to ensure correct parsing, for example
++     if the fragment is supplied into a table, will ensure that the parse stack is initialised with appropriate
++     table elements.
++     @param fragmentHtml HTML fragment to parse
++     @param context context of fragment (e.g. parent element, to get appropriate parse logic)
++     @param baseUri base URI of document (i.e. original fetch location), for resolving relative URLs.
++     @return list of nodes parsed from the fragment
++     */
++    public static List<Node> parseFragment(String fragmentHtml, Element context, String baseUri) {
++        Parser parser = new Parser(fragmentHtml, context, baseUri);
++        parser.parse();
++        return context.childNodes();
++    }
+@@ -1,32 +1,16 @@
+-    private Parser(String html, String baseUri, boolean isBodyFragment) {
+-        Validate.notNull(html);
+-        Validate.notNull(baseUri);
+-
+-        stack = new LinkedList<Element>();
+-        tq = new TokenQueue(html);
+-        this.baseUri = baseUri;
+-
+-        if (isBodyFragment) {
+-            doc = Document.createShell(baseUri);
+-            stack.add(doc.body());
+-        } else {
+-            doc = new Document(baseUri);
+-            stack.add(doc);
+-        }
+-    }
+-
+-    private Parser(String html, Element context, String baseUri) {
+-        Validate.notNull(html);
+-        Validate.notNull(baseUri);
+-        Validate.notNull(context);
+-
+-        stack = new LinkedList<Element>();
+-        tq = new TokenQueue(html);
+-        this.baseUri = baseUri;
+-        this.doc = context.ownerDocument();
+-        if (this.doc == null) { // context is not part of a document yet
+-            this.doc = Document.createShell(baseUri);
+-            this.doc.body().appendChild(context);
+-        }
+-        stack.add(context);
+-    }
++    private Parser(String html, String baseUri, boolean isBodyFragment) {
++        Validate.notNull(html);
++        Validate.notNull(baseUri);
++
++        stack = new LinkedList<Element>();
++        tq = new TokenQueue(html);
++        this.baseUri = baseUri;
++
++        if (isBodyFragment) {
++            doc = Document.createShell(baseUri);
++            stack.add(doc.body());
++        } else {
++            doc = new Document(baseUri);
++            stack.add(doc);
++        }
++    }
+@@ -1,19 +1,4 @@
+-    public static Document parseBodyFragment(String bodyHtml, String baseUri) {
+-        Parser parser = new Parser(bodyHtml, baseUri, true);
+-        return parser.parse();
+-    }
+-
+-    /**
+-     Parse a fragment of HTML into a list of nodes. The context element is used to ensure correct parsing, for example
+-     if the fragment is supplied into a table, will ensure that the parse stack is initialised with appropriate
+-     table elements.
+-     @param fragmentHtml HTML fragment to parse
+-     @param context context of fragment (e.g. parent element, to get appropriate parse logic)
+-     @param baseUri base URI of document (i.e. original fetch location), for resolving relative URLs.
+-     @return list of nodes parsed from the fragment
+-     */
+-    public static List<Node> parseFragment(String fragmentHtml, Element context, String baseUri) {
+-        Parser parser = new Parser(fragmentHtml, context, baseUri);
+-        parser.parse();
+-        return context.childNodes();
+-    }
++    public static Document parseBodyFragment(String bodyHtml, String baseUri) {
++        Parser parser = new Parser(bodyHtml, baseUri, true);
++        return parser.parse();
++    }
+@@ -1,1 +1,7 @@
+-        Element parent = popStackToSuitableContainer(child.tag());
++        if (childTag.equals(Tag.valueOf("tr")) && last().tagName().equals("table")) {
++            Element tbody = new Element(Tag.valueOf("tbody"), baseUri);
++            last().appendChild(tbody);
++            stack.addLast(tbody);
++        }
++
++        Element parent = popStackToSuitableContainer(child.tag());
+@@ -1,7 +1,1 @@
+-        if (childTag.equals(Tag.valueOf("tr")) && last().tagName().equals("table")) {
+-            Element tbody = new Element(Tag.valueOf("tbody"), baseUri);
+-            last().appendChild(tbody);
+-            stack.addLast(tbody);
+-        }
+-
+-        Element parent = popStackToSuitableContainer(child.tag());
++        Element parent = popStackToSuitableContainer(child.tag());
+@@ -1,2 +1,10 @@
+-    private Element addChildToParent(Element child, boolean isEmptyElement) {
+-        Element parent = popStackToSuitableContainer(child.tag());
++    private Element addChildToParent(Element child, boolean isEmptyElement) {
++        Tag childTag = child.tag();
++
++        if (childTag.equals(Tag.valueOf("tr")) && last().tagName().equals("table")) {
++            Element tbody = new Element(Tag.valueOf("tbody"), baseUri);
++            last().appendChild(tbody);
++            stack.addLast(tbody);
++        }
++
++        Element parent = popStackToSuitableContainer(child.tag());
+@@ -1,10 +1,2 @@
+-    private Element addChildToParent(Element child, boolean isEmptyElement) {
+-        Tag childTag = child.tag();
+-
+-        if (childTag.equals(Tag.valueOf("tr")) && last().tagName().equals("table")) {
+-            Element tbody = new Element(Tag.valueOf("tbody"), baseUri);
+-            last().appendChild(tbody);
+-            stack.addLast(tbody);
+-        }
+-
+-        Element parent = popStackToSuitableContainer(child.tag());
++    private Element addChildToParent(Element child, boolean isEmptyElement) {
++        Element parent = popStackToSuitableContainer(child.tag());
+@@ -1,2 +1,10 @@
+-    private Element addChildToParent(Element child, boolean isEmptyElement) {
+-        Element parent = popStackToSuitableContainer(child.tag());
++    private Element addChildToParent(Element child, boolean isEmptyElement) {
++        Tag childTag = child.tag();
++
++        if (childTag.equals(Tag.valueOf("tr")) && last().tagName().equals("table")) {
++            Element tbody = new Element(Tag.valueOf("tbody"), baseUri);
++            last().appendChild(tbody);
++            stack.addLast(tbody);
++        }
++
++        Element parent = popStackToSuitableContainer(child.tag());
+@@ -1,10 +1,2 @@
+-    private Element addChildToParent(Element child, boolean isEmptyElement) {
+-        Tag childTag = child.tag();
+-
+-        if (childTag.equals(Tag.valueOf("tr")) && last().tagName().equals("table")) {
+-            Element tbody = new Element(Tag.valueOf("tbody"), baseUri);
+-            last().appendChild(tbody);
+-            stack.addLast(tbody);
+-        }
+-
+-        Element parent = popStackToSuitableContainer(child.tag());
++    private Element addChildToParent(Element child, boolean isEmptyElement) {
++        Element parent = popStackToSuitableContainer(child.tag());
+@@ -1,36 +1,29 @@
+-    private Element addChildToParent(Element child, boolean isEmptyElement) {
+-        Tag childTag = child.tag();
+-
+-        if (childTag.equals(Tag.valueOf("tr")) && last().tagName().equals("table")) {
+-            Element tbody = new Element(Tag.valueOf("tbody"), baseUri);
+-            last().appendChild(tbody);
+-            stack.addLast(tbody);
+-        }
+-
+-        Element parent = popStackToSuitableContainer(child.tag());
+-        boolean validAncestor = stackHasValidParent(childTag);
+-
+-        if (!validAncestor) {
+-            // create implicit parent around this child
+-            Tag parentTag = childTag.getImplicitParent();
+-            Element implicit = new Element(parentTag, baseUri);
+-            // special case: make sure there's a head before putting in body
+-            if (child.tag().equals(bodyTag)) {
+-                Element head = new Element(headTag, baseUri);
+-                implicit.appendChild(head);
+-            }
+-            implicit.appendChild(child);
+-
+-            // recurse to ensure somewhere to put parent
+-            Element root = addChildToParent(implicit, false);
+-            if (!isEmptyElement)
+-                stack.addLast(child);
+-            return root;
+-        }
+-
+-        parent.appendChild(child);
+-
+-        if (!isEmptyElement)
+-            stack.addLast(child);
+-        return parent;
+-    }
++    private Element addChildToParent(Element child, boolean isEmptyElement) {
++        Element parent = popStackToSuitableContainer(child.tag());
++        Tag childTag = child.tag();
++        boolean validAncestor = stackHasValidParent(childTag);
++
++        if (!validAncestor) {
++            // create implicit parent around this child
++            Tag parentTag = childTag.getImplicitParent();
++            Element implicit = new Element(parentTag, baseUri);
++            // special case: make sure there's a head before putting in body
++            if (child.tag().equals(bodyTag)) {
++                Element head = new Element(headTag, baseUri);
++                implicit.appendChild(head);
++            }
++            implicit.appendChild(child);
++
++            // recurse to ensure somewhere to put parent
++            Element root = addChildToParent(implicit, false);
++            if (!isEmptyElement)
++                stack.addLast(child);
++            return root;
++        }
++
++        parent.appendChild(child);
++
++        if (!isEmptyElement)
++            stack.addLast(child);
++        return parent;
++    }
+@@ -1,29 +1,37 @@
+-    private Element addChildToParent(Element child, boolean isEmptyElement) {
+-        Element parent = popStackToSuitableContainer(child.tag());
+-        Tag childTag = child.tag();
+-        boolean validAncestor = stackHasValidParent(childTag);
+-
+-        if (!validAncestor) {
+-            // create implicit parent around this child
+-            Tag parentTag = childTag.getImplicitParent();
+-            Element implicit = new Element(parentTag, baseUri);
+-            // special case: make sure there's a head before putting in body
+-            if (child.tag().equals(bodyTag)) {
+-                Element head = new Element(headTag, baseUri);
+-                implicit.appendChild(head);
+-            }
+-            implicit.appendChild(child);
+-
+-            // recurse to ensure somewhere to put parent
+-            Element root = addChildToParent(implicit, false);
+-            if (!isEmptyElement)
+-                stack.addLast(child);
+-            return root;
+-        }
+-
+-        parent.appendChild(child);
+-
+-        if (!isEmptyElement)
+-            stack.addLast(child);
+-        return parent;
+-    }
++    private Element addChildToParent(Element child, boolean isEmptyElement) {
++        Tag childTag = child.tag();
++
++        // If a tr is found directly under a table, implicitly create a tbody
++        if (childTag.equals(Tag.valueOf("tr")) && last().tagName().equals("table")) {
++            Element tbody = new Element(Tag.valueOf("tbody"), baseUri);
++            last().appendChild(tbody);
++            stack.addLast(tbody);
++        }
++
++        Element parent = popStackToSuitableContainer(child.tag());
++        boolean validAncestor = stackHasValidParent(childTag);
++
++        if (!validAncestor) {
++            // create implicit parent around this child
++            Tag parentTag = childTag.getImplicitParent();
++            Element implicit = new Element(Tag.valueOf(parentTag.getName()), baseUri);
++            // special case: make sure there's a head before putting in body
++            if (child.tag().equals(bodyTag)) {
++                Element head = new Element(headTag, baseUri);
++                implicit.appendChild(head);
++            }
++            implicit.appendChild(child);
++
++            // recurse to ensure somewhere to put parent
++            Element root = addChildToParent(implicit, false);
++            if (!isEmptyElement)
++                stack.addLast(child);
++            return root;
++        }
++
++        parent.appendChild(child);
++
++        if (!isEmptyElement)
++            stack.addLast(child);
++        return parent;
++    }
+@@ -1,37 +1,29 @@
+-    private Element addChildToParent(Element child, boolean isEmptyElement) {
+-        Tag childTag = child.tag();
+-
+-        // If a tr is found directly under a table, implicitly create a tbody
+-        if (childTag.equals(Tag.valueOf("tr")) && last().tagName().equals("table")) {
+-            Element tbody = new Element(Tag.valueOf("tbody"), baseUri);
+-            last().appendChild(tbody);
+-            stack.addLast(tbody);
+-        }
+-
+-        Element parent = popStackToSuitableContainer(child.tag());
+-        boolean validAncestor = stackHasValidParent(childTag);
+-
+-        if (!validAncestor) {
+-            // create implicit parent around this child
+-            Tag parentTag = childTag.getImplicitParent();
+-            Element implicit = new Element(Tag.valueOf(parentTag.getName()), baseUri);
+-            // special case: make sure there's a head before putting in body
+-            if (child.tag().equals(bodyTag)) {
+-                Element head = new Element(headTag, baseUri);
+-                implicit.appendChild(head);
+-            }
+-            implicit.appendChild(child);
+-
+-            // recurse to ensure somewhere to put parent
+-            Element root = addChildToParent(implicit, false);
+-            if (!isEmptyElement)
+-                stack.addLast(child);
+-            return root;
+-        }
+-
+-        parent.appendChild(child);
+-
+-        if (!isEmptyElement)
+-            stack.addLast(child);
+-        return parent;
+-    }
++    private Element addChildToParent(Element child, boolean isEmptyElement) {
++        Element parent = popStackToSuitableContainer(child.tag());
++        Tag childTag = child.tag();
++        boolean validAncestor = stackHasValidParent(childTag);
++
++        if (!validAncestor) {
++            // create implicit parent around this child
++            Tag parentTag = childTag.getImplicitParent();
++            Element implicit = new Element(parentTag, baseUri);
++            // special case: make sure there's a head before putting in body
++            if (child.tag().equals(bodyTag)) {
++                Element head = new Element(headTag, baseUri);
++                implicit.appendChild(head);
++            }
++            implicit.appendChild(child);
++
++            // recurse to ensure somewhere to put parent
++            Element root = addChildToParent(implicit, false);
++            if (!isEmptyElement)
++                stack.addLast(child);
++            return root;
++        }
++
++        parent.appendChild(child);
++
++        if (!isEmptyElement)
++            stack.addLast(child);
++        return parent;
++    }
+@@ -1,29 +1,37 @@
+-    private Element addChildToParent(Element child, boolean isEmptyElement) {
+-        Element parent = popStackToSuitableContainer(child.tag());
+-        Tag childTag = child.tag();
+-        boolean validAncestor = stackHasValidParent(childTag);
+-
+-        if (!validAncestor) {
+-            // create implicit parent around this child
+-            Tag parentTag = childTag.getImplicitParent();
+-            Element implicit = new Element(parentTag, baseUri);
+-            // special case: make sure there's a head before putting in body
+-            if (child.tag().equals(bodyTag)) {
+-                Element head = new Element(headTag, baseUri);
+-                implicit.appendChild(head);
+-            }
+-            implicit.appendChild(child);
+-
+-            // recurse to ensure somewhere to put parent
+-            Element root = addChildToParent(implicit, false);
+-            if (!isEmptyElement)
+-                stack.addLast(child);
+-            return root;
+-        }
+-
+-        parent.appendChild(child);
+-
+-        if (!isEmptyElement)
+-            stack.addLast(child);
+-        return parent;
+-    }
++    private Element addChildToParent(Element child, boolean isEmptyElement) {
++        Tag childTag = child.tag();
++
++        // Special handling for table rows (<tr>) when directly under a table (<table>)
++        if (childTag.equals(Tag.valueOf("tr")) && last().tagName().equals("table")) {
++            Element tbody = new Element(Tag.valueOf("tbody"), baseUri);
++            last().appendChild(tbody);
++            stack.addLast(tbody); // Push tbody onto the stack so tr can be added to it
++        }
++
++        Element parent = popStackToSuitableContainer(child.tag());
++        boolean validAncestor = stackHasValidParent(childTag);
++
++        if (!validAncestor) {
++            // create implicit parent around this child
++            Tag parentTag = childTag.getImplicitParent();
++            Element implicit = new Element(parentTag, baseUri);
++            // special case: make sure there's a head before putting in body
++            if (child.tag().equals(bodyTag)) {
++                Element head = new Element(headTag, baseUri);
++                implicit.appendChild(head);
++            }
++            implicit.appendChild(child);
++
++            // recurse to ensure somewhere to put parent
++            Element root = addChildToParent(implicit, false);
++            if (!isEmptyElement)
++                stack.addLast(child);
++            return root;
++        }
++
++        parent.appendChild(child);
++
++        if (!isEmptyElement)
++            stack.addLast(child);
++        return parent;
++    }
+@@ -1,9 +1,9 @@
+-    private Element popStackToSuitableContainer(Tag tag) {
+-        while (!stack.isEmpty()) {
+-            if (last().tag().canContain(tag))
+-                return last();
+-            else
+-                stack.removeLast();
+-        }
+-        return null;
+-    }
++    private Element popStackToSuitableContainer(Tag tag) {
++        while (!stack.isEmpty()) {
++            if (stackHasValidParent(tag)) // Check if current last element on stack is a valid parent
++                return last();
++            else
++                stack.removeLast();
++        }
++        return null;
++    }
+@@ -1,9 +1,9 @@
+-    private Element popStackToSuitableContainer(Tag tag) {
+-        while (!stack.isEmpty()) {
+-            if (stackHasValidParent(tag)) // Check if current last element on stack is a valid parent
+-                return last();
+-            else
+-                stack.removeLast();
+-        }
+-        return null;
+-    }
++    private Element popStackToSuitableContainer(Tag tag) {
++        while (!stack.isEmpty()) {
++            if (last().tag().canContain(tag))
++                return last();
++            else
++                stack.removeLast();
++        }
++        return null;
++    }
+@@ -1,9 +1,9 @@
+-    private Element popStackToSuitableContainer(Tag tag) {
+-        while (!stack.isEmpty()) {
+-            if (last().tag().canContain(tag))
+-                return last();
+-            else
+-                stack.removeLast();
+-        }
+-        return null;
+-    }
++    private Element popStackToSuitableContainer(Tag tag) {
++        while (!stack.isEmpty()) {
++            if (stackHasValidParent(tag)) // Check if current last element on stack is a valid parent
++                return last();
++            else
++                stack.removeLast();
++        }
++        return null;
++    }
+@@ -1,9 +1,9 @@
+-    private Element popStackToSuitableContainer(Tag tag) {
+-        while (!stack.isEmpty()) {
+-            if (stackHasValidParent(tag)) // Check if current last element on stack is a valid parent
+-                return last();
+-            else
+-                stack.removeLast();
+-        }
+-        return null;
+-    }
++    private Element popStackToSuitableContainer(Tag tag) {
++        while (!stack.isEmpty()) {
++            if (last().tag().canContain(tag))
++                return last();
++            else
++                stack.removeLast();
++        }
++        return null;
++    }
+
+--- a/src/main/java/org/jsoup/parser/Tag.java
++++ b/src/main/java/org/jsoup/parser/Tag.java
+@@ -1,5 +1,25 @@
+-        // dt and dd (in dl)
+-        if (this.tagName.equals("dt") && child.tagName.equals("dd"))
+-            return false;
+-        if (this.tagName.equals("dd") && child.tagName.equals("dt"))
+-            return false;
++        // table rules
++        if (this.tagName.equals("table")) {
++            if (child.tagName.equals("caption") || child.tagName.equals("colgroup") || child.tagName.equals("tbody") || child.tagName.equals("tfoot") || child.tagName.equals("thead") || child.tagName.equals("tr")) {
++                return true;
++            }
++            return false;
++        }
++        if (this.tagName.equals("tbody") || this.tagName.equals("thead") || this.tagName.equals("tfoot")) {
++            if (child.tagName.equals("tr")) {
++                return true;
++            }
++            return false;
++        }
++        if (this.tagName.equals("tr")) {
++            if (child.tagName.equals("td") || child.tagName.equals("th")) {
++                return true;
++            }
++            return false;
++        }
++
++        // dt and dd (in dl)
++        if (this.tagName.equals("dt") && child.tagName.equals("dd"))
++            return false;
++        if (this.tagName.equals("dd") && child.tagName.equals("dt"))
++            return false;
+@@ -1,25 +1,5 @@
+-        // table rules
+-        if (this.tagName.equals("table")) {
+-            if (child.tagName.equals("caption") || child.tagName.equals("colgroup") || child.tagName.equals("tbody") || child.tagName.equals("tfoot") || child.tagName.equals("thead") || child.tagName.equals("tr")) {
+-                return true;
+-            }
+-            return false;
+-        }
+-        if (this.tagName.equals("tbody") || this.tagName.equals("thead") || this.tagName.equals("tfoot")) {
+-            if (child.tagName.equals("tr")) {
+-                return true;
+-            }
+-            return false;
+-        }
+-        if (this.tagName.equals("tr")) {
+-            if (child.tagName.equals("td") || child.tagName.equals("th")) {
+-                return true;
+-            }
+-            return false;
+-        }
+-
+-        // dt and dd (in dl)
+-        if (this.tagName.equals("dt") && child.tagName.equals("dd"))
+-            return false;
+-        if (this.tagName.equals("dd") && child.tagName.equals("dt"))
+-            return false;
++        // dt and dd (in dl)
++        if (this.tagName.equals("dt") && child.tagName.equals("dd"))
++            return false;
++        if (this.tagName.equals("dd") && child.tagName.equals("dt"))
++            return false;
+@@ -1,5 +1,25 @@
+-        // dt and dd (in dl)
+-        if (this.tagName.equals("dt") && child.tagName.equals("dd"))
+-            return false;
+-        if (this.tagName.equals("dd") && child.tagName.equals("dt"))
+-            return false;
++        // table rules
++        if (this.tagName.equals("table")) {
++            if (child.tagName.equals("caption") || child.tagName.equals("colgroup") || child.tagName.equals("tbody") || child.tagName.equals("tfoot") || child.tagName.equals("thead") || child.tagName.equals("tr")) {
++                return true;
++            }
++            return false;
++        }
++        if (this.tagName.equals("tbody") || this.tagName.equals("thead") || this.tagName.equals("tfoot")) {
++            if (child.tagName.equals("tr")) {
++                return true;
++            }
++            return false;
++        }
++        if (this.tagName.equals("tr")) {
++            if (child.tagName.equals("td") || child.tagName.equals("th")) {
++                return true;
++            }
++            return false;
++        }
++
++        // dt and dd (in dl)
++        if (this.tagName.equals("dt") && child.tagName.equals("dd"))
++            return false;
++        if (this.tagName.equals("dd") && child.tagName.equals("dt"))
++            return false;
+@@ -1,5 +1,25 @@
+-        // dt and dd (in dl)
+-        if (this.tagName.equals("dt") && child.tagName.equals("dd"))
+-            return false;
+-        if (this.tagName.equals("dd") && child.tagName.equals("dt"))
+-            return false;
++        // table rules
++        if (this.tagName.equals("table")) {
++            if (child.tagName.equals("caption") || child.tagName.equals("colgroup") || child.tagName.equals("tbody") || child.tagName.equals("tfoot") || child.tagName.equals("thead") || child.tagName.equals("tr")) {
++                return true;
++            }
++            return false;
++        }
++        if (this.tagName.equals("tbody") || this.tagName.equals("thead") || this.tagName.equals("tfoot")) {
++            if (child.tagName.equals("tr")) {
++                return true;
++            }
++            return false;
++        }
++        if (this.tagName.equals("tr")) {
++            if (child.tagName.equals("td") || child.tagName.equals("th")) {
++                return true;
++            }
++            return false;
++        }
++
++        // dt and dd (in dl)
++        if (this.tagName.equals("dt") && child.tagName.equals("dd"))
++            return false;
++        if (this.tagName.equals("dd") && child.tagName.equals("dt"))
++            return false;
+@@ -1,25 +1,5 @@
+-        // table rules
+-        if (this.tagName.equals("table")) {
+-            if (child.tagName.equals("caption") || child.tagName.equals("colgroup") || child.tagName.equals("tbody") || child.tagName.equals("tfoot") || child.tagName.equals("thead") || child.tagName.equals("tr")) {
+-                return true;
+-            }
+-            return false;
+-        }
+-        if (this.tagName.equals("tbody") || this.tagName.equals("thead") || this.tagName.equals("tfoot")) {
+-            if (child.tagName.equals("tr")) {
+-                return true;
+-            }
+-            return false;
+-        }
+-        if (this.tagName.equals("tr")) {
+-            if (child.tagName.equals("td") || child.tagName.equals("th")) {
+-                return true;
+-            }
+-            return false;
+-        }
+-
+-        // dt and dd (in dl)
+-        if (this.tagName.equals("dt") && child.tagName.equals("dd"))
+-            return false;
+-        if (this.tagName.equals("dd") && child.tagName.equals("dt"))
+-            return false;
++        // dt and dd (in dl)
++        if (this.tagName.equals("dt") && child.tagName.equals("dd"))
++            return false;
++        if (this.tagName.equals("dd") && child.tagName.equals("dt"))
++            return false;
+@@ -1,5 +1,25 @@
+-        // dt and dd (in dl)
+-        if (this.tagName.equals("dt") && child.tagName.equals("dd"))
+-            return false;
+-        if (this.tagName.equals("dd") && child.tagName.equals("dt"))
+-            return false;
++        // table rules
++        if (this.tagName.equals("table")) {
++            if (child.tagName.equals("caption") || child.tagName.equals("colgroup") || child.tagName.equals("tbody") || child.tagName.equals("tfoot") || child.tagName.equals("thead") || child.tagName.equals("tr")) {
++                return true;
++            }
++            return false;
++        }
++        if (this.tagName.equals("tbody") || this.tagName.equals("thead") || this.tagName.equals("tfoot")) {
++            if (child.tagName.equals("tr")) {
++                return true;
++            }
++            return false;
++        }
++        if (this.tagName.equals("tr")) {
++            if (child.tagName.equals("td") || child.tagName.equals("th")) {
++                return true;
++            }
++            return false;
++        }
++
++        // dt and dd (in dl)
++        if (this.tagName.equals("dt") && child.tagName.equals("dd"))
++            return false;
++        if (this.tagName.equals("dd") && child.tagName.equals("dt"))
++            return false;
+@@ -1,25 +1,5 @@
+-        // table rules
+-        if (this.tagName.equals("table")) {
+-            if (child.tagName.equals("caption") || child.tagName.equals("colgroup") || child.tagName.equals("tbody") || child.tagName.equals("tfoot") || child.tagName.equals("thead") || child.tagName.equals("tr")) {
+-                return true;
+-            }
+-            return false;
+-        }
+-        if (this.tagName.equals("tbody") || this.tagName.equals("thead") || this.tagName.equals("tfoot")) {
+-            if (child.tagName.equals("tr")) {
+-                return true;
+-            }
+-            return false;
+-        }
+-        if (this.tagName.equals("tr")) {
+-            if (child.tagName.equals("td") || child.tagName.equals("th")) {
+-                return true;
+-            }
+-            return false;
+-        }
+-
+-        // dt and dd (in dl)
+-        if (this.tagName.equals("dt") && child.tagName.equals("dd"))
+-            return false;
+-        if (this.tagName.equals("dd") && child.tagName.equals("dt"))
+-            return false;
++        // dt and dd (in dl)
++        if (this.tagName.equals("dt") && child.tagName.equals("dd"))
++            return false;
++        if (this.tagName.equals("dd") && child.tagName.equals("dt"))
++            return false;
+@@ -1,25 +1,5 @@
+-        // table rules
+-        if (this.tagName.equals("table")) {
+-            if (child.tagName.equals("caption") || child.tagName.equals("colgroup") || child.tagName.equals("tbody") || child.tagName.equals("tfoot") || child.tagName.equals("thead") || child.tagName.equals("tr")) {
+-                return true;
+-            }
+-            return false;
+-        }
+-        if (this.tagName.equals("tbody") || this.tagName.equals("thead") || this.tagName.equals("tfoot")) {
+-            if (child.tagName.equals("tr")) {
+-                return true;
+-            }
+-            return false;
+-        }
+-        if (this.tagName.equals("tr")) {
+-            if (child.tagName.equals("td") || child.tagName.equals("th")) {
+-                return true;
+-            }
+-            return false;
+-        }
+-
+-        // dt and dd (in dl)
+-        if (this.tagName.equals("dt") && child.tagName.equals("dd"))
+-            return false;
+-        if (this.tagName.equals("dd") && child.tagName.equals("dt"))
+-            return false;
++        // dt and dd (in dl)
++        if (this.tagName.equals("dt") && child.tagName.equals("dd"))
++            return false;
++        if (this.tagName.equals("dd") && child.tagName.equals("dt"))
++            return false;
+@@ -1,5 +1,25 @@
+-        // dt and dd (in dl)
+-        if (this.tagName.equals("dt") && child.tagName.equals("dd"))
+-            return false;
+-        if (this.tagName.equals("dd") && child.tagName.equals("dt"))
+-            return false;
++        // table rules
++        if (this.tagName.equals("table")) {
++            if (child.tagName.equals("caption") || child.tagName.equals("colgroup") || child.tagName.equals("tbody") || child.tagName.equals("tfoot") || child.tagName.equals("thead") || child.tagName.equals("tr")) {
++                return true;
++            }
++            return false;
++        }
++        if (this.tagName.equals("tbody") || this.tagName.equals("thead") || this.tagName.equals("tfoot")) {
++            if (child.tagName.equals("tr")) {
++                return true;
++            }
++            return false;
++        }
++        if (this.tagName.equals("tr")) {
++            if (child.tagName.equals("td") || child.tagName.equals("th")) {
++                return true;
++            }
++            return false;
++        }
++
++        // dt and dd (in dl)
++        if (this.tagName.equals("dt") && child.tagName.equals("dd"))
++            return false;
++        if (this.tagName.equals("dd") && child.tagName.equals("dt"))
++            return false;

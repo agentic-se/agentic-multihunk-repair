@@ -1,0 +1,29 @@
+--- a/src/main/java/com/fasterxml/jackson/databind/introspect/BasicBeanDescription.java
++++ b/src/main/java/com/fasterxml/jackson/databind/introspect/BasicBeanDescription.java
+@@ -1,13 +1,13 @@
+-        for (AnnotatedMethod am : _classInfo.getStaticMethods()) {
+-            // 24-Oct-2016, tatu: Better ensure it only takes 1 arg, no matter what
+-            if (isFactoryMethod(am)) {
+-                // And must take one of expected arg types (or supertype)
+-                Class<?> actualArgType = am.getRawParameterType(0);
+-                for (Class<?> expArgType : expArgTypes) {
+-                    // And one that matches what we would pass in
+-                    if (actualArgType.isAssignableFrom(expArgType)) {
+-                        return am.getAnnotated();
+-                    }
+-                }
+-            }
+-        }
++        for (AnnotatedMethod am : _classInfo.getStaticMethods()) {
++            // 24-Oct-2016, tatu: Better ensure it only takes 1 arg, no matter what
++            if (am.getParameterCount() == 1 && isFactoryMethod(am)) {
++                // And must take one of expected arg types (or supertype)
++                Class<?> actualArgType = am.getRawParameterType(0);
++                for (Class<?> expArgType : expArgTypes) {
++                    // And one that matches what we would pass in
++                    if (actualArgType.isAssignableFrom(expArgType)) {
++                        return am.getAnnotated();
++                    }
++                }
++            }
++        }

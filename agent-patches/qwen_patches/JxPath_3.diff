@@ -1,0 +1,24 @@
+diff --git a/src/java/org/apache/commons/jxpath/util/ValueUtils.java b/src/java/org/apache/commons/jxpath/util/ValueUtils.java
+index 56886f2..8039ddd 100644
+--- a/src/java/org/apache/commons/jxpath/util/ValueUtils.java
++++ b/src/java/org/apache/commons/jxpath/util/ValueUtils.java
+@@ -196,8 +196,17 @@ public class ValueUtils {
+             return bigger;
+         }
+         else if (collection instanceof Collection) {
+-            while (((Collection) collection).size() < size) {
+-                ((Collection) collection).add(null);
++            Collection col = (Collection) collection;
++            // Avoid potential infinite recursion when expanding collections 
++            // that might have null elements in them
++            int currentSize = col.size();
++            if (currentSize >= size) {
++                return collection;
++            }
++            
++            // Fill with nulls until the required size
++            for (int i = currentSize; i < size; i++) {
++                col.add(null);
+             }
+             return collection;
+         }

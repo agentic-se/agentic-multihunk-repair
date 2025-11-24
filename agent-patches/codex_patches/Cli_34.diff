@@ -1,0 +1,60 @@
+diff --git a/src/main/java/org/apache/commons/cli/CommandLine.java b/src/main/java/org/apache/commons/cli/CommandLine.java
+index 81d89dd..239ee0f 100644
+--- a/src/main/java/org/apache/commons/cli/CommandLine.java
++++ b/src/main/java/org/apache/commons/cli/CommandLine.java
+@@ -120,7 +120,9 @@ public class CommandLine implements Serializable
+             return null;
+         }
+         
+-        return TypeHandler.createValue(res, option.getType());
++        // Default to String type if none was specified on the option
++        Object type = option.getType() != null ? option.getType() : PatternOptionBuilder.STRING_VALUE;
++        return TypeHandler.createValue(res, type);
+     }
+ 
+     /**
+diff --git a/src/main/java/org/apache/commons/cli/Option.java b/src/main/java/org/apache/commons/cli/Option.java
+index 11a3685..c654c4a 100644
+--- a/src/main/java/org/apache/commons/cli/Option.java
++++ b/src/main/java/org/apache/commons/cli/Option.java
+@@ -130,6 +130,11 @@ public class Option implements Cloneable, Serializable
+         if (hasArg)
+         {
+             this.numberOfArgs = 1;
++            // default the type to String when an argument is expected
++            if (this.type == null)
++            {
++                this.type = PatternOptionBuilder.STRING_VALUE;
++            }
+         }
+ 
+         this.description = description;
+@@ -346,6 +351,12 @@ public class Option implements Cloneable, Serializable
+     public void setArgs(int num)
+     {
+         this.numberOfArgs = num;
++        // If this option accepts arguments and no explicit type was set,
++        // default to String as the argument type.
++        if (this.type == null && (num > 0 || num == UNLIMITED_VALUES))
++        {
++            this.type = PatternOptionBuilder.STRING_VALUE;
++        }
+     }
+ 
+     /**
+diff --git a/src/main/java/org/apache/commons/cli/OptionBuilder.java b/src/main/java/org/apache/commons/cli/OptionBuilder.java
+index f9eb13a..2242413 100644
+--- a/src/main/java/org/apache/commons/cli/OptionBuilder.java
++++ b/src/main/java/org/apache/commons/cli/OptionBuilder.java
+@@ -361,7 +361,10 @@ public final class OptionBuilder
+             option.setRequired(required);
+             option.setOptionalArg(optionalArg);
+             option.setArgs(numberOfArgs);
+-            option.setType(type);
++            if (type != null)
++            {
++                option.setType(type);
++            }
+             option.setValueSeparator(valuesep);
+             option.setArgName(argName);
+         }

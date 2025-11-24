@@ -1,0 +1,207 @@
+--- a/src/org/mockito/internal/invocation/InvocationMatcher.java
++++ b/src/org/mockito/internal/invocation/InvocationMatcher.java
+@@ -1,24 +1,11 @@
+-    public void captureArgumentsFrom(Invocation invocation) {
+-        if (invocation.getMethod().isVarArgs()) {
+-            int indexOfVararg = invocation.getRawArguments().length - 1;
+-            for (int position = 0; position < indexOfVararg; position++) {
+-                Matcher m = matchers.get(position);
+-                if (m instanceof CapturesArguments) {
+-                    ((CapturesArguments) m).captureFrom(invocation.getArgumentAt(position, Object.class));
+-                }
+-            }
+-            for (int position = indexOfVararg; position < matchers.size(); position++) {
+-                Matcher m = matchers.get(position);
+-                if (m instanceof CapturesArguments) {
+-                    ((CapturesArguments) m).captureFrom(invocation.getRawArguments()[position - indexOfVararg]);
+-                }
+-            }
+-        } else {
+-            for (int position = 0; position < matchers.size(); position++) {
+-                Matcher m = matchers.get(position);
+-                if (m instanceof CapturesArguments) {
+-                    ((CapturesArguments) m).captureFrom(invocation.getArgumentAt(position, Object.class));
+-                }
+-            }
+-        }
+-    }
++    public void captureArgumentsFrom(Invocation invocation) {
++        Object[] arguments = invocation.getArguments();
++        for (int position = 0; position < matchers.size(); position++) {
++            Matcher m = matchers.get(position);
++            if (m instanceof CapturesArguments) {
++                if (position < arguments.length) {
++                    ((CapturesArguments) m).captureFrom(arguments[position]);
++                }
++            }
++        }
++    }
+@@ -1,11 +1,36 @@
+-    public void captureArgumentsFrom(Invocation invocation) {
+-        Object[] arguments = invocation.getArguments();
+-        for (int position = 0; position < matchers.size(); position++) {
+-            Matcher m = matchers.get(position);
+-            if (m instanceof CapturesArguments) {
+-                if (position < arguments.length) {
+-                    ((CapturesArguments) m).captureFrom(arguments[position]);
+-                }
+-            }
+-        }
+-    }
++    public void captureArgumentsFrom(Invocation invocation) {
++        if (invocation.getMethod().isVarArgs()) {
++            int varargIndex = invocation.getMethod().getParameterTypes().length - 1;
++
++            // Capture regular arguments before vararg
++            for (int position = 0; position < varargIndex; position++) {
++                Matcher m = matchers.get(position);
++                if (m instanceof CapturesArguments) {
++                    ((CapturesArguments) m).captureFrom(invocation.getArgumentAt(position, Object.class));
++                }
++            }
++
++            // Capture vararg elements
++            if (varargIndex < matchers.size()) {
++                Matcher varargMatcher = matchers.get(varargIndex);
++                if (varargMatcher instanceof CapturesArguments) {
++                    Object varargArray = invocation.getRawArguments()[varargIndex];
++                    if (varargArray != null) {
++                        for (int i = 0; i < Array.getLength(varargArray); i++) {
++                            ((CapturesArguments) varargMatcher).captureFrom(Array.get(varargArray, i));
++                        }
++                    }
++                }
++            }
++        } else {
++            // Existing logic for non-vararg methods
++            for (int position = 0; position < matchers.size(); position++) {
++                Matcher m = matchers.get(position);
++                if (m instanceof CapturesArguments) {
++                    if (position < invocation.getArguments().length) {
++                        ((CapturesArguments) m).captureFrom(invocation.getArgumentAt(position, Object.class));
++                    }
++                }
++            }
++        }
++    }
+@@ -1,33 +1,11 @@
+-    public void captureArgumentsFrom(Invocation invocation) {
+-        Method method = invocation.getMethod();
+-        Object[] arguments = invocation.getArguments(); // Expanded varargs
+-
+-        if (method.isVarArgs()) {
+-            int varargParameterIndex = method.getParameterTypes().length - 1;
+-
+-            for (int position = 0; position < matchers.size(); position++) {
+-                Matcher m = matchers.get(position);
+-                if (m instanceof CapturesArguments) {
+-                    if (position < varargParameterIndex) { // Fixed arguments
+-                        ((CapturesArguments) m).captureFrom(arguments[position]);
+-                    } else { // Vararg arguments
+-                        // If this is the vararg matcher, capture all remaining arguments
+-                        for (int i = position; i < arguments.length; i++) {
+-                            ((CapturesArguments) m).captureFrom(arguments[i]);
+-                        }
+-                        break; // All vararg elements captured, no need to continue
+-                    }
+-                }
+-            }
+-        } else {
+-            // Existing logic for non-vararg methods
+-            for (int position = 0; position < matchers.size(); position++) {
+-                Matcher m = matchers.get(position);
+-                if (m instanceof CapturesArguments) {
+-                    if (position < arguments.length) {
+-                        ((CapturesArguments) m).captureFrom(arguments[position]);
+-                    }
+-                }
+-            }
+-        }
+-    }
++    public void captureArgumentsFrom(Invocation invocation) {
++        Object[] arguments = invocation.getArguments();
++        for (int position = 0; position < matchers.size(); position++) {
++            Matcher m = matchers.get(position);
++            if (m instanceof CapturesArguments) {
++                if (position < arguments.length) {
++                    ((CapturesArguments) m).captureFrom(arguments[position]);
++                }
++            }
++        }
++    }
+@@ -1,11 +1,21 @@
+-    public void captureArgumentsFrom(Invocation invocation) {
+-        Object[] arguments = invocation.getArguments();
+-        for (int position = 0; position < matchers.size(); position++) {
+-            Matcher m = matchers.get(position);
+-            if (m instanceof CapturesArguments) {
+-                if (position < arguments.length) {
+-                    ((CapturesArguments) m).captureFrom(arguments[position]);
+-                }
+-            }
+-        }
+-    }
++    public void captureArgumentsFrom(Invocation invocation) {
++        Object[] arguments = invocation.getArguments(); // Expanded varargs
++        for (int position = 0; position < matchers.size(); position++) {
++            Matcher m = matchers.get(position);
++            if (m instanceof CapturesArguments) {
++                if (position < arguments.length) {
++                    // If the method is a vararg method and this is the vararg parameter,
++                    // and the matcher is a CapturesArguments, it should capture all remaining arguments.
++                    // This is a simplification, assuming a single ArgumentCaptor.capture() for varargs.
++                    if (invocation.getMethod().isVarArgs() && position == invocation.getMethod().getParameterTypes().length - 1) {
++                        for (int i = position; i < arguments.length; i++) {
++                            ((CapturesArguments) m).captureFrom(arguments[i]);
++                        }
++                        break; // All vararg elements captured
++                    } else {
++                        ((CapturesArguments) m).captureFrom(arguments[position]);
++                    }
++                }
++            }
++        }
++    }
+@@ -1,20 +1,22 @@
+-    public void captureArgumentsFrom(Invocation invocation) {
+-        Object[] arguments = invocation.getArguments(); // Expanded varargs
+-        for (int position = 0; position < matchers.size(); position++) {
+-            Matcher m = matchers.get(position);
+-            if (m instanceof CapturesArguments) {
+-                if (position < arguments.length) { // Ensure we don't go out of bounds
+-                    if (invocation.getMethod().isVarArgs() && position == invocation.getMethod().getParameterTypes().length - 1) {
+-                        // This matcher is at the vararg parameter index, capture all remaining arguments
+-                        for (int i = position; i < arguments.length; i++) {
+-                            ((CapturesArguments) m).captureFrom(arguments[i]);
+-                        }
+-                        break; // All vararg elements captured
+-                    } else {
+-                        // Capture a single argument
+-                        ((CapturesArguments) m).captureFrom(arguments[position]);
+-                    }
+-                }
+-            }
+-        }
+-    }
++    public void captureArgumentsFrom(Invocation invocation) {
++        Method method = invocation.getMethod();
++        Object[] arguments = invocation.getArguments(); // Expanded varargs
++
++        for (int position = 0; position < matchers.size(); position++) {
++            Matcher m = matchers.get(position);
++            if (m instanceof CapturesArguments) {
++                if (position < arguments.length) { // Ensure we don't go out of bounds
++                    if (method.isVarArgs() && position == method.getParameterTypes().length - 1) {
++                        // This matcher is at the vararg parameter index, capture all remaining arguments
++                        for (int i = position; i < arguments.length; i++) {
++                            ((CapturesArguments) m).captureFrom(invocation.getArgumentAt(i, Object.class));
++                        }
++                        break; // All vararg elements captured by this matcher
++                    } else {
++                        // Capture a single argument
++                        ((CapturesArguments) m).captureFrom(invocation.getArgumentAt(position, Object.class));
++                    }
++                }
++            }
++        }
++    }

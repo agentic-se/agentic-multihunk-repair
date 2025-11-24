@@ -1,0 +1,49 @@
+diff --git a/src/main/java/org/apache/commons/csv/CSVFormat.java b/src/main/java/org/apache/commons/csv/CSVFormat.java
+index 847f30a..8c71f3a 100644
+--- a/src/main/java/org/apache/commons/csv/CSVFormat.java
++++ b/src/main/java/org/apache/commons/csv/CSVFormat.java
+@@ -316,7 +316,7 @@ public final class CSVFormat implements Serializable {
+      *      http://dev.mysql.com/doc/refman/5.1/en/load-data.html</a>
+      */
+     public static final CSVFormat MYSQL = DEFAULT.withDelimiter(TAB).withEscape(BACKSLASH).withIgnoreEmptyLines(false)
+-            .withQuote(null).withRecordSeparator(LF);
++            .withQuote(null).withRecordSeparator(LF).withNullString("\\N");
+ 
+     /**
+      * Returns true if the given character is a line break character.
+diff --git a/src/main/java/org/apache/commons/csv/CSVPrinter.java b/src/main/java/org/apache/commons/csv/CSVPrinter.java
+index ac4234b..c08da78 100644
+--- a/src/main/java/org/apache/commons/csv/CSVPrinter.java
++++ b/src/main/java/org/apache/commons/csv/CSVPrinter.java
+@@ -121,14 +121,23 @@ public final class CSVPrinter implements Flushable, Closeable {
+      */
+     public void print(final Object value) throws IOException {
+         // null values are considered empty
+-        String strValue;
++        // but are also written literally (without escaping) if a nullString is specified
+         if (value == null) {
+             final String nullString = format.getNullString();
+-            strValue = nullString == null ? Constants.EMPTY : nullString;
++            if (nullString == null) {
++                this.print(value, Constants.EMPTY, 0, 0);
++            } else {
++                // write the nullString directly without escaping
++                if (!newRecord) {
++                    out.append(format.getDelimiter());
++                }
++                out.append(nullString);
++                newRecord = false;
++            }
+         } else {
+-            strValue = value.toString();
++            final String strValue = value.toString();
++            this.print(value, strValue, 0, strValue.length());
+         }
+-        this.print(value, strValue, 0, strValue.length());
+     }
+ 
+     private void print(final Object object, final CharSequence value, final int offset, final int len)
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

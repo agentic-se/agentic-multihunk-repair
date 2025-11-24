@@ -1,0 +1,47 @@
+--- a/src/java/org/apache/commons/cli/OptionBuilder.java
++++ b/src/java/org/apache/commons/cli/OptionBuilder.java
+@@ -1,19 +1,25 @@
+-    public static Option create(String opt) throws IllegalArgumentException
+-    {
+-            // create the option
+-        Option option = new Option(opt, description);
+-
+-            // set the option properties
+-            option.setLongOpt(longopt);
+-            option.setRequired(required);
+-            option.setOptionalArg(optionalArg);
+-            option.setArgs(numberOfArgs);
+-            option.setType(type);
+-            option.setValueSeparator(valuesep);
+-            option.setArgName(argName);
+-            // reset the OptionBuilder properties
+-            OptionBuilder.reset();
+-
+-        // return the Option instance
+-        return option;
+-    }
++    public static Option create(String opt) throws IllegalArgumentException
++    {
++        try
++        {
++            // create the option
++            Option option = new Option(opt, description);
++
++            // set the option properties
++            option.setLongOpt(longopt);
++            option.setRequired(required);
++            option.setOptionalArg(optionalArg);
++            option.setArgs(numberOfArgs);
++            option.setType(type);
++            option.setValueSeparator(valuesep);
++            option.setArgName(argName);
++
++            // return the Option instance
++            return option;
++        }
++        finally
++        {
++            // reset the OptionBuilder properties
++            OptionBuilder.reset();
++        }
++    }

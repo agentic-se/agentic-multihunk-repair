@@ -1,0 +1,166 @@
+--- a/src/main/java/org/apache/commons/lang3/SerializationUtils.java
++++ b/src/main/java/org/apache/commons/lang3/SerializationUtils.java
+@@ -1,9 +1,13 @@
+-        @Override
+-        protected Class<?> resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
+-            String name = desc.getName();
+-            try {
+-                return Class.forName(name, false, classLoader);
+-            } catch (ClassNotFoundException ex) {
+-                    return Class.forName(name, false, Thread.currentThread().getContextClassLoader());
+-            }
+-        }
++        @Override
++        protected Class<?> resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
++            String name = desc.getName();
++            try {
++                return Class.forName(name, false, classLoader);
++            } catch (ClassNotFoundException ex) {
++            	try {
++            	     return Class.forName(name, false, Thread.currentThread().getContextClassLoader());
++            	} catch (Exception e) {
++		     return super.resolveClass(desc);
++		}
++            }
++        }
+@@ -1,13 +1,13 @@
+-        @Override
+-        protected Class<?> resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
+-            String name = desc.getName();
+-            try {
+-                return Class.forName(name, false, classLoader);
+-            } catch (ClassNotFoundException ex) {
+-            	try {
+-            	     return Class.forName(name, false, Thread.currentThread().getContextClassLoader());
+-            	} catch (Exception e) {
+-		     return super.resolveClass(desc);
+-		}
+-            }
+-        }
++        @Override
++        protected Class<?> resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
++            String name = desc.getName();
++            try {
++                return Class.forName(name, false, classLoader);
++            } catch (ClassNotFoundException ex) {
++                try {
++                    return Class.forName(name, false, Thread.currentThread().getContextClassLoader());
++                } catch (ClassNotFoundException ex2) {
++                    return super.resolveClass(desc);
++                }
++            }
++        }
+@@ -1,13 +1,18 @@
+-        @Override
+-        protected Class<?> resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
+-            String name = desc.getName();
+-            try {
+-                return Class.forName(name, false, classLoader);
+-            } catch (ClassNotFoundException ex) {
+-                try {
+-                    return Class.forName(name, false, Thread.currentThread().getContextClassLoader());
+-                } catch (ClassNotFoundException ex2) {
+-                    return super.resolveClass(desc);
+-                }
+-            }
+-        }
++        @Override
++        protected Class<?> resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
++            String name = desc.getName();
++
++            if (isPrimitiveOrArrayOfPrimitive(name)) {
++                return super.resolveClass(desc);
++            }
++
++            try {
++                return Class.forName(name, false, classLoader);
++            } catch (ClassNotFoundException ex) {
++                try {
++                    return Class.forName(name, false, Thread.currentThread().getContextClassLoader());
++                } catch (ClassNotFoundException ex2) {
++                    return super.resolveClass(desc);
++                }
++            }
++        }
+@@ -1,18 +1,4 @@
+-        @Override
+-        protected Class<?> resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
+-            String name = desc.getName();
+-
+-            if (isPrimitiveOrArrayOfPrimitive(name)) {
+-                return super.resolveClass(desc);
+-            }
+-
+-            try {
+-                return Class.forName(name, false, classLoader);
+-            } catch (ClassNotFoundException ex) {
+-                try {
+-                    return Class.forName(name, false, Thread.currentThread().getContextClassLoader());
+-                } catch (ClassNotFoundException ex2) {
+-                    return super.resolveClass(desc);
+-                }
+-            }
+-        }
++        @Override
++        protected Class<?> resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
++            return super.resolveClass(desc);
++        }
+@@ -1,9 +1,26 @@
+-        @Override
+-        protected Class<?> resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
+-            String name = desc.getName();
+-            try {
+-                return Class.forName(name, false, classLoader);
+-            } catch (ClassNotFoundException ex) {
+-                    return Class.forName(name, false, Thread.currentThread().getContextClassLoader());
+-            }
+-        }
++        @Override
++        protected Class<?> resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
++            String name = desc.getName();
++
++            // Check if the class is a primitive type or a primitive array
++            // Primitive type names: boolean, byte, char, short, int, long, float, double, void
++            // Primitive array names: [Z, [B, [C, [S, [I, [J, [F, [D
++            if (name.equals("boolean") || name.equals("byte") || name.equals("char") ||
++                name.equals("short") || name.equals("int") || name.equals("long") ||
++                name.equals("float") || name.equals("double") || name.equals("void") ||
++                name.startsWith("[Z") || name.startsWith("[B") || name.startsWith("[C") ||
++                name.startsWith("[S") || name.startsWith("[I") || name.startsWith("[J") ||
++                name.startsWith("[F") || name.startsWith("[D")) {
++                return super.resolveClass(desc);
++            }
++
++            try {
++                return Class.forName(name, false, classLoader);
++            } catch (ClassNotFoundException ex) {
++                try {
++                    return Class.forName(name, false, Thread.currentThread().getContextClassLoader());
++                } catch (ClassNotFoundException ex2) {
++                    return super.resolveClass(desc);
++                }
++            }
++        }
+@@ -1,9 +1,13 @@
+-        @Override
+-        protected Class<?> resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
+-            String name = desc.getName();
+-            try {
+-                return Class.forName(name, false, classLoader);
+-            } catch (ClassNotFoundException ex) {
+-                    return Class.forName(name, false, Thread.currentThread().getContextClassLoader());
+-            }
+-        }
++        @Override
++        protected Class<?> resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
++            String name = desc.getName();
++            try {
++                return Class.forName(name, false, classLoader);
++            } catch (ClassNotFoundException ex) {
++            	try {
++            	     return Class.forName(name, false, Thread.currentThread().getContextClassLoader());
++            	} catch (Exception e) {
++		     return super.resolveClass(desc);
++		}
++            }
++        }

@@ -1,0 +1,34 @@
+diff --git a/src/main/java/org/jsoup/helper/DataUtil.java b/src/main/java/org/jsoup/helper/DataUtil.java
+index f07173c..73861d4 100644
+--- a/src/main/java/org/jsoup/helper/DataUtil.java
++++ b/src/main/java/org/jsoup/helper/DataUtil.java
+@@ -89,6 +89,10 @@ public class DataUtil {
+                 }
+ 
+                 if (foundCharset != null && foundCharset.length() != 0 && !foundCharset.equals(defaultCharset)) { // need to re-decode
++                    // Clean up charset name by removing any trailing quotes that might be in malformed tags
++                    if (foundCharset.endsWith("\"")) {
++                        foundCharset = foundCharset.substring(0, foundCharset.length() - 1);
++                    }
+                     charsetName = foundCharset;
+                     byteData.rewind();
+                     docData = Charset.forName(foundCharset).decode(byteData).toString();
+@@ -158,10 +162,14 @@ public class DataUtil {
+         Matcher m = charsetPattern.matcher(contentType);
+         if (m.find()) {
+             String charset = m.group(1).trim();
+-                if (Charset.isSupported(charset)) return charset;
+-                charset = charset.toUpperCase(Locale.ENGLISH);
+-                if (Charset.isSupported(charset)) return charset;
+-                // if our advanced charset matching fails.... we just take the default
++            // Clean up charset name by removing any trailing quotes that might have been captured
++            if (charset.endsWith("\"")) {
++                charset = charset.substring(0, charset.length() - 1);
++            }
++            if (Charset.isSupported(charset)) return charset;
++            charset = charset.toUpperCase(Locale.ENGLISH);
++            if (Charset.isSupported(charset)) return charset;
++            // if our advanced charset matching fails.... we just take the default
+         }
+         return null;
+     }

@@ -1,0 +1,687 @@
+--- a/src/main/java/org/apache/commons/math3/ode/AbstractIntegrator.java
++++ b/src/main/java/org/apache/commons/math3/ode/AbstractIntegrator.java
+@@ -1,6 +1,6 @@
+-                    computeDerivatives(eventT, y, yDot);
+-                    resetOccurred = true;
+-                    for (final EventState remaining : occuringEvents) {
+-                        remaining.stepAccepted(eventT, eventY);
+-                    }
+-                    return eventT;
++                    computeDerivatives(eventT, y, yDot);
++                    resetOccurred = true;
++                    for (final EventState state : eventsStates) {
++                        state.stepAccepted(eventT, eventY);
++                    }
++                    return eventT;
+@@ -1,6 +1,6 @@
+-                    computeDerivatives(eventT, y, yDot);
+-                    resetOccurred = true;
+-                    for (final EventState state : eventsStates) {
+-                        state.stepAccepted(eventT, eventY);
+-                    }
+-                    return eventT;
++                    computeDerivatives(eventT, y, yDot);
++                    resetOccurred = true;
++                    for (final EventState remaining : occuringEvents) {
++                        remaining.stepAccepted(eventT, eventY);
++                    }
++                    return eventT;
+@@ -1,6 +1,7 @@
+-                    computeDerivatives(eventT, y, yDot);
+-                    resetOccurred = true;
+-                    for (final EventState remaining : occuringEvents) {
+-                        remaining.stepAccepted(eventT, eventY);
+-                    }
+-                    return eventT;
++                    computeDerivatives(eventT, y, yDot);
++                    resetOccurred = true;
++                    setStateInitialized(false);
++                    for (final EventState remaining : occuringEvents) {
++                        remaining.stepAccepted(eventT, eventY);
++                    }
++                    return eventT;
+@@ -1,7 +1,6 @@
+-                    computeDerivatives(eventT, y, yDot);
+-                    resetOccurred = true;
+-                    setStateInitialized(false);
+-                    for (final EventState remaining : occuringEvents) {
+-                        remaining.stepAccepted(eventT, eventY);
+-                    }
+-                    return eventT;
++                    computeDerivatives(eventT, y, yDot);
++                    resetOccurred = true;
++                    for (final EventState remaining : occuringEvents) {
++                        remaining.stepAccepted(eventT, eventY);
++                    }
++                    return eventT;
+@@ -1,12 +1,12 @@
+-                boolean needReset = currentEvent.reset(eventT, eventY);
+-                if (needReset) {
+-                    // some event handler has triggered changes that
+-                    // invalidate the derivatives, we need to recompute them
+-                    System.arraycopy(eventY, 0, y, 0, y.length);
+-                    computeDerivatives(eventT, y, yDot);
+-                    resetOccurred = true;
+-                    for (final EventState remaining : occuringEvents) {
+-                        remaining.stepAccepted(eventT, eventY);
+-                    }
+-                    return eventT;
+-                }
++                boolean needReset = currentEvent.reset(eventT, eventY);
++                if (needReset) {
++                    // some event handler has triggered changes that
++                    // invalidate the derivatives, we need to recompute them
++                    System.arraycopy(eventY, 0, y, 0, y.length);
++                    computeDerivatives(eventT, y, yDot);
++                    resetOccurred = true;
++                    for (final EventState state : eventsStates) {
++                        state.stepAccepted(eventT, eventY);
++                    }
++                    return eventT;
++                }
+@@ -1,12 +1,12 @@
+-                boolean needReset = currentEvent.reset(eventT, eventY);
+-                if (needReset) {
+-                    // some event handler has triggered changes that
+-                    // invalidate the derivatives, we need to recompute them
+-                    System.arraycopy(eventY, 0, y, 0, y.length);
+-                    computeDerivatives(eventT, y, yDot);
+-                    resetOccurred = true;
+-                    for (final EventState state : eventsStates) {
+-                        state.stepAccepted(eventT, eventY);
+-                    }
+-                    return eventT;
+-                }
++                boolean needReset = currentEvent.reset(eventT, eventY);
++                if (needReset) {
++                    // some event handler has triggered changes that
++                    // invalidate the derivatives, we need to recompute them
++                    System.arraycopy(eventY, 0, y, 0, y.length);
++                    computeDerivatives(eventT, y, yDot);
++                    resetOccurred = true;
++                    for (final EventState remaining : occuringEvents) {
++                        remaining.stepAccepted(eventT, eventY);
++                    }
++                    return eventT;
++                }
+@@ -1,6 +1,7 @@
+-                    computeDerivatives(eventT, y, yDot);
+-                    resetOccurred = true;
+-                    for (final EventState remaining : occuringEvents) {
+-                        remaining.stepAccepted(eventT, eventY);
+-                    }
+-                    return eventT;
++                    computeDerivatives(eventT, y, yDot);
++                    resetOccurred = true;
++                    setStateInitialized(false);
++                    for (final EventState remaining : occuringEvents) {
++                        remaining.stepAccepted(eventT, eventY);
++                    }
++                    return eventT;
+@@ -1,7 +1,6 @@
+-                    computeDerivatives(eventT, y, yDot);
+-                    resetOccurred = true;
+-                    setStateInitialized(false);
+-                    for (final EventState remaining : occuringEvents) {
+-                        remaining.stepAccepted(eventT, eventY);
+-                    }
+-                    return eventT;
++                    computeDerivatives(eventT, y, yDot);
++                    resetOccurred = true;
++                    for (final EventState remaining : occuringEvents) {
++                        remaining.stepAccepted(eventT, eventY);
++                    }
++                    return eventT;
+@@ -1,6 +1,6 @@
+-                    computeDerivatives(eventT, y, yDot);
+-                    resetOccurred = true;
+-                    for (final EventState remaining : occuringEvents) {
+-                        remaining.stepAccepted(eventT, eventY);
+-                    }
+-                    return eventT;
++                    computeDerivatives(eventT, y, yDot);
++                    resetOccurred = true;
++                    for (final EventState state : eventsStates) {
++                        state.resetState(eventT, eventY);
++                    }
++                    return eventT;
+@@ -1,6 +1,6 @@
+-                    computeDerivatives(eventT, y, yDot);
+-                    resetOccurred = true;
+-                    for (final EventState state : eventsStates) {
+-                        state.resetState(eventT, eventY);
+-                    }
+-                    return eventT;
++                    computeDerivatives(eventT, y, yDot);
++                    resetOccurred = true;
++                    for (final EventState remaining : occuringEvents) {
++                        remaining.stepAccepted(eventT, eventY);
++                    }
++                    return eventT;
+@@ -1,6 +1,6 @@
+-                    computeDerivatives(eventT, y, yDot);
+-                    resetOccurred = true;
+-                    for (final EventState remaining : occuringEvents) {
+-                        remaining.stepAccepted(eventT, eventY);
+-                    }
+-                    return eventT;
++                    computeDerivatives(eventT, y, yDot);
++                    resetOccurred = true;
++                    for (final EventState state : eventsStates) {
++                        state.resetState(eventT, eventY);
++                    }
++                    return eventT;
+@@ -1,6 +1,6 @@
+-                    computeDerivatives(eventT, y, yDot);
+-                    resetOccurred = true;
+-                    for (final EventState state : eventsStates) {
+-                        state.resetState(eventT, eventY);
+-                    }
+-                    return eventT;
++                    computeDerivatives(eventT, y, yDot);
++                    resetOccurred = true;
++                    for (final EventState remaining : occuringEvents) {
++                        remaining.stepAccepted(eventT, eventY);
++                    }
++                    return eventT;
+@@ -1,6 +1,6 @@
+-                    computeDerivatives(eventT, y, yDot);
+-                    resetOccurred = true;
+-                    for (final EventState remaining : occuringEvents) {
+-                        remaining.stepAccepted(eventT, eventY);
+-                    }
+-                    return eventT;
++                    computeDerivatives(eventT, y, yDot);
++                    resetOccurred = true;
++                    for (final EventState state : eventsStates) {
++                        state.resetState(eventT, eventY);
++                    }
++                    return eventT;
+@@ -1,6 +1,6 @@
+-                    computeDerivatives(eventT, y, yDot);
+-                    resetOccurred = true;
+-                    for (final EventState state : eventsStates) {
+-                        state.resetState(eventT, eventY);
+-                    }
+-                    return eventT;
++                    computeDerivatives(eventT, y, yDot);
++                    resetOccurred = true;
++                    for (final EventState remaining : occuringEvents) {
++                        remaining.stepAccepted(eventT, eventY);
++                    }
++                    return eventT;
+@@ -1,6 +1,6 @@
+-                    computeDerivatives(eventT, y, yDot);
+-                    resetOccurred = true;
+-                    for (final EventState remaining : occuringEvents) {
+-                        remaining.stepAccepted(eventT, eventY);
+-                    }
+-                    return eventT;
++                    computeDerivatives(eventT, y, yDot);
++                    resetOccurred = true;
++                    for (final EventState state : eventsStates) {
++                        state.setPreviousEventTime(eventT);
++                    }
++                    return eventT;
+@@ -1,6 +1,6 @@
+-                    computeDerivatives(eventT, y, yDot);
+-                    resetOccurred = true;
+-                    for (final EventState state : eventsStates) {
+-                        state.setPreviousEventTime(eventT);
+-                    }
+-                    return eventT;
++                    computeDerivatives(eventT, y, yDot);
++                    resetOccurred = true;
++                    for (final EventState remaining : occuringEvents) {
++                        remaining.stepAccepted(eventT, eventY);
++                    }
++                    return eventT;
+@@ -1,12 +1,12 @@
+-                boolean needReset = currentEvent.reset(eventT, eventY);
+-                if (needReset) {
+-                    // some event handler has triggered changes that
+-                    // invalidate the derivatives, we need to recompute them
+-                    System.arraycopy(eventY, 0, y, 0, y.length);
+-                    computeDerivatives(eventT, y, yDot);
+-                    resetOccurred = true;
+-                    for (final EventState remaining : occuringEvents) {
+-                        remaining.stepAccepted(eventT, eventY);
+-                    }
+-                    return eventT;
+-                }
++                boolean needReset = currentEvent.reset(eventT, eventY);
++                if (needReset) {
++                    // some event handler has triggered changes that
++                    // invalidate the derivatives, we need to recompute them
++                    System.arraycopy(eventY, 0, y, 0, y.length);
++                    computeDerivatives(eventT, y, yDot);
++                    resetOccurred = true;
++                    for (final EventState state : eventsStates) {
++                        state.stepAccepted(eventT, eventY);
++                    }
++                    return eventT;
++                }
+@@ -1,12 +1,12 @@
+-                boolean needReset = currentEvent.reset(eventT, eventY);
+-                if (needReset) {
+-                    // some event handler has triggered changes that
+-                    // invalidate the derivatives, we need to recompute them
+-                    System.arraycopy(eventY, 0, y, 0, y.length);
+-                    computeDerivatives(eventT, y, yDot);
+-                    resetOccurred = true;
+-                    for (final EventState state : eventsStates) {
+-                        state.stepAccepted(eventT, eventY);
+-                    }
+-                    return eventT;
+-                }
++                boolean needReset = currentEvent.reset(eventT, eventY);
++                if (needReset) {
++                    // some event handler has triggered changes that
++                    // invalidate the derivatives, we need to recompute them
++                    System.arraycopy(eventY, 0, y, 0, y.length);
++                    computeDerivatives(eventT, y, yDot);
++                    resetOccurred = true;
++                    for (final EventState remaining : occuringEvents) {
++                        remaining.stepAccepted(eventT, eventY);
++                    }
++                    return eventT;
++                }
+@@ -1,6 +1,7 @@
+-                    computeDerivatives(eventT, y, yDot);
+-                    resetOccurred = true;
+-                    for (final EventState remaining : occuringEvents) {
+-                        remaining.stepAccepted(eventT, eventY);
+-                    }
+-                    return eventT;
++                    computeDerivatives(eventT, y, yDot);
++                    resetOccurred = true;
++                    setStateInitialized(false);
++                    for (final EventState remaining : occuringEvents) {
++                        remaining.stepAccepted(eventT, eventY);
++                    }
++                    return eventT;
+@@ -1,7 +1,6 @@
+-                    computeDerivatives(eventT, y, yDot);
+-                    resetOccurred = true;
+-                    setStateInitialized(false);
+-                    for (final EventState remaining : occuringEvents) {
+-                        remaining.stepAccepted(eventT, eventY);
+-                    }
+-                    return eventT;
++                    computeDerivatives(eventT, y, yDot);
++                    resetOccurred = true;
++                    for (final EventState remaining : occuringEvents) {
++                        remaining.stepAccepted(eventT, eventY);
++                    }
++                    return eventT;
+@@ -1,6 +1,10 @@
+-                    computeDerivatives(eventT, y, yDot);
+-                    resetOccurred = true;
+-                    for (final EventState remaining : occuringEvents) {
+-                        remaining.stepAccepted(eventT, eventY);
+-                    }
+-                    return eventT;
++                    computeDerivatives(eventT, y, yDot);
++                    resetOccurred = true;
++                    for (final EventState state : eventsStates) {
++                        if (state != currentEvent) {
++                            state.t0 = eventT;
++                            state.g0 = state.getEventHandler().g(eventT, eventY);
++                            state.g0Positive = state.g0 >= 0;
++                        }
++                    }
++                    return eventT;
+@@ -1,10 +1,10 @@
+-                    computeDerivatives(eventT, y, yDot);
+-                    resetOccurred = true;
+-                    for (final EventState state : eventsStates) {
+-                        if (state != currentEvent) {
+-                            state.t0 = eventT;
+-                            state.g0 = state.getEventHandler().g(eventT, eventY);
+-                            state.g0Positive = state.g0 >= 0;
+-                        }
+-                    }
+-                    return eventT;
++                    computeDerivatives(eventT, y, yDot);
++                    resetOccurred = true;
++                    for (final EventState state : eventsStates) {
++                        if (state != currentEvent) {
++                            state.setT0(eventT);
++                            state.setG0(state.getEventHandler().g(eventT, eventY));
++                            state.setG0Positive(state.getG0() >= 0);
++                        }
++                    }
++                    return eventT;
+
+--- a/src/main/java/org/apache/commons/math3/ode/events/EventState.java
++++ b/src/main/java/org/apache/commons/math3/ode/events/EventState.java
+@@ -1,5 +1,24 @@
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+-
+-    }
+-
+-    /** Local wrapper to propagate exceptions. */
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++
++    }
++
++    /** Reset the state of the event handler for a new integration segment.
++     * @param t value of the independent <i>time</i> variable at the
++     * beginning of the new segment
++     * @param y array containing the current value of the state vector
++     * at the beginning of the new segment
++     * @exception MaxCountExceededException if the event handler's g function throws one because
++     * the number of functions evaluations is exceeded
++     */
++    public void resetState(final double t, final double[] y)
++        throws MaxCountExceededException {
++        this.t0 = t;
++        this.g0 = handler.g(t, y);
++        this.g0Positive = g0 >= 0;
++        this.pendingEvent = false;
++        this.pendingEventTime = Double.NaN;
++        this.previousEventTime = Double.NaN;
++        this.nextAction = EventHandler.Action.CONTINUE;
++    }
++
++    /** Local wrapper to propagate exceptions. */
+@@ -1,24 +1,5 @@
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+-
+-    }
+-
+-    /** Reset the state of the event handler for a new integration segment.
+-     * @param t value of the independent <i>time</i> variable at the
+-     * beginning of the new segment
+-     * @param y array containing the current value of the state vector
+-     * at the beginning of the new segment
+-     * @exception MaxCountExceededException if the event handler's g function throws one because
+-     * the number of functions evaluations is exceeded
+-     */
+-    public void resetState(final double t, final double[] y)
+-        throws MaxCountExceededException {
+-        this.t0 = t;
+-        this.g0 = handler.g(t, y);
+-        this.g0Positive = g0 >= 0;
+-        this.pendingEvent = false;
+-        this.pendingEventTime = Double.NaN;
+-        this.previousEventTime = Double.NaN;
+-        this.nextAction = EventHandler.Action.CONTINUE;
+-    }
+-
+-    /** Local wrapper to propagate exceptions. */
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++
++    }
++
++    /** Local wrapper to propagate exceptions. */
+@@ -1,5 +1,24 @@
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+-
+-    }
+-
+-    /** Local wrapper to propagate exceptions. */
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++
++    }
++
++    /** Reset the state of the event handler for a new integration segment.
++     * @param t value of the independent <i>time</i> variable at the
++     * beginning of the new segment
++     * @param y array containing the current value of the state vector
++     * at the beginning of the new segment
++     * @exception MaxCountExceededException if the event handler's g function throws one because
++     * the number of functions evaluations is exceeded
++     */
++    public void resetState(final double t, final double[] y)
++        throws MaxCountExceededException {
++        this.t0 = t;
++        this.g0 = handler.g(t, y);
++        this.g0Positive = g0 >= 0;
++        this.pendingEvent = false;
++        this.pendingEventTime = Double.NaN;
++        this.previousEventTime = t;
++        this.nextAction = EventHandler.Action.CONTINUE;
++    }
++
++    /** Local wrapper to propagate exceptions. */
+@@ -1,24 +1,5 @@
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+-
+-    }
+-
+-    /** Reset the state of the event handler for a new integration segment.
+-     * @param t value of the independent <i>time</i> variable at the
+-     * beginning of the new segment
+-     * @param y array containing the current value of the state vector
+-     * at the beginning of the new segment
+-     * @exception MaxCountExceededException if the event handler's g function throws one because
+-     * the number of functions evaluations is exceeded
+-     */
+-    public void resetState(final double t, final double[] y)
+-        throws MaxCountExceededException {
+-        this.t0 = t;
+-        this.g0 = handler.g(t, y);
+-        this.g0Positive = g0 >= 0;
+-        this.pendingEvent = false;
+-        this.pendingEventTime = Double.NaN;
+-        this.previousEventTime = t;
+-        this.nextAction = EventHandler.Action.CONTINUE;
+-    }
+-
+-    /** Local wrapper to propagate exceptions. */
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++
++    }
++
++    /** Local wrapper to propagate exceptions. */
+@@ -1,5 +1,24 @@
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+-
+-    }
+-
+-    /** Local wrapper to propagate exceptions. */
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++
++    }
++
++    /** Reset the state of the event handler for a new integration segment.
++     * @param t value of the independent <i>time</i> variable at the
++     * beginning of the new segment
++     * @param y array containing the current value of the state vector
++     * at the beginning of the new segment
++     * @exception MaxCountExceededException if the event handler's g function throws one because
++     * the number of functions evaluations is exceeded
++     */
++    public void resetState(final double t, final double[] y)
++        throws MaxCountExceededException {
++        this.t0 = t;
++        this.g0 = handler.g(t, y);
++        this.g0Positive = g0 >= 0;
++        this.pendingEvent = false;
++        this.pendingEventTime = Double.NaN;
++        this.previousEventTime = Double.NaN;
++        this.nextAction = EventHandler.Action.CONTINUE;
++    }
++
++    /** Local wrapper to propagate exceptions. */
+@@ -1,24 +1,5 @@
+-               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
+-
+-    }
+-
+-    /** Reset the state of the event handler for a new integration segment.
+-     * @param t value of the independent <i>time</i> variable at the
+-     * beginning of the new segment
+-     * @param y array containing the current value of the state vector
+-     * at the beginning of the new segment
+-     * @exception MaxCountExceededException if the event handler's g function throws one because
+-     * the number of functions evaluations is exceeded
+-     */
+-    public void resetState(final double t, final double[] y)
+-        throws MaxCountExceededException {
+-        this.t0 = t;
+-        this.g0 = handler.g(t, y);
+-        this.g0Positive = g0 >= 0;
+-        this.pendingEvent = false;
+-        this.pendingEventTime = Double.NaN;
+-        this.previousEventTime = Double.NaN;
+-        this.nextAction = EventHandler.Action.CONTINUE;
+-    }
+-
+-    /** Local wrapper to propagate exceptions. */
++               (nextAction == EventHandler.Action.RESET_DERIVATIVES);
++
++    }
++
++    /** Local wrapper to propagate exceptions. */
+@@ -1,7 +1,14 @@
+-    /** Let the event handler reset the state if it wants.
+-     * @param t value of the independent <i>time</i> variable at the
+-     * beginning of the next step
+-     * @param y array were to put the desired state vector at the beginning
+-     * of the next step
+-     * @return true if the integrator should reset the derivatives too
+-     */
++    /** Set the occurrence time of the previous event.
++     * @param previousEventTime occurrence time of the previous event.
++     */
++    public void setPreviousEventTime(final double previousEventTime) {
++        this.previousEventTime = previousEventTime;
++    }
++
++    /** Let the event handler reset the state if it wants.
++     * @param t value of the independent <i>time</i> variable at the
++     * beginning of the next step
++     * @param y array were to put the desired state vector at the beginning
++     * of the next step
++     * @return true if the integrator should reset the derivatives too
++     */
+@@ -1,14 +1,7 @@
+-    /** Set the occurrence time of the previous event.
+-     * @param previousEventTime occurrence time of the previous event.
+-     */
+-    public void setPreviousEventTime(final double previousEventTime) {
+-        this.previousEventTime = previousEventTime;
+-    }
+-
+-    /** Let the event handler reset the state if it wants.
+-     * @param t value of the independent <i>time</i> variable at the
+-     * beginning of the next step
+-     * @param y array were to put the desired state vector at the beginning
+-     * of the next step
+-     * @return true if the integrator should reset the derivatives too
+-     */
++    /** Let the event handler reset the state if it wants.
++     * @param t value of the independent <i>time</i> variable at the
++     * beginning of the next step
++     * @param y array were to put the desired state vector at the beginning
++     * of the next step
++     * @return true if the integrator should reset the derivatives too
++     */
+@@ -1,8 +1,8 @@
+-    /** Time at the beginning of the step. */
+-    private double t0;
+-
+-    /** Value of the events handler at the beginning of the step. */
+-    private double g0;
+-
+-    /** Simulated sign of g0 (we cheat when crossing events). */
+-    private boolean g0Positive;
++    /** Time at the beginning of the step. */
++    protected double t0;
++
++    /** Value of the events handler at the beginning of the step. */
++    protected double g0;
++
++    /** Simulated sign of g0 (we cheat when crossing events). */
++    protected boolean g0Positive;
+@@ -1,8 +1,8 @@
+-    /** Time at the beginning of the step. */
+-    protected double t0;
+-
+-    /** Value of the events handler at the beginning of the step. */
+-    protected double g0;
+-
+-    /** Simulated sign of g0 (we cheat when crossing events). */
+-    protected boolean g0Positive;
++    /** Time at the beginning of the step. */
++    private double t0;
++
++    /** Value of the events handler at the beginning of the step. */
++    private double g0;
++
++    /** Simulated sign of g0 (we cheat when crossing events). */
++    private boolean g0Positive;
+@@ -1,7 +1,28 @@
+-    /** Let the event handler reset the state if it wants.
+-     * @param t value of the independent <i>time</i> variable at the
+-     * beginning of the next step
+-     * @param y array were to put the desired state vector at the beginning
+-     * of the next step
+-     * @return true if the integrator should reset the derivatives too
+-     */
++    /** Set the time at the beginning of the step.
++     * @param t0 time at the beginning of the step.
++     */
++    public void setT0(final double t0) {
++        this.t0 = t0;
++    }
++
++    /** Set the value of the events handler at the beginning of the step.
++     * @param g0 value of the events handler at the beginning of the step.
++     */
++    public void setG0(final double g0) {
++        this.g0 = g0;
++    }
++
++    /** Set the simulated sign of g0.
++     * @param g0Positive simulated sign of g0.
++     */
++    public void setG0Positive(final boolean g0Positive) {
++        this.g0Positive = g0Positive;
++    }
++
++    /** Let the event handler reset the state if it wants.
++     * @param t value of the independent <i>time</i> variable at the
++     * beginning of the next step
++     * @param y array were to put the desired state vector at the beginning
++     * of the next step
++     * @return true if the integrator should reset the derivatives too
++     */
+@@ -1,14 +1,21 @@
+-    /** Set the simulated sign of g0.
+-     * @param g0Positive simulated sign of g0.
+-     */
+-    public void setG0Positive(final boolean g0Positive) {
+-        this.g0Positive = g0Positive;
+-    }
+-
+-    /** Let the event handler reset the state if it wants.
+-     * @param t value of the independent <i>time</i> variable at the
+-     * beginning of the next step
+-     * @param y array were to put the desired state vector at the beginning
+-     * of the next step
+-     * @return true if the integrator should reset the derivatives too
+-     */
++    /** Set the simulated sign of g0.
++     * @param g0Positive simulated sign of g0.
++     */
++    public void setG0Positive(final boolean g0Positive) {
++        this.g0Positive = g0Positive;
++    }
++
++    /** Get the value of the events handler at the beginning of the step.
++     * @return value of the events handler at the beginning of the step.
++     */
++    public double getG0() {
++        return g0;
++    }
++
++    /** Let the event handler reset the state if it wants.
++     * @param t value of the independent <i>time</i> variable at the
++     * beginning of the next step
++     * @param y array were to put the desired state vector at the beginning
++     * of the next step
++     * @return true if the integrator should reset the derivatives too
++     */

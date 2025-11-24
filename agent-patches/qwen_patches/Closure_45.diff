@@ -1,0 +1,25 @@
+diff --git a/src/com/google/javascript/jscomp/RemoveUnusedVars.java b/src/com/google/javascript/jscomp/RemoveUnusedVars.java
+index be72a580..cf239d14 100644
+--- a/src/com/google/javascript/jscomp/RemoveUnusedVars.java
++++ b/src/com/google/javascript/jscomp/RemoveUnusedVars.java
+@@ -217,8 +217,19 @@ class RemoveUnusedVars
+             assignsByVar.put(var, maybeAssign);
+             assignsByNode.put(maybeAssign.nameNode, maybeAssign);
+ 
++            // For assignments in direct argument position of function calls,
++            // we should be more conservative to preserve semantics.
++            // This is specifically for cases like a.push(b = []).
++            boolean isDirectArgument = false;
++            Node nParent = n.getParent();
++            if (nParent != null && nParent.isCall() && 
++                nParent.getFirstChild() == n) {
++              isDirectArgument = true;
++            }
++
+             if (isRemovableVar(var) &&
+-                !maybeAssign.mayHaveSecondarySideEffects) {
++                !maybeAssign.mayHaveSecondarySideEffects &&
++                !isDirectArgument) {
+               // If the var is unreferenced and performing this assign has
+               // no secondary side effects, then we can create a continuation
+               // for it instead of traversing immediately.

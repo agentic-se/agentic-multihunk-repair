@@ -1,0 +1,56 @@
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/BasicDeserializerFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/BasicDeserializerFactory.java
+@@ -1,6 +1,15 @@
+-        if (isCreator) {
+-            creators.addDelegatingCreator(factory, isCreator, null);
+-            return true;
+-        }
+-        return false;
+-    }
++        // [databind#90]: allow Collection-like types to be delegating
++        JavaType actualType = factory.getParameterType(0);
++        if (actualType.isCollectionLikeType()) {
++            if (isCreator || vchecker.isCreatorVisible(factory)) {
++                creators.addDelegatingCreator(factory, isCreator, null);
++            }
++            return true;
++        }
++        // Delegating Creator ok iff it has @JsonCreator (etc)
++        if (isCreator) {
++            creators.addDelegatingCreator(factory, isCreator, null);
++            return true;
++        }
++        return false;
++    }
+@@ -1,6 +1,14 @@
+-        if (isCreator) {
+-            creators.addDelegatingCreator(factory, isCreator, null);
+-            return true;
+-        }
+-        return false;
+-    }
++        // [databind#90]: allow Collection-like types to be delegating
++        JavaType actualType = factory.getParameterType(0);
++        if (actualType.isCollectionLikeType()) {
++            if (isCreator || vchecker.isCreatorVisible(factory)) {
++                creators.addDelegatingCreator(factory, isCreator, null);
++            }
++            return true;
++        }
++        if (isCreator) {
++            creators.addDelegatingCreator(factory, isCreator, null);
++            return true;
++        }
++        return false;
++    }
+
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/ValueInstantiator.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/ValueInstantiator.java
+@@ -1,3 +1,4 @@
+-                || canCreateFromObjectWith() || canCreateFromString()
+-                || canCreateFromInt() || canCreateFromLong()
+-                || canCreateFromDouble() || canCreateFromBoolean();
++                || canCreateUsingArrayDelegate()
++                || canCreateFromObjectWith() || canCreateFromString()
++                || canCreateFromInt() || canCreateFromLong()
++                || canCreateFromDouble() || canCreateFromBoolean();

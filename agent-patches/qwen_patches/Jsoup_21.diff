@@ -1,0 +1,47 @@
+diff --git a/src/main/java/org/jsoup/select/QueryParser.java b/src/main/java/org/jsoup/select/QueryParser.java
+index 9ff43ba..0a1099c 100644
+--- a/src/main/java/org/jsoup/select/QueryParser.java
++++ b/src/main/java/org/jsoup/select/QueryParser.java
+@@ -60,7 +60,7 @@ class QueryParser {
+                 evals.clear();
+                 evals.add(or);
+                 while (!tq.isEmpty()) {
+-                    String subQuery = tq.chompTo(",");
++                    String subQuery = consumeSubQueryForOr();
+                     or.add(parse(subQuery));
+                 }
+             } else if (tq.matchesAny(combinators)) {
+@@ -116,6 +116,33 @@ class QueryParser {
+         }
+         return sq.toString();
+     }
++    
++    private String consumeSubQueryForOr() {
++        StringBuilder sq = new StringBuilder();
++        int parenDepth = 0;
++        int bracketDepth = 0;
++        while (!tq.isEmpty()) {
++            char c = tq.peek();
++            if (c == '(') {
++                parenDepth++;
++                sq.append(tq.consume());
++            } else if (c == ')') {
++                parenDepth--;
++                sq.append(tq.consume());
++            } else if (c == '[') {
++                bracketDepth++;
++                sq.append(tq.consume());
++            } else if (c == ']') {
++                bracketDepth--;
++                sq.append(tq.consume());
++            } else if (c == ',' && parenDepth == 0 && bracketDepth == 0) {
++                break; // Found a comma that's not inside parentheses or brackets
++            } else {
++                sq.append(tq.consume());
++            }
++        }
++        return sq.toString();
++    }
+ 
+     private void findElements() {
+         if (tq.matchChomp("#"))

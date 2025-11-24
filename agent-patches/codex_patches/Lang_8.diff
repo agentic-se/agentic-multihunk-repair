@@ -1,0 +1,72 @@
+diff --git a/src/main/java/org/apache/commons/lang3/time/FastDatePrinter.java b/src/main/java/org/apache/commons/lang3/time/FastDatePrinter.java
+index 5c0edda2..22f1d521 100644
+--- a/src/main/java/org/apache/commons/lang3/time/FastDatePrinter.java
++++ b/src/main/java/org/apache/commons/lang3/time/FastDatePrinter.java
+@@ -257,9 +257,9 @@ public class FastDatePrinter implements DatePrinter, Serializable {
+                 break;
+             case 'z': // time zone (text)
+                 if (tokenLen >= 4) {
+-                    rule = new TimeZoneNameRule(mTimeZone, mLocale, TimeZone.LONG);
++                    rule = new TimeZoneNameRule(mLocale, TimeZone.LONG);
+                 } else {
+-                    rule = new TimeZoneNameRule(mTimeZone, mLocale, TimeZone.SHORT);
++                    rule = new TimeZoneNameRule(mLocale, TimeZone.SHORT);
+                 }
+                 break;
+             case 'Z': // time zone (value)
+@@ -1095,24 +1095,16 @@ public class FastDatePrinter implements DatePrinter, Serializable {
+     private static class TimeZoneNameRule implements Rule {
+         private final Locale mLocale;
+         private final int mStyle;
+-        private final TimeZone zone;
+-        private final String mStandard;
+-        private final String mDaylight;
+ 
+         /**
+          * Constructs an instance of {@code TimeZoneNameRule} with the specified properties.
+          *
+-         * @param timeZone the time zone
+          * @param locale the locale
+          * @param style the style
+          */
+-        TimeZoneNameRule(TimeZone timeZone, Locale locale, int style) {
++        TimeZoneNameRule(Locale locale, int style) {
+             mLocale = locale;
+             mStyle = style;
+-            zone = timeZone;
+-            
+-            mStandard = getTimeZoneDisplay(timeZone, false, style, locale);
+-            mDaylight = getTimeZoneDisplay(timeZone, true, style, locale);
+         }
+ 
+         /**
+@@ -1120,10 +1112,9 @@ public class FastDatePrinter implements DatePrinter, Serializable {
+          */
+         @Override
+         public int estimateLength() {
+-            // We have no access to the Calendar object that will be passed to
+-            // appendTo so base estimate on the TimeZone passed to the
+-            // constructor
+-            return Math.max(mStandard.length(), mDaylight.length());
++            // Without a specific Calendar, return a reasonable estimate.
++            // Time zone names are typically under 40 chars.
++            return 40;
+         }
+ 
+         /**
+@@ -1131,12 +1122,9 @@ public class FastDatePrinter implements DatePrinter, Serializable {
+          */
+         @Override
+         public void appendTo(StringBuffer buffer, Calendar calendar) {
+-            if (zone.useDaylightTime()
+-                    && calendar.get(Calendar.DST_OFFSET) != 0) {
+-                buffer.append(getTimeZoneDisplay(zone, true, mStyle, mLocale));
+-            } else {
+-                buffer.append(getTimeZoneDisplay(zone, false, mStyle, mLocale));
+-            }
++            TimeZone tz = calendar.getTimeZone();
++            boolean daylight = calendar.get(Calendar.DST_OFFSET) != 0;
++            buffer.append(getTimeZoneDisplay(tz, daylight, mStyle, mLocale));
+         }
+     }
+ 

@@ -1,0 +1,15 @@
+diff --git a/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java b/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
+index 16f81db..9763714 100644
+--- a/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
++++ b/src/main/java/org/jsoup/parser/HtmlTreeBuilder.java
+@@ -224,7 +224,9 @@ public class HtmlTreeBuilder extends TreeBuilder {
+         insertNode(el);
+         if (startTag.isSelfClosing()) {
+             if (tag.isKnownTag()) {
+-                if (tag.isSelfClosing()) tokeniser.acknowledgeSelfClosingFlag();
++                if (tag.isSelfClosing()) {
++                    tokeniser.acknowledgeSelfClosingFlag();
++                }
+             }
+             else {
+                 tag.setSelfClosing();

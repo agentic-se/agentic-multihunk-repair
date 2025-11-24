@@ -1,0 +1,59 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/util/TokenBuffer.java b/src/main/java/com/fasterxml/jackson/databind/util/TokenBuffer.java
+index 39d9e7186..77f632eb7 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/util/TokenBuffer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/util/TokenBuffer.java
+@@ -77,7 +77,8 @@ public class TokenBuffer
+      *
+      * @since 2.7
+      */
+-    
++    protected boolean _forceBigDecimal;
++
+     /*
+     /**********************************************************
+     /* Token buffering state
+@@ -185,6 +186,9 @@ public class TokenBuffer
+         _hasNativeTypeIds = p.canReadTypeId();
+         _hasNativeObjectIds = p.canReadObjectId();
+         _mayHaveNativeIds = _hasNativeTypeIds | _hasNativeObjectIds;
++        // [databind#965]: Store configuration for forced BigDecimal usage
++        _forceBigDecimal = (ctxt == null) ? false
++                : ctxt.isEnabled(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS);
+     }
+ 
+     /**
+@@ -961,16 +965,21 @@ sb.append("NativeObjectIds=").append(_hasNativeObjectIds).append(",");
+                  *   access as number); or is still retained as text (in which case we
+                  *   should further defer decoding that may not need BigDecimal):
+                  */
+-                switch (p.getNumberType()) {
+-                case BIG_DECIMAL:
++                // [databind#965]: Need to preserve exact representation to avoid precision loss
++                if (_forceBigDecimal) {
+                     writeNumber(p.getDecimalValue());
+-                    break;
+-                case FLOAT:
+-                    writeNumber(p.getFloatValue());
+-                    break;
+-                default:
+-                    writeNumber(p.getDoubleValue());
+-            }
++                } else {
++                    switch (p.getNumberType()) {
++                    case BIG_DECIMAL:
++                        writeNumber(p.getDecimalValue());
++                        break;
++                    case FLOAT:
++                        writeNumber(p.getFloatValue());
++                        break;
++                    default:
++                        writeNumber(p.getDoubleValue());
++                    }
++                }
+             break;
+         case VALUE_TRUE:
+             writeBoolean(true);
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

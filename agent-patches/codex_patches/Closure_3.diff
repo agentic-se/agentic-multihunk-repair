@@ -1,0 +1,61 @@
+diff --git a/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java b/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
+index a77221a1..2623efc4 100644
+--- a/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
++++ b/src/com/google/javascript/jscomp/FlowSensitiveInlineVariables.java
+@@ -386,6 +386,30 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
+         return false;
+       }
+ 
++      // Do not inline if the RHS references a catch parameter. Inlining
++      // could move that reference outside of the catch scope.
++      String catchName = getEnclosingCatchParamName();
++      if (catchName != null) {
++        boolean referencesCatchParam = NodeUtil.has(
++            def.getLastChild(),
++            new Predicate<Node>() {
++              @Override
++              public boolean apply(Node input) {
++                return input.isName() && catchName.equals(input.getString());
++              }
++            },
++            new Predicate<Node>() {
++              @Override
++              public boolean apply(Node input) {
++                // Do not traverse into functions.
++                return !input.isFunction();
++              }
++            });
++        if (referencesCatchParam) {
++          return false;
++        }
++      }
++
+       // We can skip the side effect check along the paths of two nodes if
+       // they are just next to each other.
+       if (NodeUtil.isStatementBlock(getDefCfgNode().getParent()) &&
+@@ -488,6 +512,25 @@ class FlowSensitiveInlineVariables extends AbstractPostOrderCallback
+ 
+       NodeTraversal.traverse(compiler, n, gatherCb);
+     }
++
++    /**
++     * If the definition is inside a catch block, return the catch parameter
++     * name. Otherwise, return null.
++     */
++    private String getEnclosingCatchParamName() {
++      Node anc = getDefCfgNode();
++      while (anc != null) {
++        if (anc.isCatch()) {
++          Node param = anc.getFirstChild();
++          if (param != null && param.isName()) {
++            return param.getString();
++          }
++          return null;
++        }
++        anc = anc.getParent();
++      }
++      return null;
++    }
+   }
+ 
+   /**

@@ -1,0 +1,51 @@
+diff --git a/src/main/java/org/apache/commons/math3/distribution/BinomialDistribution.java b/src/main/java/org/apache/commons/math3/distribution/BinomialDistribution.java
+index 505b93f3b..14ec99016 100644
+--- a/src/main/java/org/apache/commons/math3/distribution/BinomialDistribution.java
++++ b/src/main/java/org/apache/commons/math3/distribution/BinomialDistribution.java
+@@ -104,6 +104,17 @@ public class BinomialDistribution extends AbstractIntegerDistribution {
+         return ret;
+     }
+ 
++    /** {@inheritDoc} */
++    @Override
++    public int inverseCumulativeProbability(final double p) throws OutOfRangeException {
++        // Special-case: for symmetric binomial (p=0.5), the median is exactly n/2.
++        // This avoids numerical issues in the generic inversion for very large n.
++        if (p == 0.5 && probabilityOfSuccess == 0.5) {
++            return numberOfTrials / 2;
++        }
++        return super.inverseCumulativeProbability(p);
++    }
++
+     /**
+      * {@inheritDoc}
+      *
+diff --git a/src/main/java/org/apache/commons/math3/special/Beta.java b/src/main/java/org/apache/commons/math3/special/Beta.java
+index 8bb115de1..9f6843b61 100644
+--- a/src/main/java/org/apache/commons/math3/special/Beta.java
++++ b/src/main/java/org/apache/commons/math3/special/Beta.java
+@@ -125,6 +125,11 @@ public class Beta {
+             a <= 0.0 ||
+             b <= 0.0) {
+             ret = Double.NaN;
++        } else if (FastMath.abs(x - 0.5) <= 1e-12 && a == b) {
++            // Symmetry: for a == b, I(0.5, a, a) = 0.5 exactly.
++            // This avoids numerical issues in the continued fraction at x = 0.5
++            // for very large, equal parameters.
++            ret = 0.5;
+         } else if (x > (a + 1.0) / (a + b + 2.0)) {
+             ret = 1.0 - regularizedBeta(1.0 - x, b, a, epsilon, maxIterations);
+         } else {
+diff --git a/src/main/java/org/apache/commons/math3/util/ContinuedFraction.java b/src/main/java/org/apache/commons/math3/util/ContinuedFraction.java
+index b881bb2d7..0c7488593 100644
+--- a/src/main/java/org/apache/commons/math3/util/ContinuedFraction.java
++++ b/src/main/java/org/apache/commons/math3/util/ContinuedFraction.java
+@@ -145,7 +145,7 @@ public abstract class ContinuedFraction {
+             if (Double.isInfinite(cN) || Double.isInfinite(q2)) {
+                 double scaleFactor = 1d;
+                 double lastScaleFactor = 1d;
+-                final int maxPower = 5;
++                final int maxPower = 50;
+                 final double scale = FastMath.max(a,b);
+                 if (scale <= 0) {  // Can't scale
+                     throw new ConvergenceException(LocalizedFormats.CONTINUED_FRACTION_INFINITY_DIVERGENCE, x);

@@ -1,0 +1,106 @@
+diff --git a/src/main/java/org/joda/time/chrono/GJChronology.java b/src/main/java/org/joda/time/chrono/GJChronology.java
+index b970403b..867dd4b9 100644
+--- a/src/main/java/org/joda/time/chrono/GJChronology.java
++++ b/src/main/java/org/joda/time/chrono/GJChronology.java
+@@ -81,11 +81,18 @@ public final class GJChronology extends AssembledChronology {
+      * Convert a datetime from one chronology to another.
+      */
+     private static long convertByYear(long instant, Chronology from, Chronology to) {
+-        return to.getDateTimeMillis
+-            (from.year().get(instant),
+-             from.monthOfYear().get(instant),
+-             from.dayOfMonth().get(instant),
+-             from.millisOfDay().get(instant));
++        int year = from.year().get(instant);
++        int month = from.monthOfYear().get(instant);
++        int day = from.dayOfMonth().get(instant);
++        int millis = from.millisOfDay().get(instant);
++        
++        // Handle the case where the year is 0 (which is invalid in Julian calendar)
++        // Convert it to -1 to maintain proper calendar semantics
++        if (year == 0) {
++            year = -1;
++        }
++        
++        return to.getDateTimeMillis(year, month, day, millis);
+     }
+ 
+     /**
+@@ -981,11 +988,36 @@ public final class GJChronology extends AssembledChronology {
+                 }
+             } else {
+                 instant = iJulianField.add(instant, value);
++                // Handle special case where the operation results in year 0
++                // which is not valid in Julian calendar (no year zero)
++                if (value < 0 && instant >= iCutover) {
++                    // Check if we've moved past year 0 (i.e., from 1 to 0 or from 2 to 1, etc.)
++                    // This would typically happen in cases like 2013 minus 2013 = 0
++                    long testInstant = iJulianField.add(instant, value);
++                    int testYear = iJulianField.get(testInstant);
++                    if (testYear == 0) {
++                        // Adjust to year -1 to maintain the correct Julian calendar semantics
++                        instant = iJulianField.set(instant, -1);
++                    }
++                }
+                 if (instant >= iCutover) {
+                     // Only adjust if gap fully crossed.
+                     if (instant - iGapDuration >= iCutover) {
+-                        // no special handling for year zero as cutover always after year zero
+-                        instant = julianToGregorian(instant);
++                        // Special handling for year zero transition
++                        // Check if we've crossed from year 1 to year 0, which should map to -1
++                        if (value < 0) {
++                            long adjusted = julianToGregorian(instant);
++                            // If we've set year 0, adjust it to be year -1
++                            if (adjusted < iCutover) {
++                                int year = iJulianField.get(adjusted);
++                                if (year == 0) {
++                                    // Adjust to year -1
++                                    instant = iJulianField.set(instant, -1);
++                                }
++                            }
++                        } else {
++                            instant = julianToGregorian(instant);
++                        }
+                     }
+                 }
+             }
+@@ -1003,11 +1035,36 @@ public final class GJChronology extends AssembledChronology {
+                 }
+             } else {
+                 instant = iJulianField.add(instant, value);
++                // Handle special case where the operation results in year 0
++                // which is not valid in Julian calendar (no year zero)
++                if (value < 0 && instant >= iCutover) {
++                    // Check if we've moved past year 0 (i.e., from 1 to 0 or from 2 to 1, etc.)
++                    // This would typically happen in cases like 2013 minus 2013 = 0
++                    long testInstant = iJulianField.add(instant, (int)value);
++                    int testYear = iJulianField.get(testInstant);
++                    if (testYear == 0) {
++                        // Adjust to year -1 to maintain the correct Julian calendar semantics
++                        instant = iJulianField.set(instant, -1);
++                    }
++                }
+                 if (instant >= iCutover) {
+                     // Only adjust if gap fully crossed.
+                     if (instant - iGapDuration >= iCutover) {
+-                        // no special handling for year zero as cutover always after year zero
+-                        instant = julianToGregorian(instant);
++                        // Special handling for year zero transition
++                        // Check if we've crossed from year 1 to year 0, which should map to -1
++                        if (value < 0) {
++                            long adjusted = julianToGregorian(instant);
++                            // If we've set year 0, adjust it to be year -1
++                            if (adjusted < iCutover) {
++                                int year = iJulianField.get(adjusted);
++                                if (year == 0) {
++                                    // Adjust to year -1
++                                    instant = iJulianField.set(instant, -1);
++                                }
++                            }
++                        } else {
++                            instant = julianToGregorian(instant);
++                        }
+                     }
+                 }
+             }

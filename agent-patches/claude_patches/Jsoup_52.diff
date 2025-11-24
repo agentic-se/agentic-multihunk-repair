@@ -1,0 +1,99 @@
+diff --git a/src/main/java/org/jsoup/nodes/XmlDeclaration.java b/src/main/java/org/jsoup/nodes/XmlDeclaration.java
+index 24a9f16..59b3c2a 100644
+--- a/src/main/java/org/jsoup/nodes/XmlDeclaration.java
++++ b/src/main/java/org/jsoup/nodes/XmlDeclaration.java
+@@ -43,30 +43,40 @@ public class XmlDeclaration extends Node {
+      @return XML declaration
+      */
+     public String getWholeDeclaration() {
+-        final String decl = this.name;
+-        if(decl.equals("xml") && attributes.size() > 1 ) {
+-            StringBuilder sb = new StringBuilder(decl);
++        if(attributes != null && attributes.size() > 0 ) {
++            StringBuilder sb = new StringBuilder();
+             final String version = attributes.get("version");
+-            if( version != null ) {
+-                sb.append(" version=\"").append(version).append("\"");
++            if( version != null && version.length() > 0 ) {
++                if (sb.length() > 0) sb.append(" ");
++                sb.append("version=\"").append(version).append("\"");
+             }
+             final String encoding = attributes.get("encoding");
+-            if( encoding != null ) {
+-                sb.append(" encoding=\"").append(encoding).append("\"");
++            if( encoding != null && encoding.length() > 0 ) {
++                if (sb.length() > 0) sb.append(" ");
++                sb.append("encoding=\"").append(encoding).append("\"");
+             }
+-            return sb.toString();
+-        }
+-        else {
+-            return this.name;
++            // Add remaining attributes
++            for (Attribute attr : attributes) {
++                if (!attr.getKey().equals("version") && !attr.getKey().equals("encoding")) {
++                    if (sb.length() > 0) sb.append(" ");
++                    sb.append(attr.getKey()).append("=\"").append(attr.getValue()).append("\"");
++                }
++            }
++            if (sb.length() > 0)
++                return sb.toString();
+         }
++        return "";
+     }
+ 
+ 	void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
+         accum
+             .append("<")
+             .append(isProcessingInstruction ? "!" : "?")
+-                .append(getWholeDeclaration())
+-            .append(">");
++            .append(name);
++        String declaration = getWholeDeclaration();
++        if (declaration.length() > 0)
++            accum.append(" ").append(declaration);
++        accum.append(isProcessingInstruction ? ">" : "?>");
+     }
+ 
+ 	void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {}
+diff --git a/src/main/java/org/jsoup/parser/XmlTreeBuilder.java b/src/main/java/org/jsoup/parser/XmlTreeBuilder.java
+index 99807fc..be5b2fe 100644
+--- a/src/main/java/org/jsoup/parser/XmlTreeBuilder.java
++++ b/src/main/java/org/jsoup/parser/XmlTreeBuilder.java
+@@ -1,5 +1,6 @@
+ package org.jsoup.parser;
+ 
++import org.jsoup.Jsoup;
+ import org.jsoup.helper.Validate;
+ import org.jsoup.nodes.*;
+ 
+@@ -74,7 +75,22 @@ public class XmlTreeBuilder extends TreeBuilder {
+             String data = comment.getData();
+             if (data.length() > 1 && (data.startsWith("!") || data.startsWith("?"))) {
+                 String declaration = data.substring(1);
+-                insert = new XmlDeclaration(declaration, comment.baseUri(), data.startsWith("!"));
++                // Remove trailing ? or ! if present
++                if (declaration.endsWith("?") || declaration.endsWith("!"))
++                    declaration = declaration.substring(0, declaration.length() - 1);
++                Document doc = Jsoup.parse("<" + declaration + ">", baseUri, Parser.htmlParser());
++                // The declaration will be parsed as an element. Try to extract the name and attributes.
++                // Get all elements - for a declaration like "xml version='1' encoding='UTF-8'",
++                // it will be parsed as an <xml> element with attributes
++                String tagName = declaration.split("\\s+")[0];
++                Element el = doc.getElementsByTag(tagName).first();
++                if (el != null) {
++                    XmlDeclaration decl = new XmlDeclaration(el.tagName(), comment.baseUri(), data.startsWith("!"));
++                    decl.attributes().addAll(el.attributes());
++                    insert = decl;
++                } else {
++                    insert = new XmlDeclaration(tagName, comment.baseUri(), data.startsWith("!"));
++                }
+             }
+         }
+         insertNode(insert);
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store
++ src/main/java/Test.class
++ src/main/java/Test.java

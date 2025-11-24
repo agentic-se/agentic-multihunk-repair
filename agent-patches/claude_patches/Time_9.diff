@@ -1,0 +1,39 @@
+diff --git a/src/main/java/org/joda/time/DateTimeZone.java b/src/main/java/org/joda/time/DateTimeZone.java
+index 3ad5cfeb..780c3c7a 100644
+--- a/src/main/java/org/joda/time/DateTimeZone.java
++++ b/src/main/java/org/joda/time/DateTimeZone.java
+@@ -93,6 +93,7 @@ public abstract class DateTimeZone implements Serializable {
+     /** The time zone for Universal Coordinated Time */
+     public static final DateTimeZone UTC = new FixedDateTimeZone("UTC", "UTC", 0, 0);
+     /** Maximum offset. */
++    private static final int MAX_MILLIS = (24 * 60 * 60 * 1000) - 1;
+ 
+     /** The instance that is providing time zones. */
+     private static Provider cProvider;
+@@ -254,6 +255,9 @@ public abstract class DateTimeZone implements Serializable {
+         if (hoursOffset == 0 && minutesOffset == 0) {
+             return DateTimeZone.UTC;
+         }
++        if (hoursOffset < -23 || hoursOffset > 23) {
++            throw new IllegalArgumentException("Hours out of range: " + hoursOffset);
++        }
+         if (minutesOffset < 0 || minutesOffset > 59) {
+             throw new IllegalArgumentException("Minutes out of range: " + minutesOffset);
+         }
+@@ -277,8 +281,12 @@ public abstract class DateTimeZone implements Serializable {
+      *
+      * @param millisOffset  the offset in millis from UTC, from -23:59:59.999 to +23:59:59.999
+      * @return the DateTimeZone object for the offset
++     * @throws IllegalArgumentException if the offset is too large or too small
+      */
+     public static DateTimeZone forOffsetMillis(int millisOffset) {
++        if (millisOffset < -MAX_MILLIS || millisOffset > MAX_MILLIS) {
++            throw new IllegalArgumentException("Offset is too large");
++        }
+         String id = printOffset(millisOffset);
+         return fixedOffsetZone(id, millisOffset);
+     }
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

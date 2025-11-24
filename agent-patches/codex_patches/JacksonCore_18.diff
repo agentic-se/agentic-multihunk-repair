@@ -1,0 +1,56 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/json/UTF8JsonGenerator.java b/src/main/java/com/fasterxml/jackson/core/json/UTF8JsonGenerator.java
+index cf6ca3a6..70034344 100644
+--- a/src/main/java/com/fasterxml/jackson/core/json/UTF8JsonGenerator.java
++++ b/src/main/java/com/fasterxml/jackson/core/json/UTF8JsonGenerator.java
+@@ -907,9 +907,23 @@ public class UTF8JsonGenerator
+         if (value == null) {
+             _writeNull();
+         } else  if (_cfgNumbersAsStrings) {
++            if (Feature.WRITE_BIGDECIMAL_AS_PLAIN.enabledIn(_features)) {
++                // [core#315]: Prevent DoS via gigantic scale when asking for plain output
++                final int scale = value.scale();
++                if (scale < -9999 || scale > 9999) {
++                    _reportError("Attempt to write plain `java.math.BigDecimal` with illegal scale ("
++                            + scale + "): needs to be between [-9999, 9999]");
++                }
++            }
+             String raw = Feature.WRITE_BIGDECIMAL_AS_PLAIN.enabledIn(_features) ? value.toPlainString() : value.toString();
+             _writeQuotedRaw(raw);
+         } else if (Feature.WRITE_BIGDECIMAL_AS_PLAIN.enabledIn(_features)) {
++            // [core#315]: Prevent DoS via gigantic scale when asking for plain output
++            final int scale = value.scale();
++            if (scale < -9999 || scale > 9999) {
++                _reportError("Attempt to write plain `java.math.BigDecimal` with illegal scale ("
++                        + scale + "): needs to be between [-9999, 9999]");
++            }
+             writeRaw(value.toPlainString());
+         } else {
+             writeRaw(_asString(value));
+diff --git a/src/main/java/com/fasterxml/jackson/core/json/WriterBasedJsonGenerator.java b/src/main/java/com/fasterxml/jackson/core/json/WriterBasedJsonGenerator.java
+index 156d997b..325b3cd7 100644
+--- a/src/main/java/com/fasterxml/jackson/core/json/WriterBasedJsonGenerator.java
++++ b/src/main/java/com/fasterxml/jackson/core/json/WriterBasedJsonGenerator.java
+@@ -684,9 +684,23 @@ public final class WriterBasedJsonGenerator
+         if (value == null) {
+             _writeNull();
+         } else  if (_cfgNumbersAsStrings) {
++            if (isEnabled(Feature.WRITE_BIGDECIMAL_AS_PLAIN)) {
++                // [core#315]: Prevent DoS via gigantic scale when asking for plain output
++                final int scale = value.scale();
++                if (scale < -9999 || scale > 9999) {
++                    _reportError("Attempt to write plain `java.math.BigDecimal` with illegal scale ("
++                            + scale + "): needs to be between [-9999, 9999]");
++                }
++            }
+             String raw = isEnabled(Feature.WRITE_BIGDECIMAL_AS_PLAIN) ? value.toPlainString() : value.toString();
+             _writeQuotedRaw(raw);
+         } else if (isEnabled(Feature.WRITE_BIGDECIMAL_AS_PLAIN)) {
++            // [core#315]: Prevent DoS via gigantic scale when asking for plain output
++            final int scale = value.scale();
++            if (scale < -9999 || scale > 9999) {
++                _reportError("Attempt to write plain `java.math.BigDecimal` with illegal scale ("
++                        + scale + "): needs to be between [-9999, 9999]");
++            }
+             writeRaw(value.toPlainString());
+         } else {
+             writeRaw(_asString(value));

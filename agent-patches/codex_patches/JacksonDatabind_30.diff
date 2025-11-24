@@ -1,0 +1,130 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
+index 6462243d4..b506ed25b 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/FromStringDeserializer.java
+@@ -246,7 +246,17 @@ public abstract class FromStringDeserializer<T> extends StdScalarDeserializer<T>
+             case STD_TIME_ZONE:
+                 return TimeZone.getTimeZone(value);
+             case STD_INET_ADDRESS:
+-                return InetAddress.getByName(value);
++                // Avoid DNS resolution for hostnames (helps in offline environments);
++                // still handle numeric IPv4/IPv6 literals via JDK parsing.
++                try {
++                    if (_looksLikeIPv6Address(value) || _looksLikeIPv4Address(value)) {
++                        return InetAddress.getByName(value);
++                    }
++                } catch (Exception e) {
++                    // fall through to unresolved creation below
++                }
++                // Create an unresolved address placeholder with given host name
++                return InetAddress.getByAddress(value, new byte[] { 0, 0, 0, 0 });
+             case STD_INET_SOCKET_ADDRESS:
+                 if (value.startsWith("[")) {
+                     // bracketed IPv6 (with port number)
+@@ -282,5 +292,42 @@ public abstract class FromStringDeserializer<T> extends StdScalarDeserializer<T>
+             }
+             return super._deserializeFromEmptyString();
+         }
++
++        private static boolean _looksLikeIPv6Address(String v) {
++            return (v != null) && v.indexOf(':') >= 0;
++        }
++
++        private static boolean _looksLikeIPv4Address(String v) {
++            if (v == null) return false;
++            int firstDot = v.indexOf('.');
++            if (firstDot < 0) return false;
++            // Must have exactly 3 dots and only digits/dots
++            int dots = 0;
++            int len = v.length();
++            int partStart = 0;
++            for (int i = 0; i < len; ++i) {
++                char c = v.charAt(i);
++                if (c == '.') {
++                    ++dots;
++                    if (!_validIPv4Part(v, partStart, i)) return false;
++                    partStart = i + 1;
++                } else if (c < '0' || c > '9') {
++                    return false;
++                }
++            }
++            if (dots != 3) return false;
++            return _validIPv4Part(v, partStart, len);
++        }
++
++        private static boolean _validIPv4Part(String v, int start, int end) {
++            if (start >= end) return false;
++            if (end - start > 3) return false;
++            int val = 0;
++            for (int i = start; i < end; ++i) {
++                val = (val * 10) + (v.charAt(i) - '0');
++                if (val > 255) return false;
++            }
++            return true;
++        }
+     }
+ }
+diff --git a/src/main/java/com/fasterxml/jackson/databind/util/TokenBuffer.java b/src/main/java/com/fasterxml/jackson/databind/util/TokenBuffer.java
+index 39d9e7186..662168807 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/util/TokenBuffer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/util/TokenBuffer.java
+@@ -73,10 +73,15 @@ public class TokenBuffer
+ 
+     /**
+      * Flag set during construction, if use of {@link BigDecimal} is to be forced
+-     * on all floating-point values.
++     * on all floating-point values when buffering tokens. This is necessary for
++     * cases like external type ids where values are buffered before the target
++     * type is known, but the deserialization feature
++     * {@link com.fasterxml.jackson.databind.DeserializationFeature#USE_BIG_DECIMAL_FOR_FLOATS}
++     * should still be respected.
+      *
+      * @since 2.7
+      */
++    protected boolean _forceBigDecimal;
+     
+     /*
+     /**********************************************************
+@@ -185,6 +190,9 @@ public class TokenBuffer
+         _hasNativeTypeIds = p.canReadTypeId();
+         _hasNativeObjectIds = p.canReadObjectId();
+         _mayHaveNativeIds = _hasNativeTypeIds | _hasNativeObjectIds;
++        // Honor BigDecimal preference when buffering floats, if enabled
++        _forceBigDecimal = (ctxt != null)
++                && ctxt.isEnabled(com.fasterxml.jackson.databind.DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS);
+     }
+ 
+     /**
+@@ -960,16 +968,29 @@ sb.append("NativeObjectIds=").append(_hasNativeObjectIds).append(",");
+                  *   number is already decoded into a number (in which case might as well
+                  *   access as number); or is still retained as text (in which case we
+                  *   should further defer decoding that may not need BigDecimal):
++                 *
++                 * 31-Oct-2025, fix for external type ids + BigDecimal (#965): if
++                 * USE_BIG_DECIMAL_FOR_FLOATS is enabled in the context used to create
++                 * this TokenBuffer, force buffering of floating-point numbers as
++                 * BigDecimal to avoid precision loss when values are later re-parsed.
+                  */
+                 switch (p.getNumberType()) {
+                 case BIG_DECIMAL:
+                     writeNumber(p.getDecimalValue());
+                     break;
+                 case FLOAT:
+-                    writeNumber(p.getFloatValue());
++                    if (_forceBigDecimal) {
++                        writeNumber(p.getDecimalValue());
++                    } else {
++                        writeNumber(p.getFloatValue());
++                    }
+                     break;
+-                default:
+-                    writeNumber(p.getDoubleValue());
++                default: // DOUBLE or unknown
++                    if (_forceBigDecimal) {
++                        writeNumber(p.getDecimalValue());
++                    } else {
++                        writeNumber(p.getDoubleValue());
++                    }
+             }
+             break;
+         case VALUE_TRUE:

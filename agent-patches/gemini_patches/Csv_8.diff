@@ -1,0 +1,28 @@
+--- a/src/main/java/org/apache/commons/csv/CSVFormat.java
++++ b/src/main/java/org/apache/commons/csv/CSVFormat.java
+@@ -1,6 +1,7 @@
+-        if (header == null) {
+-        	this.header = null;
+-        } else {
+-            this.header = header.clone();        	
+-        }
+-        this.skipHeaderRecord = skipHeaderRecord;
++        if (header == null) {
++        	this.header = null;
++        } else {
++            this.header = header.clone();        	
++        }
++        this.skipHeaderRecord = skipHeaderRecord;
++        this.validate();
+
+--- a/src/test/java/org/apache/commons/csv/CSVFormatTest.java
++++ b/src/test/java/org/apache/commons/csv/CSVFormatTest.java
+@@ -1,4 +1,4 @@
+-    @Test(expected = IllegalArgumentException.class)
+-    public void testDuplicateHeaderElements() {
+-        CSVFormat.DEFAULT.withHeader("A", "A").validate();
+-    }
++    @Test(expected = IllegalStateException.class)
++    public void testDuplicateHeaderElements() {
++        CSVFormat.DEFAULT.withHeader("A", "A").validate();
++    }

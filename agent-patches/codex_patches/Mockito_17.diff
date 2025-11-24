@@ -1,0 +1,57 @@
+diff --git a/src/org/mockito/internal/creation/MockSettingsImpl.java b/src/org/mockito/internal/creation/MockSettingsImpl.java
+index bf2cf3bf2..13fb876b1 100644
+--- a/src/org/mockito/internal/creation/MockSettingsImpl.java
++++ b/src/org/mockito/internal/creation/MockSettingsImpl.java
+@@ -22,21 +22,30 @@ public class MockSettingsImpl implements MockSettings {
+         return this.extraInterfaces(java.io.Serializable.class);
+     }
+ 
+-    public MockSettings extraInterfaces(Class<?>... extraInterfaces) {
+-        if (extraInterfaces == null || extraInterfaces.length == 0) {
+-            new Reporter().extraInterfacesRequiresAtLeastOneInterface();
+-        }
+-            
+-        for (Class<?> i : extraInterfaces) {
+-            if (i == null) {
+-                new Reporter().extraInterfacesDoesNotAcceptNullParameters();
+-            } else if (!i.isInterface()) {
+-                new Reporter().extraInterfacesAcceptsOnlyInterfaces(i);
+-            }
+-        }
+-        this.extraInterfaces = extraInterfaces;
+-        return this;
+-    }
++    public MockSettings extraInterfaces(Class<?>... extraInterfaces) {
++        if (extraInterfaces == null || extraInterfaces.length == 0) {
++            new Reporter().extraInterfacesRequiresAtLeastOneInterface();
++        }
++
++        for (Class<?> i : extraInterfaces) {
++            if (i == null) {
++                new Reporter().extraInterfacesDoesNotAcceptNullParameters();
++            } else if (!i.isInterface()) {
++                new Reporter().extraInterfacesAcceptsOnlyInterfaces(i);
++            }
++        }
++
++        // Merge provided interfaces with any already configured ones to allow combining
++        // calls like withSettings().serializable().extraInterfaces(X) and vice versa.
++        if (this.extraInterfaces == null || this.extraInterfaces.length == 0) {
++            this.extraInterfaces = extraInterfaces;
++        } else {
++            java.util.LinkedHashSet<Class<?>> merged = new java.util.LinkedHashSet<Class<?>>(java.util.Arrays.asList(this.extraInterfaces));
++            merged.addAll(java.util.Arrays.asList(extraInterfaces));
++            this.extraInterfaces = merged.toArray(new Class<?>[merged.size()]);
++        }
++        return this;
++    }
+ 
+     public MockName getMockName() {
+         return mockName;
+@@ -77,4 +86,4 @@ public class MockSettingsImpl implements MockSettings {
+     public void initiateMockName(Class classToMock) {
+         mockName = new MockName(name, classToMock);
+     }
+-}
+\ No newline at end of file
++}

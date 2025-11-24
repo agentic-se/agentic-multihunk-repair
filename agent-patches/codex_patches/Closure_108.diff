@@ -1,0 +1,27 @@
+diff --git a/src/com/google/javascript/jscomp/ScopedAliases.java b/src/com/google/javascript/jscomp/ScopedAliases.java
+index 1e22c9e8..84acd994 100644
+--- a/src/com/google/javascript/jscomp/ScopedAliases.java
++++ b/src/com/google/javascript/jscomp/ScopedAliases.java
+@@ -233,10 +233,18 @@ class ScopedAliases implements HotSwapCompilerPass {
+       String typeName = aliasReference.getString();
+       String aliasExpanded =
+           Preconditions.checkNotNull(aliasDefinition.getQualifiedName());
+-      Preconditions.checkState(typeName.startsWith(aliasName));
+-      String replacement =
+-          aliasExpanded + typeName.substring(aliasName.length());
+-      aliasReference.setString(replacement);
++      // If the type has already been expanded elsewhere, do nothing.
++      if (typeName.startsWith(aliasExpanded)) {
++        return;
++      }
++      // Only replace when the alias appears at the start of the type name
++      // (either exact match or qualified like "alias.Member").
++      if (typeName.equals(aliasName) || typeName.startsWith(aliasName + ".")) {
++        String replacement = aliasExpanded + typeName.substring(aliasName.length());
++        aliasReference.setString(replacement);
++        return;
++      }
++      // Be tolerant of unexpected shapes; avoid crashing on preconditions.
+ 
+     }
+   }

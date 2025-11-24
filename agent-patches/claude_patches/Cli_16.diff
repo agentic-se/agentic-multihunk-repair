@@ -1,0 +1,53 @@
+diff --git a/src/java/org/apache/commons/cli2/commandline/WriteableCommandLineImpl.java b/src/java/org/apache/commons/cli2/commandline/WriteableCommandLineImpl.java
+index 337eeb6..6dbc55c 100644
+--- a/src/java/org/apache/commons/cli2/commandline/WriteableCommandLineImpl.java
++++ b/src/java/org/apache/commons/cli2/commandline/WriteableCommandLineImpl.java
+@@ -64,10 +64,15 @@ public class WriteableCommandLineImpl
+ 
+     public void addOption(Option option) {
+         options.add(option);
+-        nameToOption.put(option.getPreferredName(), option);
+ 
+-        for (Iterator i = option.getTriggers().iterator(); i.hasNext();) {
+-            nameToOption.put(i.next(), option);
++        // Groups should not have their triggers added to the nameToOption map
++        // as this would overwrite child option mappings
++        if (!(option instanceof org.apache.commons.cli2.Group)) {
++            nameToOption.put(option.getPreferredName(), option);
++
++            for (Iterator i = option.getTriggers().iterator(); i.hasNext();) {
++                nameToOption.put(i.next(), option);
++            }
+         }
+ 
+         // ensure that all parent options are also added
+diff --git a/src/java/org/apache/commons/cli2/option/GroupImpl.java b/src/java/org/apache/commons/cli2/option/GroupImpl.java
+index e3b69f8..e366050 100644
+--- a/src/java/org/apache/commons/cli2/option/GroupImpl.java
++++ b/src/java/org/apache/commons/cli2/option/GroupImpl.java
+@@ -180,6 +180,10 @@ public class GroupImpl
+             if (opt != null) {
+                 arguments.previous();
+                 opt.process(commandLine, arguments);
++                // add this group to the command line if any child option is present
++                if (!commandLine.hasOption(this)) {
++                    commandLine.addOption(this);
++                }
+             }
+             // [START option NOT found
+             else {
+@@ -198,6 +202,10 @@ public class GroupImpl
+                             foundMemberOption = true;
+                             arguments.previous();
+                             option.process(commandLine, arguments);
++                            // add this group to the command line if any child option is present
++                            if (!commandLine.hasOption(this)) {
++                                commandLine.addOption(this);
++                            }
+                         }
+                     }
+ 
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

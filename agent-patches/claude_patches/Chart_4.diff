@@ -1,0 +1,22 @@
+diff --git a/source/org/jfree/chart/plot/XYPlot.java b/source/org/jfree/chart/plot/XYPlot.java
+index ec26162..b2f62db 100644
+--- a/source/org/jfree/chart/plot/XYPlot.java
++++ b/source/org/jfree/chart/plot/XYPlot.java
+@@ -4489,7 +4489,8 @@ public class XYPlot extends Plot implements ValueAxisPlot, Pannable,
+                                 DatasetUtilities.findRangeBounds(d));
+                     }
+                 }
+-                
++
++                if (r != null) {
+                     Collection c = r.getAnnotations();
+                     Iterator i = c.iterator();
+                     while (i.hasNext()) {
+@@ -4498,6 +4499,7 @@ public class XYPlot extends Plot implements ValueAxisPlot, Pannable,
+                             includedAnnotations.add(a);
+                         }
+                     }
++                }
+             }
+         }
+ 

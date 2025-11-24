@@ -1,0 +1,17 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/MappingIterator.java b/src/main/java/com/fasterxml/jackson/databind/MappingIterator.java
+index b4ce3e956..19310d44b 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/MappingIterator.java
++++ b/src/main/java/com/fasterxml/jackson/databind/MappingIterator.java
+@@ -252,6 +252,12 @@ public class MappingIterator<T> implements Iterator<T>, Closeable
+                 value = _updatedValue;
+             }
+             return value;
++        } catch (JsonProcessingException e) {
++            // 24-Mar-2015, tatu: As per [#733], we need to improve error recovery
++            // Clear current token to avoid infinite loop
++            _parser.clearCurrentToken();
++            // Re-throw the exception
++            throw e;
+         } finally {
+             /* 24-Mar-2015, tatu: As per [#733], need to mark token consumed no
+              *   matter what, to avoid infinite loop for certain failure cases.

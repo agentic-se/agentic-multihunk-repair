@@ -1,0 +1,65 @@
+diff --git a/src/com/google/javascript/jscomp/ScopedAliases.java b/src/com/google/javascript/jscomp/ScopedAliases.java
+index a4e503d0..65a994da 100644
+--- a/src/com/google/javascript/jscomp/ScopedAliases.java
++++ b/src/com/google/javascript/jscomp/ScopedAliases.java
+@@ -374,21 +374,51 @@ class ScopedAliases implements HotSwapCompilerPass {
+ 
+           // Add $jscomp.scope.name = EXPR;
+           // Make sure we copy over all the jsdoc and debug info.
+-            Node newDecl = NodeUtil.newQualifiedNameNodeDeclaration(
+-                compiler.getCodingConvention(),
+-                globalName,
+-                value,
+-                v.getJSDocInfo())
+-                .useSourceInfoIfMissingFromForTree(n);
+-            NodeUtil.setDebugInformation(
+-                newDecl.getFirstChild().getFirstChild(), n, name);
+-            parent.getParent().addChildBefore(newDecl, parent);
++          Node newDecl = NodeUtil.newQualifiedNameNodeDeclaration(
++              compiler.getCodingConvention(),
++              globalName,
++              value,
++              v.getJSDocInfo())
++              .useSourceInfoIfMissingFromForTree(n);
++          NodeUtil.setDebugInformation(
++              newDecl.getFirstChild().getFirstChild(), n, name);
++          parent.getParent().addChildBefore(newDecl, parent);
+ 
+           // Rewrite "var name = EXPR;" to "var name = $jscomp.scope.name;"
+           v.getNameNode().addChildToFront(
+               NodeUtil.newQualifiedNameNode(
+                   compiler.getCodingConvention(), globalName, n, name));
+ 
++          recordAlias(v);
++        } else if (parent.isVar() && !n.hasChildren()) {
++          // Handle uninitialized locals inside goog.scope.
++          String name = n.getString();
++          int nameCount = scopedAliasNames.count(name);
++          scopedAliasNames.add(name);
++          String globalName =
++              "$jscomp.scope." + name + (nameCount == 0 ? "" : ("$" + nameCount));
++
++          // We will reference $jscomp.scope, so ensure it's available.
++          compiler.ensureLibraryInjected("base");
++
++          // If there is JSDoc on the local, preserve it by emitting
++          // an annotated reference to $jscomp.scope.name.
++          JSDocInfo jsdoc = v.getJSDocInfo();
++          if (jsdoc != null) {
++            Node qName = NodeUtil.newQualifiedNameNode(
++                compiler.getCodingConvention(), globalName);
++            qName.setJSDocInfo(jsdoc);
++            NodeUtil.setDebugInformation(qName, n, name);
++            Node expr = NodeUtil.newExpr(qName)
++                .useSourceInfoIfMissingFromForTree(n);
++            parent.getParent().addChildBefore(expr, parent);
++          }
++
++          // Rewrite "var name;" to "var name = $jscomp.scope.name;"
++          v.getNameNode().addChildToFront(
++              NodeUtil.newQualifiedNameNode(
++                  compiler.getCodingConvention(), globalName, n, name));
++
+           recordAlias(v);
+         } else {
+           // Do not allow hoisted functions or other kinds of local symbols.

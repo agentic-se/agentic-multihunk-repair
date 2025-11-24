@@ -1,0 +1,22 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+index 41ffafb2b..7d5107238 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
++++ b/src/main/java/com/fasterxml/jackson/databind/type/TypeFactory.java
+@@ -1422,7 +1422,16 @@ public final class TypeFactory
+         bindings = bindings.withUnboundVariable(name);
+ 
+         Type[] bounds = var.getBounds();
+-        return _fromAny(context, bounds[0], bindings);
++        if (bounds == null || bounds.length == 0) {
++            // Fall back to Object if no bounds are available
++            return CORE_TYPE_OBJECT;
++        }
++        // Handle potentially null bounds[0] which can cause NPE
++        Type bound = bounds[0];
++        if (bound == null) {
++            return CORE_TYPE_OBJECT;
++        }
++        return _fromAny(context, bound, bindings);
+     }
+ 
+     protected JavaType _fromWildcard(ClassStack context, WildcardType type, TypeBindings bindings)

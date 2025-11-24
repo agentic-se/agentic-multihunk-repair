@@ -1,0 +1,43 @@
+--- a/src/java/org/apache/commons/lang/time/FastDateFormat.java
++++ b/src/java/org/apache/commons/lang/time/FastDateFormat.java
+@@ -1,9 +1,9 @@
+-    public static synchronized FastDateFormat getDateInstance(int style, TimeZone timeZone, Locale locale) {
+-        Object key = new Integer(style);
+-        if (timeZone != null) {
+-            key = new Pair(key, timeZone);
+-        }
+-
+-        if (locale != null) {
+-            key = new Pair(key, locale);
+-        }
++    public static synchronized FastDateFormat getDateInstance(int style, TimeZone timeZone, Locale locale) {
++        Object key = new Integer(style);
++        if (timeZone != null) {
++            key = new Pair(key, timeZone);
++        }
++        if (locale == null) {
++            locale = Locale.getDefault();
++        }
++        key = new Pair(key, locale);
+@@ -1,10 +1,11 @@
+-    public static synchronized FastDateFormat getDateTimeInstance(int dateStyle, int timeStyle, TimeZone timeZone,
+-            Locale locale) {
+-
+-        Object key = new Pair(new Integer(dateStyle), new Integer(timeStyle));
+-        if (timeZone != null) {
+-            key = new Pair(key, timeZone);
+-        }
+-        if (locale != null) {
+-            key = new Pair(key, locale);
+-        }
++    public static synchronized FastDateFormat getDateTimeInstance(int dateStyle, int timeStyle, TimeZone timeZone,
++            Locale locale) {
++
++        Object key = new Pair(new Integer(dateStyle), new Integer(timeStyle));
++        if (timeZone != null) {
++            key = new Pair(key, timeZone);
++        }
++        if (locale == null) {
++            locale = Locale.getDefault();
++        }
++        key = new Pair(key, locale);

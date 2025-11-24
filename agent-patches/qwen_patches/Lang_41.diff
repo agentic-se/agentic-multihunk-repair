@@ -1,0 +1,70 @@
+diff --git a/src/java/org/apache/commons/lang/ClassUtils.java b/src/java/org/apache/commons/lang/ClassUtils.java
+index d5de42b2..bdf168e6 100644
+--- a/src/java/org/apache/commons/lang/ClassUtils.java
++++ b/src/java/org/apache/commons/lang/ClassUtils.java
+@@ -188,10 +188,26 @@ public class ClassUtils {
+             return StringUtils.EMPTY;
+         }
+ 
+-
+         // Handle array encoding
+-            // Strip Object type encoding
+-
++        // Strip array prefixes
++        int arrayDimensions = 0;
++        while (className.startsWith("[") && className.length() > 0) {
++            arrayDimensions++;
++            className = className.substring(1);
++        }
++        
++        // Handle object type encoding
++        if (className.startsWith("L") && className.endsWith(";")) {
++            className = className.substring(1, className.length() - 1);
++        }
++        
++        // Handle primitive type encoding
++        if (className.length() > 0 && className.length() == 1) {
++            String primitiveName = reverseAbbreviationMap.get(className);
++            if (primitiveName != null) {
++                className = primitiveName;
++            }
++        }
+ 
+         int lastDotIdx = className.lastIndexOf(PACKAGE_SEPARATOR_CHAR);
+         int innerIdx = className.indexOf(
+@@ -200,6 +216,10 @@ public class ClassUtils {
+         if (innerIdx != -1) {
+             out = out.replace(INNER_CLASS_SEPARATOR_CHAR, PACKAGE_SEPARATOR_CHAR);
+         }
++        // Add array brackets back
++        for (int i = 0; i < arrayDimensions; i++) {
++            out += "[]";
++        }
+         return out;
+     }
+ 
+@@ -247,7 +267,23 @@ public class ClassUtils {
+         }
+ 
+         // Strip array encoding
+-        // Strip Object type encoding
++        // Strip array prefixes
++        while (className.startsWith("[") && className.length() > 0) {
++            className = className.substring(1);
++        }
++        
++        // Handle object type encoding
++        if (className.startsWith("L") && className.endsWith(";")) {
++            className = className.substring(1, className.length() - 1);
++        }
++        
++        // Handle primitive type encoding
++        if (className.length() > 0 && className.length() == 1) {
++            String primitiveName = reverseAbbreviationMap.get(className);
++            if (primitiveName != null) {
++                className = primitiveName;
++            }
++        }
+ 
+         int i = className.lastIndexOf(PACKAGE_SEPARATOR_CHAR);
+         if (i == -1) {

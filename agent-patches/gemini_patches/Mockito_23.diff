@@ -1,0 +1,55 @@
+--- a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
++++ b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+@@ -1,1 +1,1 @@
+-    private MockitoCore mockitoCore = new MockitoCore();
++    private transient MockitoCore mockitoCore = new MockitoCore();
+@@ -1,5 +1,10 @@
+-    protected GenericMetadataSupport actualParameterizedType(Object mock) {
+-        CreationSettings mockSettings = (CreationSettings) new MockUtil().getMockHandler(mock).getMockSettings();
+-        return GenericMetadataSupport.inferFrom(mockSettings.getTypeToMock());
+-    }
+-}
++    protected GenericMetadataSupport actualParameterizedType(Object mock) {
++        CreationSettings mockSettings = (CreationSettings) new MockUtil().getMockHandler(mock).getMockSettings();
++        return GenericMetadataSupport.inferFrom(mockSettings.getTypeToMock());
++    }
++
++    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, ClassNotFoundException {
++        in.defaultReadObject();
++        mockitoCore = new MockitoCore();
++    }
++}
+@@ -1,8 +1,3 @@
+-    private ReturnsDeepStubs returnsDeepStubsAnswerUsing(final GenericMetadataSupport returnTypeGenericMetadata) {
+-        return new ReturnsDeepStubs() {
+-            @Override
+-            protected GenericMetadataSupport actualParameterizedType(Object mock) {
+-                return returnTypeGenericMetadata;
+-            }
+-        };
+-    }
++    private ReturnsDeepStubs returnsDeepStubsAnswerUsing(final GenericMetadataSupport returnTypeGenericMetadata) {
++        return new ReturnsDeepStubs();
++    }
+@@ -1,3 +1,3 @@
+-    private ReturnsDeepStubs returnsDeepStubsAnswerUsing(final GenericMetadataSupport returnTypeGenericMetadata) {
+-        return new ReturnsDeepStubs();
+-    }
++    private ReturnsDeepStubs returnsDeepStubsAnswerUsing() {
++        return new ReturnsDeepStubs();
++    }
+@@ -1,1 +1,1 @@
+-                .defaultAnswer(returnsDeepStubsAnswerUsing(returnTypeGenericMetadata));
++                .defaultAnswer(returnsDeepStubsAnswerUsing());
+
+--- a/src/org/mockito/internal/util/reflection/GenericMetadataSupport.java
++++ b/src/org/mockito/internal/util/reflection/GenericMetadataSupport.java
+@@ -1,1 +1,1 @@
+-    protected Map<TypeVariable, Type> contextualActualTypeParameters = new HashMap<TypeVariable, Type>();
++    protected transient Map<TypeVariable, Type> contextualActualTypeParameters = new HashMap<TypeVariable, Type>();
+@@ -1,1 +1,1 @@
+-public abstract class GenericMetadataSupport implements Serializable {
++public abstract class GenericMetadataSupport {
+@@ -1,1 +1,1 @@
+-    protected transient Map<TypeVariable, Type> contextualActualTypeParameters = new HashMap<TypeVariable, Type>();
++    protected Map<TypeVariable, Type> contextualActualTypeParameters = new HashMap<TypeVariable, Type>();

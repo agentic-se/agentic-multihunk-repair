@@ -1,0 +1,26 @@
+diff --git a/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java b/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java
+index 26a56a7a..a0c931ed 100644
+--- a/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java
++++ b/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java
+@@ -809,6 +809,11 @@ public final class JsDocInfoParser {
+                   if (type == null) {
+                     // error reported during recursive descent
+                     // recovering parsing
++                    token = eatTokensUntilEOL();
++                    if (token == JsDocToken.EOC || token == JsDocToken.EOF) {
++                      // Remove the token so the EOF/EOC case will exit cleanly
++                      return token == JsDocToken.EOC;
++                    }
+                   } else {
+                     switch (annotation) {
+                       case DEFINE:
+@@ -865,8 +870,7 @@ public final class JsDocInfoParser {
+                         }
+                         break;
+                     }
+-
+-                  token = eatTokensUntilEOL();
++                    token = eatTokensUntilEOL();
+                   }
+                   continue retry;
+               }

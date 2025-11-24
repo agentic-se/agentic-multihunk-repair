@@ -1,0 +1,47 @@
+diff --git a/src/main/java/org/apache/commons/math3/optimization/linear/SimplexSolver.java b/src/main/java/org/apache/commons/math3/optimization/linear/SimplexSolver.java
+index a84438d9b..08f479ab9 100644
+--- a/src/main/java/org/apache/commons/math3/optimization/linear/SimplexSolver.java
++++ b/src/main/java/org/apache/commons/math3/optimization/linear/SimplexSolver.java
+@@ -67,18 +67,15 @@ public class SimplexSolver extends AbstractLinearOptimizer {
+      * @return column with the most negative coefficient
+      */
+     private Integer getPivotColumn(SimplexTableau tableau) {
+-        double minValue = 0;
+-        Integer minPos = null;
++        // Apply Bland's rule on columns: choose the smallest-index column
++        // with a strictly negative coefficient in the objective row.
+         for (int i = tableau.getNumObjectiveFunctions(); i < tableau.getWidth() - 1; i++) {
+             final double entry = tableau.getEntry(0, i);
+-            // check if the entry is strictly smaller than the current minimum
+-            // do not use a ulp/epsilon check
+-            if (entry < minValue) {
+-                minValue = entry;
+-                minPos = i;
++            if (entry < 0) {
++                return i;
+             }
+         }
+-        return minPos;
++        return null;
+     }
+ 
+     /**
+@@ -138,13 +135,15 @@ public class SimplexSolver extends AbstractLinearOptimizer {
+                 Integer minRow = null;
+                 int minIndex = tableau.getWidth();
+                 for (Integer row : minRatioPositions) {
+-                    int i = tableau.getNumObjectiveFunctions();
+-                    for (; i < tableau.getWidth() - 1 && minRow != row; i++) {
+-                        if (row == tableau.getBasicRow(i)) {
++                    for (int i = tableau.getNumObjectiveFunctions(); i < tableau.getWidth() - 1; i++) {
++                        final Integer basicRow = tableau.getBasicRow(i);
++                        if (row != null && row.equals(basicRow)) {
+                             if (i < minIndex) {
+                                 minIndex = i;
+                                 minRow = row;
+                             }
++                            // Found the basic column for this row; move to next row
++                            break;
+                         }
+                     }
+                 }

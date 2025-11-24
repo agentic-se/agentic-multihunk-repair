@@ -1,0 +1,232 @@
+diff --git a/src/com/google/javascript/jscomp/MakeDeclaredNamesUnique.java b/src/com/google/javascript/jscomp/MakeDeclaredNamesUnique.java
+index 79f2247d..a575f03a 100644
+--- a/src/com/google/javascript/jscomp/MakeDeclaredNamesUnique.java
++++ b/src/com/google/javascript/jscomp/MakeDeclaredNamesUnique.java
+@@ -237,11 +237,8 @@ class MakeDeclaredNamesUnique
+     private final AbstractCompiler compiler;
+ 
+     // The set of names referenced in the current scope.
+-
+-    // Stack reference sets.
+-
+     // Name are globally unique initially, so we don't need a per-scope map.
+-    private Map<Var, String> nameMap = Maps.newHashMap();
++    private final Map<Var, String> nameMap = Maps.newHashMap();
+ 
+     private ContextualRenameInverter(AbstractCompiler compiler) {
+       this.compiler = compiler;
+@@ -285,61 +282,136 @@ class MakeDeclaredNamesUnique
+     public void visit(NodeTraversal t, Node node, Node parent) {
+       if (node.getType() == Token.NAME) {
+         String oldName = node.getString();
+-        if (containsSeparator(oldName)) {
+-          Scope scope = t.getScope();
+-          Var var = t.getScope().getVar(oldName);
+-          if (var == null || var.isGlobal()) {
+-        return;
+-      }
+ 
+-          if (nameMap.containsKey(var)) {
+-            node.setString(nameMap.get(var));
+-          } else {
+-            int index = indexOfSeparator(oldName);
+-            String newName = getOrginalNameInternal(oldName, index);
+-            String suffix = getNameSuffix(oldName, index);
+-
+-      // Merge any names that were referenced but not declared in the current
+-      // scope.
+-      // If there isn't anything left in the stack we will be going into the
+-      // global scope: don't try to build a set of referenced names for the
+-      // global scope.
+-            boolean recurseScopes = false;
+-            if (!suffix.matches("\\d+")) {
+-              recurseScopes = true;
++        // If this is a simple name without a separator, nothing to invert.
++        if (!containsSeparator(oldName)) return;
++
++        // Attempt to invert a contextual rename when safe
++        Scope scope = t.getScope();
++        Var var = (scope == null) ? null : scope.getVar(oldName);
++        if (var == null || var.isGlobal()) {
++          return;
++        }
++
++        if (nameMap.containsKey(var)) {
++          node.setString(nameMap.get(var));
++          return;
++        }
++
++        int index = indexOfSeparator(oldName);
++        String newName = getOrginalNameInternal(oldName, index);
++        String suffix = getNameSuffix(oldName, index);
++
++        // Do not invert the first numeric-suffixed name (e.g. foo$$1)
++        if (suffix.matches("\\d+") && "1".equals(suffix)) {
++          Node declParent = var.getParentNode();
++          if (declParent != null && declParent.getType() == Token.VAR) {
++            // Only block inversion of the first numeric suffix if the current
++            // scope has descendant function scopes that declare the same name.
++            if (hasDescendantFunctionDeclaring(var.scope.getRootNode(), newName)) {
++              nameMap.put(var, oldName);
++              return;
+             }
++          }
++        }
+ 
+-    /**
+-     * For the Var declared in the current scope determine if it is possible
+-     * to revert the name to its orginal form without conflicting with other
+-     * values.
+-     */
+-        // Check if the new name is valid and if it would cause conflicts.
+-            if (var.scope.isDeclared(newName, recurseScopes) ||
+-                !TokenStream.isJSIdentifier(newName)) {
+-              newName = oldName;
+-            } else {
+-              var.scope.declare(newName, var.nameNode, null, null);
+-          // Adding a reference to the new name to prevent either the parent
+-          // scopes or the current scope renaming another var to this new name.
+-              Node parentNode = var.getParentNode();
+-              if (parentNode.getType() == Token.FUNCTION &&
+-                  parentNode == var.scope.getRootNode()) {
+-                var.getNameNode().setString(newName);
+-              }
+-              node.setString(newName);
+-          compiler.reportCodeChange();
++        // Never invert to "arguments"; it is a special identifier.
++        if ("arguments".equals(newName)) {
++          nameMap.put(var, oldName);
++          return;
++        }
++
++        // Only block renaming if the base name is already declared in the
++        // current scope, or if renaming would shadow a referenced free name in
++        // this scope.
++        boolean baseDeclaredHere = var.scope.isDeclared(newName, false);
++        boolean baseReferencedHere = referencesNameInScope(var.scope.getRootNode(), newName);
++
++        if (baseDeclaredHere || baseReferencedHere ||
++            !TokenStream.isJSIdentifier(newName)) {
++          // Keep the old unique name
++          nameMap.put(var, oldName);
++          return;
++        }
++
++        // Declare the reverted name in the scope to avoid subsequent conflicts
++        var.scope.declare(newName, var.nameNode, null, null);
++        // If this is a function parameter, update the declaration node as well
++        Node parentNode = var.getParentNode();
++        if (parentNode != null && parentNode.getType() == Token.FUNCTION &&
++            parentNode == var.scope.getRootNode()) {
++          var.getNameNode().setString(newName);
+         }
++        node.setString(newName);
++        compiler.reportCodeChange();
++        nameMap.put(var, newName);
++      }
++    }
+ 
+-            nameMap.put(var, newName);
++    private boolean isDeclarationName(Node n) {
++      Node p = n.getParent();
++      if (p == null) return false;
++      int pt = p.getType();
++      if (NodeUtil.isVarDeclaration(n)) return true;
++      if (pt == Token.FUNCTION && n == p.getFirstChild()) return true; // function name
++      if (pt == Token.LP && p.getParent() != null && p.getParent().getType() == Token.FUNCTION) {
++        return true; // parameter
++      }
++      if (pt == Token.CATCH && n == p.getFirstChild()) return true; // catch exception
++      return false;
++    }
+ 
++    private boolean referencesNameInScope(final Node scopeRoot, final String name) {
++      if (scopeRoot == null) return false;
++      // Determine the subtree to search: for functions, search the body.
++      Node searchRoot = scopeRoot;
++      if (scopeRoot.getType() == Token.FUNCTION) {
++        searchRoot = scopeRoot.getLastChild();
+       }
++      // Walk the subtree and look for a non-declaration reference to the name.
++      final boolean[] found = new boolean[]{false};
++      NodeTraversal.traverse(compiler, searchRoot, new NodeTraversal.AbstractPostOrderCallback() {
++        @Override
++        public void visit(NodeTraversal t, Node n, Node parent) {
++          if (found[0]) return;
++          if (n.getType() == Token.FUNCTION && parent == scopeRoot) {
++            // Skip nested function bodies entirely
++            return;
++          }
++          if (n.getType() == Token.NAME && name.equals(n.getString())) {
++            if (!isDeclarationName(n)) {
++              found[0] = true;
++            }
++          }
++        }
++      });
++      return found[0];
++    }
+ 
+-        // Add all referenced names to the set so it is possible to check for
+-        // conflicts.
+-        // Store only references to candidate names in the node map.
++    private boolean hasDescendantFunctionDeclaring(Node scopeRoot, final String name) {
++      if (scopeRoot == null) return false;
++      if (scopeRoot.getType() != Token.FUNCTION) return false;
++      Node body = scopeRoot.getLastChild();
++      for (Node stmt = body.getFirstChild(); stmt != null; stmt = stmt.getNext()) {
++        if (stmt.getType() == Token.FUNCTION) {
++          Node childBody = stmt.getLastChild();
++          for (Node inner = childBody.getFirstChild(); inner != null; inner = inner.getNext()) {
++            if (inner.getType() == Token.VAR) {
++              for (Node v = inner.getFirstChild(); v != null; v = v.getNext()) {
++                if (v.getType() == Token.NAME) {
++                  String vName = v.getString();
++                  int idx = indexOfSeparator(vName);
++                  String base = (idx == -1) ? vName : getOrginalNameInternal(vName, idx);
++                  if (name.equals(base)) {
++                  return true;
++                  }
++                }
++              }
++            }
++          }
+         }
+       }
++      return false;
+     }
+ 
+   }
+@@ -388,6 +460,11 @@ class MakeDeclaredNamesUnique
+      */
+     @Override
+     public void addDeclaredName(String name) {
++        // Never make "arguments" unique; it's a special identifier in JS.
++        if ("arguments".equals(name)) {
++          declarations.put(name, null);
++          return;
++        }
+         if (global) {
+           reserveName(name);
+         } else {
+diff --git a/src/com/google/javascript/jscomp/Normalize.java b/src/com/google/javascript/jscomp/Normalize.java
+index a8526b5e..41900a68 100644
+--- a/src/com/google/javascript/jscomp/Normalize.java
++++ b/src/com/google/javascript/jscomp/Normalize.java
+@@ -79,12 +79,15 @@ class Normalize implements CompilerPass {
+   public void process(Node externs, Node root) {
+     NodeTraversal.traverse(compiler, root,
+         new NormalizeStatements(compiler, assertOnChange));
+-    removeDuplicateDeclarations(root);
+     if (MAKE_LOCAL_NAMES_UNIQUE) {
+       MakeDeclaredNamesUnique renamer = new MakeDeclaredNamesUnique();
+       NodeTraversal t = new NodeTraversal(compiler, renamer);
+       t.traverseRoots(externs, root);
+     }
++    // Remove duplicate declarations after making names unique so that catch
++    // exception names are handled properly and inner scope variables are not
++    // rewritten into assignments.
++    removeDuplicateDeclarations(root);
+     // It is important that removeDuplicateDeclarations runs after
+     // MakeDeclaredNamesUnique in order for catch block exception names to be
+     // handled properly. Specifically, catch block exception names are

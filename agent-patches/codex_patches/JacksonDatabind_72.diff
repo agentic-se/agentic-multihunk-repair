@@ -1,0 +1,14 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/InnerClassProperty.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/InnerClassProperty.java
+index 021a3cf46..855646d49 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/InnerClassProperty.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/InnerClassProperty.java
+@@ -90,6 +90,9 @@ public final class InnerClassProperty
+     @Override
+     public int getPropertyIndex() { return _delegate.getPropertyIndex(); }
+ 
++    @Override
++    public int getCreatorIndex() { return _delegate.getCreatorIndex(); }
++
+     
+     // // // BeanProperty impl
+     

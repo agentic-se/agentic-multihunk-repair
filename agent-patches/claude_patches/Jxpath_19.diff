@@ -1,0 +1,56 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
+index 3300d03..933d0f2 100644
+--- a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
+@@ -558,9 +558,16 @@ public class DOMNodePointer extends NodePointer {
+         Node n = node.getPreviousSibling();
+         while (n != null) {
+             if (n.getNodeType() == Node.ELEMENT_NODE) {
+-                String nm = n.getNodeName();
+-                if (nm.equals(node.getNodeName())) {
+-                count++;
++                // Compare by namespace URI and local name, not just node name
++                // This handles the case where elements have the same namespace
++                // but different prefixes (e.g., a:elem and b:elem in namespace "ns")
++                String nsURI = getNamespaceURI(node);
++                String nsURI_n = getNamespaceURI(n);
++                String localName = getLocalName(node);
++                String localName_n = getLocalName(n);
++
++                if (equalStrings(nsURI, nsURI_n) && localName.equals(localName_n)) {
++                    count++;
+                 }
+             }
+             n = n.getPreviousSibling();
+diff --git a/src/java/org/apache/commons/jxpath/ri/model/jdom/JDOMNodePointer.java b/src/java/org/apache/commons/jxpath/ri/model/jdom/JDOMNodePointer.java
+index 7df3ace..5073dec 100644
+--- a/src/java/org/apache/commons/jxpath/ri/model/jdom/JDOMNodePointer.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/jdom/JDOMNodePointer.java
+@@ -690,12 +690,19 @@ public class JDOMNodePointer extends NodePointer {
+ 
+             List children = ((Element) parent).getContent();
+             int count = 0;
+-            String name = ((Element) node).getQualifiedName();
++            // Compare by namespace URI and local name, not just qualified name
++            // This handles the case where elements have the same namespace
++            // but different prefixes (e.g., a:elem and b:elem in namespace "ns")
++            String nsURI = getNamespaceURI(node);
++            String localName = getLocalName(node);
+             for (int i = 0; i < children.size(); i++) {
+                 Object child = children.get(i);
+-                if ((child instanceof Element)
+-                    && ((Element) child).getQualifiedName().equals(name)) {
+-                    count++;
++                if (child instanceof Element) {
++                    String childNS = getNamespaceURI(child);
++                    String childLocalName = getLocalName(child);
++                    if (equalStrings(nsURI, childNS) && localName.equals(childLocalName)) {
++                        count++;
++                    }
+                 }
+                 if (child == node) {
+                     break;
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

@@ -1,0 +1,32 @@
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/CreatorCollector.java
+@@ -1,9 +1,20 @@
+-            if (oldOne.getClass() == newOne.getClass()) {
+-                // [databind#667]: avoid one particular class of bogus problems
+-
+-                    throw new IllegalArgumentException("Conflicting "+TYPE_DESCS[typeIndex]
+-                            +" creators: already had explicitly marked "+oldOne+", encountered "+newOne);
+-                // otherwise, which one to choose?
+-                    // new type more generic, use old
+-                // new type more specific, use it
+-            }
++            if (oldOne.getClass() == newOne.getClass()) {
++                // [databind#667]: avoid one particular class of bogus problems
++                // 07-Oct-2015, tatu: Special case for [databind#8]: allow String and CharSequence
++                //   to co-exist, if they are for different parameter types.
++                if (typeIndex == C_STRING) {
++                    Class<?> oldType = oldOne.getRawParameterType(0);
++                    Class<?> newType = newOne.getRawParameterType(0);
++                    if (oldType == String.class && newType == CharSequence.class) {
++                        return;
++                    }
++                    if (oldType == CharSequence.class && newType == String.class) {
++                        return;
++                    }
++                }
++                throw new IllegalArgumentException("Conflicting "+TYPE_DESCS[typeIndex]
++                        +" creators: already had explicitly marked "+oldOne+", encountered "+newOne);
++                // otherwise, which one to choose?
++                    // new type more generic, use old
++                // new type more specific, use it
++            }

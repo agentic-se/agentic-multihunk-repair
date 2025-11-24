@@ -1,0 +1,72 @@
+--- a/src/org/mockito/exceptions/Reporter.java
++++ b/src/org/mockito/exceptions/Reporter.java
+@@ -1,1 +1,1 @@
+-                "But found this interaction on mock '" + undesired.getMock() + "':",
++                "But found this interaction on mock '" + safelyGetMockName(undesired.getMock()) + "':",
+@@ -1,3 +1,10 @@
+-    private MockName safelyGetMockName(Object mock) {
+-        return new MockUtil().getMockName(mock);
+-    }
++    private String safelyGetMockName(Object mock) {
++        if (mock == null) {
++            return "null";
++        }
++        MockUtil mockUtil = new MockUtil();
++        if (mockUtil.isMock(mock)) {
++            return mockUtil.getMockName(mock).toString();
++        }
++        return mock.getClass().getSimpleName();
++    }
+@@ -1,10 +1,3 @@
+-    private String safelyGetMockName(Object mock) {
+-        if (mock == null) {
+-            return "null";
+-        }
+-        MockUtil mockUtil = new MockUtil();
+-        if (mockUtil.isMock(mock)) {
+-            return mockUtil.getMockName(mock).toString();
+-        }
+-        return mock.getClass().getSimpleName();
+-    }
++    private MockName safelyGetMockName(Object mock) {
++        return new MockUtil().getMockName(mock);
++    }
+@@ -1,3 +1,10 @@
+-    private MockName safelyGetMockName(Object mock) {
+-        return new MockUtil().getMockName(mock);
+-    }
++    private MockName safelyGetMockName(Object mock) {
++        MockUtil mockUtil = new MockUtil();
++        if (mock == null) {
++            return new MockNameImpl("null");
++        } else if (mockUtil.isMock(mock)) {
++            return mockUtil.getMockName(mock);
++        } else {
++            return new MockNameImpl(mock.getClass().getSimpleName());
++        }
++    }
+@@ -1,1 +1,2 @@
+-import org.mockito.internal.util.MockUtil;
++import org.mockito.internal.util.MockUtil;
++import org.mockito.internal.util.MockNameImpl;
+@@ -1,10 +1,10 @@
+-    private MockName safelyGetMockName(Object mock) {
+-        MockUtil mockUtil = new MockUtil();
+-        if (mock == null) {
+-            return new MockNameImpl("null");
+-        } else if (mockUtil.isMock(mock)) {
+-            return mockUtil.getMockName(mock);
+-        } else {
+-            return new MockNameImpl(mock.getClass().getSimpleName());
+-        }
+-    }
++    private String safelyGetMockName(Object mock) {
++        MockUtil mockUtil = new MockUtil();
++        if (mock == null) {
++            return "null";
++        } else if (mockUtil.isMock(mock)) {
++            return mockUtil.getMockName(mock).toString();
++        } else {
++            return mock.getClass().getSimpleName();
++        }
++    }

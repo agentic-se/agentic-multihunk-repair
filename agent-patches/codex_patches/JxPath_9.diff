@@ -1,0 +1,89 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationCompare.java b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationCompare.java
+index 26875b8..b33b72a 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationCompare.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationCompare.java
+@@ -122,6 +122,18 @@ public abstract class CoreOperationCompare extends CoreOperation {
+     protected boolean equal(Object l, Object r) {
+         if (l instanceof Pointer && r instanceof Pointer) {
+             if (l.equals(r)) {
++                // If both pointers reference the same node, they are equal
++                // unless the underlying values are NaN numbers, in which case
++                // comparison should yield false per expected semantics.
++                Object lv = ((Pointer) l).getValue();
++                Object rv = ((Pointer) r).getValue();
++                if ((lv instanceof Number || rv instanceof Number)) {
++                    double ld = InfoSetUtil.doubleValue(lv);
++                    double rd = InfoSetUtil.doubleValue(rv);
++                    if (Double.isNaN(ld) || Double.isNaN(rd)) {
++                        return false;
++                    }
++                }
+                 return true;
+             }
+         }
+@@ -133,7 +145,16 @@ public abstract class CoreOperationCompare extends CoreOperation {
+             r = ((Pointer) r).getValue();
+         }
+ 
++        // If references are identical, they are equal except for NaN numbers:
++        // XPath semantics in this project expect that any comparison involving
++        // NaN yields false, including '=' when both sides are NaN.
+         if (l == r) {
++            if (l instanceof Number) {
++                double ld = InfoSetUtil.doubleValue(l);
++                if (Double.isNaN(ld)) {
++                    return false;
++                }
++            }
+             return true;
+         }
+         if (l instanceof Boolean || r instanceof Boolean) {
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationNotEqual.java b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationNotEqual.java
+index 6754f46..dc6fee8 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationNotEqual.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationNotEqual.java
+@@ -29,6 +29,44 @@ public class CoreOperationNotEqual extends CoreOperationCompare {
+     }
+ 
+     public Object computeValue(org.apache.commons.jxpath.ri.EvalContext context) {
++        Object lRaw = args[0].computeValue(context);
++        Object rRaw = args[1].computeValue(context);
++        // Dereference pointers to compare underlying values
++        if (lRaw instanceof org.apache.commons.jxpath.ri.EvalContext) {
++            org.apache.commons.jxpath.Pointer p = ((org.apache.commons.jxpath.ri.EvalContext) lRaw).getSingleNodePointer();
++            lRaw = p == null ? null : p.getValue();
++        }
++        if (lRaw instanceof org.apache.commons.jxpath.Pointer) {
++            lRaw = ((org.apache.commons.jxpath.Pointer) lRaw).getValue();
++        }
++        if (rRaw instanceof org.apache.commons.jxpath.ri.EvalContext) {
++            org.apache.commons.jxpath.Pointer p = ((org.apache.commons.jxpath.ri.EvalContext) rRaw).getSingleNodePointer();
++            rRaw = p == null ? null : p.getValue();
++        }
++        if (rRaw instanceof org.apache.commons.jxpath.Pointer) {
++            rRaw = ((org.apache.commons.jxpath.Pointer) rRaw).getValue();
++        }
++
++        // Follow the same type precedence as CoreOperationCompare.equal(...)
++        if (lRaw instanceof Boolean || rRaw instanceof Boolean) {
++            boolean lb = org.apache.commons.jxpath.ri.InfoSetUtil.booleanValue(lRaw);
++            boolean rb = org.apache.commons.jxpath.ri.InfoSetUtil.booleanValue(rRaw);
++            return lb != rb ? Boolean.TRUE : Boolean.FALSE;
++        }
++        if (lRaw instanceof Number || rRaw instanceof Number) {
++            double ld = org.apache.commons.jxpath.ri.InfoSetUtil.doubleValue(lRaw);
++            double rd = org.apache.commons.jxpath.ri.InfoSetUtil.doubleValue(rRaw);
++            // Special-case NaN: any comparison with NaN yields false
++            if (Double.isNaN(ld) || Double.isNaN(rd)) {
++                return Boolean.FALSE;
++            }
++            return ld != rd ? Boolean.TRUE : Boolean.FALSE;
++        }
++        if (lRaw instanceof String || rRaw instanceof String) {
++            String ls = org.apache.commons.jxpath.ri.InfoSetUtil.stringValue(lRaw);
++            String rs = org.apache.commons.jxpath.ri.InfoSetUtil.stringValue(rRaw);
++            return !ls.equals(rs) ? Boolean.TRUE : Boolean.FALSE;
++        }
+         return equal(context, args[0], args[1]) ? Boolean.FALSE : Boolean.TRUE;
+     }
+     public String getSymbol() {

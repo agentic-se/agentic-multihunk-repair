@@ -1,0 +1,29 @@
+--- a/src/main/java/org/joda/time/Days.java
++++ b/src/main/java/org/joda/time/Days.java
+@@ -1,2 +1,9 @@
+-        int amount = BaseSingleFieldPeriod.between(start, end, ZERO);
+-        return Days.days(amount);
++        if (start instanceof MonthDay && end instanceof MonthDay) {
++            // Use a common leap year for calculation to handle Feb 29th correctly
++            // 2000 is a leap year.
++            LocalDate startDate = ((MonthDay) start).toLocalDate(2000);
++            LocalDate endDate = ((MonthDay) end).toLocalDate(2000);
++            return daysBetween(startDate, endDate);
++        }
++        int amount = BaseSingleFieldPeriod.between(start, end, ZERO);
++        return Days.days(amount);
+
+--- a/src/main/java/org/joda/time/Months.java
++++ b/src/main/java/org/joda/time/Months.java
+@@ -1,2 +1,9 @@
+-        int amount = BaseSingleFieldPeriod.between(start, end, ZERO);
+-        return Months.months(amount);
++        if (start instanceof MonthDay && end instanceof MonthDay) {
++            // Use a common leap year for calculation to handle Feb 29th correctly
++            // 2000 is a leap year.
++            LocalDate startDate = ((MonthDay) start).toLocalDate(2000);
++            LocalDate endDate = ((MonthDay) end).toLocalDate(2000);
++            return monthsBetween(startDate, endDate);
++        }
++        int amount = BaseSingleFieldPeriod.between(start, end, ZERO);
++        return Months.months(amount);

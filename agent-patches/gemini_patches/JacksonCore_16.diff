@@ -1,0 +1,73 @@
+--- a/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
++++ b/src/main/java/com/fasterxml/jackson/core/util/JsonParserSequence.java
+@@ -1,19 +1,21 @@
+-    /**
+-     * Flag used to indicate that `JsonParser.nextToken()` should not be called,
+-     * due to parser already pointing to a token.
+-     *
+-     * @since 2.8
+-     */
+-    
+-    /*
+-     *******************************************************
+-     * Construction
+-     *******************************************************
+-     */
+-
+-    protected JsonParserSequence(JsonParser[] parsers)
+-    {
+-        super(parsers[0]);
+-        _parsers = parsers;
+-        _nextParser = 1;
+-    }
++    /**
++     * Flag used to indicate that `JsonParser.nextToken()` should not be called,
++     * due to parser already pointing to a token.
++     *
++     * @since 2.8
++     */
++    protected boolean _hasToken;
++    
++    /*
++     *******************************************************
++     * Construction
++     *******************************************************
++     */
++
++    protected JsonParserSequence(JsonParser[] parsers)
++    {
++        super(parsers[0]);
++        _parsers = parsers;
++        _nextParser = 1;
++        _hasToken = parsers[0].hasCurrentToken();
++    }
+@@ -1,11 +1,18 @@
+-    @Override
+-    public JsonToken nextToken() throws IOException, JsonParseException
+-    {
+-        JsonToken t = delegate.nextToken();
+-        if (t != null) return t;
+-        while (switchToNext()) {
+-            t = delegate.nextToken();
+-            if (t != null) return t;
+-        }
+-        return null;
+-    }
++    @Override
++    public JsonToken nextToken() throws IOException, JsonParseException
++    {
++        if (_hasToken) {
++            _hasToken = false;
++            return delegate.getCurrentToken();
++        }
++        JsonToken t = delegate.nextToken();
++        if (t != null) return t;
++        while (switchToNext()) {
++            if (delegate.hasCurrentToken()) {
++                return delegate.getCurrentToken();
++            }
++            t = delegate.nextToken();
++            if (t != null) return t;
++        }
++        return null;
++    }

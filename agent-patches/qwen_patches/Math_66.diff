@@ -1,0 +1,99 @@
+diff --git a/src/main/java/org/apache/commons/math/optimization/univariate/BrentOptimizer.java b/src/main/java/org/apache/commons/math/optimization/univariate/BrentOptimizer.java
+index 926541536..199ca624a 100644
+--- a/src/main/java/org/apache/commons/math/optimization/univariate/BrentOptimizer.java
++++ b/src/main/java/org/apache/commons/math/optimization/univariate/BrentOptimizer.java
+@@ -1,5 +1,4 @@
+-/*
+- * Licensed to the Apache Software Foundation (ASF) under one or more
++/* Licensed to the Apache Software Foundation (ASF) under one or more
+  * contributor license agreements.  See the NOTICE file distributed with
+  * this work for additional information regarding copyright ownership.
+  * The ASF licenses this file to You under the Apache License, Version 2.0
+@@ -41,10 +40,10 @@ public class BrentOptimizer extends AbstractUnivariateRealOptimizer {
+      * Construct a solver.
+      */
+     public BrentOptimizer() {
+-        setMaxEvaluations(Integer.MAX_VALUE);
++        setMaxEvaluations(1000);
+         setMaximalIterationCount(100);
+-        setAbsoluteAccuracy(1E-10);
+-        setRelativeAccuracy(1.0e-14);
++        setAbsoluteAccuracy(1e-11);
++        setRelativeAccuracy(1e-9);
+     }
+ 
+     /**
+@@ -54,17 +53,10 @@ public class BrentOptimizer extends AbstractUnivariateRealOptimizer {
+      */
+     protected double doOptimize()
+         throws MaxIterationsExceededException, FunctionEvaluationException {
+-        throw new UnsupportedOperationException();
+-    }
+-    public double optimize(final UnivariateRealFunction f, final GoalType goalType, final double min, final double max, final double startValue) throws MaxIterationsExceededException, FunctionEvaluationException {
+-        clearResult();
+         return localMin(getGoalType() == GoalType.MINIMIZE,
+-                        f, goalType, min, startValue, max,
++                        getMin(), getStartValue(), getMax(),
+                         getRelativeAccuracy(), getAbsoluteAccuracy());
+     }
+-    public double optimize(final UnivariateRealFunction f, final GoalType goalType, final double min, final double max) throws MaxIterationsExceededException, FunctionEvaluationException {
+-        return optimize(f, goalType, min, max, min + GOLDEN_SECTION * (max - min));
+-    }
+ 
+     /**
+      * Find the minimum of the function within the interval {@code (lo, hi)}.
+@@ -91,8 +83,6 @@ public class BrentOptimizer extends AbstractUnivariateRealOptimizer {
+      * the function.
+      */
+     private double localMin(boolean isMinim,
+-                            UnivariateRealFunction f,
+-                            GoalType goalType,
+                             double lo, double mid, double hi,
+                             double eps, double t)
+         throws MaxIterationsExceededException, FunctionEvaluationException {
+@@ -116,15 +106,14 @@ public class BrentOptimizer extends AbstractUnivariateRealOptimizer {
+         double w = x;
+         double d = 0;
+         double e = 0;
+-        double fx = computeObjectiveValue(f, x);
+-        if (goalType == GoalType.MAXIMIZE) {
++        double fx = computeObjectiveValue(x);
++        if (!isMinim) {
+             fx = -fx;
+         }
+         double fv = fx;
+         double fw = fx;
+ 
+-        int count = 0;
+-        while (count < maximalIterationCount) {
++        while (true) {
+             double m = 0.5 * (a + b);
+             final double tol1 = eps * Math.abs(x) + t;
+             final double tol2 = 2 * tol1;
+@@ -197,8 +186,8 @@ public class BrentOptimizer extends AbstractUnivariateRealOptimizer {
+                     u = x + d;
+                 }
+ 
+-                double fu = computeObjectiveValue(f, u);
+-                if (goalType == GoalType.MAXIMIZE) {
++                double fu = computeObjectiveValue(u);
++                if (!isMinim) {
+                     fu = -fu;
+                 }
+ 
+@@ -235,11 +224,10 @@ public class BrentOptimizer extends AbstractUnivariateRealOptimizer {
+                     }
+                 }
+             } else { // termination
+-                setResult(x, (goalType == GoalType.MAXIMIZE) ? -fx : fx, count);
++                setFunctionValue(isMinim ? fx : -fx);
+                 return x;
+             }
+-            ++count;
++            incrementIterationsCounter();
+         }
+-        throw new MaxIterationsExceededException(maximalIterationCount);
+     }
+-}
++}
+\ No newline at end of file

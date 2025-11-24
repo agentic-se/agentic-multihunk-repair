@@ -1,0 +1,31 @@
+diff --git a/src/com/google/javascript/rhino/jstype/RecordType.java b/src/com/google/javascript/rhino/jstype/RecordType.java
+index 50423d5b..47de4dee 100755
+--- a/src/com/google/javascript/rhino/jstype/RecordType.java
++++ b/src/com/google/javascript/rhino/jstype/RecordType.java
+@@ -270,7 +270,25 @@ class RecordType extends PrototypeObjectType {
+         // If one declared property isn't invariant,
+         // then the whole record isn't covariant.
+         if (!propA.isInvariant(propB)) {
+-          return false;
++          // Special-case function-typed properties: if either function's
++          // return type is unknown, treat them as compatible as long as
++          // there is a subtyping relationship between the functions.
++          if (propA.isFunctionType() && propB.isFunctionType()) {
++            FunctionType fA = propA.toMaybeFunctionType();
++            FunctionType fB = propB.toMaybeFunctionType();
++            JSType retA = fA.getReturnType();
++            JSType retB = fB.getReturnType();
++            if ((retA != null && retA.isUnknownType()) ||
++                (retB != null && retB.isUnknownType())) {
++              if (!(propA.isSubtype(propB) || propB.isSubtype(propA))) {
++                return false;
++              }
++            } else {
++              return false;
++            }
++          } else {
++            return false;
++          }
+         }
+       } else {
+         // If one inferred property isn't a subtype,

@@ -1,0 +1,38 @@
+diff --git a/src/java/org/apache/commons/codec/binary/Base64.java b/src/java/org/apache/commons/codec/binary/Base64.java
+index 76f14f50..aa6ada4e 100644
+--- a/src/java/org/apache/commons/codec/binary/Base64.java
++++ b/src/java/org/apache/commons/codec/binary/Base64.java
+@@ -378,14 +378,31 @@ public class Base64 implements BinaryEncoder, BinaryDecoder {
+         return buffer != null ? pos - readPos : 0;
+     }
+ 
+-    /** Doubles our buffer. */
++    /**
++     * Ensure the internal buffer exists and has enough space for the next write.
++     *
++     * Historically, this method only doubled the existing buffer when more
++     * capacity was needed. However, when the buffer was initially set via
++     * {@link #setInitialBuffer(byte[], int, int)} to point at a very small
++     * external array (e.g., a single-byte array used by InputStream.read()),
++     * a single doubling may still leave the buffer too small for the minimum
++     * write size (which is {@code encodeSize}, i.e., at least 4 bytes).
++     *
++     * To avoid ArrayIndexOutOfBoundsException in such cases (see CODEC-105),
++     * we now grow the buffer to at least {@code pos + encodeSize} bytes.
++     */
+     private void resizeBuffer() {
+         if (buffer == null) {
+             buffer = new byte[DEFAULT_BUFFER_SIZE];
+             pos = 0;
+             readPos = 0;
+         } else {
+-            byte[] b = new byte[buffer.length * DEFAULT_BUFFER_RESIZE_FACTOR];
++            int minCapacity = pos + encodeSize;
++            int newLen = buffer.length * DEFAULT_BUFFER_RESIZE_FACTOR;
++            if (newLen < minCapacity) {
++                newLen = minCapacity;
++            }
++            byte[] b = new byte[newLen];
+             System.arraycopy(buffer, 0, b, 0, buffer.length);
+             buffer = b;
+         }

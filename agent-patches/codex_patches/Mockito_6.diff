@@ -1,0 +1,277 @@
+diff --git a/src/org/mockito/Matchers.java b/src/org/mockito/Matchers.java
+index 04f40e5b8..4e58fab37 100644
+--- a/src/org/mockito/Matchers.java
++++ b/src/org/mockito/Matchers.java
+@@ -118,9 +118,9 @@ public class Matchers {
+      * 
+      * @return <code>false</code>.
+      */
+-    public static boolean anyBoolean() {
+-        return reportMatcher(Any.ANY).returnFalse();
+-    }
++    public static boolean anyBoolean() {
++        return reportMatcher(NotNull.NOT_NULL).returnFalse();
++    }
+ 
+     /**
+      * Any <code>byte</code>, <code>Byte</code> or <code>null</code>.
+@@ -133,9 +133,9 @@ public class Matchers {
+      * 
+      * @return <code>0</code>.
+      */
+-    public static byte anyByte() {
+-        return reportMatcher(Any.ANY).returnZero();
+-    }
++    public static byte anyByte() {
++        return reportMatcher(NotNull.NOT_NULL).returnZero();
++    }
+ 
+     /**
+      * Any <code>char</code>, <code>Character</code> or <code>null</code>.
+@@ -148,9 +148,9 @@ public class Matchers {
+      * 
+      * @return <code>0</code>.
+      */
+-    public static char anyChar() {
+-        return reportMatcher(Any.ANY).returnChar();
+-    }
++    public static char anyChar() {
++        return reportMatcher(NotNull.NOT_NULL).returnChar();
++    }
+ 
+     /**
+      * Any int, Integer or <code>null</code>.
+@@ -163,9 +163,9 @@ public class Matchers {
+      * 
+      * @return <code>0</code>.
+      */
+-    public static int anyInt() {
+-        return reportMatcher(Any.ANY).returnZero();
+-    }
++    public static int anyInt() {
++        return reportMatcher(NotNull.NOT_NULL).returnZero();
++    }
+ 
+     /**
+      * Any <code>long</code>, <code>Long</code> or <code>null</code>.
+@@ -178,9 +178,9 @@ public class Matchers {
+      * 
+      * @return <code>0</code>.
+      */
+-    public static long anyLong() {
+-        return reportMatcher(Any.ANY).returnZero();
+-    }
++    public static long anyLong() {
++        return reportMatcher(NotNull.NOT_NULL).returnZero();
++    }
+ 
+     /**
+      * Any <code>float</code>, <code>Float</code> or <code>null</code>.
+@@ -193,9 +193,9 @@ public class Matchers {
+      * 
+      * @return <code>0</code>.
+      */
+-    public static float anyFloat() {
+-        return reportMatcher(Any.ANY).returnZero();
+-    }
++    public static float anyFloat() {
++        return reportMatcher(NotNull.NOT_NULL).returnZero();
++    }
+ 
+     /**
+      * Any <code>double</code>, <code>Double</code> or <code>null</code>.
+@@ -208,9 +208,9 @@ public class Matchers {
+      * 
+      * @return <code>0</code>.
+      */
+-    public static double anyDouble() {
+-        return reportMatcher(Any.ANY).returnZero();
+-    }
++    public static double anyDouble() {
++        return reportMatcher(NotNull.NOT_NULL).returnZero();
++    }
+ 
+     /**
+      * Any <code>short</code>, <code>Short</code> or <code>null</code>.
+@@ -223,9 +223,9 @@ public class Matchers {
+      * 
+      * @return <code>0</code>.
+      */
+-    public static short anyShort() {
+-        return reportMatcher(Any.ANY).returnZero();
+-    }
++    public static short anyShort() {
++        return reportMatcher(NotNull.NOT_NULL).returnZero();
++    }
+ 
+     /**
+      * Any <code>Object</code> or <code>null</code>.
+@@ -240,9 +240,9 @@ public class Matchers {
+      * 
+      * @return <code>null</code>.
+      */
+-    public static <T> T anyObject() {
+-        return (T) reportMatcher(Any.ANY).returnNull();
+-    }
++    public static <T> T anyObject() {
++        return (T) reportMatcher(NotNull.NOT_NULL).returnNull();
++    }
+ 
+     /**
+      * Any vararg, meaning any number and values of arguments.
+@@ -267,9 +267,9 @@ public class Matchers {
+      *
+      * @return <code>null</code>.
+      */
+-    public static <T> T anyVararg() {
+-        return (T) reportMatcher(AnyVararg.ANY_VARARG).returnNull();
+-    }
++    public static <T> T anyVararg() {
++        return (T) reportMatcher(AnyVararg.ANY_VARARG).returnNull();
++    }
+     
+     /**
+      * Any kind object, not necessary of the given class.
+@@ -288,9 +288,9 @@ public class Matchers {
+      * @param clazz The type to avoid casting
+      * @return <code>null</code>.
+      */
+-    public static <T> T any(Class<T> clazz) {
+-        return (T) reportMatcher(Any.ANY).returnFor(clazz);
+-    }
++    public static <T> T any(Class<T> clazz) {
++        return (T) reportMatcher(NotNull.NOT_NULL).returnFor(clazz);
++    }
+     
+     /**
+      * Any object or <code>null</code>.
+@@ -305,9 +305,9 @@ public class Matchers {
+      * 
+      * @return <code>null</code>.
+      */
+-    public static <T> T any() {
+-        return (T) anyObject();
+-    }
++    public static <T> T any() {
++        return (T) anyObject();
++    }
+ 
+     /**
+      * Any <code>String</code> or <code>null</code>.
+@@ -320,9 +320,9 @@ public class Matchers {
+      * 
+      * @return empty String ("")
+      */
+-    public static String anyString() {
+-        return reportMatcher(Any.ANY).returnString();
+-    }
++    public static String anyString() {
++        return reportMatcher(NotNull.NOT_NULL).returnString();
++    }
+     
+     /**
+      * Any <code>List</code> or <code>null</code>.
+@@ -335,9 +335,9 @@ public class Matchers {
+      * 
+      * @return empty List.
+      */
+-    public static List anyList() {
+-        return reportMatcher(Any.ANY).returnList();
+-    }    
++    public static List anyList() {
++        return reportMatcher(NotNull.NOT_NULL).returnList();
++    }    
+     
+     /**
+      * Generic friendly alias to {@link Matchers#anyList()}.
+@@ -354,9 +354,9 @@ public class Matchers {
+      * @param clazz Type owned by the list to avoid casting
+      * @return empty List.
+      */
+-    public static <T> List<T> anyListOf(Class<T> clazz) {
+-        return (List) reportMatcher(Any.ANY).returnList();
+-    }    
++    public static <T> List<T> anyListOf(Class<T> clazz) {
++        return (List) reportMatcher(NotNull.NOT_NULL).returnList();
++    }    
+     
+     /**
+      * Any <code>Set</code> or <code>null</code>.
+@@ -369,9 +369,9 @@ public class Matchers {
+      *
+      * @return empty Set
+      */
+-    public static Set anySet() {
+-        return reportMatcher(Any.ANY).returnSet();
+-    }
++    public static Set anySet() {
++        return reportMatcher(NotNull.NOT_NULL).returnSet();
++    }
+     
+     /**
+      * Generic friendly alias to {@link Matchers#anySet()}.
+@@ -388,9 +388,9 @@ public class Matchers {
+      * @param clazz Type owned by the Set to avoid casting
+      * @return empty Set
+      */
+-    public static <T> Set<T> anySetOf(Class<T> clazz) {
+-        return (Set) reportMatcher(Any.ANY).returnSet();
+-    }
++    public static <T> Set<T> anySetOf(Class<T> clazz) {
++        return (Set) reportMatcher(NotNull.NOT_NULL).returnSet();
++    }
+ 
+     /**
+      * Any <code>Map</code> or <code>null</code>.
+@@ -403,9 +403,9 @@ public class Matchers {
+      * 
+      * @return empty Map.
+      */
+-    public static Map anyMap() {
+-        return reportMatcher(Any.ANY).returnMap();
+-    }
++    public static Map anyMap() {
++        return reportMatcher(NotNull.NOT_NULL).returnMap();
++    }
+ 
+     /**
+      * Generic friendly alias to {@link Matchers#anyMap()}.
+@@ -423,9 +423,9 @@ public class Matchers {
+      * @param valueClazz Type of the value to avoid casting
+      * @return empty Map.
+      */
+-    public static <K, V>  Map<K, V> anyMapOf(Class<K> keyClazz, Class<V> valueClazz) {
+-        return reportMatcher(Any.ANY).returnMap();
+-    }
++    public static <K, V>  Map<K, V> anyMapOf(Class<K> keyClazz, Class<V> valueClazz) {
++        return reportMatcher(NotNull.NOT_NULL).returnMap();
++    }
+     
+     /**
+      * Any <code>Collection</code> or <code>null</code>.
+@@ -438,9 +438,9 @@ public class Matchers {
+      * 
+      * @return empty Collection.
+      */
+-    public static Collection anyCollection() {
+-        return reportMatcher(Any.ANY).returnList();
+-    }    
++    public static Collection anyCollection() {
++        return reportMatcher(NotNull.NOT_NULL).returnList();
++    }    
+     
+     /**
+      * Generic friendly alias to {@link Matchers#anyCollection()}.
+@@ -457,9 +457,9 @@ public class Matchers {
+      * @param clazz Type owned by the collection to avoid casting
+      * @return empty Collection.
+      */
+-    public static <T> Collection<T> anyCollectionOf(Class<T> clazz) {
+-        return (Collection) reportMatcher(Any.ANY).returnList();
+-    }    
++    public static <T> Collection<T> anyCollectionOf(Class<T> clazz) {
++        return (Collection) reportMatcher(NotNull.NOT_NULL).returnList();
++    }    
+ 
+     /**
+      * <code>Object</code> argument that implements the given class.

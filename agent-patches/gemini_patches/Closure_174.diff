@@ -1,0 +1,1455 @@
+--- a/src/com/google/javascript/jscomp/ScopedAliases.java
++++ b/src/com/google/javascript/jscomp/ScopedAliases.java
+@@ -1,5 +1,31 @@
+-          recordAlias(v);
+-        } else {
+-          // Do not allow hoisted functions or other kinds of local symbols.
+-          report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
+-        }
++          recordAlias(v);
++        } else if (parent.isVar() && !n.hasChildren()) { // NEW BLOCK FOR UNINITIALIZED VARS
++          String name = n.getString();
++          int nameCount = scopedAliasNames.count(name);
++          scopedAliasNames.add(name);
++          String globalName =
++              "$jscomp.scope." + name + (nameCount == 0 ? "" : ("$" + nameCount));
++
++          compiler.ensureLibraryInjected("base");
++
++          // Add $jscomp.scope.name; (or with JSDoc)
++          Node newDecl = NodeUtil.newQualifiedNameNodeDeclaration(
++              compiler.getCodingConvention(),
++              globalName,
++              null, // No initial value
++              v.getJSDocInfo())
++              .useSourceInfoIfMissingFromForTree(n);
++          NodeUtil.setDebugInformation(
++              newDecl.getFirstChild().getFirstChild(), n, name);
++          parent.getParent().addChildBefore(newDecl, parent);
++
++          // Rewrite "var name;" to "var name = $jscomp.scope.name;"
++          v.getNameNode().addChildToFront(
++              NodeUtil.newQualifiedNameNode(
++                  compiler.getCodingConvention(), globalName, n, name));
++
++          recordAlias(v);
++        } else {
++          // Do not allow hoisted functions or other kinds of local symbols.
++          report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
++        }
+@@ -1,30 +1,4 @@
+-        } else if (parent.isVar() && !n.hasChildren()) { // NEW BLOCK FOR UNINITIALIZED VARS
+-          String name = n.getString();
+-          int nameCount = scopedAliasNames.count(name);
+-          scopedAliasNames.add(name);
+-          String globalName =
+-              "$jscomp.scope." + name + (nameCount == 0 ? "" : ("$" + nameCount));
+-
+-          compiler.ensureLibraryInjected("base");
+-
+-          // Create the new declaration: "var $jscomp.scope.name;" (or with JSDoc)
+-          Node newGlobalNameNode = NodeUtil.newQualifiedNameNode(
+-              compiler.getCodingConvention(), globalName, n, name);
+-          Node newDecl = NodeUtil.newQualifiedNameNodeDeclaration(
+-              compiler.getCodingConvention(),
+-              globalName,
+-              null, // No initial value
+-              v.getJSDocInfo())
+-              .useSourceInfoIfMissingFromForTree(n);
+-          NodeUtil.setDebugInformation(
+-              newDecl.getFirstChild().getFirstChild(), n, name);
+-          parent.getParent().addChildBefore(newDecl, parent);
+-
+-          // Add the original var declaration to be removed later.
+-          aliasDefinitionsInOrder.add(parent);
+-
+-          // Update the Var's initial value to point to the new global name.
+-          // This is crucial for the visit method to correctly identify usages.
+-          v.setInitialValue(newGlobalNameNode);
+-          aliases.put(name, v); // Add to aliases map for lookup in visit method
+-        }
++        } else {
++          // Do not allow hoisted functions or other kinds of local symbols.
++          report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
++        }
+@@ -1,4 +1,27 @@
+-    }
+-  }
+-
+-  private class AliasedTypeNode extends AliasUsage {
++    }
++  }
++
++  private class AliasedLocalVarNode extends AliasUsage {
++    private final String globalName;
++
++    AliasedLocalVarNode(Var aliasVar, Node aliasReference, String globalName) {
++      super(aliasVar, aliasReference);
++      this.globalName = globalName;
++    }
++
++    @Override
++    public void applyAlias() {
++      aliasReference.getParent().replaceChild(
++          aliasReference, NodeUtil.newQualifiedNameNode(
++              compiler.getCodingConvention(), globalName, aliasReference, aliasReference.getString()));
++    }
++
++    @Override
++    public boolean referencesOtherAlias() {
++      // Local variables don't reference other aliases in the same way
++      // as qualified names.
++      return false;
++    }
++  }
++
++  private class AliasedTypeNode extends AliasUsage {
+@@ -1,1 +1,5 @@
+-    private final Map<String, Var> aliases = Maps.newHashMap();
++    private final Map<String, Var> aliases = Maps.newHashMap();
++
++    // This map stores the global names for local variables that are not
++    // traditional aliases (i.e., not qualified names).
++    private final Map<Var, String> localAliasMap = Maps.newHashMap();
+@@ -1,10 +1,15 @@
+-        // Check if this name points to an alias.
+-        if (aliasVar != null) {
+-          // Note, to support the transitive case, it's important we don't
+-          // clone aliasedNode here.  For example,
+-          // var g = goog; var d = g.dom; d.createElement('DIV');
+-          // The node in aliasedNode (which is "g") will be replaced in the
+-          // changes pass above with "goog".  If we cloned here, we'd end up
+-          // with <code>g.dom.createElement('DIV')</code>.
+-          aliasUsages.add(new AliasedNode(aliasVar, n));
+-        }
++        // Check if this name points to an alias.
++        if (aliasVar != null) {
++          if (localAliasMap.containsKey(aliasVar)) {
++            aliasUsages.add(new AliasedLocalVarNode(
++                aliasVar, n, localAliasMap.get(aliasVar)));
++          } else {
++            // Note, to support the transitive case, it's important we don't
++            // clone aliasedNode here.  For example,
++            // var g = goog; var d = g.dom; d.createElement('DIV');
++            // The node in aliasedNode (which is "g") will be replaced in the
++            // changes pass above with "goog".  If we cloned here, we'd end up
++            // with <code>g.dom.createElement('DIV')</code>.
++            aliasUsages.add(new AliasedNode(aliasVar, n));
++          }
++        }
+@@ -1,1 +1,1 @@
+-        if (parent.isVar() && n.getFirstChild() != null && n.getFirstChild().isQualifiedName()) {
++        if (isVarAssign && n.getFirstChild().isQualifiedName()) {
+@@ -1,2 +1,2 @@
+-        if (isVarAssign && n.getFirstChild().isQualifiedName()) {
+-          recordAlias(v);
++        if (parent.isVar() && n.hasChildren() && n.getFirstChild().isQualifiedName()) {
++          recordAlias(v);
+@@ -1,1 +1,1 @@
+-        if (parent.isVar() && n.hasChildren() && n.getFirstChild().isQualifiedName()) {
++        if (isVarAssign && n.getFirstChild().isQualifiedName()) {
+@@ -1,7 +1,4 @@
+-        } else {
+-          // Do not allow hoisted functions or other kinds of local symbols.
+-          report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
+-        } else {
+-          // Do not allow hoisted functions or other kinds of local symbols.
+-          report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
+-        }
++        } else {
++          // Do not allow hoisted functions or other kinds of local symbols.
++          report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
++        }
+@@ -1,2 +1,4 @@
+-          // Store the global name for this local variable.
+-          localAliasMap.put(v, globalName);
++          // Store the global name for this local variable.
++          localAliasMap.put(v, globalName);
++          // Add to aliases map for lookup in visit method
++          aliases.put(name, v);
+@@ -1,16 +1,20 @@
+-    private void recordAlias(Var aliasVar) {
+-      String name = aliasVar.getName();
+-      aliases.put(name, aliasVar);
+-
+-      String qualifiedName =
+-        aliasVar.getInitialValue().getQualifiedName();
+-      transformation.addAlias(name, qualifiedName);
+-
+-      int rootIndex = qualifiedName.indexOf(".");
+-      if (rootIndex != -1) {
+-        String qNameRoot = qualifiedName.substring(0, rootIndex);
+-        if (!aliases.containsKey(qNameRoot)) {
+-          forbiddenLocals.add(qNameRoot);
+-        }
+-      }
+-    }
++    private void recordAlias(Var aliasVar) {
++      String name = aliasVar.getName();
++      aliases.put(name, aliasVar);
++
++      String qualifiedName;
++      if (localAliasMap.containsKey(aliasVar)) {
++        qualifiedName = localAliasMap.get(aliasVar);
++      } else {
++        qualifiedName = aliasVar.getInitialValue().getQualifiedName();
++      }
++      transformation.addAlias(name, qualifiedName);
++
++      int rootIndex = qualifiedName.indexOf(".");
++      if (rootIndex != -1) {
++        String qNameRoot = qualifiedName.substring(0, rootIndex);
++        if (!aliases.containsKey(qNameRoot)) {
++          forbiddenLocals.add(qNameRoot);
++        }
++      }
++    }
+@@ -1,20 +1,16 @@
+-    private void recordAlias(Var aliasVar) {
+-      String name = aliasVar.getName();
+-      aliases.put(name, aliasVar);
+-
+-      String qualifiedName;
+-      if (localAliasMap.containsKey(aliasVar)) {
+-        qualifiedName = localAliasMap.get(aliasVar);
+-      } else {
+-        qualifiedName = aliasVar.getInitialValue().getQualifiedName();
+-      }
+-      transformation.addAlias(name, qualifiedName);
+-
+-      int rootIndex = qualifiedName.indexOf(".");
+-      if (rootIndex != -1) {
+-        String qNameRoot = qualifiedName.substring(0, rootIndex);
+-        if (!aliases.containsKey(qNameRoot)) {
+-          forbiddenLocals.add(qNameRoot);
+-        }
+-      }
+-    }
++    private void recordAlias(Var aliasVar) {
++      String name = aliasVar.getName();
++      aliases.put(name, aliasVar);
++
++      String qualifiedName =
++        aliasVar.getInitialValue().getQualifiedName();
++      transformation.addAlias(name, qualifiedName);
++
++      int rootIndex = qualifiedName.indexOf(".");
++      if (rootIndex != -1) {
++        String qNameRoot = qualifiedName.substring(0, rootIndex);
++        if (!aliases.containsKey(qNameRoot)) {
++          forbiddenLocals.add(qNameRoot);
++        }
++      }
++    }
+@@ -1,4 +1,6 @@
+-          // Store the global name for this local variable.
+-          localAliasMap.put(v, globalName);
+-          // Add to aliases map for lookup in visit method
+-          aliases.put(name, v);
++          // Store the global name for this local variable.
++          localAliasMap.put(v, globalName);
++          // Create a synthetic node for the global name and put it in the aliases map.
++          // This allows AliasedNode and AliasedTypeNode to correctly resolve the name.
++          aliases.put(name, new Var(name, NodeUtil.newQualifiedNameNode(
++              compiler.getCodingConvention(), globalName, n, name), v.getScope()));
+@@ -1,6 +1,4 @@
+-          // Store the global name for this local variable.
+-          localAliasMap.put(v, globalName);
+-          // Create a synthetic node for the global name and put it in the aliases map.
+-          // This allows AliasedNode and AliasedTypeNode to correctly resolve the name.
+-          aliases.put(name, new Var(name, NodeUtil.newQualifiedNameNode(
+-              compiler.getCodingConvention(), globalName, n, name), v.getScope()));
++          // Store the global name for this local variable.
++          localAliasMap.put(v, globalName);
++          // Add to aliases map for lookup in visit method
++          aliases.put(name, v);
+@@ -1,8 +1,10 @@
+-  private abstract class AliasUsage {
+-    final Var aliasVar;
+-    final Node aliasReference;
+-
+-    AliasUsage(Var aliasVar, Node aliasReference) {
+-      this.aliasVar = aliasVar;
+-      this.aliasReference = aliasReference;
+-    }
++  private abstract class AliasUsage {
++    final Var aliasVar;
++    final Node aliasReference;
++    final Map<Var, String> localAliasMap;
++
++    AliasUsage(Var aliasVar, Node aliasReference, Map<Var, String> localAliasMap) {
++      this.aliasVar = aliasVar;
++      this.aliasReference = aliasReference;
++      this.localAliasMap = localAliasMap;
++    }
+@@ -1,11 +1,18 @@
+-  private class AliasedNode extends AliasUsage {
+-    AliasedNode(Var aliasVar, Node aliasReference) {
+-      super(aliasVar, aliasReference);
+-    }
+-
+-    @Override
+-    public void applyAlias() {
+-      Node aliasDefinition = aliasVar.getInitialValue();
+-      aliasReference.getParent().replaceChild(
+-          aliasReference, aliasDefinition.cloneTree());
+-    }
++  private class AliasedNode extends AliasUsage {
++    AliasedNode(Var aliasVar, Node aliasReference, Map<Var, String> localAliasMap) {
++      super(aliasVar, aliasReference, localAliasMap);
++    }
++
++    @Override
++    public void applyAlias() {
++      Node aliasDefinition;
++      if (localAliasMap.containsKey(aliasVar)) {
++        aliasDefinition = NodeUtil.newQualifiedNameNode(
++            compiler.getCodingConvention(), localAliasMap.get(aliasVar),
++            aliasReference, aliasReference.getString());
++      } else {
++        aliasDefinition = aliasVar.getInitialValue().cloneTree();
++      }
++      aliasReference.getParent().replaceChild(
++          aliasReference, aliasDefinition);
++    }
+@@ -1,14 +1,12 @@
+-  private class AliasedLocalVarNode extends AliasUsage {
+-    private final String globalName;
+-
+-    AliasedLocalVarNode(Var aliasVar, Node aliasReference, String globalName) {
+-      super(aliasVar, aliasReference);
+-      this.globalName = globalName;
+-    }
+-
+-    @Override
+-    public void applyAlias() {
+-      aliasReference.getParent().replaceChild(
+-          aliasReference, NodeUtil.newQualifiedNameNode(
+-              compiler.getCodingConvention(), globalName, aliasReference, aliasReference.getString()));
+-    }
++  private class AliasedLocalVarNode extends AliasUsage {
++
++    AliasedLocalVarNode(Var aliasVar, Node aliasReference, Map<Var, String> localAliasMap) {
++      super(aliasVar, aliasReference, localAliasMap);
++    }
++
++    @Override
++    public void applyAlias() {
++      aliasReference.getParent().replaceChild(
++          aliasReference, NodeUtil.newQualifiedNameNode(
++              compiler.getCodingConvention(), localAliasMap.get(aliasVar), aliasReference, aliasReference.getString()));
++    }
+@@ -1,15 +1,20 @@
+-  private class AliasedTypeNode extends AliasUsage {
+-    AliasedTypeNode(Var aliasVar, Node aliasReference) {
+-      super(aliasVar, aliasReference);
+-    }
+-
+-    @Override
+-    public void applyAlias() {
+-      Node aliasDefinition = aliasVar.getInitialValue();
+-      String aliasName = aliasVar.getName();
+-      String typeName = aliasReference.getString();
+-      String aliasExpanded =
+-          Preconditions.checkNotNull(aliasDefinition.getQualifiedName());
+-      Preconditions.checkState(typeName.startsWith(aliasName));
+-      aliasReference.setString(typeName.replaceFirst(aliasName, aliasExpanded));
+-    }
++  private class AliasedTypeNode extends AliasUsage {
++    AliasedTypeNode(Var aliasVar, Node aliasReference, Map<Var, String> localAliasMap) {
++      super(aliasVar, aliasReference, localAliasMap);
++    }
++
++    @Override
++    public void applyAlias() {
++      Node aliasDefinition;
++      String aliasExpanded;
++      if (localAliasMap.containsKey(aliasVar)) {
++        aliasExpanded = localAliasMap.get(aliasVar);
++      } else {
++        aliasDefinition = aliasVar.getInitialValue();
++        aliasExpanded = Preconditions.checkNotNull(aliasDefinition.getQualifiedName());
++      }
++      String aliasName = aliasVar.getName();
++      String typeName = aliasReference.getString();
++      Preconditions.checkState(typeName.startsWith(aliasName));
++      aliasReference.setString(typeName.replaceFirst(aliasName, aliasExpanded));
++    }
+@@ -1,14 +1,14 @@
+-        if (aliasVar != null) {
+-          if (localAliasMap.containsKey(aliasVar)) {
+-            aliasUsages.add(new AliasedLocalVarNode(
+-                aliasVar, n, localAliasMap.get(aliasVar)));
+-          } else {
+-            // Note, to support the transitive case, it's important we don't
+-            // clone aliasedNode here.  For example,
+-            // var g = goog; var d = g.dom; d.createElement('DIV');
+-            // The node in aliasedNode (which is "g") will be replaced in the
+-            // changes pass above with "goog".  If we cloned here, we'd end up
+-            // with <code>g.dom.createElement('DIV')</code>.
+-            aliasUsages.add(new AliasedNode(aliasVar, n));
+-          }
+-        }
++        if (aliasVar != null) {
++          if (localAliasMap.containsKey(aliasVar)) {
++            aliasUsages.add(new AliasedLocalVarNode(
++                aliasVar, n, localAliasMap));
++          } else {
++            // Note, to support the transitive case, it's important we don't
++            // clone aliasedNode here.  For example,
++            // var g = goog; var d = g.dom; d.createElement('DIV');
++            // The node in aliasedNode (which is "g") will be replaced in the
++            // changes pass above with "goog".  If we cloned here, we'd end up
++            // with <code>g.dom.createElement('DIV')</code>.
++            aliasUsages.add(new AliasedNode(aliasVar, n, localAliasMap));
++          }
++        }
+@@ -1,5 +1,5 @@
+-        String baseName = name.substring(0, endIndex);
+-        Var aliasVar = aliases.get(baseName);
+-        if (aliasVar != null) {
+-          aliasUsages.add(new AliasedTypeNode(aliasVar, typeNode));
+-        }
++        String baseName = name.substring(0, endIndex);
++        Var aliasVar = aliases.get(baseName);
++        if (aliasVar != null) {
++          aliasUsages.add(new AliasedTypeNode(aliasVar, typeNode, localAliasMap));
++        }
+@@ -1,10 +1,8 @@
+-  private abstract class AliasUsage {
+-    final Var aliasVar;
+-    final Node aliasReference;
+-    final Map<Var, String> localAliasMap;
+-
+-    AliasUsage(Var aliasVar, Node aliasReference, Map<Var, String> localAliasMap) {
+-      this.aliasVar = aliasVar;
+-      this.aliasReference = aliasReference;
+-      this.localAliasMap = localAliasMap;
+-    }
++  private abstract class AliasUsage {
++    final Var aliasVar;
++    final Node aliasReference;
++
++    AliasUsage(Var aliasVar, Node aliasReference) {
++      this.aliasVar = aliasVar;
++      this.aliasReference = aliasReference;
++    }
+@@ -1,18 +1,11 @@
+-  private class AliasedNode extends AliasUsage {
+-    AliasedNode(Var aliasVar, Node aliasReference, Map<Var, String> localAliasMap) {
+-      super(aliasVar, aliasReference, localAliasMap);
+-    }
+-
+-    @Override
+-    public void applyAlias() {
+-      Node aliasDefinition;
+-      if (localAliasMap.containsKey(aliasVar)) {
+-        aliasDefinition = NodeUtil.newQualifiedNameNode(
+-            compiler.getCodingConvention(), localAliasMap.get(aliasVar),
+-            aliasReference, aliasReference.getString());
+-      } else {
+-        aliasDefinition = aliasVar.getInitialValue().cloneTree();
+-      }
+-      aliasReference.getParent().replaceChild(
+-          aliasReference, aliasDefinition);
+-    }
++  private class AliasedNode extends AliasUsage {
++    AliasedNode(Var aliasVar, Node aliasReference) {
++      super(aliasVar, aliasReference);
++    }
++
++    @Override
++    public void applyAlias() {
++      Node aliasDefinition = aliasVar.getInitialValue();
++      aliasReference.getParent().replaceChild(
++          aliasReference, aliasDefinition.cloneTree());
++    }
+@@ -1,12 +1,14 @@
+-  private class AliasedLocalVarNode extends AliasUsage {
+-
+-    AliasedLocalVarNode(Var aliasVar, Node aliasReference, Map<Var, String> localAliasMap) {
+-      super(aliasVar, aliasReference, localAliasMap);
+-    }
+-
+-    @Override
+-    public void applyAlias() {
+-      aliasReference.getParent().replaceChild(
+-          aliasReference, NodeUtil.newQualifiedNameNode(
+-              compiler.getCodingConvention(), localAliasMap.get(aliasVar), aliasReference, aliasReference.getString()));
+-    }
++  private class AliasedLocalVarNode extends AliasUsage {
++    private final String globalName;
++
++    AliasedLocalVarNode(Var aliasVar, Node aliasReference, String globalName) {
++      super(aliasVar, aliasReference);
++      this.globalName = globalName;
++    }
++
++    @Override
++    public void applyAlias() {
++      aliasReference.getParent().replaceChild(
++          aliasReference, NodeUtil.newQualifiedNameNode(
++              compiler.getCodingConvention(), globalName, aliasReference, aliasReference.getString()));
++    }
+@@ -1,20 +1,15 @@
+-  private class AliasedTypeNode extends AliasUsage {
+-    AliasedTypeNode(Var aliasVar, Node aliasReference, Map<Var, String> localAliasMap) {
+-      super(aliasVar, aliasReference, localAliasMap);
+-    }
+-
+-    @Override
+-    public void applyAlias() {
+-      Node aliasDefinition;
+-      String aliasExpanded;
+-      if (localAliasMap.containsKey(aliasVar)) {
+-        aliasExpanded = localAliasMap.get(aliasVar);
+-      } else {
+-        aliasDefinition = aliasVar.getInitialValue();
+-        aliasExpanded = Preconditions.checkNotNull(aliasDefinition.getQualifiedName());
+-      }
+-      String aliasName = aliasVar.getName();
+-      String typeName = aliasReference.getString();
+-      Preconditions.checkState(typeName.startsWith(aliasName));
+-      aliasReference.setString(typeName.replaceFirst(aliasName, aliasExpanded));
+-    }
++  private class AliasedTypeNode extends AliasUsage {
++    AliasedTypeNode(Var aliasVar, Node aliasReference) {
++      super(aliasVar, aliasReference);
++    }
++
++    @Override
++    public void applyAlias() {
++      Node aliasDefinition = aliasVar.getInitialValue();
++      String aliasName = aliasVar.getName();
++      String typeName = aliasReference.getString();
++      String aliasExpanded =
++          Preconditions.checkNotNull(aliasDefinition.getQualifiedName());
++      Preconditions.checkState(typeName.startsWith(aliasName));
++      aliasReference.setString(typeName.replaceFirst(aliasName, aliasExpanded));
++    }
+@@ -1,15 +1,10 @@
+-        // Check if this name points to an alias.
+-        if (aliasVar != null) {
+-          if (localAliasMap.containsKey(aliasVar)) {
+-            aliasUsages.add(new AliasedLocalVarNode(
+-                aliasVar, n, localAliasMap));
+-          } else {
+-            // Note, to support the transitive case, it's important we don't
+-            // clone aliasedNode here.  For example,
+-            // var g = goog; var d = g.dom; d.createElement('DIV');
+-            // The node in aliasedNode (which is "g") will be replaced in the
+-            // changes pass above with "goog".  If we cloned here, we'd end up
+-            // with <code>g.dom.createElement('DIV')</code>.
+-            aliasUsages.add(new AliasedNode(aliasVar, n, localAliasMap));
+-          }
+-        }
++        // Check if this name points to an alias.
++        if (aliasVar != null) {
++          // Note, to support the transitive case, it's important we don't
++          // clone aliasedNode here.  For example,
++          // var g = goog; var d = g.dom; d.createElement('DIV');
++          // The node in aliasedNode (which is "g") will be replaced in the
++          // changes pass above with "goog".  If we cloned here, we'd end up
++          // with <code>g.dom.createElement('DIV')</code>.
++          aliasUsages.add(new AliasedNode(aliasVar, n));
++        }
+@@ -1,5 +1,5 @@
+-        String baseName = name.substring(0, endIndex);
+-        Var aliasVar = aliases.get(baseName);
+-        if (aliasVar != null) {
+-          aliasUsages.add(new AliasedTypeNode(aliasVar, typeNode, localAliasMap));
+-        }
++        String baseName = name.substring(0, endIndex);
++        Var aliasVar = aliases.get(baseName);
++        if (aliasVar != null) {
++          aliasUsages.add(new AliasedTypeNode(aliasVar, typeNode));
++        }
+@@ -1,7 +1,10 @@
+-          // Add the original var declaration to be removed later.
+-          aliasDefinitionsInOrder.add(parent);
+-
+-          // Store the global name for this local variable.
+-          localAliasMap.put(v, globalName);
+-          // Add to aliases map for lookup in visit method
+-          aliases.put(name, v);
++          // Add the original var declaration to be removed later.
++          aliasDefinitionsInOrder.add(parent);
++
++          // Create a synthetic node for the global name and set it as the initial value
++          // of the Var object. This allows AliasedNode and AliasedTypeNode to correctly
++          // resolve the name.
++          Node syntheticGlobalNameNode = NodeUtil.newQualifiedNameNode(
++              compiler.getCodingConvention(), globalName, n, name);
++          v.setInitialValue(syntheticGlobalNameNode);
++          aliases.put(name, v);
+@@ -1,10 +1,7 @@
+-          // Add the original var declaration to be removed later.
+-          aliasDefinitionsInOrder.add(parent);
+-
+-          // Create a synthetic node for the global name and set it as the initial value
+-          // of the Var object. This allows AliasedNode and AliasedTypeNode to correctly
+-          // resolve the name.
+-          Node syntheticGlobalNameNode = NodeUtil.newQualifiedNameNode(
+-              compiler.getCodingConvention(), globalName, n, name);
+-          v.setInitialValue(syntheticGlobalNameNode);
+-          aliases.put(name, v);
++          // Add the original var declaration to be removed later.
++          aliasDefinitionsInOrder.add(parent);
++
++          // Store the global name for this local variable.
++          localAliasMap.put(v, globalName);
++          // Add to aliases map for lookup in visit method
++          aliases.put(name, v);
+@@ -1,8 +1,10 @@
+-  private abstract class AliasUsage {
+-    final Var aliasVar;
+-    final Node aliasReference;
+-
+-    AliasUsage(Var aliasVar, Node aliasReference) {
+-      this.aliasVar = aliasVar;
+-      this.aliasReference = aliasReference;
+-    }
++  private abstract class AliasUsage {
++    final Var aliasVar;
++    final Node aliasReference;
++    final Map<Var, String> localAliasMap;
++
++    AliasUsage(Var aliasVar, Node aliasReference, Map<Var, String> localAliasMap) {
++      this.aliasVar = aliasVar;
++      this.aliasReference = aliasReference;
++      this.localAliasMap = localAliasMap;
++    }
+@@ -1,11 +1,18 @@
+-  private class AliasedNode extends AliasUsage {
+-    AliasedNode(Var aliasVar, Node aliasReference) {
+-      super(aliasVar, aliasReference);
+-    }
+-
+-    @Override
+-    public void applyAlias() {
+-      Node aliasDefinition = aliasVar.getInitialValue();
+-      aliasReference.getParent().replaceChild(
+-          aliasReference, aliasDefinition.cloneTree());
+-    }
++  private class AliasedNode extends AliasUsage {
++    AliasedNode(Var aliasVar, Node aliasReference, Map<Var, String> localAliasMap) {
++      super(aliasVar, aliasReference, localAliasMap);
++    }
++
++    @Override
++    public void applyAlias() {
++      Node aliasDefinition;
++      if (localAliasMap.containsKey(aliasVar)) {
++        aliasDefinition = NodeUtil.newQualifiedNameNode(
++            compiler.getCodingConvention(), localAliasMap.get(aliasVar),
++            aliasReference, aliasReference.getString());
++      } else {
++        aliasDefinition = aliasVar.getInitialValue().cloneTree();
++      }
++      aliasReference.getParent().replaceChild(
++          aliasReference, aliasDefinition);
++    }
+@@ -1,14 +1,12 @@
+-  private class AliasedLocalVarNode extends AliasUsage {
+-    private final String globalName;
+-
+-    AliasedLocalVarNode(Var aliasVar, Node aliasReference, String globalName) {
+-      super(aliasVar, aliasReference);
+-      this.globalName = globalName;
+-    }
+-
+-    @Override
+-    public void applyAlias() {
+-      aliasReference.getParent().replaceChild(
+-          aliasReference, NodeUtil.newQualifiedNameNode(
+-              compiler.getCodingConvention(), globalName, aliasReference, aliasReference.getString()));
+-    }
++  private class AliasedLocalVarNode extends AliasUsage {
++
++    AliasedLocalVarNode(Var aliasVar, Node aliasReference, Map<Var, String> localAliasMap) {
++      super(aliasVar, aliasReference, localAliasMap);
++    }
++
++    @Override
++    public void applyAlias() {
++      aliasReference.getParent().replaceChild(
++          aliasReference, NodeUtil.newQualifiedNameNode(
++              compiler.getCodingConvention(), localAliasMap.get(aliasVar), aliasReference, aliasReference.getString()));
++    }
+@@ -1,15 +1,20 @@
+-  private class AliasedTypeNode extends AliasUsage {
+-    AliasedTypeNode(Var aliasVar, Node aliasReference) {
+-      super(aliasVar, aliasReference);
+-    }
+-
+-    @Override
+-    public void applyAlias() {
+-      Node aliasDefinition = aliasVar.getInitialValue();
+-      String aliasName = aliasVar.getName();
+-      String typeName = aliasReference.getString();
+-      String aliasExpanded =
+-          Preconditions.checkNotNull(aliasDefinition.getQualifiedName());
+-      Preconditions.checkState(typeName.startsWith(aliasName));
+-      aliasReference.setString(typeName.replaceFirst(aliasName, aliasExpanded));
+-    }
++  private class AliasedTypeNode extends AliasUsage {
++    AliasedTypeNode(Var aliasVar, Node aliasReference, Map<Var, String> localAliasMap) {
++      super(aliasVar, aliasReference, localAliasMap);
++    }
++
++    @Override
++    public void applyAlias() {
++      Node aliasDefinition;
++      String aliasExpanded;
++      if (localAliasMap.containsKey(aliasVar)) {
++        aliasExpanded = localAliasMap.get(aliasVar);
++      } else {
++        aliasDefinition = aliasVar.getInitialValue();
++        aliasExpanded = Preconditions.checkNotNull(aliasDefinition.getQualifiedName());
++      }
++      String aliasName = aliasVar.getName();
++      String typeName = aliasReference.getString();
++      Preconditions.checkState(typeName.startsWith(aliasName));
++      aliasReference.setString(typeName.replaceFirst(aliasName, aliasExpanded));
++    }
+@@ -1,9 +1,14 @@
+-        if (aliasVar != null) {
+-          // Note, to support the transitive case, it's important we don't
+-          // clone aliasedNode here.  For example,
+-          // var g = goog; var d = g.dom; d.createElement('DIV');
+-          // The node in aliasedNode (which is "g") will be replaced in the
+-          // changes pass above with "goog".  If we cloned here, we'd end up
+-          // with <code>g.dom.createElement('DIV')</code>.
+-          aliasUsages.add(new AliasedNode(aliasVar, n));
+-        }
++        if (aliasVar != null) {
++          if (localAliasMap.containsKey(aliasVar)) {
++            aliasUsages.add(new AliasedLocalVarNode(
++                aliasVar, n, localAliasMap));
++          } else {
++            // Note, to support the transitive case, it's important we don't
++            // clone aliasedNode here.  For example,
++            // var g = goog; var d = g.dom; d.createElement('DIV');
++            // The node in aliasedNode (which is "g") will be replaced in the
++            // changes pass above with "goog".  If we cloned here, we'd end up
++            // with <code>g.dom.createElement('DIV')</code>.
++            aliasUsages.add(new AliasedNode(aliasVar, n, localAliasMap));
++          }
++        }
+@@ -1,5 +1,5 @@
+-        String baseName = name.substring(0, endIndex);
+-        Var aliasVar = aliases.get(baseName);
+-        if (aliasVar != null) {
+-          aliasUsages.add(new AliasedTypeNode(aliasVar, typeNode));
+-        }
++        String baseName = name.substring(0, endIndex);
++        Var aliasVar = aliases.get(baseName);
++        if (aliasVar != null) {
++          aliasUsages.add(new AliasedTypeNode(aliasVar, typeNode, localAliasMap));
++        }
+@@ -1,10 +1,8 @@
+-  private abstract class AliasUsage {
+-    final Var aliasVar;
+-    final Node aliasReference;
+-    final Map<Var, String> localAliasMap;
+-
+-    AliasUsage(Var aliasVar, Node aliasReference, Map<Var, String> localAliasMap) {
+-      this.aliasVar = aliasVar;
+-      this.aliasReference = aliasReference;
+-      this.localAliasMap = localAliasMap;
+-    }
++  private abstract class AliasUsage {
++    final Var aliasVar;
++    final Node aliasReference;
++
++    AliasUsage(Var aliasVar, Node aliasReference) {
++      this.aliasVar = aliasVar;
++      this.aliasReference = aliasReference;
++    }
+@@ -1,18 +1,11 @@
+-  private class AliasedNode extends AliasUsage {
+-    AliasedNode(Var aliasVar, Node aliasReference, Map<Var, String> localAliasMap) {
+-      super(aliasVar, aliasReference, localAliasMap);
+-    }
+-
+-    @Override
+-    public void applyAlias() {
+-      Node aliasDefinition;
+-      if (localAliasMap.containsKey(aliasVar)) {
+-        aliasDefinition = NodeUtil.newQualifiedNameNode(
+-            compiler.getCodingConvention(), localAliasMap.get(aliasVar),
+-            aliasReference, aliasReference.getString());
+-      } else {
+-        aliasDefinition = aliasVar.getInitialValue().cloneTree();
+-      }
+-      aliasReference.getParent().replaceChild(
+-          aliasReference, aliasDefinition);
+-    }
++  private class AliasedNode extends AliasUsage {
++    AliasedNode(Var aliasVar, Node aliasReference) {
++      super(aliasVar, aliasReference);
++    }
++
++    @Override
++    public void applyAlias() {
++      Node aliasDefinition = aliasVar.getInitialValue();
++      aliasReference.getParent().replaceChild(
++          aliasReference, aliasDefinition.cloneTree());
++    }
+@@ -1,12 +1,14 @@
+-  private class AliasedLocalVarNode extends AliasUsage {
+-
+-    AliasedLocalVarNode(Var aliasVar, Node aliasReference, Map<Var, String> localAliasMap) {
+-      super(aliasVar, aliasReference, localAliasMap);
+-    }
+-
+-    @Override
+-    public void applyAlias() {
+-      aliasReference.getParent().replaceChild(
+-          aliasReference, NodeUtil.newQualifiedNameNode(
+-              compiler.getCodingConvention(), localAliasMap.get(aliasVar), aliasReference, aliasReference.getString()));
+-    }
++  private class AliasedLocalVarNode extends AliasUsage {
++    private final String globalName;
++
++    AliasedLocalVarNode(Var aliasVar, Node aliasReference, String globalName) {
++      super(aliasVar, aliasReference);
++      this.globalName = globalName;
++    }
++
++    @Override
++    public void applyAlias() {
++      aliasReference.getParent().replaceChild(
++          aliasReference, NodeUtil.newQualifiedNameNode(
++              compiler.getCodingConvention(), globalName, aliasReference, aliasReference.getString()));
++    }
+@@ -1,20 +1,15 @@
+-  private class AliasedTypeNode extends AliasUsage {
+-    AliasedTypeNode(Var aliasVar, Node aliasReference, Map<Var, String> localAliasMap) {
+-      super(aliasVar, aliasReference, localAliasMap);
+-    }
+-
+-    @Override
+-    public void applyAlias() {
+-      Node aliasDefinition;
+-      String aliasExpanded;
+-      if (localAliasMap.containsKey(aliasVar)) {
+-        aliasExpanded = localAliasMap.get(aliasVar);
+-      } else {
+-        aliasDefinition = aliasVar.getInitialValue();
+-        aliasExpanded = Preconditions.checkNotNull(aliasDefinition.getQualifiedName());
+-      }
+-      String aliasName = aliasVar.getName();
+-      String typeName = aliasReference.getString();
+-      Preconditions.checkState(typeName.startsWith(aliasName));
+-      aliasReference.setString(typeName.replaceFirst(aliasName, aliasExpanded));
+-    }
++  private class AliasedTypeNode extends AliasUsage {
++    AliasedTypeNode(Var aliasVar, Node aliasReference) {
++      super(aliasVar, aliasReference);
++    }
++
++    @Override
++    public void applyAlias() {
++      Node aliasDefinition = aliasVar.getInitialValue();
++      String aliasName = aliasVar.getName();
++      String typeName = aliasReference.getString();
++      String aliasExpanded =
++          Preconditions.checkNotNull(aliasDefinition.getQualifiedName());
++      Preconditions.checkState(typeName.startsWith(aliasName));
++      aliasReference.setString(typeName.replaceFirst(aliasName, aliasExpanded));
++    }
+@@ -1,14 +1,10 @@
+-        if (aliasVar != null) {
+-          if (localAliasMap.containsKey(aliasVar)) {
+-            aliasUsages.add(new AliasedLocalVarNode(
+-                aliasVar, n, localAliasMap));
+-          } else {
+-            // Note, to support the transitive case, it's important we don't
+-            // clone aliasedNode here.  For example,
+-            // var g = goog; var d = g.dom; d.createElement('DIV');
+-            // The node in aliasedNode (which is "g") will be replaced in the
+-            // changes pass above with "goog".  If we cloned here, we'd end up
+-            // with <code>g.dom.createElement('DIV')</code>.
+-            aliasUsages.add(new AliasedNode(aliasVar, n, localAliasMap));
+-          }
+-        }
++        // Check if this name points to an alias.
++        if (aliasVar != null) {
++          // Note, to support the transitive case, it's important we don't
++          // clone aliasedNode here.  For example,
++          // var g = goog; var d = g.dom; d.createElement('DIV');
++          // The node in aliasedNode (which is "g") will be replaced in the
++          // changes pass above with "goog".  If we cloned here, we'd end up
++          // with <code>g.dom.createElement('DIV')</code>.
++          aliasUsages.add(new AliasedNode(aliasVar, n));
++        }
+@@ -1,5 +1,5 @@
+-        String baseName = name.substring(0, endIndex);
+-        Var aliasVar = aliases.get(baseName);
+-        if (aliasVar != null) {
+-          aliasUsages.add(new AliasedTypeNode(aliasVar, typeNode, localAliasMap));
+-        }
++        String baseName = name.substring(0, endIndex);
++        Var aliasVar = aliases.get(baseName);
++        if (aliasVar != null) {
++          aliasUsages.add(new AliasedTypeNode(aliasVar, typeNode));
++        }
+@@ -1,7 +1,10 @@
+-          // Add the original var declaration to be removed later.
+-          aliasDefinitionsInOrder.add(parent);
+-
+-          // Store the global name for this local variable.
+-          localAliasMap.put(v, globalName);
+-          // Add to aliases map for lookup in visit method
+-          aliases.put(name, v);
++          // Add the original var declaration to be removed later.
++          aliasDefinitionsInOrder.add(parent);
++
++          // Create a synthetic node for the global name.
++          Node syntheticGlobalNameNode = NodeUtil.newQualifiedNameNode(
++              compiler.getCodingConvention(), globalName, n, name);
++
++          // Create a new Var object with the synthetic node as its initial value
++          // and replace the original Var in the aliases map.
++          aliases.put(name, new Var(name, syntheticGlobalNameNode, v.getJSType(), v.getScope(), v.getIndex(), v.isTypeInferred(), v.getCompilerInput()));
+@@ -1,10 +1,7 @@
+-          // Add the original var declaration to be removed later.
+-          aliasDefinitionsInOrder.add(parent);
+-
+-          // Create a synthetic node for the global name.
+-          Node syntheticGlobalNameNode = NodeUtil.newQualifiedNameNode(
+-              compiler.getCodingConvention(), globalName, n, name);
+-
+-          // Create a new Var object with the synthetic node as its initial value
+-          // and replace the original Var in the aliases map.
+-          aliases.put(name, new Var(name, syntheticGlobalNameNode, v.getJSType(), v.getScope(), v.getIndex(), v.isTypeInferred(), v.getCompilerInput()));
++          // Add the original var declaration to be removed later.
++          aliasDefinitionsInOrder.add(parent);
++
++          // Store the global name for this local variable.
++          localAliasMap.put(v, globalName);
++          // Add to aliases map for lookup in visit method
++          aliases.put(name, v);
+@@ -1,1 +1,5 @@
+-    private final Map<String, Var> aliases = Maps.newHashMap();
++    private final Map<String, Var> aliases = Maps.newHashMap();
++
++    // This map stores the global names for local variables that are not
++    // traditional aliases (i.e., not qualified names).
++    private final Map<Var, String> localAliasMap = Maps.newHashMap();
+@@ -1,8 +1,10 @@
+-  private abstract class AliasUsage {
+-    final Var aliasVar;
+-    final Node aliasReference;
+-
+-    AliasUsage(Var aliasVar, Node aliasReference) {
+-      this.aliasVar = aliasVar;
+-      this.aliasReference = aliasReference;
+-    }
++  private abstract class AliasUsage {
++    final Var aliasVar;
++    final Node aliasReference;
++    final Map<Var, String> localAliasMap;
++
++    AliasUsage(Var aliasVar, Node aliasReference, Map<Var, String> localAliasMap) {
++      this.aliasVar = aliasVar;
++      this.aliasReference = aliasReference;
++      this.localAliasMap = localAliasMap;
++    }
+@@ -1,11 +1,18 @@
+-  private class AliasedNode extends AliasUsage {
+-    AliasedNode(Var aliasVar, Node aliasReference) {
+-      super(aliasVar, aliasReference);
+-    }
+-
+-    @Override
+-    public void applyAlias() {
+-      Node aliasDefinition = aliasVar.getInitialValue();
+-      aliasReference.getParent().replaceChild(
+-          aliasReference, aliasDefinition.cloneTree());
+-    }
++  private class AliasedNode extends AliasUsage {
++    AliasedNode(Var aliasVar, Node aliasReference, Map<Var, String> localAliasMap) {
++      super(aliasVar, aliasReference, localAliasMap);
++    }
++
++    @Override
++    public void applyAlias() {
++      Node aliasDefinition;
++      if (localAliasMap.containsKey(aliasVar)) {
++        aliasDefinition = NodeUtil.newQualifiedNameNode(
++            compiler.getCodingConvention(), localAliasMap.get(aliasVar),
++            aliasReference, aliasReference.getString());
++      } else {
++        aliasDefinition = aliasVar.getInitialValue().cloneTree();
++      }
++      aliasReference.getParent().replaceChild(
++          aliasReference, aliasDefinition);
++    }
+@@ -1,14 +1,12 @@
+-  private class AliasedLocalVarNode extends AliasUsage {
+-    private final String globalName;
+-
+-    AliasedLocalVarNode(Var aliasVar, Node aliasReference, String globalName) {
+-      super(aliasVar, aliasReference);
+-      this.globalName = globalName;
+-    }
+-
+-    @Override
+-    public void applyAlias() {
+-      aliasReference.getParent().replaceChild(
+-          aliasReference, NodeUtil.newQualifiedNameNode(
+-              compiler.getCodingConvention(), globalName, aliasReference, aliasReference.getString()));
+-    }
++  private class AliasedLocalVarNode extends AliasUsage {
++
++    AliasedLocalVarNode(Var aliasVar, Node aliasReference, Map<Var, String> localAliasMap) {
++      super(aliasVar, aliasReference, localAliasMap);
++    }
++
++    @Override
++    public void applyAlias() {
++      aliasReference.getParent().replaceChild(
++          aliasReference, NodeUtil.newQualifiedNameNode(
++              compiler.getCodingConvention(), localAliasMap.get(aliasVar), aliasReference, aliasReference.getString()));
++    }
+@@ -1,15 +1,20 @@
+-  private class AliasedTypeNode extends AliasUsage {
+-    AliasedTypeNode(Var aliasVar, Node aliasReference) {
+-      super(aliasVar, aliasReference);
+-    }
+-
+-    @Override
+-    public void applyAlias() {
+-      Node aliasDefinition = aliasVar.getInitialValue();
+-      String aliasName = aliasVar.getName();
+-      String typeName = aliasReference.getString();
+-      String aliasExpanded =
+-          Preconditions.checkNotNull(aliasDefinition.getQualifiedName());
+-      Preconditions.checkState(typeName.startsWith(aliasName));
+-      aliasReference.setString(typeName.replaceFirst(aliasName, aliasExpanded));
+-    }
++  private class AliasedTypeNode extends AliasUsage {
++    AliasedTypeNode(Var aliasVar, Node aliasReference, Map<Var, String> localAliasMap) {
++      super(aliasVar, aliasReference, localAliasMap);
++    }
++
++    @Override
++    public void applyAlias() {
++      Node aliasDefinition;
++      String aliasExpanded;
++      if (localAliasMap.containsKey(aliasVar)) {
++        aliasExpanded = localAliasMap.get(aliasVar);
++      } else {
++        aliasDefinition = aliasVar.getInitialValue();
++        aliasExpanded = Preconditions.checkNotNull(aliasDefinition.getQualifiedName());
++      }
++      String aliasName = aliasVar.getName();
++      String typeName = aliasReference.getString();
++      Preconditions.checkState(typeName.startsWith(aliasName));
++      aliasReference.setString(typeName.replaceFirst(aliasName, aliasExpanded));
++    }
+@@ -1,9 +1,14 @@
+-        if (aliasVar != null) {
+-          // Note, to support the transitive case, it's important we don't
+-          // clone aliasedNode here.  For example,
+-          // var g = goog; var d = g.dom; d.createElement('DIV');
+-          // The node in aliasedNode (which is "g") will be replaced in the
+-          // changes pass above with "goog".  If we cloned here, we'd end up
+-          // with <code>g.dom.createElement('DIV')</code>.
+-          aliasUsages.add(new AliasedNode(aliasVar, n));
+-        }
++        if (aliasVar != null) {
++          if (localAliasMap.containsKey(aliasVar)) {
++            aliasUsages.add(new AliasedLocalVarNode(
++                aliasVar, n, localAliasMap));
++          } else {
++            // Note, to support the transitive case, it's important we don't
++            // clone aliasedNode here.  For example,
++            // var g = goog; var d = g.dom; d.createElement('DIV');
++            // The node in aliasedNode (which is "g") will be replaced in the
++            // changes pass above with "goog".  If we cloned here, we'd end up
++            // with <code>g.dom.createElement('DIV')</code>.
++            aliasUsages.add(new AliasedNode(aliasVar, n, localAliasMap));
++          }
++        }
+@@ -1,5 +1,5 @@
+-        String baseName = name.substring(0, endIndex);
+-        Var aliasVar = aliases.get(baseName);
+-        if (aliasVar != null) {
+-          aliasUsages.add(new AliasedTypeNode(aliasVar, typeNode));
+-        }
++        String baseName = name.substring(0, endIndex);
++        Var aliasVar = aliases.get(baseName);
++        if (aliasVar != null) {
++          aliasUsages.add(new AliasedTypeNode(aliasVar, typeNode, localAliasMap));
++        }
+@@ -1,5 +1,1 @@
+-    private final Map<Var, String> localAliasMap = Maps.newHashMap();
+-
+-    // This map stores the global names for local variables that are not
+-    // traditional aliases (i.e., not qualified names).
+-    private final Map<Var, String> localAliasMap = Maps.newHashMap();
++    private final Map<Var, String> localAliasMap = Maps.newHashMap();
+@@ -1,6 +1,9 @@
+-    public boolean referencesOtherAlias() {
+-      Node aliasDefinition = aliasVar.getInitialValue();
+-      Node root = NodeUtil.getRootOfQualifiedName(aliasDefinition);
+-      Var otherAliasVar = aliasVar.getScope().getOwnSlot(root.getString());
+-      return otherAliasVar != null;
+-    }
++    public boolean referencesOtherAlias() {
++      if (localAliasMap.containsKey(aliasVar)) {
++        return false;
++      }
++      Node aliasDefinition = aliasVar.getInitialValue();
++      Node root = NodeUtil.getRootOfQualifiedName(aliasDefinition);
++      Var otherAliasVar = aliasVar.getScope().getOwnSlot(root.getString());
++      return otherAliasVar != null;
++    }
+@@ -1,10 +1,8 @@
+-  private abstract class AliasUsage {
+-    final Var aliasVar;
+-    final Node aliasReference;
+-    final Map<Var, String> localAliasMap;
+-
+-    AliasUsage(Var aliasVar, Node aliasReference, Map<Var, String> localAliasMap) {
+-      this.aliasVar = aliasVar;
+-      this.aliasReference = aliasReference;
+-      this.localAliasMap = localAliasMap;
+-    }
++  private abstract class AliasUsage {
++    final Var aliasVar;
++    final Node aliasReference;
++
++    AliasUsage(Var aliasVar, Node aliasReference) {
++      this.aliasVar = aliasVar;
++      this.aliasReference = aliasReference;
++    }
+@@ -1,18 +1,11 @@
+-  private class AliasedNode extends AliasUsage {
+-    AliasedNode(Var aliasVar, Node aliasReference, Map<Var, String> localAliasMap) {
+-      super(aliasVar, aliasReference, localAliasMap);
+-    }
+-
+-    @Override
+-    public void applyAlias() {
+-      Node aliasDefinition;
+-      if (localAliasMap.containsKey(aliasVar)) {
+-        aliasDefinition = NodeUtil.newQualifiedNameNode(
+-            compiler.getCodingConvention(), localAliasMap.get(aliasVar),
+-            aliasReference, aliasReference.getString());
+-      } else {
+-        aliasDefinition = aliasVar.getInitialValue().cloneTree();
+-      }
+-      aliasReference.getParent().replaceChild(
+-          aliasReference, aliasDefinition);
+-    }
++  private class AliasedNode extends AliasUsage {
++    AliasedNode(Var aliasVar, Node aliasReference) {
++      super(aliasVar, aliasReference);
++    }
++
++    @Override
++    public void applyAlias() {
++      Node aliasDefinition = aliasVar.getInitialValue();
++      aliasReference.getParent().replaceChild(
++          aliasReference, aliasDefinition.cloneTree());
++    }
+@@ -1,12 +1,14 @@
+-  private class AliasedLocalVarNode extends AliasUsage {
+-
+-    AliasedLocalVarNode(Var aliasVar, Node aliasReference, Map<Var, String> localAliasMap) {
+-      super(aliasVar, aliasReference, localAliasMap);
+-    }
+-
+-    @Override
+-    public void applyAlias() {
+-      aliasReference.getParent().replaceChild(
+-          aliasReference, NodeUtil.newQualifiedNameNode(
+-              compiler.getCodingConvention(), localAliasMap.get(aliasVar), aliasReference, aliasReference.getString()));
+-    }
++  private class AliasedLocalVarNode extends AliasUsage {
++    private final String globalName;
++
++    AliasedLocalVarNode(Var aliasVar, Node aliasReference, String globalName) {
++      super(aliasVar, aliasReference);
++      this.globalName = globalName;
++    }
++
++    @Override
++    public void applyAlias() {
++      aliasReference.getParent().replaceChild(
++          aliasReference, NodeUtil.newQualifiedNameNode(
++              compiler.getCodingConvention(), globalName, aliasReference, aliasReference.getString()));
++    }
+@@ -1,20 +1,15 @@
+-  private class AliasedTypeNode extends AliasUsage {
+-    AliasedTypeNode(Var aliasVar, Node aliasReference, Map<Var, String> localAliasMap) {
+-      super(aliasVar, aliasReference, localAliasMap);
+-    }
+-
+-    @Override
+-    public void applyAlias() {
+-      Node aliasDefinition;
+-      String aliasExpanded;
+-      if (localAliasMap.containsKey(aliasVar)) {
+-        aliasExpanded = localAliasMap.get(aliasVar);
+-      } else {
+-        aliasDefinition = aliasVar.getInitialValue();
+-        aliasExpanded = Preconditions.checkNotNull(aliasDefinition.getQualifiedName());
+-      }
+-      String aliasName = aliasVar.getName();
+-      String typeName = aliasReference.getString();
+-      Preconditions.checkState(typeName.startsWith(aliasName));
+-      aliasReference.setString(typeName.replaceFirst(aliasName, aliasExpanded));
+-    }
++  private class AliasedTypeNode extends AliasUsage {
++    AliasedTypeNode(Var aliasVar, Node aliasReference) {
++      super(aliasVar, aliasReference);
++    }
++
++    @Override
++    public void applyAlias() {
++      Node aliasDefinition = aliasVar.getInitialValue();
++      String aliasName = aliasVar.getName();
++      String typeName = aliasReference.getString();
++      String aliasExpanded =
++          Preconditions.checkNotNull(aliasDefinition.getQualifiedName());
++      Preconditions.checkState(typeName.startsWith(aliasName));
++      aliasReference.setString(typeName.replaceFirst(aliasName, aliasExpanded));
++    }
+@@ -1,14 +1,10 @@
+-        if (aliasVar != null) {
+-          if (localAliasMap.containsKey(aliasVar)) {
+-            aliasUsages.add(new AliasedLocalVarNode(
+-                aliasVar, n, localAliasMap));
+-          } else {
+-            // Note, to support the transitive case, it's important we don't
+-            // clone aliasedNode here.  For example,
+-            // var g = goog; var d = g.dom; d.createElement('DIV');
+-            // The node in aliasedNode (which is "g") will be replaced in the
+-            // changes pass above with "goog".  If we cloned here, we'd end up
+-            // with <code>g.dom.createElement('DIV')</code>.
+-            aliasUsages.add(new AliasedNode(aliasVar, n, localAliasMap));
+-          }
+-        }
++        // Check if this name points to an alias.
++        if (aliasVar != null) {
++          // Note, to support the transitive case, it's important we don't
++          // clone aliasedNode here.  For example,
++          // var g = goog; var d = g.dom; d.createElement('DIV');
++          // The node in aliasedNode (which is "g") will be replaced in the
++          // changes pass above with "goog".  If we cloned here, we'd end up
++          // with <code>g.dom.createElement('DIV')</code>.
++          aliasUsages.add(new AliasedNode(aliasVar, n));
++        }
+@@ -1,5 +1,5 @@
+-        String baseName = name.substring(0, endIndex);
+-        Var aliasVar = aliases.get(baseName);
+-        if (aliasVar != null) {
+-          aliasUsages.add(new AliasedTypeNode(aliasVar, typeNode, localAliasMap));
+-        }
++        String baseName = name.substring(0, endIndex);
++        Var aliasVar = aliases.get(baseName);
++        if (aliasVar != null) {
++          aliasUsages.add(new AliasedTypeNode(aliasVar, typeNode));
++        }
+@@ -1,7 +1,10 @@
+-          // Add the original var declaration to be removed later.
+-          aliasDefinitionsInOrder.add(parent);
+-
+-          // Store the global name for this local variable.
+-          localAliasMap.put(v, globalName);
+-          // Add to aliases map for lookup in visit method
+-          aliases.put(name, v);
++          // Add the original var declaration to be removed later.
++          aliasDefinitionsInOrder.add(parent);
++
++          // Create a synthetic node for the global name.
++          Node syntheticGlobalNameNode = NodeUtil.newQualifiedNameNode(
++              compiler.getCodingConvention(), globalName, n, name);
++
++          // Create a new Var object with the synthetic node as its initial value
++          // and replace the original Var in the aliases map.
++          aliases.put(name, new Var(name, syntheticGlobalNameNode, v.getJSType(), v.getScope(), v.getIndex(), v.isTypeInferred(), v.getCompilerInput()));
+@@ -1,10 +1,7 @@
+-          // Add the original var declaration to be removed later.
+-          aliasDefinitionsInOrder.add(parent);
+-
+-          // Create a synthetic node for the global name.
+-          Node syntheticGlobalNameNode = NodeUtil.newQualifiedNameNode(
+-              compiler.getCodingConvention(), globalName, n, name);
+-
+-          // Create a new Var object with the synthetic node as its initial value
+-          // and replace the original Var in the aliases map.
+-          aliases.put(name, new Var(name, syntheticGlobalNameNode, v.getJSType(), v.getScope(), v.getIndex(), v.isTypeInferred(), v.getCompilerInput()));
++          // Add the original var declaration to be removed later.
++          aliasDefinitionsInOrder.add(parent);
++
++          // Store the global name for this local variable.
++          localAliasMap.put(v, globalName);
++          // Add to aliases map for lookup in visit method
++          aliases.put(name, v);
+@@ -1,1 +1,5 @@
+-    private final Map<String, Var> aliases = Maps.newHashMap();
++    private final Map<String, Var> aliases = Maps.newHashMap();
++
++    // This map stores the global names for local variables that are not
++    // traditional aliases (i.e., not qualified names).
++    private final Map<Var, String> localAliasMap = Maps.newHashMap();
+@@ -1,8 +1,10 @@
+-  private abstract class AliasUsage {
+-    final Var aliasVar;
+-    final Node aliasReference;
+-
+-    AliasUsage(Var aliasVar, Node aliasReference) {
+-      this.aliasVar = aliasVar;
+-      this.aliasReference = aliasReference;
+-    }
++  private abstract class AliasUsage {
++    final Var aliasVar;
++    final Node aliasReference;
++    final Map<Var, String> localAliasMap;
++
++    AliasUsage(Var aliasVar, Node aliasReference, Map<Var, String> localAliasMap) {
++      this.aliasVar = aliasVar;
++      this.aliasReference = aliasReference;
++      this.localAliasMap = localAliasMap;
++    }
+@@ -1,11 +1,18 @@
+-  private class AliasedNode extends AliasUsage {
+-    AliasedNode(Var aliasVar, Node aliasReference) {
+-      super(aliasVar, aliasReference);
+-    }
+-
+-    @Override
+-    public void applyAlias() {
+-      Node aliasDefinition = aliasVar.getInitialValue();
+-      aliasReference.getParent().replaceChild(
+-          aliasReference, aliasDefinition.cloneTree());
+-    }
++  private class AliasedNode extends AliasUsage {
++    AliasedNode(Var aliasVar, Node aliasReference, Map<Var, String> localAliasMap) {
++      super(aliasVar, aliasReference, localAliasMap);
++    }
++
++    @Override
++    public void applyAlias() {
++      Node aliasDefinition;
++      if (localAliasMap.containsKey(aliasVar)) {
++        aliasDefinition = NodeUtil.newQualifiedNameNode(
++            compiler.getCodingConvention(), localAliasMap.get(aliasVar),
++            aliasReference, aliasReference.getString());
++      } else {
++        aliasDefinition = aliasVar.getInitialValue().cloneTree();
++      }
++      aliasReference.getParent().replaceChild(
++          aliasReference, aliasDefinition);
++    }
+@@ -1,14 +1,12 @@
+-  private class AliasedLocalVarNode extends AliasUsage {
+-    private final String globalName;
+-
+-    AliasedLocalVarNode(Var aliasVar, Node aliasReference, String globalName) {
+-      super(aliasVar, aliasReference);
+-      this.globalName = globalName;
+-    }
+-
+-    @Override
+-    public void applyAlias() {
+-      aliasReference.getParent().replaceChild(
+-          aliasReference, NodeUtil.newQualifiedNameNode(
+-              compiler.getCodingConvention(), globalName, aliasReference, aliasReference.getString()));
+-    }
++  private class AliasedLocalVarNode extends AliasUsage {
++
++    AliasedLocalVarNode(Var aliasVar, Node aliasReference, Map<Var, String> localAliasMap) {
++      super(aliasVar, aliasReference, localAliasMap);
++    }
++
++    @Override
++    public void applyAlias() {
++      aliasReference.getParent().replaceChild(
++          aliasReference, NodeUtil.newQualifiedNameNode(
++              compiler.getCodingConvention(), localAliasMap.get(aliasVar), aliasReference, aliasReference.getString()));
++    }
+@@ -1,15 +1,20 @@
+-  private class AliasedTypeNode extends AliasUsage {
+-    AliasedTypeNode(Var aliasVar, Node aliasReference) {
+-      super(aliasVar, aliasReference);
+-    }
+-
+-    @Override
+-    public void applyAlias() {
+-      Node aliasDefinition = aliasVar.getInitialValue();
+-      String aliasName = aliasVar.getName();
+-      String typeName = aliasReference.getString();
+-      String aliasExpanded =
+-          Preconditions.checkNotNull(aliasDefinition.getQualifiedName());
+-      Preconditions.checkState(typeName.startsWith(aliasName));
+-      aliasReference.setString(typeName.replaceFirst(aliasName, aliasExpanded));
+-    }
++  private class AliasedTypeNode extends AliasUsage {
++    AliasedTypeNode(Var aliasVar, Node aliasReference, Map<Var, String> localAliasMap) {
++      super(aliasVar, aliasReference, localAliasMap);
++    }
++
++    @Override
++    public void applyAlias() {
++      Node aliasDefinition;
++      String aliasExpanded;
++      if (localAliasMap.containsKey(aliasVar)) {
++        aliasExpanded = localAliasMap.get(aliasVar);
++      } else {
++        aliasDefinition = aliasVar.getInitialValue();
++        aliasExpanded = Preconditions.checkNotNull(aliasDefinition.getQualifiedName());
++      }
++      String aliasName = aliasVar.getName();
++      String typeName = aliasReference.getString();
++      Preconditions.checkState(typeName.startsWith(aliasName));
++      aliasReference.setString(typeName.replaceFirst(aliasName, aliasExpanded));
++    }
+@@ -1,9 +1,14 @@
+-        if (aliasVar != null) {
+-          // Note, to support the transitive case, it's important we don't
+-          // clone aliasedNode here.  For example,
+-          // var g = goog; var d = g.dom; d.createElement('DIV');
+-          // The node in aliasedNode (which is "g") will be replaced in the
+-          // changes pass above with "goog".  If we cloned here, we'd end up
+-          // with <code>g.dom.createElement('DIV')</code>.
+-          aliasUsages.add(new AliasedNode(aliasVar, n));
+-        }
++        if (aliasVar != null) {
++          if (localAliasMap.containsKey(aliasVar)) {
++            aliasUsages.add(new AliasedLocalVarNode(
++                aliasVar, n, localAliasMap));
++          } else {
++            // Note, to support the transitive case, it's important we don't
++            // clone aliasedNode here.  For example,
++            // var g = goog; var d = g.dom; d.createElement('DIV');
++            // The node in aliasedNode (which is "g") will be replaced in the
++            // changes pass above with "goog".  If we cloned here, we'd end up
++            // with <code>g.dom.createElement('DIV')</code>.
++            aliasUsages.add(new AliasedNode(aliasVar, n, localAliasMap));
++          }
++        }
+@@ -1,5 +1,5 @@
+-        String baseName = name.substring(0, endIndex);
+-        Var aliasVar = aliases.get(baseName);
+-        if (aliasVar != null) {
+-          aliasUsages.add(new AliasedTypeNode(aliasVar, typeNode));
+-        }
++        String baseName = name.substring(0, endIndex);
++        Var aliasVar = aliases.get(baseName);
++        if (aliasVar != null) {
++          aliasUsages.add(new AliasedTypeNode(aliasVar, typeNode, localAliasMap));
++        }
+@@ -1,5 +1,1 @@
+-    private final Map<Var, String> localAliasMap = Maps.newHashMap();
+-
+-    // This map stores the global names for local variables that are not
+-    // traditional aliases (i.e., not qualified names).
+-    private final Map<Var, String> localAliasMap = Maps.newHashMap();
++    private final Map<Var, String> localAliasMap = Maps.newHashMap();

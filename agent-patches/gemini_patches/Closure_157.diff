@@ -1,0 +1,1744 @@
+--- a/src/com/google/javascript/jscomp/CodeGenerator.java
++++ b/src/com/google/javascript/jscomp/CodeGenerator.java
+@@ -1,4 +1,9 @@
+-            } else {
+-              // Determine if the string is a simple number.
+-              addExpr(c, 1);
+-            }
++            } else {
++              // Determine if the string is a simple number.
++              Double numberValue = NodeUtil.getStringNumberValue(c.getString());
++              if (c.getType() == Token.STRING && numberValue != null) {
++                cc.addNumber(numberValue);
++              } else {
++                addExpr(c, 1);
++              }
++            }
+@@ -1,10 +1,14 @@
+-        // Add the property name.
+-        if (TokenStream.isJSIdentifier(name) &&
+-            // do not encode literally any non-literal characters that were
+-            // unicode escaped.
+-            NodeUtil.isLatin(name)) {
+-          add(name);
+-        } else {
+-          // Determine if the string is a simple number.
+-          add(jsString(n.getString(), outputCharsetEncoder));
+-        }
++        // Add the property name.
++        if (TokenStream.isJSIdentifier(name) &&
++            // do not encode literally any non-literal characters that were
++            // unicode escaped.
++            NodeUtil.isLatin(name)) {
++          add(name);
++        } else {
++          Double numberValue = NodeUtil.getStringNumberValue(name);
++          if (numberValue != null) {
++            cc.addNumber(numberValue);
++          } else {
++            add(jsString(n.getString(), outputCharsetEncoder));
++          }
++        }
+@@ -1,20 +1,23 @@
+-          if (c.getType() == Token.GET || c.getType() == Token.SET) {
+-            add(c);
+-          } else {
+-            // Object literal property names don't have to be quoted if they
+-            // are not JavaScript keywords
+-            if (c.getType() == Token.STRING &&
+-                !c.isQuotedString() &&
+-                !TokenStream.isKeyword(c.getString()) &&
+-                TokenStream.isJSIdentifier(c.getString()) &&
+-                // do not encode literally any non-literal characters that
+-                // were unicode escaped.
+-                NodeUtil.isLatin(c.getString())) {
+-              add(c.getString());
+-            } else {
+-              // Determine if the string is a simple number.
+-              addExpr(c, 1);
+-            }
+-            add(":");
+-            addExpr(c.getFirstChild(), 1);
+-          }
++          if (c.getType() == Token.GET || c.getType() == Token.SET) {
++            add(c);
++          } else {
++            String propertyName = c.getString();
++            Double numberValue = NodeUtil.getStringNumberValue(propertyName);
++
++            if (numberValue != null) {
++              // If it's a number-like string, print it as a number.
++              cc.addNumber(numberValue);
++            } else if (c.getType() == Token.STRING &&
++                       !c.isQuotedString() &&
++                       !TokenStream.isKeyword(propertyName) &&
++                       TokenStream.isJSIdentifier(propertyName) &&
++                       NodeUtil.isLatin(propertyName)) {
++              // If it's an unquoted identifier string, print it as is.
++              add(propertyName);
++            } else {
++              // Otherwise, print it as a quoted string (or whatever addExpr does for non-string/number nodes).
++              addExpr(c, 1);
++            }
++            add(":");
++            addExpr(c.getFirstChild(), 1);
++          }
+@@ -1,10 +1,12 @@
+-        // Add the property name.
+-        if (TokenStream.isJSIdentifier(name) &&
+-            // do not encode literally any non-literal characters that were
+-            // unicode escaped.
+-            NodeUtil.isLatin(name)) {
+-          add(name);
+-        } else {
+-          // Determine if the string is a simple number.
+-          add(jsString(n.getString(), outputCharsetEncoder));
+-        }
++        // Add the property name.
++        String name = n.getString();
++        Double numberValue = NodeUtil.getStringNumberValue(name);
++
++        if (numberValue != null) {
++          cc.addNumber(numberValue);
++        } else if (TokenStream.isJSIdentifier(name) &&
++            NodeUtil.isLatin(name)) {
++          add(name);
++        } else {
++          add(jsString(n.getString(), outputCharsetEncoder));
++        }
+@@ -1,20 +1,23 @@
+-          if (c.getType() == Token.GET || c.getType() == Token.SET) {
+-            add(c);
+-          } else {
+-            // Object literal property names don't have to be quoted if they
+-            // are not JavaScript keywords
+-            if (c.getType() == Token.STRING &&
+-                !c.isQuotedString() &&
+-                !TokenStream.isKeyword(c.getString()) &&
+-                TokenStream.isJSIdentifier(c.getString()) &&
+-                // do not encode literally any non-literal characters that
+-                // were unicode escaped.
+-                NodeUtil.isLatin(c.getString())) {
+-              add(c.getString());
+-            } else {
+-              // Determine if the string is a simple number.
+-              addExpr(c, 1);
+-            }
+-            add(":");
+-            addExpr(c.getFirstChild(), 1);
+-          }
++          if (c.getType() == Token.GET || c.getType() == Token.SET) {
++            add(c);
++          } else {
++            String propertyName = c.getString();
++            Double propertyNumberValue = NodeUtil.getStringNumberValue(propertyName);
++
++            if (propertyNumberValue != null) {
++              // If it's a number-like string, print it as a number.
++              cc.addNumber(propertyNumberValue);
++            } else if (c.getType() == Token.STRING &&
++                       !c.isQuotedString() &&
++                       !TokenStream.isKeyword(propertyName) &&
++                       TokenStream.isJSIdentifier(propertyName) &&
++                       NodeUtil.isLatin(propertyName)) {
++              // If it's an unquoted identifier string, print it as is.
++              add(propertyName);
++            } else {
++              // Otherwise, print it as a quoted string (or whatever addExpr does for non-string/number nodes).
++              addExpr(c, 1);
++            }
++            add(":");
++            addExpr(c.getFirstChild(), 1);
++          }
+@@ -1,16 +1,17 @@
+-        // The name is on the GET or SET node.
+-        String name = n.getString();
+-        Node fn = first;
+-        Node parameters = fn.getChildAtIndex(1);
+-        Node body = fn.getLastChild();
+-
+-        // Add the property name.
+-        if (TokenStream.isJSIdentifier(name) &&
+-            // do not encode literally any non-literal characters that were
+-            // unicode escaped.
+-            NodeUtil.isLatin(name)) {
+-          add(name);
+-        } else {
+-          // Determine if the string is a simple number.
+-          add(jsString(n.getString(), outputCharsetEncoder));
+-        }
++        // The name is on the GET or SET node.
++        String propertyName = n.getString();
++        Node fn = first;
++        Node parameters = fn.getChildAtIndex(1);
++        Node body = fn.getLastChild();
++
++        // Add the property name.
++        Double propertyNumberValue = NodeUtil.getStringNumberValue(propertyName);
++
++        if (propertyNumberValue != null) {
++          cc.addNumber(propertyNumberValue);
++        } else if (TokenStream.isJSIdentifier(propertyName) &&
++            NodeUtil.isLatin(propertyName)) {
++          add(propertyName);
++        } else {
++          add(jsString(n.getString(), outputCharsetEncoder));
++        }
+@@ -1,20 +1,24 @@
+-          if (c.getType() == Token.GET || c.getType() == Token.SET) {
+-            add(c);
+-          } else {
+-            // Object literal property names don't have to be quoted if they
+-            // are not JavaScript keywords
+-            if (c.getType() == Token.STRING &&
+-                !c.isQuotedString() &&
+-                !TokenStream.isKeyword(c.getString()) &&
+-                TokenStream.isJSIdentifier(c.getString()) &&
+-                // do not encode literally any non-literal characters that
+-                // were unicode escaped.
+-                NodeUtil.isLatin(c.getString())) {
+-              add(c.getString());
+-            } else {
+-              // Determine if the string is a simple number.
+-              addExpr(c, 1);
+-            }
+-            add(":");
+-            addExpr(c.getFirstChild(), 1);
+-          }
++          if (c.getType() == Token.GET || c.getType() == Token.SET) {
++            add(c);
++          } else {
++            // Object literal property names don't have to be quoted if they
++            // are not JavaScript keywords
++            String propertyName = c.getString();
++            Double propertyNumberValue = NodeUtil.getStringNumberValue(propertyName);
++
++            if (propertyNumberValue != null) {
++              // If it's a number-like string, print it as a number.
++              cc.addNumber(propertyNumberValue);
++            } else if (c.getType() == Token.STRING &&
++                       !c.isQuotedString() &&
++                       !TokenStream.isKeyword(propertyName) &&
++                       TokenStream.isJSIdentifier(propertyName) &&
++                       NodeUtil.isLatin(propertyName)) {
++              add(propertyName);
++            } else {
++              // Determine if the string is a simple number.
++              addExpr(c, 1);
++            }
++            add(":");
++            addExpr(c.getFirstChild(), 1);
++          }
+@@ -1,16 +1,17 @@
+-        // The name is on the GET or SET node.
+-        String name = n.getString();
+-        Node fn = first;
+-        Node parameters = fn.getChildAtIndex(1);
+-        Node body = fn.getLastChild();
+-
+-        // Add the property name.
+-        if (TokenStream.isJSIdentifier(name) &&
+-            // do not encode literally any non-literal characters that were
+-            // unicode escaped.
+-            NodeUtil.isLatin(name)) {
+-          add(name);
+-        } else {
+-          // Determine if the string is a simple number.
+-          add(jsString(n.getString(), outputCharsetEncoder));
+-        }
++        // The name is on the GET or SET node.
++        String propertyName = n.getString();
++        Node fn = first;
++        Node parameters = fn.getChildAtIndex(1);
++        Node body = fn.getLastChild();
++
++        // Add the property name.
++        Double propertyNumberValue = NodeUtil.getStringNumberValue(propertyName);
++
++        if (propertyNumberValue != null) {
++          cc.addNumber(propertyNumberValue);
++        } else if (TokenStream.isJSIdentifier(propertyName) &&
++            NodeUtil.isLatin(propertyName)) {
++          add(propertyName);
++        } else {
++          add(jsString(n.getString(), outputCharsetEncoder));
++        }
+@@ -1,3 +1,16 @@
+-  /**
+-   * @see #appendHexJavaScriptRepresentation(int, Appendable)
+-   */
++  private void addPropertyName(Node n, String name) {
++    Double numberValue = NodeUtil.getStringNumberValue(name);
++
++    if (numberValue != null) {
++      cc.addNumber(numberValue);
++    } else if (TokenStream.isJSIdentifier(name) &&
++        NodeUtil.isLatin(name)) {
++      add(name);
++    } else {
++      add(jsString(name, outputCharsetEncoder));
++    }
++  }
++
++  /**
++   * @see #appendHexJavaScriptRepresentation(int, Appendable)
++   */
+@@ -1,20 +1,7 @@
+-          if (c.getType() == Token.GET || c.getType() == Token.SET) {
+-            add(c);
+-          } else {
+-            // Object literal property names don't have to be quoted if they
+-            // are not JavaScript keywords
+-            if (c.getType() == Token.STRING &&
+-                !c.isQuotedString() &&
+-                !TokenStream.isKeyword(c.getString()) &&
+-                TokenStream.isJSIdentifier(c.getString()) &&
+-                // do not encode literally any non-literal characters that
+-                // were unicode escaped.
+-                NodeUtil.isLatin(c.getString())) {
+-              add(c.getString());
+-            } else {
+-              // Determine if the string is a simple number.
+-              addExpr(c, 1);
+-            }
+-            add(":");
+-            addExpr(c.getFirstChild(), 1);
+-          }
++          if (c.getType() == Token.GET || c.getType() == Token.SET) {
++            add(c);
++          } else {
++            addPropertyName(c, c.getString());
++            add(":");
++            addExpr(c.getFirstChild(), 1);
++          }
+@@ -1,16 +1,8 @@
+-        // The name is on the GET or SET node.
+-        String name = n.getString();
+-        Node fn = first;
+-        Node parameters = fn.getChildAtIndex(1);
+-        Node body = fn.getLastChild();
+-
+-        // Add the property name.
+-        if (TokenStream.isJSIdentifier(name) &&
+-            // do not encode literally any non-literal characters that were
+-            // unicode escaped.
+-            NodeUtil.isLatin(name)) {
+-          add(name);
+-        } else {
+-          // Determine if the string is a simple number.
+-          add(jsString(n.getString(), outputCharsetEncoder));
+-        }
++        // The name is on the GET or SET node.
++        String name = n.getString();
++        Node fn = first;
++        Node parameters = fn.getChildAtIndex(1);
++        Node body = fn.getLastChild();
++
++        // Add the property name.
++        addPropertyName(n, name);
+@@ -1,3 +1,21 @@
+-  /**
+-   * @see #appendHexJavaScriptRepresentation(int, Appendable)
+-   */
++  private void addPropertyName(Node n, String name) {
++    // Check if it's a valid JavaScript identifier.
++    if (TokenStream.isJSIdentifier(name) && NodeUtil.isLatin(name)) {
++      add(name);
++      return;
++    }
++
++    // Check if it's an integer-like number string.
++    Double numberValue = NodeUtil.getStringNumberValue(name);
++    if (numberValue != null && numberValue == (long) numberValue) {
++      cc.addNumber(numberValue);
++      return;
++    }
++
++    // Otherwise, print as a quoted string.
++    add(jsString(name, outputCharsetEncoder));
++  }
++
++  /**
++   * @see #appendHexJavaScriptRepresentation(int, Appendable)
++   */
+@@ -1,20 +1,7 @@
+-          if (c.getType() == Token.GET || c.getType() == Token.SET) {
+-            add(c);
+-          } else {
+-            // Object literal property names don't have to be quoted if they
+-            // are not JavaScript keywords
+-            if (c.getType() == Token.STRING &&
+-                !c.isQuotedString() &&
+-                !TokenStream.isKeyword(c.getString()) &&
+-                TokenStream.isJSIdentifier(c.getString()) &&
+-                // do not encode literally any non-literal characters that
+-                // were unicode escaped.
+-                NodeUtil.isLatin(c.getString())) {
+-              add(c.getString());
+-            } else {
+-              // Determine if the string is a simple number.
+-              addExpr(c, 1);
+-            }
+-            add(":");
+-            addExpr(c.getFirstChild(), 1);
+-          }
++          if (c.getType() == Token.GET || c.getType() == Token.SET) {
++            add(c);
++          } else {
++            addPropertyName(c, c.getString());
++            add(":");
++            addExpr(c.getFirstChild(), 1);
++          }
+@@ -1,16 +1,8 @@
+-        // The name is on the GET or SET node.
+-        String name = n.getString();
+-        Node fn = first;
+-        Node parameters = fn.getChildAtIndex(1);
+-        Node body = fn.getLastChild();
+-
+-        // Add the property name.
+-        if (TokenStream.isJSIdentifier(name) &&
+-            // do not encode literally any non-literal characters that were
+-            // unicode escaped.
+-            NodeUtil.isLatin(name)) {
+-          add(name);
+-        } else {
+-          // Determine if the string is a simple number.
+-          add(jsString(n.getString(), outputCharsetEncoder));
+-        }
++        // The name is on the GET or SET node.
++        String name = n.getString();
++        Node fn = first;
++        Node parameters = fn.getChildAtIndex(1);
++        Node body = fn.getLastChild();
++
++        // Add the property name.
++        addPropertyName(n, name);
+@@ -1,3 +1,21 @@
+-  /**
+-   * @see #appendHexJavaScriptRepresentation(int, Appendable)
+-   */
++  private void addPropertyName(Node n, String name) {
++    // Check if it's a valid JavaScript identifier.
++    if (TokenStream.isJSIdentifier(name) && NodeUtil.isLatin(name)) {
++      add(name);
++      return;
++    }
++
++    // Check if it's an integer-like number string.
++    Double numberValue = NodeUtil.getStringNumberValue(name);
++    if (numberValue != null && numberValue.doubleValue() == Math.floor(numberValue.doubleValue())) {
++      cc.addNumber(numberValue);
++      return;
++    }
++
++    // Otherwise, print as a quoted string.
++    add(jsString(name, outputCharsetEncoder));
++  }
++
++  /**
++   * @see #appendHexJavaScriptRepresentation(int, Appendable)
++   */
+@@ -1,20 +1,7 @@
+-          if (c.getType() == Token.GET || c.getType() == Token.SET) {
+-            add(c);
+-          } else {
+-            // Object literal property names don't have to be quoted if they
+-            // are not JavaScript keywords
+-            if (c.getType() == Token.STRING &&
+-                !c.isQuotedString() &&
+-                !TokenStream.isKeyword(c.getString()) &&
+-                TokenStream.isJSIdentifier(c.getString()) &&
+-                // do not encode literally any non-literal characters that
+-                // were unicode escaped.
+-                NodeUtil.isLatin(c.getString())) {
+-              add(c.getString());
+-            } else {
+-              // Determine if the string is a simple number.
+-              addExpr(c, 1);
+-            }
+-            add(":");
+-            addExpr(c.getFirstChild(), 1);
+-          }
++          if (c.getType() == Token.GET || c.getType() == Token.SET) {
++            add(c);
++          } else {
++            addPropertyName(c, c.getString());
++            add(":");
++            addExpr(c.getFirstChild(), 1);
++          }
+@@ -1,16 +1,8 @@
+-        // The name is on the GET or SET node.
+-        String name = n.getString();
+-        Node fn = first;
+-        Node parameters = fn.getChildAtIndex(1);
+-        Node body = fn.getLastChild();
+-
+-        // Add the property name.
+-        if (TokenStream.isJSIdentifier(name) &&
+-            // do not encode literally any non-literal characters that were
+-            // unicode escaped.
+-            NodeUtil.isLatin(name)) {
+-          add(name);
+-        } else {
+-          // Determine if the string is a simple number.
+-          add(jsString(n.getString(), outputCharsetEncoder));
+-        }
++        // The name is on the GET or SET node.
++        String name = n.getString();
++        Node fn = first;
++        Node parameters = fn.getChildAtIndex(1);
++        Node body = fn.getLastChild();
++
++        // Add the property name.
++        addPropertyName(n, name);
+@@ -1,3 +1,32 @@
+-  /**
+-   * @see #appendHexJavaScriptRepresentation(int, Appendable)
+-   */
++  private void addPropertyName(Node n) {
++    String name = n.getString();
++
++    // If it's a valid JavaScript identifier, print it as is.
++    if (TokenStream.isJSIdentifier(name) && NodeUtil.isLatin(name)) {
++      add(name);
++      return;
++    }
++
++    // If it's a NUMBER node, print it as a number.
++    if (n.getType() == Token.NUMBER) {
++      cc.addNumber(n.getDouble());
++      return;
++    }
++
++    // If it's a STRING node that represents an integer, print it as an unquoted number.
++    // This handles cases like {'1':1} -> {1:1}
++    if (n.getType() == Token.STRING) {
++      Double numberValue = NodeUtil.getStringNumberValue(name);
++      if (numberValue != null && numberValue.doubleValue() == Math.floor(numberValue.doubleValue())) {
++        cc.addNumber(numberValue);
++        return;
++      }
++    }
++
++    // Otherwise, print as a quoted string.
++    add(jsString(name, outputCharsetEncoder));
++  }
++
++  /**
++   * @see #appendHexJavaScriptRepresentation(int, Appendable)
++   */
+@@ -1,20 +1,7 @@
+-          if (c.getType() == Token.GET || c.getType() == Token.SET) {
+-            add(c);
+-          } else {
+-            // Object literal property names don't have to be quoted if they
+-            // are not JavaScript keywords
+-            if (c.getType() == Token.STRING &&
+-                !c.isQuotedString() &&
+-                !TokenStream.isKeyword(c.getString()) &&
+-                TokenStream.isJSIdentifier(c.getString()) &&
+-                // do not encode literally any non-literal characters that
+-                // were unicode escaped.
+-                NodeUtil.isLatin(c.getString())) {
+-              add(c.getString());
+-            } else {
+-              // Determine if the string is a simple number.
+-              addExpr(c, 1);
+-            }
+-            add(":");
+-            addExpr(c.getFirstChild(), 1);
+-          }
++          if (c.getType() == Token.GET || c.getType() == Token.SET) {
++            add(c);
++          } else {
++            addPropertyName(c);
++            add(":");
++            addExpr(c.getFirstChild(), 1);
++          }
+@@ -1,16 +1,8 @@
+-        // The name is on the GET or SET node.
+-        String name = n.getString();
+-        Node fn = first;
+-        Node parameters = fn.getChildAtIndex(1);
+-        Node body = fn.getLastChild();
+-
+-        // Add the property name.
+-        if (TokenStream.isJSIdentifier(name) &&
+-            // do not encode literally any non-literal characters that were
+-            // unicode escaped.
+-            NodeUtil.isLatin(name)) {
+-          add(name);
+-        } else {
+-          // Determine if the string is a simple number.
+-          add(jsString(n.getString(), outputCharsetEncoder));
+-        }
++        // The name is on the GET or SET node.
++        String name = n.getString();
++        Node fn = first;
++        Node parameters = fn.getChildAtIndex(1);
++        Node body = fn.getLastChild();
++
++        // Add the property name.
++        addPropertyName(n);
+@@ -1,3 +1,28 @@
+-  /**
+-   * @see #appendHexJavaScriptRepresentation(int, Appendable)
+-   */
++  private void addPropertyName(String name) {
++    // If it's a valid JavaScript identifier, print it as is.
++    if (TokenStream.isJSIdentifier(name) && NodeUtil.isLatin(name)) {
++      add(name);
++      return;
++    }
++
++    // If it's a string that represents an integer, print it as an unquoted number.
++    // This handles cases like {'1':1} -> {1:1}
++    try {
++      long longValue = Long.parseLong(name);
++      // If it parses as a long, and the string representation of that long
++      // is the same as the original string, then it's an integer string.
++      if (String.valueOf(longValue).equals(name)) {
++        cc.addNumber(longValue);
++        return;
++      }
++    } catch (NumberFormatException e) {
++      // Not a simple long integer string.
++    }
++
++    // Otherwise, print as a quoted string.
++    add(jsString(name, outputCharsetEncoder));
++  }
++
++  /**
++   * @see #appendHexJavaScriptRepresentation(int, Appendable)
++   */
+@@ -1,20 +1,17 @@
+-          if (c.getType() == Token.GET || c.getType() == Token.SET) {
+-            add(c);
+-          } else {
+-            // Object literal property names don't have to be quoted if they
+-            // are not JavaScript keywords
+-            if (c.getType() == Token.STRING &&
+-                !c.isQuotedString() &&
+-                !TokenStream.isKeyword(c.getString()) &&
+-                TokenStream.isJSIdentifier(c.getString()) &&
+-                // do not encode literally any non-literal characters that
+-                // were unicode escaped.
+-                NodeUtil.isLatin(c.getString())) {
+-              add(c.getString());
+-            } else {
+-              // Determine if the string is a simple number.
+-              addExpr(c, 1);
+-            }
+-            add(":");
+-            addExpr(c.getFirstChild(), 1);
+-          }
++          if (c.getType() == Token.GET || c.getType() == Token.SET) {
++            add(c);
++          } else if (c.getType() == Token.STRING) {
++            addPropertyName(c.getString());
++            add(":");
++            addExpr(c.getFirstChild(), 1);
++          } else if (c.getType() == Token.NUMBER) {
++            // Handle number literals directly.
++            cc.addNumber(c.getDouble());
++            add(":");
++            addExpr(c.getFirstChild(), 1);
++          } else {
++            // Fallback for other node types (should not happen for property names)
++            addExpr(c, 1);
++            add(":");
++            addExpr(c.getFirstChild(), 1);
++          }
+@@ -1,16 +1,8 @@
+-        // The name is on the GET or SET node.
+-        String name = n.getString();
+-        Node fn = first;
+-        Node parameters = fn.getChildAtIndex(1);
+-        Node body = fn.getLastChild();
+-
+-        // Add the property name.
+-        if (TokenStream.isJSIdentifier(name) &&
+-            // do not encode literally any non-literal characters that were
+-            // unicode escaped.
+-            NodeUtil.isLatin(name)) {
+-          add(name);
+-        } else {
+-          // Determine if the string is a simple number.
+-          add(jsString(n.getString(), outputCharsetEncoder));
+-        }
++        // The name is on the GET or SET node.
++        String name = n.getString();
++        Node fn = first;
++        Node parameters = fn.getChildAtIndex(1);
++        Node body = fn.getLastChild();
++
++        // Add the property name.
++        addPropertyName(name);
+@@ -1,3 +1,27 @@
+-  /**
+-   * @see #appendHexJavaScriptRepresentation(int, Appendable)
+-   */
++  private void addPropertyName(String name) {
++    // If it's a valid JavaScript identifier, print it as is.
++    if (TokenStream.isJSIdentifier(name) && NodeUtil.isLatin(name)) {
++      add(name);
++      return;
++    }
++
++    // If it's a string that represents an integer, print it as an unquoted number.
++    try {
++      long longValue = Long.parseLong(name);
++      // If it parses as a long, and the string representation of that long
++      // is the same as the original string, then it's an integer string.
++      if (String.valueOf(longValue).equals(name)) {
++        cc.addNumber(longValue);
++        return;
++      }
++    } catch (NumberFormatException e) {
++      // Not a simple long integer string.
++    }
++
++    // Otherwise, print as a quoted string.
++    add(jsString(name, outputCharsetEncoder));
++  }
++
++  /**
++   * @see #appendHexJavaScriptRepresentation(int, Appendable)
++   */
+@@ -1,20 +1,13 @@
+-          if (c.getType() == Token.GET || c.getType() == Token.SET) {
+-            add(c);
+-          } else {
+-            // Object literal property names don't have to be quoted if they
+-            // are not JavaScript keywords
+-            if (c.getType() == Token.STRING &&
+-                !c.isQuotedString() &&
+-                !TokenStream.isKeyword(c.getString()) &&
+-                TokenStream.isJSIdentifier(c.getString()) &&
+-                // do not encode literally any non-literal characters that
+-                // were unicode escaped.
+-                NodeUtil.isLatin(c.getString())) {
+-              add(c.getString());
+-            } else {
+-              // Determine if the string is a simple number.
+-              addExpr(c, 1);
+-            }
+-            add(":");
+-            addExpr(c.getFirstChild(), 1);
+-          }
++          if (c.getType() == Token.GET || c.getType() == Token.SET) {
++            add(c);
++          } else {
++            String propertyName;
++            if (c.getType() == Token.NUMBER) {
++              propertyName = NodeUtil.getStringValue(c.getDouble());
++            } else {
++              propertyName = c.getString();
++            }
++            addPropertyName(propertyName);
++            add(":");
++            addExpr(c.getFirstChild(), 1);
++          }
+@@ -1,16 +1,8 @@
+-        // The name is on the GET or SET node.
+-        String name = n.getString();
+-        Node fn = first;
+-        Node parameters = fn.getChildAtIndex(1);
+-        Node body = fn.getLastChild();
+-
+-        // Add the property name.
+-        if (TokenStream.isJSIdentifier(name) &&
+-            // do not encode literally any non-literal characters that were
+-            // unicode escaped.
+-            NodeUtil.isLatin(name)) {
+-          add(name);
+-        } else {
+-          // Determine if the string is a simple number.
+-          add(jsString(n.getString(), outputCharsetEncoder));
+-        }
++        // The name is on the GET or SET node.
++        String name = n.getString();
++        Node fn = first;
++        Node parameters = fn.getChildAtIndex(1);
++        Node body = fn.getLastChild();
++
++        // Add the property name.
++        addPropertyName(name);
+@@ -1,3 +1,26 @@
+-  /**
+-   * @see #appendHexJavaScriptRepresentation(int, Appendable)
+-   */
++  private void addPropertyName(String name) {
++    // If it's a valid JavaScript identifier, print it as is.
++    if (TokenStream.isJSIdentifier(name) && NodeUtil.isLatin(name)) {
++      add(name);
++      return;
++    }
++
++    // Check if it's a string that represents a pure integer (no decimal point).
++    // This handles {'1':1} -> {1:1}
++    // This will NOT handle {'1.0':1} -> {1:1}
++    if (name.matches("^-?\\d+$")) { // Regex for integer string
++      try {
++        cc.addNumber(Long.parseLong(name));
++        return;
++      } catch (NumberFormatException e) {
++        // Should not happen if regex matches, but good for safety.
++      }
++    }
++
++    // Otherwise, print as a quoted string.
++    add(jsString(name, outputCharsetEncoder));
++  }
++
++  /**
++   * @see #appendHexJavaScriptRepresentation(int, Appendable)
++   */
+@@ -1,20 +1,17 @@
+-          if (c.getType() == Token.GET || c.getType() == Token.SET) {
+-            add(c);
+-          } else {
+-            // Object literal property names don't have to be quoted if they
+-            // are not JavaScript keywords
+-            if (c.getType() == Token.STRING &&
+-                !c.isQuotedString() &&
+-                !TokenStream.isKeyword(c.getString()) &&
+-                TokenStream.isJSIdentifier(c.getString()) &&
+-                // do not encode literally any non-literal characters that
+-                // were unicode escaped.
+-                NodeUtil.isLatin(c.getString())) {
+-              add(c.getString());
+-            } else {
+-              // Determine if the string is a simple number.
+-              addExpr(c, 1);
+-            }
+-            add(":");
+-            addExpr(c.getFirstChild(), 1);
+-          }
++          if (c.getType() == Token.GET || c.getType() == Token.SET) {
++            add(c);
++          } else if (c.getType() == Token.STRING) {
++            addPropertyName(c.getString());
++            add(":");
++            addExpr(c.getFirstChild(), 1);
++          } else if (c.getType() == Token.NUMBER) {
++            // Handle number literals directly.
++            cc.addNumber(c.getDouble());
++            add(":");
++            addExpr(c.getFirstChild(), 1);
++          } else {
++            // Fallback for other node types (should not happen for property names)
++            addExpr(c, 1);
++            add(":");
++            addExpr(c.getFirstChild(), 1);
++          }
+@@ -1,16 +1,8 @@
+-        // The name is on the GET or SET node.
+-        String name = n.getString();
+-        Node fn = first;
+-        Node parameters = fn.getChildAtIndex(1);
+-        Node body = fn.getLastChild();
+-
+-        // Add the property name.
+-        if (TokenStream.isJSIdentifier(name) &&
+-            // do not encode literally any non-literal characters that were
+-            // unicode escaped.
+-            NodeUtil.isLatin(name)) {
+-          add(name);
+-        } else {
+-          // Determine if the string is a simple number.
+-          add(jsString(n.getString(), outputCharsetEncoder));
+-        }
++        // The name is on the GET or SET node.
++        String name = n.getString();
++        Node fn = first;
++        Node parameters = fn.getChildAtIndex(1);
++        Node body = fn.getLastChild();
++
++        // Add the property name.
++        addPropertyName(name);
+@@ -1,3 +1,24 @@
+-  /**
+-   * @see #appendHexJavaScriptRepresentation(int, Appendable)
+-   */
++  private void addPropertyName(String name) {
++    // If it's a valid JavaScript identifier, print it as is.
++    if (TokenStream.isJSIdentifier(name) && NodeUtil.isLatin(name)) {
++      add(name);
++      return;
++    }
++
++    // Check if it's a string that represents a pure integer (no decimal point).
++    if (name.matches("^-?\\d+$")) { // Regex for integer string
++      try {
++        cc.addNumber(Long.parseLong(name));
++        return;
++      } catch (NumberFormatException e) {
++        // Should not happen if regex matches, but good for safety.
++      }
++    }
++
++    // Otherwise, print as a quoted string.
++    add(jsString(name, outputCharsetEncoder));
++  }
++
++  /**
++   * @see #appendHexJavaScriptRepresentation(int, Appendable)
++   */
+@@ -1,20 +1,16 @@
+-          if (c.getType() == Token.GET || c.getType() == Token.SET) {
+-            add(c);
+-          } else {
+-            // Object literal property names don't have to be quoted if they
+-            // are not JavaScript keywords
+-            if (c.getType() == Token.STRING &&
+-                !c.isQuotedString() &&
+-                !TokenStream.isKeyword(c.getString()) &&
+-                TokenStream.isJSIdentifier(c.getString()) &&
+-                // do not encode literally any non-literal characters that
+-                // were unicode escaped.
+-                NodeUtil.isLatin(c.getString())) {
+-              add(c.getString());
+-            } else {
+-              // Determine if the string is a simple number.
+-              addExpr(c, 1);
+-            }
+-            add(":");
+-            addExpr(c.getFirstChild(), 1);
+-          }
++          if (c.getType() == Token.GET || c.getType() == Token.SET) {
++            add(c);
++          } else if (c.getType() == Token.STRING) {
++            addPropertyName(c.getString());
++            add(":");
++            addExpr(c.getFirstChild(), 1);
++          } else if (c.getType() == Token.NUMBER) {
++            cc.addNumber(c.getDouble());
++            add(":");
++            addExpr(c.getFirstChild(), 1);
++          } else {
++            // Fallback for other node types (should not happen for property names)
++            addExpr(c, 1);
++            add(":");
++            addExpr(c.getFirstChild(), 1);
++          }
+@@ -1,16 +1,8 @@
+-        // The name is on the GET or SET node.
+-        String name = n.getString();
+-        Node fn = first;
+-        Node parameters = fn.getChildAtIndex(1);
+-        Node body = fn.getLastChild();
+-
+-        // Add the property name.
+-        if (TokenStream.isJSIdentifier(name) &&
+-            // do not encode literally any non-literal characters that were
+-            // unicode escaped.
+-            NodeUtil.isLatin(name)) {
+-          add(name);
+-        } else {
+-          // Determine if the string is a simple number.
+-          add(jsString(n.getString(), outputCharsetEncoder));
+-        }
++        // The name is on the GET or SET node.
++        String name = n.getString();
++        Node fn = first;
++        Node parameters = fn.getChildAtIndex(1);
++        Node body = fn.getLastChild();
++
++        // Add the property name.
++        addPropertyName(name);
+@@ -1,20 +1,28 @@
+-          if (c.getType() == Token.GET || c.getType() == Token.SET) {
+-            add(c);
+-          } else {
+-            // Object literal property names don't have to be quoted if they
+-            // are not JavaScript keywords
+-            if (c.getType() == Token.STRING &&
+-                !c.isQuotedString() &&
+-                !TokenStream.isKeyword(c.getString()) &&
+-                TokenStream.isJSIdentifier(c.getString()) &&
+-                // do not encode literally any non-literal characters that
+-                // were unicode escaped.
+-                NodeUtil.isLatin(c.getString())) {
+-              add(c.getString());
+-            } else {
+-              // Determine if the string is a simple number.
+-              addExpr(c, 1);
+-            }
+-            add(":");
+-            addExpr(c.getFirstChild(), 1);
+-          }
++          if (c.getType() == Token.GET || c.getType() == Token.SET) {
++            add(c);
++          } else if (c.getType() == Token.STRING) {
++            // If it's a string that represents a pure integer (no decimal point),
++            // print it as an unquoted number.
++            if (c.getString().matches("^-?\\d+$")) {
++              try {
++                cc.addNumber(Long.parseLong(c.getString()));
++              } catch (NumberFormatException e) {
++                // Should not happen if regex matches, but good for safety.
++                add(jsString(c.getString(), outputCharsetEncoder));
++              }
++            } else {
++              // Otherwise, print as a quoted string.
++              add(jsString(c.getString(), outputCharsetEncoder));
++            }
++            add(":");
++            addExpr(c.getFirstChild(), 1);
++          } else if (c.getType() == Token.NUMBER) {
++            cc.addNumber(c.getDouble());
++            add(":");
++            addExpr(c.getFirstChild(), 1);
++          } else {
++            // Fallback for other node types (should not happen for property names)
++            addExpr(c, 1);
++            add(":");
++            addExpr(c.getFirstChild(), 1);
++          }
+@@ -1,16 +1,22 @@
+-        // The name is on the GET or SET node.
+-        String name = n.getString();
+-        Node fn = first;
+-        Node parameters = fn.getChildAtIndex(1);
+-        Node body = fn.getLastChild();
+-
+-        // Add the property name.
+-        if (TokenStream.isJSIdentifier(name) &&
+-            // do not encode literally any non-literal characters that were
+-            // unicode escaped.
+-            NodeUtil.isLatin(name)) {
+-          add(name);
+-        } else {
+-          // Determine if the string is a simple number.
+-          add(jsString(n.getString(), outputCharsetEncoder));
+-        }
++        // The name is on the GET or SET node.
++        String name = n.getString();
++        Node fn = first;
++        Node parameters = fn.getChildAtIndex(1);
++        Node body = fn.getLastChild();
++
++        // Add the property name.
++        // If it's a string that represents a pure integer (no decimal point),
++        // print it as an unquoted number.
++        if (name.matches("^-?\\d+$")) {
++          try {
++            cc.addNumber(Long.parseLong(name));
++          } catch (NumberFormatException e) {
++            // Should not happen if regex matches, but good for safety.
++            add(jsString(name, outputCharsetEncoder));
++          }
++        } else if (TokenStream.isJSIdentifier(name) &&
++            NodeUtil.isLatin(name)) {
++          add(name);
++        } else {
++          add(jsString(name, outputCharsetEncoder));
++        }
+@@ -1,20 +1,28 @@
+-          if (c.getType() == Token.GET || c.getType() == Token.SET) {
+-            add(c);
+-          } else {
+-            // Object literal property names don't have to be quoted if they
+-            // are not JavaScript keywords
+-            if (c.getType() == Token.STRING &&
+-                !c.isQuotedString() &&
+-                !TokenStream.isKeyword(c.getString()) &&
+-                TokenStream.isJSIdentifier(c.getString()) &&
+-                // do not encode literally any non-literal characters that
+-                // were unicode escaped.
+-                NodeUtil.isLatin(c.getString())) {
+-              add(c.getString());
+-            } else {
+-              // Determine if the string is a simple number.
+-              addExpr(c, 1);
+-            }
+-            add(":");
+-            addExpr(c.getFirstChild(), 1);
+-          }
++          if (c.getType() == Token.GET || c.getType() == Token.SET) {
++            add(c);
++          } else {
++            String propertyName = c.getString();
++            // If it's a string that represents a pure integer (no decimal point),
++            // print it as an unquoted number.
++            if (c.getType() == Token.STRING && propertyName.matches("^-?\\d+$")) {
++              try {
++                cc.addNumber(Long.parseLong(propertyName));
++              } catch (NumberFormatException e) {
++                // Should not happen if regex matches, but good for safety.
++                add(jsString(propertyName, outputCharsetEncoder));
++              }
++            } else if (c.getType() == Token.STRING &&
++                       !c.isQuotedString() &&
++                       !TokenStream.isKeyword(propertyName) &&
++                       TokenStream.isJSIdentifier(propertyName) &&
++                       NodeUtil.isLatin(propertyName)) {
++              // Original logic for unquoted identifiers.
++              add(propertyName);
++            } else {
++              // Fallback for other string types (quoted strings, non-integer number strings)
++              // and for NUMBER nodes.
++              addExpr(c, 1);
++            }
++            add(":");
++            addExpr(c.getFirstChild(), 1);
++          }
+@@ -1,16 +1,24 @@
+-        // The name is on the GET or SET node.
+-        String name = n.getString();
+-        Node fn = first;
+-        Node parameters = fn.getChildAtIndex(1);
+-        Node body = fn.getLastChild();
+-
+-        // Add the property name.
+-        if (TokenStream.isJSIdentifier(name) &&
+-            // do not encode literally any non-literal characters that were
+-            // unicode escaped.
+-            NodeUtil.isLatin(name)) {
+-          add(name);
+-        } else {
+-          // Determine if the string is a simple number.
+-          add(jsString(n.getString(), outputCharsetEncoder));
+-        }
++        // The name is on the GET or SET node.
++        String name = n.getString();
++        Node fn = first;
++        Node parameters = fn.getChildAtIndex(1);
++        Node body = fn.getLastChild();
++
++        // Add the property name.
++        // If it's a string that represents a pure integer (no decimal point),
++        // print it as an unquoted number.
++        if (name.matches("^-?\\d+$")) {
++          try {
++            cc.addNumber(Long.parseLong(name));
++          } catch (NumberFormatException e) {
++            // Should not happen if regex matches, but good for safety.
++            add(jsString(name, outputCharsetEncoder));
++          }
++        } else if (TokenStream.isJSIdentifier(name) &&
++            NodeUtil.isLatin(name)) {
++          // Original logic for unquoted identifiers.
++          add(name);
++        } else {
++          // Fallback for other string types (quoted strings, non-integer number strings).
++          add(jsString(name, outputCharsetEncoder));
++        }
+@@ -1,20 +1,28 @@
+-          if (c.getType() == Token.GET || c.getType() == Token.SET) {
+-            add(c);
+-          } else {
+-            // Object literal property names don't have to be quoted if they
+-            // are not JavaScript keywords
+-            if (c.getType() == Token.STRING &&
+-                !c.isQuotedString() &&
+-                !TokenStream.isKeyword(c.getString()) &&
+-                TokenStream.isJSIdentifier(c.getString()) &&
+-                // do not encode literally any non-literal characters that
+-                // were unicode escaped.
+-                NodeUtil.isLatin(c.getString())) {
+-              add(c.getString());
+-            } else {
+-              // Determine if the string is a simple number.
+-              addExpr(c, 1);
+-            }
+-            add(":");
+-            addExpr(c.getFirstChild(), 1);
+-          }
++          if (c.getType() == Token.GET || c.getType() == Token.SET) {
++            add(c);
++          } else {
++            String propertyName = c.getString();
++            // If it's a string that represents a pure integer (no decimal point),
++            // print it as an unquoted number.
++            if (c.getType() == Token.STRING && propertyName.matches("^-?\\d+$")) {
++              try {
++                cc.addNumber(Long.parseLong(propertyName));
++              } catch (NumberFormatException e) {
++                // Should not happen if regex matches, but good for safety.
++                add(jsString(propertyName, outputCharsetEncoder));
++              }
++            } else if (c.getType() == Token.STRING &&
++                       !c.isQuotedString() &&
++                       !TokenStream.isKeyword(propertyName) &&
++                       TokenStream.isJSIdentifier(propertyName) &&
++                       NodeUtil.isLatin(propertyName)) {
++              // Original logic for unquoted identifiers.
++              add(propertyName);
++            } else {
++              // Fallback for other string types (quoted strings, non-integer number strings)
++              // and for NUMBER nodes.
++              addExpr(c, 1);
++            }
++            add(":");
++            addExpr(c.getFirstChild(), 1);
++          }
+@@ -1,16 +1,24 @@
+-        // The name is on the GET or SET node.
+-        String name = n.getString();
+-        Node fn = first;
+-        Node parameters = fn.getChildAtIndex(1);
+-        Node body = fn.getLastChild();
+-
+-        // Add the property name.
+-        if (TokenStream.isJSIdentifier(name) &&
+-            // do not encode literally any non-literal characters that were
+-            // unicode escaped.
+-            NodeUtil.isLatin(name)) {
+-          add(name);
+-        } else {
+-          // Determine if the string is a simple number.
+-          add(jsString(n.getString(), outputCharsetEncoder));
+-        }
++        // The name is on the GET or SET node.
++        String name = n.getString();
++        Node fn = first;
++        Node parameters = fn.getChildAtIndex(1);
++        Node body = fn.getLastChild();
++
++        // Add the property name.
++        // If it's a string that represents a pure integer (no decimal point),
++        // print it as an unquoted number.
++        if (name.matches("^-?\\d+$")) {
++          try {
++            cc.addNumber(Long.parseLong(name));
++          } catch (NumberFormatException e) {
++            // Should not happen if regex matches, but good for safety.
++            add(jsString(name, outputCharsetEncoder));
++          }
++        } else if (TokenStream.isJSIdentifier(name) &&
++            NodeUtil.isLatin(name)) {
++          // Original logic for unquoted identifiers.
++          add(name);
++        } else {
++          // Fallback for other string types (quoted strings, non-integer number strings).
++          add(jsString(name, outputCharsetEncoder));
++        }
+@@ -1,20 +1,28 @@
+-          if (c.getType() == Token.GET || c.getType() == Token.SET) {
+-            add(c);
+-          } else {
+-            // Object literal property names don't have to be quoted if they
+-            // are not JavaScript keywords
+-            if (c.getType() == Token.STRING &&
+-                !c.isQuotedString() &&
+-                !TokenStream.isKeyword(c.getString()) &&
+-                TokenStream.isJSIdentifier(c.getString()) &&
+-                // do not encode literally any non-literal characters that
+-                // were unicode escaped.
+-                NodeUtil.isLatin(c.getString())) {
+-              add(c.getString());
+-            } else {
+-              // Determine if the string is a simple number.
+-              addExpr(c, 1);
+-            }
+-            add(":");
+-            addExpr(c.getFirstChild(), 1);
+-          }
++          if (c.getType() == Token.GET || c.getType() == Token.SET) {
++            add(c);
++          } else {
++            String propertyName = c.getString();
++            // If it's a string that represents a pure integer (no decimal point),
++            // print it as an unquoted number.
++            if (c.getType() == Token.STRING && propertyName.matches("^-?\\d+$")) {
++              try {
++                cc.addNumber(Long.parseLong(propertyName));
++              } catch (NumberFormatException e) {
++                // Should not happen if regex matches, but good for safety.
++                add(jsString(propertyName, outputCharsetEncoder));
++              }
++            } else if (c.getType() == Token.STRING &&
++                       !c.isQuotedString() &&
++                       !TokenStream.isKeyword(propertyName) &&
++                       TokenStream.isJSIdentifier(propertyName) &&
++                       NodeUtil.isLatin(propertyName)) {
++              // Original logic for unquoted identifiers.
++              add(propertyName);
++            } else {
++              // Fallback for other string types (quoted strings, non-integer number strings)
++              // and for NUMBER nodes.
++              addExpr(c, 1);
++            }
++            add(":");
++            addExpr(c.getFirstChild(), 1);
++          }
+@@ -1,16 +1,20 @@
+-        // The name is on the GET or SET node.
+-        String name = n.getString();
+-        Node fn = first;
+-        Node parameters = fn.getChildAtIndex(1);
+-        Node body = fn.getLastChild();
+-
+-        // Add the property name.
+-        if (TokenStream.isJSIdentifier(name) &&
+-            // do not encode literally any non-literal characters that were
+-            // unicode escaped.
+-            NodeUtil.isLatin(name)) {
+-          add(name);
+-        } else {
+-          // Determine if the string is a simple number.
+-          add(jsString(n.getString(), outputCharsetEncoder));
+-        }
++        // The name is on the GET or SET node.
++        String name = n.getString();
++        Node fn = first;
++        Node parameters = fn.getChildAtIndex(1);
++        Node body = fn.getLastChild();
++
++        // Add the property name.
++        // If it's a string that represents a pure integer (no decimal point),
++        // print it as an unquoted number.
++        if (name.matches("^-?\\d+$")) {
++          try {
++            cc.addNumber(Long.parseLong(name));
++          } catch (NumberFormatException e) {
++            // Should not happen if regex matches, but good for safety.
++            add(jsString(name, outputCharsetEncoder));
++          }
++        } else {
++          // Otherwise, print as a quoted string.
++          add(jsString(name, outputCharsetEncoder));
++        }
+@@ -1,20 +1,29 @@
+-          if (c.getType() == Token.GET || c.getType() == Token.SET) {
+-            add(c);
+-          } else {
+-            // Object literal property names don't have to be quoted if they
+-            // are not JavaScript keywords
+-            if (c.getType() == Token.STRING &&
+-                !c.isQuotedString() &&
+-                !TokenStream.isKeyword(c.getString()) &&
+-                TokenStream.isJSIdentifier(c.getString()) &&
+-                // do not encode literally any non-literal characters that
+-                // were unicode escaped.
+-                NodeUtil.isLatin(c.getString())) {
+-              add(c.getString());
+-            } else {
+-              // Determine if the string is a simple number.
+-              addExpr(c, 1);
+-            }
+-            add(":");
+-            addExpr(c.getFirstChild(), 1);
+-          }
++          if (c.getType() == Token.GET || c.getType() == Token.SET) {
++            add(c);
++          } else if (c.getType() == Token.STRING) {
++            String propertyName = c.getString();
++            // If it's a string that represents a pure integer (no decimal point),
++            // print it as an unquoted number.
++            if (propertyName.matches("^-?\\d+$")) {
++              try {
++                cc.addNumber(Long.parseLong(propertyName));
++              } catch (NumberFormatException e) {
++                // Should not happen if regex matches, but good for safety.
++                add(jsString(propertyName, outputCharsetEncoder));
++              }
++            } else {
++              // Otherwise, print as a quoted string.
++              add(jsString(propertyName, outputCharsetEncoder));
++            }
++            add(":");
++            addExpr(c.getFirstChild(), 1);
++          } else if (c.getType() == Token.NUMBER) {
++            cc.addNumber(c.getDouble());
++            add(":");
++            addExpr(c.getFirstChild(), 1);
++          } else {
++            // Fallback for other node types (should not happen for property names)
++            addExpr(c, 1);
++            add(":");
++            addExpr(c.getFirstChild(), 1);
++          }
+@@ -1,16 +1,20 @@
+-        // The name is on the GET or SET node.
+-        String name = n.getString();
+-        Node fn = first;
+-        Node parameters = fn.getChildAtIndex(1);
+-        Node body = fn.getLastChild();
+-
+-        // Add the property name.
+-        if (TokenStream.isJSIdentifier(name) &&
+-            // do not encode literally any non-literal characters that were
+-            // unicode escaped.
+-            NodeUtil.isLatin(name)) {
+-          add(name);
+-        } else {
+-          // Determine if the string is a simple number.
+-          add(jsString(n.getString(), outputCharsetEncoder));
+-        }
++        // The name is on the GET or SET node.
++        String name = n.getString();
++        Node fn = first;
++        Node parameters = fn.getChildAtIndex(1);
++        Node body = fn.getLastChild();
++
++        // Add the property name.
++        // If it's a string that represents a pure integer (no decimal point),
++        // print it as an unquoted number.
++        if (name.matches("^-?\\d+$")) {
++          try {
++            cc.addNumber(Long.parseLong(name));
++          } catch (NumberFormatException e) {
++            // Should not happen if regex matches, but good for safety.
++            add(jsString(name, outputCharsetEncoder));
++          }
++        } else {
++          // Otherwise, print as a quoted string.
++          add(jsString(name, outputCharsetEncoder));
++        }
+@@ -1,20 +1,26 @@
+-          if (c.getType() == Token.GET || c.getType() == Token.SET) {
+-            add(c);
+-          } else {
+-            // Object literal property names don't have to be quoted if they
+-            // are not JavaScript keywords
+-            if (c.getType() == Token.STRING &&
+-                !c.isQuotedString() &&
+-                !TokenStream.isKeyword(c.getString()) &&
+-                TokenStream.isJSIdentifier(c.getString()) &&
+-                // do not encode literally any non-literal characters that
+-                // were unicode escaped.
+-                NodeUtil.isLatin(c.getString())) {
+-              add(c.getString());
+-            } else {
+-              // Determine if the string is a simple number.
+-              addExpr(c, 1);
+-            }
+-            add(":");
+-            addExpr(c.getFirstChild(), 1);
+-          }
++          if (c.getType() == Token.GET || c.getType() == Token.SET) {
++            add(c);
++          } else if (c.getType() == Token.STRING) {
++            String propertyName = c.getString();
++            Double numberValue = NodeUtil.getStringNumberValue(propertyName);
++            if (numberValue != null && numberValue.doubleValue() == Math.floor(numberValue.doubleValue())) {
++              cc.addNumber(numberValue);
++            } else if (!c.isQuotedString() &&
++                       !TokenStream.isKeyword(propertyName) &&
++                       TokenStream.isJSIdentifier(propertyName) &&
++                       NodeUtil.isLatin(propertyName)) {
++              add(propertyName);
++            } else {
++              add(jsString(propertyName, outputCharsetEncoder));
++            }
++            add(":");
++            addExpr(c.getFirstChild(), 1);
++          } else if (c.getType() == Token.NUMBER) {
++            cc.addNumber(c.getDouble());
++            add(":");
++            addExpr(c.getFirstChild(), 1);
++          } else {
++            addExpr(c, 1);
++            add(":");
++            addExpr(c.getFirstChild(), 1);
++          }
+@@ -1,16 +1,16 @@
+-        // The name is on the GET or SET node.
+-        String name = n.getString();
+-        Node fn = first;
+-        Node parameters = fn.getChildAtIndex(1);
+-        Node body = fn.getLastChild();
+-
+-        // Add the property name.
+-        if (TokenStream.isJSIdentifier(name) &&
+-            // do not encode literally any non-literal characters that were
+-            // unicode escaped.
+-            NodeUtil.isLatin(name)) {
+-          add(name);
+-        } else {
+-          // Determine if the string is a simple number.
+-          add(jsString(n.getString(), outputCharsetEncoder));
+-        }
++        // The name is on the GET or SET node.
++        String name = n.getString();
++        Node fn = first;
++        Node parameters = fn.getChildAtIndex(1);
++        Node body = fn.getLastChild();
++
++        // Add the property name.
++        Double numberValue = NodeUtil.getStringNumberValue(name);
++        if (numberValue != null && numberValue.doubleValue() == Math.floor(numberValue.doubleValue())) {
++          cc.addNumber(numberValue);
++        } else if (TokenStream.isJSIdentifier(name) &&
++            NodeUtil.isLatin(name)) {
++          add(name);
++        } else {
++          add(jsString(name, outputCharsetEncoder));
++        }
+@@ -1,3 +1,38 @@
+-  /**
+-   * @see #appendHexJavaScriptRepresentation(int, Appendable)
+-   */
++  private void addPropertyName(Node propertyNode) {
++    String name = propertyNode.getString();
++
++    // Case 1: Numeric literal (e.g., 1, 1.5, 3E9)
++    if (propertyNode.getType() == Token.NUMBER) {
++      cc.addNumber(propertyNode.getDouble());
++      return;
++    }
++
++    // Case 2: String literal that represents an integer (e.g., '1')
++    if (propertyNode.getType() == Token.STRING && name.matches("^-?\\d+$")) {
++      try {
++        cc.addNumber(Long.parseLong(name));
++        return;
++      } catch (NumberFormatException e) {
++        // Fallback to quoting if parsing fails (should not happen with regex)
++      }
++    }
++
++    // Case 3: Unquoted valid JavaScript identifier (e.g., x in {x:1})
++    // If the original node was a STRING and it was NOT quoted, and it's a valid identifier,
++    // then print it unquoted.
++    if (propertyNode.getType() == Token.STRING &&
++        !propertyNode.isQuotedString() &&
++        TokenStream.isJSIdentifier(name) &&
++        NodeUtil.isLatin(name)) {
++      add(name);
++      return;
++    }
++
++    // Case 4: All other strings (e.g., '1.0', 'foo-bar', 'x' if originally quoted,
++    // or numbers like 1.5 if they were originally strings like '1.5')
++    add(jsString(name, outputCharsetEncoder));
++  }
++
++  /**
++   * @see #appendHexJavaScriptRepresentation(int, Appendable)
++   */
+@@ -1,20 +1,7 @@
+-          if (c.getType() == Token.GET || c.getType() == Token.SET) {
+-            add(c);
+-          } else {
+-            // Object literal property names don't have to be quoted if they
+-            // are not JavaScript keywords
+-            if (c.getType() == Token.STRING &&
+-                !c.isQuotedString() &&
+-                !TokenStream.isKeyword(c.getString()) &&
+-                TokenStream.isJSIdentifier(c.getString()) &&
+-                // do not encode literally any non-literal characters that
+-                // were unicode escaped.
+-                NodeUtil.isLatin(c.getString())) {
+-              add(c.getString());
+-            } else {
+-              // Determine if the string is a simple number.
+-              addExpr(c, 1);
+-            }
+-            add(":");
+-            addExpr(c.getFirstChild(), 1);
+-          }
++          if (c.getType() == Token.GET || c.getType() == Token.SET) {
++            add(c);
++          } else {
++            addPropertyName(c);
++            add(":");
++            addExpr(c.getFirstChild(), 1);
++          }
+@@ -1,16 +1,8 @@
+-        // The name is on the GET or SET node.
+-        String name = n.getString();
+-        Node fn = first;
+-        Node parameters = fn.getChildAtIndex(1);
+-        Node body = fn.getLastChild();
+-
+-        // Add the property name.
+-        if (TokenStream.isJSIdentifier(name) &&
+-            // do not encode literally any non-literal characters that were
+-            // unicode escaped.
+-            NodeUtil.isLatin(name)) {
+-          add(name);
+-        } else {
+-          // Determine if the string is a simple number.
+-          add(jsString(n.getString(), outputCharsetEncoder));
+-        }
++        // The name is on the GET or SET node.
++        String name = n.getString();
++        Node fn = first;
++        Node parameters = fn.getChildAtIndex(1);
++        Node body = fn.getLastChild();
++
++        // Add the property name.
++        addPropertyName(n);
+@@ -1,20 +1,28 @@
+-          if (c.getType() == Token.GET || c.getType() == Token.SET) {
+-            add(c);
+-          } else {
+-            // Object literal property names don't have to be quoted if they
+-            // are not JavaScript keywords
+-            if (c.getType() == Token.STRING &&
+-                !c.isQuotedString() &&
+-                !TokenStream.isKeyword(c.getString()) &&
+-                TokenStream.isJSIdentifier(c.getString()) &&
+-                // do not encode literally any non-literal characters that
+-                // were unicode escaped.
+-                NodeUtil.isLatin(c.getString())) {
+-              add(c.getString());
+-            } else {
+-              // Determine if the string is a simple number.
+-              addExpr(c, 1);
+-            }
+-            add(":");
+-            addExpr(c.getFirstChild(), 1);
+-          }
++          if (c.getType() == Token.GET || c.getType() == Token.SET) {
++            add(c);
++          } else if (c.getType() == Token.STRING) {
++            String propertyName = c.getString();
++            // If it's a string that represents a pure integer (no decimal point),
++            // print it as an unquoted number.
++            if (propertyName.matches("^-?\\d+$")) {
++              try {
++                cc.addNumber(Long.parseLong(propertyName));
++              } catch (NumberFormatException e) {
++                // Should not happen if regex matches, but good for safety.
++                add(jsString(propertyName, outputCharsetEncoder));
++              }
++            } else {
++              // Otherwise, print as a quoted string.
++              add(jsString(propertyName, outputCharsetEncoder));
++            }
++            add(":");
++            addExpr(c.getFirstChild(), 1);
++          } else if (c.getType() == Token.NUMBER) {
++            cc.addNumber(c.getDouble());
++            add(":");
++            addExpr(c.getFirstChild(), 1);
++          } else {
++            addExpr(c, 1);
++            add(":");
++            addExpr(c.getFirstChild(), 1);
++          }
+@@ -1,16 +1,20 @@
+-        // The name is on the GET or SET node.
+-        String name = n.getString();
+-        Node fn = first;
+-        Node parameters = fn.getChildAtIndex(1);
+-        Node body = fn.getLastChild();
+-
+-        // Add the property name.
+-        if (TokenStream.isJSIdentifier(name) &&
+-            // do not encode literally any non-literal characters that were
+-            // unicode escaped.
+-            NodeUtil.isLatin(name)) {
+-          add(name);
+-        } else {
+-          // Determine if the string is a simple number.
+-          add(jsString(n.getString(), outputCharsetEncoder));
+-        }
++        // The name is on the GET or SET node.
++        String name = n.getString();
++        Node fn = first;
++        Node parameters = fn.getChildAtIndex(1);
++        Node body = fn.getLastChild();
++
++        // Add the property name.
++        // If it's a string that represents a pure integer (no decimal point),
++        // print it as an unquoted number.
++        if (name.matches("^-?\\d+$")) {
++          try {
++            cc.addNumber(Long.parseLong(name));
++          } catch (NumberFormatException e) {
++            // Should not happen if regex matches, but good for safety.
++            add(jsString(name, outputCharsetEncoder));
++          }
++        } else {
++          // Otherwise, print as a quoted string.
++          add(jsString(name, outputCharsetEncoder));
++        }
+@@ -1,20 +1,33 @@
+-          if (c.getType() == Token.GET || c.getType() == Token.SET) {
+-            add(c);
+-          } else {
+-            // Object literal property names don't have to be quoted if they
+-            // are not JavaScript keywords
+-            if (c.getType() == Token.STRING &&
+-                !c.isQuotedString() &&
+-                !TokenStream.isKeyword(c.getString()) &&
+-                TokenStream.isJSIdentifier(c.getString()) &&
+-                // do not encode literally any non-literal characters that
+-                // were unicode escaped.
+-                NodeUtil.isLatin(c.getString())) {
+-              add(c.getString());
+-            } else {
+-              // Determine if the string is a simple number.
+-              addExpr(c, 1);
+-            }
+-            add(":");
+-            addExpr(c.getFirstChild(), 1);
+-          }
++          if (c.getType() == Token.GET || c.getType() == Token.SET) {
++            add(c);
++          } else if (c.getType() == Token.STRING) {
++            String propertyName = c.getString();
++            // If it's a string that represents a pure integer (no decimal point),
++            // print it as an unquoted number.
++            if (propertyName.matches("^-?\\d+$")) {
++              try {
++                cc.addNumber(Long.parseLong(propertyName));
++              } catch (NumberFormatException e) {
++                // Should not happen if regex matches, but good for safety.
++                add(jsString(propertyName, outputCharsetEncoder));
++              }
++            } else {
++              // Otherwise, print as a quoted string.
++              add(jsString(propertyName, outputCharsetEncoder));
++            }
++            add(":");
++            addExpr(c.getFirstChild(), 1);
++          } else if (c.getType() == Token.NUMBER) {
++            double numberValue = c.getDouble();
++            if (numberValue == Math.floor(numberValue)) { // Check if it's an integer
++              cc.addNumber(numberValue);
++            } else {
++              add(jsString(String.valueOf(numberValue), outputCharsetEncoder));
++            }
++            add(":");
++            addExpr(c.getFirstChild(), 1);
++          } else {
++            addExpr(c, 1);
++            add(":");
++            addExpr(c.getFirstChild(), 1);
++          }
+@@ -1,16 +1,20 @@
+-        // The name is on the GET or SET node.
+-        String name = n.getString();
+-        Node fn = first;
+-        Node parameters = fn.getChildAtIndex(1);
+-        Node body = fn.getLastChild();
+-
+-        // Add the property name.
+-        if (TokenStream.isJSIdentifier(name) &&
+-            // do not encode literally any non-literal characters that were
+-            // unicode escaped.
+-            NodeUtil.isLatin(name)) {
+-          add(name);
+-        } else {
+-          // Determine if the string is a simple number.
+-          add(jsString(n.getString(), outputCharsetEncoder));
+-        }
++        // The name is on the GET or SET node.
++        String name = n.getString();
++        Node fn = first;
++        Node parameters = fn.getChildAtIndex(1);
++        Node body = fn.getLastChild();
++
++        // Add the property name.
++        // If it's a string that represents a pure integer (no decimal point),
++        // print it as an unquoted number.
++        if (name.matches("^-?\\d+$")) {
++          try {
++            cc.addNumber(Long.parseLong(name));
++          } catch (NumberFormatException e) {
++            // Should not happen if regex matches, but good for safety.
++            add(jsString(name, outputCharsetEncoder));
++          }
++        } else {
++          // Otherwise, print as a quoted string.
++          add(jsString(name, outputCharsetEncoder));
++        }

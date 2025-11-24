@@ -1,0 +1,109 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/base/ParserBase.java b/src/main/java/com/fasterxml/jackson/core/base/ParserBase.java
+index e14f5021..e0197d1c 100644
+--- a/src/main/java/com/fasterxml/jackson/core/base/ParserBase.java
++++ b/src/main/java/com/fasterxml/jackson/core/base/ParserBase.java
+@@ -465,6 +465,29 @@ public abstract class ParserBase
+             _ioContext.releaseNameCopyBuffer(buf);
+         }
+     }
++
++    /**
++     * Ensure that when parsing a root-level scalar value, the following
++     * character is a valid separator (i.e. whitespace). This prevents cases
++     * like "123true" from being tokenized as two separate root values
++     * without a separator.
++     */
++    protected final void _verifyRootSpace(int ch) throws JsonParseException
++    {
++        // Only applies at root context; within arrays/objects, normal
++        // structural checks apply elsewhere.
++        if (!_parsingContext.inRoot()) {
++            return;
++        }
++        // Allow standard whitespace characters as separators between
++        // multiple root values (if caller processes multiple values).
++        if (ch == INT_SPACE || ch == INT_TAB || ch == INT_CR || ch == INT_LF) {
++            return;
++        }
++        // Otherwise, report a problem to avoid accepting mangled tokens
++        // like numbers directly followed by identifiers (e.g. true/false).
++        _reportError("expected space between root values");
++    }
+     
+     /**
+      * Method called when an EOF is encountered between tokens.
+diff --git a/src/main/java/com/fasterxml/jackson/core/json/ReaderBasedJsonParser.java b/src/main/java/com/fasterxml/jackson/core/json/ReaderBasedJsonParser.java
+index 12af5fb0..60b4f03b 100644
+--- a/src/main/java/com/fasterxml/jackson/core/json/ReaderBasedJsonParser.java
++++ b/src/main/java/com/fasterxml/jackson/core/json/ReaderBasedJsonParser.java
+@@ -947,6 +947,8 @@ public final class ReaderBasedJsonParser
+             }
+             // Got it all: let's add to text buffer for parsing, access
+             --ptr; // need to push back following separator
++            // Ensure valid separation at root between consecutive values
++            _verifyRootSpace(ch);
+             _inputPtr = ptr;
+             // As per #105, need separating space between root values; check here
+             int len = ptr-startPtr;
+@@ -1077,6 +1079,8 @@ public final class ReaderBasedJsonParser
+ 
+         // Ok; unless we hit end-of-input, need to push last char read back
+         if (!eof) {
++            // Ensure valid separation at root between consecutive values
++            _verifyRootSpace(c);
+             --_inputPtr;
+         }
+         _textBuffer.setCurrentLength(outPtr);
+diff --git a/src/main/java/com/fasterxml/jackson/core/json/UTF8StreamJsonParser.java b/src/main/java/com/fasterxml/jackson/core/json/UTF8StreamJsonParser.java
+index 15faeb8b..a9d08840 100644
+--- a/src/main/java/com/fasterxml/jackson/core/json/UTF8StreamJsonParser.java
++++ b/src/main/java/com/fasterxml/jackson/core/json/UTF8StreamJsonParser.java
+@@ -1237,7 +1237,12 @@ public final class UTF8StreamJsonParser
+         if (c == '.' || c == 'e' || c == 'E') {
+             return _parseFloat(outBuf, outPtr, c, negative, intLen);
+         }
+-        
++        // Ensure valid trailing separator for number termination
++        {
++            final int d = (_inputBuffer[_inputPtr-1] & 0xFF);
++            // Ensure valid separation at root between consecutive values
++            _verifyRootSpace(d);
++        }
+         --_inputPtr; // to push back trailing char (comma etc)
+         _textBuffer.setCurrentLength(outPtr);
+         // As per #105, need separating space between root values; check here
+@@ -1267,6 +1272,7 @@ public final class UTF8StreamJsonParser
+                 }
+                 break;
+             }
++            // fall through loop
+             if (outPtr >= outBuf.length) {
+                 outBuf = _textBuffer.finishCurrentSegment();
+                 outPtr = 0;
+@@ -1274,6 +1280,12 @@ public final class UTF8StreamJsonParser
+             outBuf[outPtr++] = (char) c;
+             ++intPartLength;
+         }
++        // Ensure valid trailing separator for number termination
++        {
++            final int d = (_inputBuffer[_inputPtr-1] & 0xFF);
++            // Ensure valid separation at root between consecutive values
++            _verifyRootSpace(d);
++        }
+         --_inputPtr; // to push back trailing char (comma etc)
+         _textBuffer.setCurrentLength(outPtr);
+         // As per #105, need separating space between root values; check here
+@@ -1402,6 +1414,8 @@ public final class UTF8StreamJsonParser
+ 
+         // Ok; unless we hit end-of-input, need to push last char read back
+         if (!eof) {
++            // Ensure valid separation at root between consecutive values
++            _verifyRootSpace(c);
+             --_inputPtr;
+             // As per #105, need separating space between root values; check here
+         }
+
+
+# Untracked source files (not included in patch):
++ src/test/java/ManualCheck.class
++ src/test/java/ManualCheck.java

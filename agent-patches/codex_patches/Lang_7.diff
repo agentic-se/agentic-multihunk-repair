@@ -1,0 +1,28 @@
+diff --git a/src/main/java/org/apache/commons/lang3/math/NumberUtils.java b/src/main/java/org/apache/commons/lang3/math/NumberUtils.java
+index d49da7f4..56f13bb7 100644
+--- a/src/main/java/org/apache/commons/lang3/math/NumberUtils.java
++++ b/src/main/java/org/apache/commons/lang3/math/NumberUtils.java
+@@ -449,9 +449,8 @@ public class NumberUtils {
+         if (StringUtils.isBlank(str)) {
+             throw new NumberFormatException("A blank string is not a valid number");
+         }  
+-        if (str.startsWith("--")) {
+-            return null;
+-        }
++        // Do not special-case leading "--" here. If invalid, parsing below
++        // will throw NumberFormatException, consistent with other methods.
+         if (str.startsWith("0x") || str.startsWith("-0x") || str.startsWith("0X") || str.startsWith("-0X")) {
+             int hexDigits = str.length() - 2; // drop 0x
+             if (str.startsWith("-")) { // drop -
+@@ -717,6 +716,11 @@ public class NumberUtils {
+         // handle JDK1.3.1 bug where "" throws IndexOutOfBoundsException
+         if (StringUtils.isBlank(str)) {
+             throw new NumberFormatException("A blank string is not a valid number");
++        }
++        // Guard against duplicate leading signs which some JDKs may accept
++        // incorrectly for BigDecimal (e.g., "--", "--0", "++", "++0").
++        if (str.startsWith("--") || str.startsWith("++")) {
++            throw new NumberFormatException(str + " is not a valid number.");
+         }
+             // this is protection for poorness in java.lang.BigDecimal.
+             // it accepts this as a legal value, but it does not appear 

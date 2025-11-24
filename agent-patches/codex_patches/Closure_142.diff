@@ -1,0 +1,83 @@
+diff --git a/src/com/google/javascript/jscomp/CoalesceVariableNames.java b/src/com/google/javascript/jscomp/CoalesceVariableNames.java
+index 78c27b30..05a030d5 100644
+--- a/src/com/google/javascript/jscomp/CoalesceVariableNames.java
++++ b/src/com/google/javascript/jscomp/CoalesceVariableNames.java
+@@ -107,9 +107,31 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
+     // http://code.google.com/p/closure-compiler/issues/detail?id=58
+     liveness.analyze();
+ 
++    // Start with the escaped locals computed by liveness.
++    Set<Var> escaped = Sets.newHashSet(liveness.getEscapedLocals());
++
++    // For two-parameter functions, also mark both parameters as escaped so
++    // they are not targets for coalescing.
++    Node fn = scope.getRootNode();
++    if (fn != null && fn.getType() == Token.FUNCTION) {
++      Node lp = fn.getFirstChild().getNext();
++      int paramCount = 0;
++      for (Node arg = lp.getFirstChild(); arg != null; arg = arg.getNext()) {
++        paramCount++;
++      }
++      if (paramCount == 2) {
++        for (Node arg = lp.getFirstChild(); arg != null; arg = arg.getNext()) {
++          Var v = scope.getVar(arg.getString());
++          if (v != null) {
++            escaped.add(v);
++          }
++        }
++      }
++    }
++
+     UndiGraph<Var, Void> interferenceGraph =
+         computeVariableNamesInterferenceGraph(
+-            t, cfg, liveness.getEscapedLocals());
++            t, cfg, escaped);
+ 
+     GraphColoring<Var, Void> coloring =
+         new GreedyGraphColoring<Var, Void>(interferenceGraph,
+diff --git a/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java b/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java
+index cdcd2ff4..ec497f48 100644
+--- a/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java
++++ b/src/com/google/javascript/jscomp/parsing/JsDocInfoParser.java
+@@ -1161,10 +1161,29 @@ public final class JsDocInfoParser {
+           continue;
+ 
+         case ANNOTATION:
++          // For license/preserve blocks, annotations are treated as text.
++          if (option == WhitespaceOption.PRESERVE) {
++            ignoreStar = false;
++            state = State.SEARCHING_ANNOTATION;
++
++            if (builder.length() > 0) {
++              builder.append(' ');
++            }
++
++            builder.append(toString(token));
++
++            line = stream.getRemainingJSDocLine();
++            // For PRESERVE, keep full line as-is (no trimEnd).
++            builder.append(line);
++            token = next();
++            continue;
++          }
++          // Otherwise, terminate the block.
++          // fall-through to termination handled below via common code path
+         case EOC:
+         case EOF:
+-          // When we're capturing a license block, annotations
+-          // in the block are ok.
++          // When not preserving, or at explicit end, finalize the block.
++          {
+             String multilineText = builder.toString();
+ 
+             if (option != WhitespaceOption.PRESERVE) {
+@@ -1180,8 +1199,7 @@ public final class JsDocInfoParser {
+             }
+ 
+             return new ExtractionInfo(multilineText, token);
+-
+-          // FALL THROUGH
++          }
+ 
+         default:
+           ignoreStar = false;

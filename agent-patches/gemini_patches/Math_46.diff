@@ -1,0 +1,19 @@
+--- a/src/test/java/org/apache/commons/math/complex/ComplexTest.java
++++ b/src/test/java/org/apache/commons/math/complex/ComplexTest.java
+@@ -1,4 +1,3 @@
+-        Complex x = new Complex(3.0, 4.0);
+-        Complex z = x.divide(Complex.ZERO);
+-        // Assert.assertEquals(z, Complex.INF); // See MATH-657
+-        Assert.assertEquals(z, Complex.NaN);
++        Complex x = new Complex(3.0, 4.0);
++        Complex z = x.divide(Complex.ZERO);
++        Assert.assertEquals(z, Complex.INF); // See MATH-657
+@@ -1,4 +1,4 @@
+-    @Test
+-    public void testAtanI() {
+-        Assert.assertTrue(Complex.I.atan().isNaN());
+-    }
++    @Test
++    public void testAtanI() {
++        Assert.assertTrue(Complex.I.atan().isInfinite());
++    }

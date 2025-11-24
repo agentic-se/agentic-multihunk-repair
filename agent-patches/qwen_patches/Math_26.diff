@@ -1,0 +1,33 @@
+diff --git a/src/main/java/org/apache/commons/math3/fraction/Fraction.java b/src/main/java/org/apache/commons/math3/fraction/Fraction.java
+index f81ff0a94..d3234a431 100644
+--- a/src/main/java/org/apache/commons/math3/fraction/Fraction.java
++++ b/src/main/java/org/apache/commons/math3/fraction/Fraction.java
+@@ -227,13 +227,24 @@ public class Fraction
+             throw new FractionConversionException(value, maxIterations);
+         }
+ 
++        int num, den;
+         if (q2 < maxDenominator) {
+-            this.numerator = (int) p2;
+-            this.denominator = (int) q2;
++            num = (int) p2;
++            den = (int) q2;
+         } else {
+-            this.numerator = (int) p1;
+-            this.denominator = (int) q1;
++            num = (int) p1;
++            den = (int) q1;
+         }
++        
++        // Apply sign to result for negative values
++        // Only apply the sign if the algorithm produced a positive numerator
++        // (sign handling in continued fraction algorithms can be tricky)
++        if (value < 0 && num > 0) {
++            num = -num;
++        }
++        
++        this.numerator = num;
++        this.denominator = den;
+ 
+     }
+ 

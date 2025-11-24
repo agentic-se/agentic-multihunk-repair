@@ -1,0 +1,38 @@
+diff --git a/src/com/google/javascript/jscomp/ProcessCommonJSModules.java b/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
+index 1744a589..2c833ba9 100644
+--- a/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
++++ b/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
+@@ -125,6 +125,9 @@ public class ProcessCommonJSModules implements CompilerPass {
+       AbstractPostOrderCallback {
+ 
+     private int scriptNodeCount = 0;
++    // Track which scripts access module.exports so we only emit the
++    // module$exports override when needed.
++    private final Set<Node> scriptsWithModuleExports = Sets.newHashSet();
+ 
+     @Override
+     public void visit(NodeTraversal t, Node n, Node parent) {
+@@ -188,7 +191,11 @@ public class ProcessCommonJSModules implements CompilerPass {
+           IR.call(IR.getprop(IR.name("goog"), IR.string("provide")),
+               IR.string(moduleName))).copyInformationFromForTree(script));
+ 
+-      emitOptionalModuleExportsOverride(script, moduleName);
++      // Only emit the optional module$exports override when the script
++      // actually references module.exports.
++      if (scriptsWithModuleExports.contains(script)) {
++        emitOptionalModuleExportsOverride(script, moduleName);
++      }
+ 
+       // Rename vars to not conflict in global scope.
+       NodeTraversal.traverse(compiler, script, new SuffixVarsCallback(
+@@ -225,6 +232,10 @@ public class ProcessCommonJSModules implements CompilerPass {
+       Node exports = prop.getChildAtIndex(1);
+       exports.putProp(Node.ORIGINALNAME_PROP, "exports");
+       exports.setString("module$exports");
++      // Mark this script as using module.exports so that we can emit the
++      // conditional override at the end of the script.
++      Node script = getCurrentScriptNode(prop);
++      scriptsWithModuleExports.add(script);
+     }
+ 
+     /**

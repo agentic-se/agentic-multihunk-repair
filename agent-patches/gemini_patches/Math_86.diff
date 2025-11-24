@@ -1,0 +1,22 @@
+--- a/src/java/org/apache/commons/math/linear/CholeskyDecompositionImpl.java
++++ b/src/java/org/apache/commons/math/linear/CholeskyDecompositionImpl.java
+@@ -1,4 +1,4 @@
+-        final int order = matrix.getRowDimension();
+-        lTData   = matrix.getData();
+-        cachedL  = null;
+-        cachedLT = null;
++        final int order = matrix.getRowDimension();
++        lTData   = matrix.copy().getData(); // Create a deep copy of the matrix data
++        cachedL  = null;
++        cachedLT = null;
+@@ -1,4 +1,6 @@
+-            // check diagonal element
+-
+-            ltI[i] = Math.sqrt(ltI[i]);
+-            final double inverse = 1.0 / ltI[i];
++            // check diagonal element
++            if (ltI[i] <= absolutePositivityThreshold) {
++                throw new NotPositiveDefiniteMatrixException();
++            }
++            ltI[i] = Math.sqrt(ltI[i]);
++            final double inverse = 1.0 / ltI[i];

@@ -1,0 +1,104 @@
+diff --git a/source/org/jfree/data/general/DatasetUtilities.java b/source/org/jfree/data/general/DatasetUtilities.java
+index 927cbad..4e12777 100644
+--- a/source/org/jfree/data/general/DatasetUtilities.java
++++ b/source/org/jfree/data/general/DatasetUtilities.java
+@@ -747,22 +747,33 @@ public final class DatasetUtilities {
+         int seriesCount = dataset.getSeriesCount();
+         double lvalue;
+         double uvalue;
+-        if (includeInterval && dataset instanceof IntervalXYDataset) {
+-            IntervalXYDataset intervalXYData = (IntervalXYDataset) dataset;
+-            for (int series = 0; series < seriesCount; series++) {
+-                int itemCount = dataset.getItemCount(series);
+-                for (int item = 0; item < itemCount; item++) {
+-                    lvalue = intervalXYData.getStartXValue(series, item);
+-                    uvalue = intervalXYData.getEndXValue(series, item);
+-                    if (!Double.isNaN(lvalue)) {
+-                        minimum = Math.min(minimum, lvalue);
+-                    }
+-                    if (!Double.isNaN(uvalue)) {
+-                        maximum = Math.max(maximum, uvalue);
+-                    }
+-                }
+-            }
+-        }
++        if (includeInterval && dataset instanceof IntervalXYDataset) {
++            IntervalXYDataset intervalXYData = (IntervalXYDataset) dataset;
++            for (int series = 0; series < seriesCount; series++) {
++                int itemCount = dataset.getItemCount(series);
++                for (int item = 0; item < itemCount; item++) {
++                    // read interval bounds
++                    lvalue = intervalXYData.getStartXValue(series, item);
++                    uvalue = intervalXYData.getEndXValue(series, item);
++                    // base x-value (used as fallback when interval contains NaN)
++                    double x = dataset.getXValue(series, item);
++
++                    // incorporate any defined values among start, end and base x
++                    if (!Double.isNaN(lvalue)) {
++                        minimum = Math.min(minimum, lvalue);
++                        maximum = Math.max(maximum, lvalue);
++                    }
++                    if (!Double.isNaN(uvalue)) {
++                        minimum = Math.min(minimum, uvalue);
++                        maximum = Math.max(maximum, uvalue);
++                    }
++                    if (!Double.isNaN(x)) {
++                        minimum = Math.min(minimum, x);
++                        maximum = Math.max(maximum, x);
++                    }
++                }
++            }
++        }
+         else {
+             for (int series = 0; series < seriesCount; series++) {
+                 int itemCount = dataset.getItemCount(series);
+@@ -1233,23 +1244,32 @@ public final class DatasetUtilities {
+         int seriesCount = dataset.getSeriesCount();
+ 
+         // handle three cases by dataset type
+-        if (includeInterval && dataset instanceof IntervalXYDataset) {
+-            // handle special case of IntervalXYDataset
+-            IntervalXYDataset ixyd = (IntervalXYDataset) dataset;
+-            for (int series = 0; series < seriesCount; series++) {
+-                int itemCount = dataset.getItemCount(series);
+-                for (int item = 0; item < itemCount; item++) {
+-                    double lvalue = ixyd.getStartYValue(series, item);
+-                    double uvalue = ixyd.getEndYValue(series, item);
+-                    if (!Double.isNaN(lvalue)) {
+-                        minimum = Math.min(minimum, lvalue);
+-                    }
+-                    if (!Double.isNaN(uvalue)) {
+-                        maximum = Math.max(maximum, uvalue);
+-                    }
+-                }
+-            }
+-        }
++        if (includeInterval && dataset instanceof IntervalXYDataset) {
++            // handle special case of IntervalXYDataset
++            IntervalXYDataset ixyd = (IntervalXYDataset) dataset;
++            for (int series = 0; series < seriesCount; series++) {
++                int itemCount = dataset.getItemCount(series);
++                for (int item = 0; item < itemCount; item++) {
++                    double lvalue = ixyd.getStartYValue(series, item);
++                    double uvalue = ixyd.getEndYValue(series, item);
++                    // base y-value (used as fallback when interval contains NaN)
++                    double y = dataset.getYValue(series, item);
++                    // incorporate any defined values among start, end and base y
++                    if (!Double.isNaN(lvalue)) {
++                        minimum = Math.min(minimum, lvalue);
++                        maximum = Math.max(maximum, lvalue);
++                    }
++                    if (!Double.isNaN(uvalue)) {
++                        minimum = Math.min(minimum, uvalue);
++                        maximum = Math.max(maximum, uvalue);
++                    }
++                    if (!Double.isNaN(y)) {
++                        minimum = Math.min(minimum, y);
++                        maximum = Math.max(maximum, y);
++                    }
++                }
++            }
++        }
+         else if (includeInterval && dataset instanceof OHLCDataset) {
+             // handle special case of OHLCDataset
+             OHLCDataset ohlc = (OHLCDataset) dataset;

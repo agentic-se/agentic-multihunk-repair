@@ -1,0 +1,100 @@
+diff --git a/src/com/google/javascript/jscomp/AbstractCommandLineRunner.java b/src/com/google/javascript/jscomp/AbstractCommandLineRunner.java
+index 3a7f427f..4d7dda84 100644
+--- a/src/com/google/javascript/jscomp/AbstractCommandLineRunner.java
++++ b/src/com/google/javascript/jscomp/AbstractCommandLineRunner.java
+@@ -194,12 +194,33 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
+       throws FlagUsageException, IOException {
+     DiagnosticGroups diagnosticGroups = getDiagnosticGroups();
+ 
+-    diagnosticGroups.setWarningLevels(
+-        options, config.jscompError, CheckLevel.ERROR);
+-    diagnosticGroups.setWarningLevels(
+-        options, config.jscompWarning, CheckLevel.WARNING);
+-    diagnosticGroups.setWarningLevels(
+-        options, config.jscompOff, CheckLevel.OFF);
++    // Apply warning guards. If an ordered spec is provided, honor it;
++    // otherwise fall back to applying by category.
++    if (!config.warningsGuardSpec.isEmpty()) {
++      for (String spec : config.warningsGuardSpec) {
++        if (spec == null || spec.length() < 3 || spec.charAt(1) != ':') {
++          continue; // ignore malformed entries defensively
++        }
++        char code = spec.charAt(0);
++        String name = spec.substring(2);
++        CheckLevel level;
++        switch (code) {
++          case 'e': level = CheckLevel.ERROR; break;
++          case 'w': level = CheckLevel.WARNING; break;
++          case 'o': level = CheckLevel.OFF; break;
++          default:  continue; // unknown spec code
++        }
++        diagnosticGroups.setWarningLevels(
++            options, Collections.singletonList(name), level);
++      }
++    } else {
++      diagnosticGroups.setWarningLevels(
++          options, config.jscompError, CheckLevel.ERROR);
++      diagnosticGroups.setWarningLevels(
++          options, config.jscompWarning, CheckLevel.WARNING);
++      diagnosticGroups.setWarningLevels(
++          options, config.jscompOff, CheckLevel.OFF);
++    }
+ 
+     createDefineOrTweakReplacements(config.define, options, false);
+ 
+@@ -1517,6 +1538,19 @@ abstract class AbstractCommandLineRunner<A extends Compiler,
+       return this;
+     }
+ 
++    // Combined, ordered warning-guard specifications encoded as
++    // "e:<group>", "w:<group>", or "o:<group>" to indicate ERROR,
++    // WARNING, or OFF respectively, preserving CLI order.
++    final List<String> warningsGuardSpec = Lists.newArrayList();
++
++    CommandLineConfig setWarningsGuardSpec(List<String> spec) {
++      this.warningsGuardSpec.clear();
++      if (spec != null) {
++        this.warningsGuardSpec.addAll(spec);
++      }
++      return this;
++    }
++
+     private final List<String> define = Lists.newArrayList();
+ 
+     /**
+diff --git a/src/com/google/javascript/jscomp/CommandLineRunner.java b/src/com/google/javascript/jscomp/CommandLineRunner.java
+index d9a381b5..53e1554c 100644
+--- a/src/com/google/javascript/jscomp/CommandLineRunner.java
++++ b/src/com/google/javascript/jscomp/CommandLineRunner.java
+@@ -525,6 +525,23 @@ public class CommandLineRunner extends
+       isConfigValid = false;
+       parser.printUsage(err);
+     } else {
++      // Build an ordered list of warning-guard specs based on the original
++      // command-line order. We encode entries as:
++      //   'e:<group>' for --jscomp_error
++      //   'w:<group>' for --jscomp_warning
++      //   'o:<group>' for --jscomp_off
++      List<String> orderedWarningGuards = Lists.newArrayList();
++      for (int i = 0; i < processedArgs.size() - 1; i++) {
++        String flag = processedArgs.get(i);
++        String value = processedArgs.get(i + 1);
++        if ("--jscomp_error".equals(flag)) {
++          orderedWarningGuards.add("e:" + value);
++        } else if ("--jscomp_warning".equals(flag)) {
++          orderedWarningGuards.add("w:" + value);
++        } else if ("--jscomp_off".equals(flag)) {
++          orderedWarningGuards.add("o:" + value);
++        }
++      }
+       getCommandLineConfig()
+           .setPrintTree(flags.print_tree)
+           .setComputePhaseOrdering(flags.compute_phase_ordering)
+@@ -552,6 +569,7 @@ public class CommandLineRunner extends
+           .setJscompError(flags.jscomp_error)
+           .setJscompWarning(flags.jscomp_warning)
+           .setJscompOff(flags.jscomp_off)
++          .setWarningsGuardSpec(orderedWarningGuards)
+           .setDefine(flags.define)
+           .setCharset(flags.charset)
+           .setManageClosureDependencies(flags.manage_closure_dependencies)

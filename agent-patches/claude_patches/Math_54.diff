@@ -1,0 +1,31 @@
+diff --git a/src/main/java/org/apache/commons/math/dfp/Dfp.java b/src/main/java/org/apache/commons/math/dfp/Dfp.java
+index 73f1ea3e8..4ace44073 100644
+--- a/src/main/java/org/apache/commons/math/dfp/Dfp.java
++++ b/src/main/java/org/apache/commons/math/dfp/Dfp.java
+@@ -270,6 +270,9 @@ public class Dfp implements FieldElement<Dfp> {
+             // Zero or sub-normal
+             if (x == 0) {
+                 // make sure 0 has the right sign
++                if ((bits & 0x8000000000000000L) != 0) {
++                    sign = -1;
++                }
+                 return;
+             }
+ 
+@@ -2314,6 +2317,12 @@ public class Dfp implements FieldElement<Dfp> {
+             return Double.NaN;
+         }
+ 
++        // Check for zero - must be done before log10() is called
++        if (mant[mant.length - 1] == 0) {
++            // Return zero with the correct sign
++            return (sign < 0) ? -0.0 : 0.0;
++        }
++
+         Dfp y = this;
+         boolean negate = false;
+         if (lessThan(getZero())) {
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

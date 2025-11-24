@@ -1,0 +1,81 @@
+diff --git a/src/main/java/org/jsoup/select/Selector.java b/src/main/java/org/jsoup/select/Selector.java
+index 13341ce..d1b1dd5 100644
+--- a/src/main/java/org/jsoup/select/Selector.java
++++ b/src/main/java/org/jsoup/select/Selector.java
+@@ -178,6 +178,8 @@ public class Selector {
+             return matches(false);
+         } else if (tq.matches(":matchesOwn(")) {
+             return matches(true);
++        } else if (tq.matches(":not(")) {
++            return not();
+         } else { // unhandled
+             throw new SelectorParseException("Could not parse query '%s': unexpected token at '%s'", query, tq.remainder());
+         }
+@@ -280,7 +282,14 @@ public class Selector {
+         String subQuery = tq.chompBalanced('(',')');
+         Validate.notEmpty(subQuery, ":has(el) subselect must not be empty");
+ 
+-        return filterForParentsOfDescendants(elements, select(subQuery, elements));
++        // Find children that match the subquery, then filter for parents that contain them
++        if (elements.isEmpty()) {
++            // Standalone :has - find all elements from root that contain matches
++            return filterForParentsOfDescendants(root.getAllElements(), select(subQuery, root));
++        } else {
++            // Filter current elements to those that contain matching descendants
++            return filterForParentsOfDescendants(elements, select(subQuery, elements));
++        }
+     }
+     
+     // pseudo selector :contains(text), containsOwn(text)
+@@ -302,7 +311,32 @@ public class Selector {
+     }
+ 
+     // :not(selector)
++    private Elements not() {
++        tq.consume(":not");
++        String subQuery = tq.chompBalanced('(',')');
++        Validate.notEmpty(subQuery, ":not(selector) subselect must not be empty");
+ 
++        // :not filters existing elements. We need to evaluate which elements match the subquery
++        // and then exclude those from the current set
++        Elements toExclude = new Elements();
++
++        if (elements.isEmpty()) {
++            // Standalone :not selector - select from root and exclude from all elements
++            toExclude = select(subQuery, root);
++            return filterForParentExclude(root.getAllElements(), toExclude);
++        } else {
++            // We have existing elements - need to find which ones match the subquery
++            // Evaluate each element individually to see if it matches
++            for (Element el : elements) {
++                Elements matches = select(subQuery, el);
++                // Check if el itself matches (it will be in the results)
++                if (matches.contains(el)) {
++                    toExclude.add(el);
++                }
++            }
++            return filterForParentExclude(elements, toExclude);
++        }
++    }
+ 
+     // direct child descendants
+     private static Elements filterForChildren(Collection<Element> parents, Collection<Element> candidates) {
+@@ -396,6 +430,18 @@ public class Selector {
+     }
+ 
+     // exclude set. package open so that Elements can implement .not() selector.
++    static Elements filterForParentExclude(Collection<Element> parents, Collection<Element> toExclude) {
++        Elements output = new Elements();
++        ELEMENT: for (Element el : parents) {
++            for (Element excluded : toExclude) {
++                if (el.equals(excluded)) {
++                    continue ELEMENT;
++                }
++            }
++            output.add(el);
++        }
++        return output;
++    }
+ 
+     public static class SelectorParseException extends IllegalStateException {
+         public SelectorParseException(String msg, Object... params) {

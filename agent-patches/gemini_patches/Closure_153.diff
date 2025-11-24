@@ -1,0 +1,678 @@
+--- a/run_bug_exposing_tests.sh
++++ b/run_bug_exposing_tests.sh
+@@ -1,4 +1,4 @@
+-for cls in $(defects4j export -p tests.trigger | cut -d: -f1 | sort -u); do
+-  echo "Running $cls" | tee -a "$LOGFILE"
+-  java -cp "$CP" org.junit.runner.JUnitCore "$cls" >> "$LOGFILE" 2>&1
+-done
++for test_method in $(defects4j export -p tests.trigger); do
++  echo "Running $test_method" | tee -a "$LOGFILE"
++  defects4j test -t "$test_method" >> "$LOGFILE" 2>&1
++done
+@@ -1,4 +1,4 @@
+-for test_method in $(defects4j export -p tests.trigger); do
+-  echo "Running $test_method" | tee -a "$LOGFILE"
+-  defects4j test -t "$test_method" >> "$LOGFILE" 2>&1
+-done
++for cls in $(defects4j export -p tests.trigger | cut -d: -f1 | sort -u); do
++  echo "Running $cls" | tee -a "$LOGFILE"
++  java -cp "$CP" org.junit.runner.JUnitCore "$cls" >> "$LOGFILE" 2>&1
++done
+@@ -1,4 +1,4 @@
+-for cls in $(defects4j export -p tests.trigger | cut -d: -f1 | sort -u); do
+-  echo "Running $cls" | tee -a "$LOGFILE"
+-  java -cp "$CP" org.junit.runner.JUnitCore "$cls" >> "$LOGFILE" 2>&1
+-done
++for test_method in $(defects4j export -p tests.trigger); do
++  echo "Running $test_method" | tee -a "$LOGFILE"
++  defects4j test -t "$test_method" >> "$LOGFILE" 2>&1
++done
+@@ -1,4 +1,4 @@
+-for test_method in $(defects4j export -p tests.trigger); do
+-  echo "Running $test_method" | tee -a "$LOGFILE"
+-  defects4j test -t "$test_method" >> "$LOGFILE" 2>&1
+-done
++for cls in $(defects4j export -p tests.trigger | cut -d: -f1 | sort -u); do
++  echo "Running $cls" | tee -a "$LOGFILE"
++  java -cp "$CP" org.junit.runner.JUnitCore "$cls" >> "$LOGFILE" 2>&1
++done
+
+--- a/src/com/google/javascript/jscomp/MakeDeclaredNamesUnique.java
++++ b/src/com/google/javascript/jscomp/MakeDeclaredNamesUnique.java
+@@ -1,2 +1,2 @@
+-      if (NodeUtil.isVarDeclaration(n)) {
+-        renamer.addDeclaredName(n.getString());
++      if (NodeUtil.isVarDeclaration(n)) {
++        renamer.addDeclaredName(n.getFirstChild().getString());
+@@ -1,2 +1,2 @@
+-      if (NodeUtil.isVarDeclaration(n)) {
+-        renamer.addDeclaredName(n.getFirstChild().getString());
++      if (NodeUtil.isVarDeclaration(n)) {
++        renamer.addDeclaredName(n.getString());
+@@ -1,2 +1,2 @@
+-      if (NodeUtil.isVarDeclaration(n)) {
+-        renamer.addDeclaredName(n.getString());
++      if (NodeUtil.isVarDeclaration(n)) {
++        renamer.addDeclaredName(n.getFirstChild().getString());
+@@ -1,2 +1,4 @@
+-      if (NodeUtil.isVarDeclaration(n)) {
+-        renamer.addDeclaredName(n.getFirstChild().getString());
++      if (n.getType() == Token.VAR) {
++        for (Node nameNode = n.getFirstChild(); nameNode != null; nameNode = nameNode.getNext()) {
++          renamer.addDeclaredName(nameNode.getString());
++        }
+@@ -1,2 +1,4 @@
+-      case Token.NAME:
+-        String newName = getReplacementName(n.getString());
++      case Token.NAME:
++        String oldName = n.getString();
++        String newName = getReplacementName(oldName);
++        System.err.println("DEBUG: visit: oldName=" + oldName + ", newName=" + newName);
+@@ -1,4 +1,2 @@
+-      case Token.NAME:
+-        String oldName = n.getString();
+-        String newName = getReplacementName(oldName);
+-        System.err.println("DEBUG: visit: oldName=" + oldName + ", newName=" + newName);
++      case Token.NAME:
++        String newName = getReplacementName(n.getString());
+@@ -1,1 +1,2 @@
+-        if (newName != null) {
++        if (newName != null) {
++          Preconditions.checkState(false, "Renaming should happen here: oldName=" + oldName + ", newName=" + newName);
+@@ -1,2 +1,1 @@
+-        if (newName != null) {
+-          Preconditions.checkState(false, "Renaming should happen here: oldName=" + oldName + ", newName=" + newName);
++        if (newName != null) {
+
+--- a/src/com/google/javascript/jscomp/Normalize.java
++++ b/src/com/google/javascript/jscomp/Normalize.java
+@@ -1,1 +1,4 @@
+-      } else if (parent.getType() == Token.VAR) {
++      } else if (parent.getType() == Token.VAR &&
++                 // If the original declaration is an extern, we should not
++                 // convert the VAR to an assignment.
++                 (v == null || !v.isExtern())) {
+@@ -1,4 +1,1 @@
+-      } else if (parent.getType() == Token.VAR &&
+-                 // If the original declaration is an extern, we should not
+-                 // convert the VAR to an assignment.
+-                 (v == null || !v.isExtern())) {
++      } else if (parent.getType() == Token.VAR) {
+@@ -1,3 +1,12 @@
+-        // declaration appears in source and the other in externs.
+-        // This deals with issues where a browser built-in is declared
+-        // in one browser but not in another.
++        // declaration appears in source and the other in externs.
++        // This deals with issues where a browser built-in is declared
++        // in one browser but not in another.
++
++      // If the variable is an extern, and we are redeclaring it in the
++      // source code, we should not modify the VAR node. The
++      // MakeDeclaredNamesUnique pass should have already handled any
++      // local shadowing.
++      if (v != null && v.isExtern() && parent.getType() == Token.VAR) {
++        return;
++      }
++
+@@ -1,12 +1,3 @@
+-        // declaration appears in source and the other in externs.
+-        // This deals with issues where a browser built-in is declared
+-        // in one browser but not in another.
+-
+-      // If the variable is an extern, and we are redeclaring it in the
+-      // source code, we should not modify the VAR node. The
+-      // MakeDeclaredNamesUnique pass should have already handled any
+-      // local shadowing.
+-      if (v != null && v.isExtern() && parent.getType() == Token.VAR) {
+-        return;
+-      }
+-
++        // declaration appears in source and the other in externs.
++        // This deals with issues where a browser built-in is declared
++        // in one browser but not in another.
+@@ -1,4 +1,11 @@
+-          replaceVarWithAssignment(v.getNameNode(), v.getParentNode(),
+-              v.getParentNode().getParent());
+-        }
+-      } else if (parent.getType() == Token.VAR) {
++          replaceVarWithAssignment(v.getNameNode(), v.getParentNode(),
++              v.getParentNode().getParent());
++        }
++      } else if (parent.getType() == Token.VAR &&
++                 // If the original declaration is an extern, we should not
++                 // convert the VAR to an assignment.
++                 // The MakeDeclaredNamesUnique pass should have already handled any
++                 // local shadowing.
++                 v != null && v.isExtern()) {
++        // Do nothing, keep the VAR declaration as is.
++      } else if (parent.getType() == Token.VAR) {
+@@ -1,11 +1,4 @@
+-          replaceVarWithAssignment(v.getNameNode(), v.getParentNode(),
+-              v.getParentNode().getParent());
+-        }
+-      } else if (parent.getType() == Token.VAR &&
+-                 // If the original declaration is an extern, we should not
+-                 // convert the VAR to an assignment.
+-                 // The MakeDeclaredNamesUnique pass should have already handled any
+-                 // local shadowing.
+-                 v != null && v.isExtern()) {
+-        // Do nothing, keep the VAR declaration as is.
+-      } else if (parent.getType() == Token.VAR) {
++          replaceVarWithAssignment(v.getNameNode(), v.getParentNode(),
++              v.getParentNode().getParent());
++        }
++      } else if (parent.getType() == Token.VAR) {
+@@ -1,4 +1,13 @@
+-          replaceVarWithAssignment(v.getNameNode(), v.getParentNode(),
+-              v.getParentNode().getParent());
+-        }
+-      } else if (parent.getType() == Token.VAR) {
++          replaceVarWithAssignment(v.getNameNode(), v.getParentNode(),
++              v.getParentNode().getParent());
++        }
++      } else if (parent.getType() == Token.VAR &&
++                 // If the original declaration is an extern, we should not
++                 // convert the VAR to an assignment.
++                 // The MakeDeclaredNamesUnique pass should have already handled any
++                 // local shadowing.
++                 (v == null || !v.isExtern())) {
++        Preconditions.checkState(parent.hasOneChild());
++
++        replaceVarWithAssignment(n, parent, gramps);
++      }
+@@ -1,13 +1,4 @@
+-          replaceVarWithAssignment(v.getNameNode(), v.getParentNode(),
+-              v.getParentNode().getParent());
+-        }
+-      } else if (parent.getType() == Token.VAR &&
+-                 // If the original declaration is an extern, we should not
+-                 // convert the VAR to an assignment.
+-                 // The MakeDeclaredNamesUnique pass should have already handled any
+-                 // local shadowing.
+-                 (v == null || !v.isExtern())) {
+-        Preconditions.checkState(parent.hasOneChild());
+-
+-        replaceVarWithAssignment(n, parent, gramps);
+-      }
++          replaceVarWithAssignment(v.getNameNode(), v.getParentNode(),
++              v.getParentNode().getParent());
++        }
++      } else if (parent.getType() == Token.VAR) {
+@@ -1,4 +1,8 @@
+-          replaceVarWithAssignment(v.getNameNode(), v.getParentNode(),
+-              v.getParentNode().getParent());
+-        }
+-      } else if (parent.getType() == Token.VAR) {
++          replaceVarWithAssignment(v.getNameNode(), v.getParentNode(),
++              v.getParentNode().getParent());
++        }
++      } else if (v != null && v.isExtern() && parent.getType() == Token.VAR) {
++        // If the original declaration is an extern, and we are redeclaring it
++        // in the source code, do nothing.
++        return;
++      } else if (parent.getType() == Token.VAR) {
+@@ -1,8 +1,4 @@
+-          replaceVarWithAssignment(v.getNameNode(), v.getParentNode(),
+-              v.getParentNode().getParent());
+-        }
+-      } else if (v != null && v.isExtern() && parent.getType() == Token.VAR) {
+-        // If the original declaration is an extern, and we are redeclaring it
+-        // in the source code, do nothing.
+-        return;
+-      } else if (parent.getType() == Token.VAR) {
++          replaceVarWithAssignment(v.getNameNode(), v.getParentNode(),
++              v.getParentNode().getParent());
++        }
++      } else if (parent.getType() == Token.VAR) {
+@@ -1,4 +1,5 @@
+-        Scope s, String name, Node n, Node parent, Node gramps,
+-        Node nodeWithLineNumber) {
+-      Preconditions.checkState(n.getType() == Token.NAME);
+-      Var v = s.getVar(name);
++        Scope s, String name, Node n, Node parent, Node gramps,
++        Node nodeWithLineNumber) {
++      Preconditions.checkState(n.getType() == Token.NAME);
++      Var v = s.getVar(name);
++      System.out.println("onRedeclaration: name=" + name + ", parent.getType()=" + parent.getType() + ", v=" + v + ", v.isExtern()=" + (v != null ? v.isExtern() : "null"));
+@@ -1,5 +1,4 @@
+-        Scope s, String name, Node n, Node parent, Node gramps,
+-        Node nodeWithLineNumber) {
+-      Preconditions.checkState(n.getType() == Token.NAME);
+-      Var v = s.getVar(name);
+-      System.out.println("onRedeclaration: name=" + name + ", parent.getType()=" + parent.getType() + ", v=" + v + ", v.isExtern()=" + (v != null ? v.isExtern() : "null"));
++        Scope s, String name, Node n, Node parent, Node gramps,
++        Node nodeWithLineNumber) {
++      Preconditions.checkState(n.getType() == Token.NAME);
++      Var v = s.getVar(name);
+@@ -1,3 +1,22 @@
+-        // declaration appears in source and the other in externs.
+-        // This deals with issues where a browser built-in is declared
+-        // in one browser but not in another.
++        // declaration appears in source and the other in externs.
++        // This deals with issues where a browser built-in is declared
++        // in one browser but not in another.
++
++      // If in global scope, check for suppressed duplicates.
++      if (s.isGlobal()) {
++        Var origVar = s.getVar(name);
++        // origVar can be null if the name is "arguments"
++        if (origVar != null && origVar.isExtern()) {
++          boolean allowDupe = false;
++          JSDocInfo info = n.getJSDocInfo();
++          if (info == null) {
++            info = parent.getJSDocInfo();
++          }
++          allowDupe =
++              info != null && info.getSuppressions().contains("duplicate");
++
++          if (allowDupe) {
++            return; // Do nothing, allow the duplicate extern declaration.
++          }
++        }
++      }
+@@ -1,22 +1,3 @@
+-        // declaration appears in source and the other in externs.
+-        // This deals with issues where a browser built-in is declared
+-        // in one browser but not in another.
+-
+-      // If in global scope, check for suppressed duplicates.
+-      if (s.isGlobal()) {
+-        Var origVar = s.getVar(name);
+-        // origVar can be null if the name is "arguments"
+-        if (origVar != null && origVar.isExtern()) {
+-          boolean allowDupe = false;
+-          JSDocInfo info = n.getJSDocInfo();
+-          if (info == null) {
+-            info = parent.getJSDocInfo();
+-          }
+-          allowDupe =
+-              info != null && info.getSuppressions().contains("duplicate");
+-
+-          if (allowDupe) {
+-            return; // Do nothing, allow the duplicate extern declaration.
+-          }
+-        }
+-      }
++        // declaration appears in source and the other in externs.
++        // This deals with issues where a browser built-in is declared
++        // in one browser but not in another.
+@@ -1,3 +1,10 @@
+-        // declaration appears in source and the other in externs.
+-        // This deals with issues where a browser built-in is declared
+-        // in one browser but not in another.
++        // declaration appears in source and the other in externs.
++        // This deals with issues where a browser built-in is declared
++        // in one browser but not in another.
++
++      if (s.isGlobal()) {
++        Var origVar = s.getVar(name);
++        if (origVar != null && origVar.isExtern()) {
++          return; // Do nothing, allow the duplicate extern declaration.
++        }
++      }
+@@ -1,10 +1,3 @@
+-        // declaration appears in source and the other in externs.
+-        // This deals with issues where a browser built-in is declared
+-        // in one browser but not in another.
+-
+-      if (s.isGlobal()) {
+-        Var origVar = s.getVar(name);
+-        if (origVar != null && origVar.isExtern()) {
+-          return; // Do nothing, allow the duplicate extern declaration.
+-        }
+-      }
++        // declaration appears in source and the other in externs.
++        // This deals with issues where a browser built-in is declared
++        // in one browser but not in another.
+@@ -1,4 +1,5 @@
+-        Scope s, String name, Node n, Node parent, Node gramps,
+-        Node nodeWithLineNumber) {
+-      Preconditions.checkState(n.getType() == Token.NAME);
+-      Var v = s.getVar(name);
++        Scope s, String name, Node n, Node parent, Node gramps,
++        Node nodeWithLineNumber) {
++      Preconditions.checkState(n.getType() == Token.NAME);
++      Var v = s.getVar(name);
++      System.err.println("DEBUG: onRedeclaration: name=" + name + ", parent.getType()=" + parent.getType() + ", s.isGlobal()=" + s.isGlobal() + ", v=" + v + ", v.isExtern()=" + (v != null ? v.isExtern() : "null"));
+@@ -1,5 +1,4 @@
+-        Scope s, String name, Node n, Node parent, Node gramps,
+-        Node nodeWithLineNumber) {
+-      Preconditions.checkState(n.getType() == Token.NAME);
+-      Var v = s.getVar(name);
+-      System.err.println("DEBUG: onRedeclaration: name=" + name + ", parent.getType()=" + parent.getType() + ", s.isGlobal()=" + s.isGlobal() + ", v=" + v + ", v.isExtern()=" + (v != null ? v.isExtern() : "null"));
++        Scope s, String name, Node n, Node parent, Node gramps,
++        Node nodeWithLineNumber) {
++      Preconditions.checkState(n.getType() == Token.NAME);
++      Var v = s.getVar(name);
+@@ -1,3 +1,22 @@
+-        // declaration appears in source and the other in externs.
+-        // This deals with issues where a browser built-in is declared
+-        // in one browser but not in another.
++        // declaration appears in source and the other in externs.
++        // This deals with issues where a browser built-in is declared
++        // in one browser but not in another.
++
++      // If in global scope, check for suppressed duplicates.
++      if (s.isGlobal()) {
++        Var origVar = s.getVar(name);
++        // origVar can be null if the name is "arguments"
++        if (origVar != null && origVar.isExtern()) {
++          boolean allowDupe = false;
++          JSDocInfo info = n.getJSDocInfo();
++          if (info == null) {
++            info = parent.getJSDocInfo();
++          }
++          allowDupe =
++              info != null && info.getSuppressions().contains("duplicate");
++
++          if (allowDupe) {
++            return; // Do nothing, allow the duplicate extern declaration.
++          }
++        }
++      }
+@@ -1,3 +1,22 @@
+-        // declaration appears in source and the other in externs.
+-        // This deals with issues where a browser built-in is declared
+-        // in one browser but not in another.
++        // declaration appears in source and the other in externs.
++        // This deals with issues where a browser built-in is declared
++        // in one browser but not in another.
++
++      // If in global scope, check for suppressed duplicates.
++      if (s.isGlobal()) {
++        Var origVar = s.getVar(name);
++        // origVar can be null if the name is "arguments"
++        if (origVar != null && origVar.isExtern()) {
++          boolean allowDupe = false;
++          JSDocInfo info = n.getJSDocInfo();
++          if (info == null) {
++            info = parent.getJSDocInfo();
++          }
++          allowDupe =
++              info != null && info.getSuppressions().contains("duplicate");
++
++          if (allowDupe) {
++            return; // Do nothing, allow the duplicate extern declaration.
++          }
++        }
++      }
+@@ -1,3 +1,22 @@
+-        // declaration appears in source and the other in externs.
+-        // This deals with issues where a browser built-in is declared
+-        // in one browser but not in another.
++        // declaration appears in source and the other in externs.
++        // This deals with issues where a browser built-in is declared
++        // in one browser but not in another.
++
++      // If in global scope, check for suppressed duplicates.
++      if (s.isGlobal()) {
++        Var origVar = s.getVar(name);
++        // origVar can be null if the name is "arguments"
++        if (origVar != null && origVar.isExtern()) {
++          boolean allowDupe = false;
++          JSDocInfo info = n.getJSDocInfo();
++          if (info == null) {
++            info = parent.getJSDocInfo();
++          }
++          allowDupe =
++              info != null && info.getSuppressions().contains("duplicate");
++
++          if (allowDupe) {
++            return; // Do nothing, allow the duplicate extern declaration.
++          }
++        }
++      }
+@@ -1,22 +1,3 @@
+-        // declaration appears in source and the other in externs.
+-        // This deals with issues where a browser built-in is declared
+-        // in one browser but not in another.
+-
+-      // If in global scope, check for suppressed duplicates.
+-      if (s.isGlobal()) {
+-        Var origVar = s.getVar(name);
+-        // origVar can be null if the name is "arguments"
+-        if (origVar != null && origVar.isExtern()) {
+-          boolean allowDupe = false;
+-          JSDocInfo info = n.getJSDocInfo();
+-          if (info == null) {
+-            info = parent.getJSDocInfo();
+-          }
+-          allowDupe =
+-              info != null && info.getSuppressions().contains("duplicate");
+-
+-          if (allowDupe) {
+-            return; // Do nothing, allow the duplicate extern declaration.
+-          }
+-        }
+-      }
++        // declaration appears in source and the other in externs.
++        // This deals with issues where a browser built-in is declared
++        // in one browser but not in another.
+@@ -1,3 +1,22 @@
+-        // declaration appears in source and the other in externs.
+-        // This deals with issues where a browser built-in is declared
+-        // in one browser but not in another.
++        // declaration appears in source and the other in externs.
++        // This deals with issues where a browser built-in is declared
++        // in one browser but not in another.
++
++      // If in global scope, check for suppressed duplicates.
++      if (s.isGlobal()) {
++        Var origVar = s.getVar(name);
++        // origVar can be null if the name is "arguments"
++        if (origVar != null && origVar.isExtern()) {
++          boolean allowDupe = false;
++          JSDocInfo info = n.getJSDocInfo();
++          if (info == null) {
++            info = parent.getJSDocInfo();
++          }
++          allowDupe =
++              info != null && info.getSuppressions().contains("duplicate");
++
++          if (allowDupe) {
++            return; // Do nothing, allow the duplicate extern declaration.
++          }
++        }
++      }
+@@ -1,22 +1,3 @@
+-        // declaration appears in source and the other in externs.
+-        // This deals with issues where a browser built-in is declared
+-        // in one browser but not in another.
+-
+-      // If in global scope, check for suppressed duplicates.
+-      if (s.isGlobal()) {
+-        Var origVar = s.getVar(name);
+-        // origVar can be null if the name is "arguments"
+-        if (origVar != null && origVar.isExtern()) {
+-          boolean allowDupe = false;
+-          JSDocInfo info = n.getJSDocInfo();
+-          if (info == null) {
+-            info = parent.getJSDocInfo();
+-          }
+-          allowDupe =
+-              info != null && info.getSuppressions().contains("duplicate");
+-
+-          if (allowDupe) {
+-            return; // Do nothing, allow the duplicate extern declaration.
+-          }
+-        }
+-      }
++        // declaration appears in source and the other in externs.
++        // This deals with issues where a browser built-in is declared
++        // in one browser but not in another.
+@@ -1,4 +1,5 @@
+-        Scope s, String name, Node n, Node parent, Node gramps,
+-        Node nodeWithLineNumber) {
+-      Preconditions.checkState(n.getType() == Token.NAME);
+-      Var v = s.getVar(name);
++        Scope s, String name, Node n, Node parent, Node gramps,
++        Node nodeWithLineNumber) {
++      Preconditions.checkState(n.getType() == Token.NAME);
++      Var v = s.getVar(name);
++      System.err.println("DEBUG: onRedeclaration: name=" + name + ", parent.getType()=" + parent.getType() + ", s.isGlobal()=" + s.isGlobal() + ", v=" + v + ", v.isExtern()=" + (v != null ? v.isExtern() : "null") + ", parent.toStringTree()=" + parent.toStringTree());
+@@ -1,3 +1,22 @@
+-        // declaration appears in source and the other in externs.
+-        // This deals with issues where a browser built-in is declared
+-        // in one browser but not in another.
++        // declaration appears in source and the other in externs.
++        // This deals with issues where a browser built-in is declared
++        // in one browser but not in another.
++
++      // If in global scope, check for suppressed duplicates.
++      if (s.isGlobal()) {
++        Var origVar = s.getVar(name);
++        // origVar can be null if the name is "arguments"
++        if (origVar != null && origVar.isExtern()) {
++          boolean allowDupe = false;
++          JSDocInfo info = n.getJSDocInfo();
++          if (info == null) {
++            info = parent.getJSDocInfo();
++          }
++          allowDupe =
++              info != null && info.getSuppressions().contains("duplicate");
++
++          if (allowDupe) {
++            return; // Do nothing, allow the duplicate extern declaration.
++          }
++        }
++      }
+@@ -1,3 +1,22 @@
+-        // declaration appears in source and the other in externs.
+-        // This deals with issues where a browser built-in is declared
+-        // in one browser but not in another.
++        // declaration appears in source and the other in externs.
++        // This deals with issues where a browser built-in is declared
++        // in one browser but not in another.
++
++      // If in global scope, check for suppressed duplicates.
++      if (s.isGlobal()) {
++        Var origVar = s.getVar(name);
++        // origVar can be null if the name is "arguments"
++        if (origVar != null && origVar.isExtern()) {
++          boolean allowDupe = false;
++          JSDocInfo info = n.getJSDocInfo();
++          if (info == null) {
++            info = parent.getJSDocInfo();
++          }
++          allowDupe =
++              info != null && info.getSuppressions().contains("duplicate");
++
++          if (allowDupe) {
++            return; // Do nothing, allow the duplicate extern declaration.
++          }
++        }
++      }
+@@ -1,5 +1,4 @@
+-        Scope s, String name, Node n, Node parent, Node gramps,
+-        Node nodeWithLineNumber) {
+-      Preconditions.checkState(n.getType() == Token.NAME);
+-      Var v = s.getVar(name);
+-      System.err.println("DEBUG: onRedeclaration: name=" + name + ", parent.getType()=" + parent.getType() + ", s.isGlobal()=" + s.isGlobal() + ", v=" + v + ", v.isExtern()=" + (v != null ? v.isExtern() : "null") + ", parent.toStringTree()=" + parent.toStringTree());
++        Scope s, String name, Node n, Node parent, Node gramps,
++        Node nodeWithLineNumber) {
++      Preconditions.checkState(n.getType() == Token.NAME);
++      Var v = s.getVar(name);
+@@ -1,3 +1,22 @@
+-        // declaration appears in source and the other in externs.
+-        // This deals with issues where a browser built-in is declared
+-        // in one browser but not in another.
++        // declaration appears in source and the other in externs.
++        // This deals with issues where a browser built-in is declared
++        // in one browser but not in another.
++
++      // If in global scope, check for suppressed duplicates.
++      if (s.isGlobal()) {
++        Var origVar = s.getVar(name);
++        // origVar can be null if the name is "arguments"
++        if (origVar != null && origVar.isExtern()) {
++          boolean allowDupe = false;
++          JSDocInfo info = n.getJSDocInfo();
++          if (info == null) {
++            info = parent.getJSDocInfo();
++          }
++          allowDupe =
++              info != null && info.getSuppressions().contains("duplicate");
++
++          if (allowDupe) {
++            return; // Do nothing, allow the duplicate extern declaration.
++          }
++        }
++      }
+@@ -1,3 +1,22 @@
+-        // declaration appears in source and the other in externs.
+-        // This deals with issues where a browser built-in is declared
+-        // in one browser but not in another.
++        // declaration appears in source and the other in externs.
++        // This deals with issues where a browser built-in is declared
++        // in one browser but not in another.
++
++      // If in global scope, check for suppressed duplicates.
++      if (s.isGlobal()) {
++        Var origVar = s.getVar(name);
++        // origVar can be null if the name is "arguments"
++        if (origVar != null && origVar.isExtern()) {
++          boolean allowDupe = false;
++          JSDocInfo info = n.getJSDocInfo();
++          if (info == null) {
++            info = parent.getJSDocInfo();
++          }
++          allowDupe =
++              info != null && info.getSuppressions().contains("duplicate");
++
++          if (allowDupe) {
++            return; // Do nothing, allow the duplicate extern declaration.
++          }
++        }
++      }
+@@ -1,3 +1,22 @@
+-        // declaration appears in source and the other in externs.
+-        // This deals with issues where a browser built-in is declared
+-        // in one browser but not in another.
++        // declaration appears in source and the other in externs.
++        // This deals with issues where a browser built-in is declared
++        // in one browser but not in another.
++
++      // If in global scope, check for suppressed duplicates.
++      if (s.isGlobal()) {
++        Var origVar = s.getVar(name);
++        // origVar can be null if the name is "arguments"
++        if (origVar != null && origVar.isExtern()) {
++          boolean allowDupe = false;
++          JSDocInfo info = n.getJSDocInfo();
++          if (info == null) {
++            info = parent.getJSDocInfo();
++          }
++          allowDupe =
++              info != null && info.getSuppressions().contains("duplicate");
++
++          if (allowDupe) {
++            return; // Do nothing, allow the duplicate extern declaration.
++          }
++        }
++      }
+@@ -1,3 +1,22 @@
+-        // declaration appears in source and the other in externs.
+-        // This deals with issues where a browser built-in is declared
+-        // in one browser but not in another.
++        // declaration appears in source and the other in externs.
++        // This deals with issues where a browser built-in is declared
++        // in one browser but not in another.
++
++      // If in global scope, check for suppressed duplicates.
++      if (s.isGlobal()) {
++        Var origVar = s.getVar(name);
++        // origVar can be null if the name is "arguments"
++        if (origVar != null && origVar.isExtern()) {
++          boolean allowDupe = false;
++          JSDocInfo info = n.getJSDocInfo();
++          if (info == null) {
++            info = parent.getJSDocInfo();
++          }
++          allowDupe =
++              info != null && info.getSuppressions().contains("duplicate");
++
++          if (allowDupe) {
++            return; // Do nothing, allow the duplicate extern declaration.
++          }
++        }
++      }

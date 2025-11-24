@@ -1,0 +1,88 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/util/StdDateFormat.java b/src/main/java/com/fasterxml/jackson/databind/util/StdDateFormat.java
+index 5ea467d0d..77e3232bf 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/util/StdDateFormat.java
++++ b/src/main/java/com/fasterxml/jackson/databind/util/StdDateFormat.java
+@@ -487,37 +487,52 @@ public class StdDateFormat
+         // But `pad4()` deals with "big" numbers now so:
+ 
+     private static void pad2(StringBuffer buffer, int value) {
+-        int tens = value / 10;
+-        if (tens == 0) {
+-            buffer.append('0');
+-        } else {
+-            buffer.append((char) ('0' + tens));
+-            value -= 10 * tens;
+-        }
+-        buffer.append((char) ('0' + value));
+-    }
++    int tens = value / 10;
++    if (tens >= 10) {
++        pad2(buffer, tens);
++        buffer.append((char) ('0' + value % 10));
++        return;
++    }
++    if (tens == 0) {
++        buffer.append('0');
++    } else {
++        buffer.append((char) ('0' + tens));
++        value -= 10 * tens;
++    }
++    buffer.append((char) ('0' + value));
++}
+ 
+-    private static void pad3(StringBuffer buffer, int value) {
+-        int h = value / 100;
+-        if (h == 0) {
+-            buffer.append('0');
+-        } else {
+-            buffer.append((char) ('0' + h));
+-            value -= (h * 100);
+-        }
+-        pad2(buffer, value);
++private static void pad3(StringBuffer buffer, int value) {
++    int h = value / 100;
++    if (h >= 100) {
++        pad3(buffer, h);
++        pad2(buffer, value % 100);
++        return;
+     }
++    if (h == 0) {
++        buffer.append('0');
++    } else {
++        buffer.append((char) ('0' + h));
++        value -= (h * 100);
++    }
++    pad2(buffer, value);
++}
+ 
+-    private static void pad4(StringBuffer buffer, int value) {
+-        int h = value / 100;
+-        if (h == 0) {
+-            buffer.append('0').append('0');
+-        } else {
+-                pad2(buffer, h);
+-            value -= (100 * h);
+-        }
+-        pad2(buffer, value);
++private static void pad4(StringBuffer buffer, int value) {
++    int h = value / 100;
++    if (h >= 1000) {
++        pad4(buffer, h);
++        pad2(buffer, value % 100);
++        return;
++    }
++    if (h == 0) {
++        buffer.append('0').append('0');
++    } else {
++        pad2(buffer, h);
++        value -= (100 * h);
+     }
++    pad2(buffer, value);
++}
+     
+     /*
+     /**********************************************************
+
+
+# Untracked source files (not included in patch):
++ src/test/java/com/fasterxml/jackson/databind/ser/jdk/TestDateSerialization.java

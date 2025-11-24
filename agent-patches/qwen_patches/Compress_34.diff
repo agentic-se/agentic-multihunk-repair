@@ -1,0 +1,56 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/X7875_NewUnix.java b/src/main/java/org/apache/commons/compress/archivers/zip/X7875_NewUnix.java
+index 14aebab1..da10727f 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/X7875_NewUnix.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/X7875_NewUnix.java
+@@ -204,17 +204,49 @@ public class X7875_NewUnix implements ZipExtraField, Cloneable, Serializable {
+     public void parseFromLocalFileData(
+             byte[] data, int offset, int length
+     ) throws ZipException {
++        if (data == null || offset < 0 || length < 0) {
++            throw new ZipException("Invalid data, offset, or length");
++        }
++        
+         reset();
++        
++        // Check that we have at least 1 byte for version
++        if (offset >= data.length) {
++            throw new ZipException("Insufficient data for version");
++        }
+         this.version = signedByteToUnsignedInt(data[offset++]);
++        
++        // Check that we have at least 1 byte for uidSize
++        if (offset >= data.length) {
++            throw new ZipException("Insufficient data for uidSize");
++        }
+         int uidSize = signedByteToUnsignedInt(data[offset++]);
++        
++        // Check that we have enough data for the uid data
++        if (offset + uidSize > data.length) {
++            throw new ZipException("Insufficient data for uid");
++        }
+         byte[] uidBytes = new byte[uidSize];
+-        System.arraycopy(data, offset, uidBytes, 0, uidSize);
++        if (uidSize > 0) {
++            System.arraycopy(data, offset, uidBytes, 0, uidSize);
++        }
+         offset += uidSize;
+         this.uid = new BigInteger(1, reverse(uidBytes)); // sign-bit forced positive
+ 
++        // Check that we have at least 1 byte for gidSize
++        if (offset >= data.length) {
++            throw new ZipException("Insufficient data for gidSize");
++        }
+         int gidSize = signedByteToUnsignedInt(data[offset++]);
++        
++        // Check that we have enough data for the gid data
++        if (offset + gidSize > data.length) {
++            throw new ZipException("Insufficient data for gid");
++        }
+         byte[] gidBytes = new byte[gidSize];
+-        System.arraycopy(data, offset, gidBytes, 0, gidSize);
++        if (gidSize > 0) {
++            System.arraycopy(data, offset, gidBytes, 0, gidSize);
++        }
+         this.gid = new BigInteger(1, reverse(gidBytes)); // sign-bit forced positive
+     }
+ 

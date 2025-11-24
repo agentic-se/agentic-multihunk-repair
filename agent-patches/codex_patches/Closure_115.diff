@@ -1,0 +1,42 @@
+diff --git a/src/com/google/javascript/jscomp/FunctionInjector.java b/src/com/google/javascript/jscomp/FunctionInjector.java
+index 73d6a4b3..91ff8193 100644
+--- a/src/com/google/javascript/jscomp/FunctionInjector.java
++++ b/src/com/google/javascript/jscomp/FunctionInjector.java
+@@ -359,9 +359,21 @@ class FunctionInjector {
+     EXPRESSION() {
+       @Override
+       public void prepare(FunctionInjector injector, Node callNode) {
+-        injector.getDecomposer().moveExpression(callNode);
++        // If the call is immediately used as the base of a property access
++        // (e.g., foo().bar or foo()[0]), avoid moving it into a temporary.
++        // Instead, expose surrounding expressions in-place to preserve
++        // chaining, which maintains expected AST shape for advanced
++        // optimizations.
++        Node parent = callNode.getParent();
++        boolean isPropertyBase = (parent.isGetProp() || parent.isGetElem()) && parent.getFirstChild() == callNode;
++        boolean isCallArgument = parent.isCall() && parent.getFirstChild() != callNode;
++        if (isPropertyBase || isCallArgument) {
++          injector.getDecomposer().maybeExposeExpression(callNode);
++        } else {
++          injector.getDecomposer().moveExpression(callNode);
++        }
+ 
+-        // Reclassify after move
++        // Reclassify after transformation
+         CallSiteType callSiteType = injector.classifyCallSite(callNode);
+         Preconditions.checkState(this != callSiteType);
+         callSiteType.prepare(injector, callNode);
+@@ -502,6 +514,13 @@ class FunctionInjector {
+         fnName, fnNode, callNode, resultName,
+         needsDefaultReturnResult, isCallInLoop);
+ 
++    // If the inlined body reduces to a single expression statement, unwrap
++    // the block to avoid introducing an extra BLOCK where a single statement
++    // is expected (e.g., simple assignment results).
++    if (newBlock.isBlock() && newBlock.hasOneChild() && newBlock.getFirstChild().isExprResult()) {
++      newBlock = newBlock.removeFirstChild();
++    }
++
+     // TODO(nicksantos): Create a common mutation function that
+     // can replace either a VAR name assignment, assignment expression or
+     // a EXPR_RESULT.

@@ -1,0 +1,613 @@
+--- a/src/main/java/com/fasterxml/jackson/databind/DeserializationFeature.java
++++ b/src/main/java/com/fasterxml/jackson/databind/DeserializationFeature.java
+@@ -1,3 +1,14 @@
+-    EAGER_DESERIALIZER_FETCH(true)
+-    
+-    ;
++    EAGER_DESERIALIZER_FETCH(true),
++
++    /**
++     * Feature that determines whether {@link MappingIterator} should
++     * try to recover from {@link JsonProcessingException} by skipping
++     * tokens until a matching `END_OBJECT` or `END_ARRAY` is found.
++     * If disabled, exceptions are re-thrown as is.
++     * <p>
++     * Feature is disabled by default.
++     *
++     * @since 2.6
++     */
++    READ_RECOVERY(false)
++    ;
+
+--- a/src/main/java/com/fasterxml/jackson/databind/MappingIterator.java
++++ b/src/main/java/com/fasterxml/jackson/databind/MappingIterator.java
+@@ -1,15 +1,16 @@
+-import java.io.Closeable;
+-import java.io.IOException;
+-import java.util.*;
+-
+-import com.fasterxml.jackson.core.*;
+-
+-/**
+- * Iterator exposed by {@link ObjectMapper} when binding sequence of
+- * objects. Extension is done to allow more convenient exposing of
+- * {@link IOException} (which basic {@link Iterator} does not expose)
+- */
+-public class MappingIterator<T> implements Iterator<T>, Closeable
+-{
+-    protected final static MappingIterator<?> EMPTY_ITERATOR =
+-        new MappingIterator<Object>(null, null, null, null, false, null);
++import java.io.Closeable;
++import java.io.IOException;
++import java.util.*;
++
++import com.fasterxml.jackson.core.*;
++import com.fasterxml.jackson.databind.DeserializationConfig;
++
++/**
++ * Iterator exposed by {@link ObjectMapper} when binding sequence of
++ * objects. Extension is done to allow more convenient exposing of
++ * {@link IOException} (which basic {@link Iterator} does not expose)
++ */
++public class MappingIterator<T> implements Iterator<T>, Closeable
++{
++    protected final static MappingIterator<?> EMPTY_ITERATOR =
++        new MappingIterator<Object>(null, null, null, null, false, null, false);
+@@ -1,2 +1,2 @@
+-    protected final static MappingIterator<?> EMPTY_ITERATOR =
+-        new MappingIterator<Object>(null, null, null, null, false, null, false);
++    protected final static MappingIterator<?> EMPTY_ITERATOR =
++        new MappingIterator<Object>(null, null, null, null, false, null, null);
+@@ -1,3 +1,29 @@
+-    protected <R> R _handleMappingException(JsonMappingException e) {
+-        throw new RuntimeJsonMappingException(e.getMessage(), e);
+-    }
++    protected <R> R _handleMappingException(JsonMappingException e) {
++        if (_readRecoveryEnabled) {
++            // If we have a JsonProcessingException, try to recover
++            if (e instanceof JsonProcessingException) {
++                JsonParser jp = _parser;
++                if (jp != null) {
++                    try {
++                        // Try to skip tokens until we find a matching END_OBJECT or END_ARRAY
++                        int depth = 1; // Start with 1 because we're already in an error state
++                        JsonToken t;
++                        while ((t = jp.nextToken()) != null) {
++                            if (t.isStructStart()) {
++                                depth++;
++                            } else if (t.isStructEnd()) {
++                                depth--;
++                            }
++                            if (depth == 0) {
++                                jp.clearCurrentToken();
++                                return (R) Boolean.TRUE;
++                            }
++                        }
++                    } catch (IOException e2) {
++                        // If another IOException occurs during recovery, just re-throw the original
++                    }
++                }
++            }
++        }
++        throw new RuntimeJsonMappingException(e.getMessage(), e);
++    }
+@@ -1,1 +1,1 @@
+-        _readRecoveryEnabled = config.isEnabled(DeserializationFeature.READ_RECOVERY);
++        _readRecoveryEnabled = (config == null) ? false : config.isEnabled(DeserializationFeature.READ_RECOVERY);
+@@ -1,23 +1,21 @@
+-    @Override
+-    public boolean hasNext()
+-    {
+-        try {
+-            return hasNextValue();
+-        } catch (JsonMappingException e) {
+-            return (Boolean) _handleMappingException(e);
+-        } catch (IOException e) {
+-            return (Boolean) _handleIOException(e);
+-        }
+-    }
+-    
+-    @Override
+-    public T next()
+-    {
+-        try {
+-            return nextValue();
+-        } catch (JsonMappingException e) {
+-            throw new RuntimeJsonMappingException(e.getMessage(), e);
+-        } catch (IOException e) {
+-            throw new RuntimeException(e.getMessage(), e);
+-        }
+-    }
++    @Override
++    public boolean hasNext()
++    {
++        try {
++            return hasNextValue();
++        } catch (IOException e) {
++            return (Boolean) _handleIOException(e);
++        }
++    }
++    
++    @Override
++    public T next()
++    {
++        try {
++            return nextValue();
++        } catch (JsonMappingException e) {
++            return (T) _handleMappingException(e);
++        } catch (IOException e) {
++            throw new RuntimeException(e.getMessage(), e);
++        }
++    }
+@@ -1,17 +1,18 @@
+-    @Override
+-    public T next()
+-    {
+-        try {
+-            return nextValue();
+-        } catch (JsonMappingException e) {
+-            T value = _handleMappingException(e);
+-            if (value != null) {
+-                return value;
+-            }
+-            // If recovery returns null, it means we skipped the problematic element
+-            // and should try to find the next valid one.
+-            return next();
+-        } catch (IOException e) {
+-            throw new RuntimeException(e.getMessage(), e);
+-        }
+-    }
++    @Override
++    public T next()
++    {
++        try {
++            return nextValue();
++        } catch (JsonMappingException e) {
++            T value = _handleMappingException(e);
++            if (value != null) {
++                return value;
++            }
++            // If recovery returns null, it means we skipped the problematic element
++            // and should try to find the next valid one.
++            _hasNextChecked = false; // Force re-check for the next element
++            return nextValue(); // Try to read the next value
++        } catch (IOException e) {
++            throw new RuntimeException(e.getMessage(), e);
++        }
++    }
+@@ -1,18 +1,22 @@
+-    @Override
+-    public T next()
+-    {
+-        try {
+-            return nextValue();
+-        } catch (JsonMappingException e) {
+-            T value = _handleMappingException(e);
+-            if (value != null) {
+-                return value;
+-            }
+-            // If recovery returns null, it means we skipped the problematic element
+-            // and should try to find the next valid one.
+-            _hasNextChecked = false; // Force re-check for the next element
+-            return nextValue(); // Try to read the next value
+-        } catch (IOException e) {
+-            throw new RuntimeException(e.getMessage(), e);
+-        }
+-    }
++    @Override
++    public T next()
++    {
++        try {
++            return nextValue();
++        } catch (JsonMappingException e) {
++            T value = _handleMappingException(e);
++            if (value != null) {
++                return value;
++            }
++            // If recovery returns null, it means we skipped the problematic element
++            // and should try to find the next valid one.
++            _hasNextChecked = false; // Force re-check for the next element
++            try {
++                return nextValue(); // Try to read the next value
++            } catch (IOException e2) {
++                throw new RuntimeException(e2.getMessage(), e2);
++            }
++        } catch (IOException e) {
++            throw new RuntimeException(e.getMessage(), e);
++        }
++    }
+@@ -1,22 +1,11 @@
+-    @Override
+-    public T next()
+-    {
+-        try {
+-            return nextValue();
+-        } catch (JsonMappingException e) {
+-            T value = _handleMappingException(e);
+-            if (value != null) {
+-                return value;
+-            }
+-            // If recovery returns null, it means we skipped the problematic element
+-            // and should try to find the next valid one.
+-            _hasNextChecked = false; // Force re-check for the next element
+-            try {
+-                return nextValue(); // Try to read the next value
+-            } catch (IOException e2) {
+-                throw new RuntimeException(e2.getMessage(), e2);
+-            }
+-        } catch (IOException e) {
+-            throw new RuntimeException(e.getMessage(), e);
+-        }
+-    }
++    @Override
++    public T next()
++    {
++        try {
++            return nextValue();
++        } catch (JsonMappingException e) {
++            throw new RuntimeJsonMappingException(e.getMessage(), e);
++        } catch (IOException e) {
++            throw new RuntimeException(e.getMessage(), e);
++        }
++    }
+@@ -1,9 +1,22 @@
+-    @Override
+-    public boolean hasNext()
+-    {
+-        try {
+-            return hasNextValue();
+-        } catch (IOException e) {
+-            return (Boolean) _handleIOException(e);
+-        }
+-    }
++    @Override
++    public boolean hasNext()
++    {
++        try {
++            return hasNextValue();
++        } catch (JsonMappingException e) {
++            // If recovery is enabled, try to recover
++            if (_readRecoveryEnabled) {
++                _handleMappingException(e);
++                // After recovery, re-check if there's a next value
++                _hasNextChecked = false; // Force re-check
++                try {
++                    return hasNextValue();
++                } catch (IOException e2) {
++                    throw new RuntimeException(e2.getMessage(), e2);
++                }
++            }
++            throw new RuntimeJsonMappingException(e.getMessage(), e);
++        } catch (IOException e) {
++            throw new RuntimeException(e.getMessage(), e);
++        }
++    }
+@@ -1,22 +1,24 @@
+-    @Override
+-    public boolean hasNext()
+-    {
+-        try {
+-            return hasNextValue();
+-        } catch (JsonMappingException e) {
+-            // If recovery is enabled, try to recover
+-            if (_readRecoveryEnabled) {
+-                _handleMappingException(e);
+-                // After recovery, re-check if there's a next value
+-                _hasNextChecked = false; // Force re-check
+-                try {
+-                    return hasNextValue();
+-                } catch (IOException e2) {
+-                    throw new RuntimeException(e2.getMessage(), e2);
+-                }
+-            }
+-            throw new RuntimeJsonMappingException(e.getMessage(), e);
+-        } catch (IOException e) {
+-            throw new RuntimeException(e.getMessage(), e);
+-        }
+-    }
++    @Override
++    public boolean hasNext()
++    {
++        try {
++            return hasNextValue();
++        } catch (JsonMappingException e) {
++            // If recovery is enabled, try to recover
++            if (_readRecoveryEnabled) {
++                if (_handleMappingException(e)) {
++                    // After successful recovery, re-check if there's a next value
++                    _hasNextChecked = false; // Force re-check
++                    try {
++                        return hasNextValue();
++                    } catch (IOException e2) {
++                        throw new RuntimeException(e2.getMessage(), e2);
++                    }
++                }
++                return false; // Recovery failed to find next element or reached end of stream
++            }
++            throw new RuntimeJsonMappingException(e.getMessage(), e);
++        } catch (IOException e) {
++            throw new RuntimeException(e.getMessage(), e);
++        }
++    }
+@@ -1,24 +1,24 @@
+-    @Override
+-    public boolean hasNext()
+-    {
+-        try {
+-            return hasNextValue();
+-        } catch (JsonMappingException e) {
+-            // If recovery is enabled, try to recover
+-            if (_readRecoveryEnabled) {
+-                if (_handleMappingException(e)) {
+-                    // After successful recovery, re-check if there's a next value
+-                    _hasNextChecked = false; // Force re-check
+-                    try {
+-                        return hasNextValue();
+-                    } catch (IOException e2) {
+-                        throw new RuntimeException(e2.getMessage(), e2);
+-                    }
+-                }
+-                return false; // Recovery failed to find next element or reached end of stream
+-            }
+-            throw new RuntimeJsonMappingException(e.getMessage(), e);
+-        } catch (IOException e) {
+-            return (Boolean) _handleIOException(e);
+-        }
+-    }
++    @Override
++    public boolean hasNext()
++    {
++        try {
++            return hasNextValue();
++        } catch (JsonMappingException e) {
++            // If recovery is enabled, try to recover
++            if (_readRecoveryEnabled) {
++                if (_handleMappingException(e)) {
++                    // After successful recovery, re-check if there's a next value
++                    _hasNextChecked = false; // Force re-check
++                    try {
++                        return hasNextValue();
++                    } catch (IOException e2) {
++                        throw new RuntimeException(e2.getMessage(), e2);
++                    }
++                }
++                return false; // Recovery failed to find next element or reached end of stream
++            }
++            throw new RuntimeJsonMappingException(e.getMessage(), e);
++        } catch (IOException e) {
++            return _handleIOException(e);
++        }
++    }
+@@ -1,3 +1,3 @@
+-    protected <R> R _handleIOException(IOException e) {
+-        throw new RuntimeException(e.getMessage(), e);
+-    }
++    protected boolean _handleIOException(IOException e) {
++        throw new RuntimeException(e.getMessage(), e);
++    }
+@@ -1,3 +1,3 @@
+-    protected boolean _handleIOException(IOException e) {
+-        throw new RuntimeException(e.getMessage(), e);
+-    }
++    protected <R> R _handleIOException(IOException e) {
++        throw new RuntimeException(e.getMessage(), e);
++    }
+@@ -1,24 +1,24 @@
+-    @Override
+-    public boolean hasNext()
+-    {
+-        try {
+-            return hasNextValue();
+-        } catch (JsonMappingException e) {
+-            // If recovery is enabled, try to recover
+-            if (_readRecoveryEnabled) {
+-                if (_handleMappingException(e)) {
+-                    // After successful recovery, re-check if there's a next value
+-                    _hasNextChecked = false; // Force re-check
+-                    try {
+-                        return hasNextValue();
+-                    } catch (IOException e2) {
+-                        throw new RuntimeException(e2.getMessage(), e2);
+-                    }
+-                }
+-                return false; // Recovery failed to find next element or reached end of stream
+-            }
+-            throw new RuntimeJsonMappingException(e.getMessage(), e);
+-        } catch (IOException e) {
+-            return _handleIOException(e);
+-        }
+-    }
++    @Override
++    public boolean hasNext()
++    {
++        try {
++            return hasNextValue();
++        } catch (JsonMappingException e) {
++            // If recovery is enabled, try to recover
++            if (_readRecoveryEnabled) {
++                if (_handleMappingException(e)) {
++                    // After successful recovery, re-check if there's a next value
++                    _hasNextChecked = false; // Force re-check
++                    try {
++                        return hasNextValue();
++                    } catch (IOException e2) {
++                        throw new RuntimeException(e2.getMessage(), e2);
++                    }
++                }
++                return false; // Recovery failed to find next element or reached end of stream
++            }
++            throw new RuntimeJsonMappingException(e.getMessage(), e);
++        } catch (IOException e) {
++            throw new RuntimeException(e.getMessage(), e);
++        }
++    }
+@@ -1,24 +1,11 @@
+-    @Override
+-    public boolean hasNext()
+-    {
+-        try {
+-            return hasNextValue();
+-        } catch (JsonMappingException e) {
+-            // If recovery is enabled, try to recover
+-            if (_readRecoveryEnabled) {
+-                if (_handleMappingException(e)) {
+-                    // After successful recovery, re-check if there's a next value
+-                    _hasNextChecked = false; // Force re-check
+-                    try {
+-                        return hasNextValue();
+-                    } catch (IOException e2) {
+-                        throw new RuntimeException(e2.getMessage(), e2);
+-                    }
+-                }
+-                return false; // Recovery failed to find next element or reached end of stream
+-            }
+-            throw new RuntimeJsonMappingException(e.getMessage(), e);
+-        } catch (IOException e) {
+-            throw new RuntimeException(e.getMessage(), e);
+-        }
+-    }
++    @Override
++    public boolean hasNext()
++    {
++        try {
++            return hasNextValue();
++        } catch (JsonMappingException e) {
++            return (Boolean) _handleMappingException(e);
++        } catch (IOException e) {
++            return (Boolean) _handleIOException(e);
++        }
++    }
+@@ -1,11 +1,20 @@
+-    @Override
+-    public T next()
+-    {
+-        try {
+-            return nextValue();
+-        } catch (JsonMappingException e) {
+-            throw new RuntimeJsonMappingException(e.getMessage(), e);
+-        } catch (IOException e) {
+-            throw new RuntimeException(e.getMessage(), e);
+-        }
+-    }
++    @Override
++    public T next()
++    {
++        try {
++            return nextValue();
++        } catch (JsonMappingException e) {
++            if (_readRecoveryEnabled) {
++                Object result = _handleMappingException(e);
++                if (result != null) {
++                    // If recovery was successful, try to get the next value
++                    return next();
++                }
++                // If recovery returned null, it means end of stream was reached or no more elements
++                return _throwNoSuchElement();
++            }
++            throw new RuntimeJsonMappingException(e.getMessage(), e);
++        } catch (IOException e) {
++            throw new RuntimeException(e.getMessage(), e);
++        }
++    }
+@@ -1,20 +1,20 @@
+-    @Override
+-    public T next()
+-    {
+-        try {
+-            return nextValue();
+-        } catch (JsonMappingException e) {
+-            if (_readRecoveryEnabled) {
+-                Object result = _handleMappingException(e);
+-                if (result != null) {
+-                    // If recovery was successful, try to get the next value
+-                    return next();
+-                }
+-                // If recovery returned null, it means end of stream was reached or no more elements
+-                return _throwNoSuchElement();
+-            }
+-            throw new RuntimeJsonMappingException(e.getMessage(), e);
+-        } catch (IOException e) {
+-            throw new RuntimeException(e.getMessage(), e);
+-        }
+-    }
++    @Override
++    public T next()
++    {
++        try {
++            return nextValue();
++        } catch (JsonMappingException e) {
++            if (_readRecoveryEnabled) {
++                Object result = _handleMappingException(e);
++                if (result == Boolean.TRUE) {
++                    // After successful recovery, try to get the next value
++                    return next();
++                }
++                // If recovery returned Boolean.FALSE, it means end of stream was reached or no more elements
++                return _throwNoSuchElement();
++            }
++            throw new RuntimeJsonMappingException(e.getMessage(), e);
++        } catch (IOException e) {
++            throw new RuntimeException(e.getMessage(), e);
++        }
++    }
+@@ -1,20 +1,22 @@
+-    @Override
+-    public T next()
+-    {
+-        try {
+-            return nextValue();
+-        } catch (JsonMappingException e) {
+-            if (_readRecoveryEnabled) {
+-                Object result = _handleMappingException(e);
+-                if (result == Boolean.TRUE) {
+-                    // After successful recovery, try to get the next value
+-                    return next();
+-                }
+-                // If recovery returned Boolean.FALSE, it means end of stream was reached or no more elements
+-                return _throwNoSuchElement();
+-            }
+-            throw new RuntimeJsonMappingException(e.getMessage(), e);
+-        } catch (IOException e) {
+-            throw new RuntimeException(e.getMessage(), e);
+-        }
+-    }
++    @Override
++    public T next()
++    {
++        for (;;) {
++            try {
++                return nextValue();
++            } catch (JsonMappingException e) {
++                if (_readRecoveryEnabled) {
++                    Object result = _handleMappingException(e);
++                    if (result == Boolean.TRUE) {
++                        // After successful recovery, continue loop to get the next value
++                        continue;
++                    }
++                    // If recovery returned Boolean.FALSE, it means end of stream was reached or no more elements
++                    return _throwNoSuchElement();
++                }
++                throw new RuntimeJsonMappingException(e.getMessage(), e);
++            } catch (IOException e) {
++                throw new RuntimeException(e.getMessage(), e);
++            }
++        }
++    }
+
+--- a/src/main/java/com/fasterxml/jackson/databind/ObjectReader.java
++++ b/src/main/java/com/fasterxml/jackson/databind/ObjectReader.java
+@@ -1,7 +1,7 @@
+-    protected <T> MappingIterator<T> _newIterator(JavaType valueType,
+-            JsonParser parser, DeserializationContext ctxt,
+-            JsonDeserializer<?> deser, boolean parserManaged, Object valueToUpdate)
+-    {
+-        return new MappingIterator<T>(valueType, parser, ctxt,
+-                deser, parserManaged, valueToUpdate);
+-    }
++    protected <T> MappingIterator<T> _newIterator(JavaType valueType,
++            JsonParser parser, DeserializationContext ctxt,
++            JsonDeserializer<?> deser, boolean parserManaged, Object valueToUpdate)
++    {
++        return new MappingIterator<T>(valueType, parser, ctxt,
++                deser, parserManaged, valueToUpdate, _config);
++    }

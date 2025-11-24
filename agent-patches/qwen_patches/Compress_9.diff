@@ -1,0 +1,76 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
+index 15beec89..304cb328 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
+@@ -1,5 +1,4 @@
+-/*
+- * Licensed to the Apache Software Foundation (ASF) under one
++/* Licensed to the Apache Software Foundation (ASF) under one
+  * or more contributor license agreements.  See the NOTICE file
+  * distributed with this work for additional information
+  * regarding copyright ownership.  The ASF licenses this file
+@@ -104,9 +103,6 @@ public class TarArchiveOutputStream extends ArchiveOutputStream {
+         this.longFileMode = longFileMode;
+     }
+ 
+-
+-
+-
+     /**
+      * Ends the TAR archive without closing the underlying OutputStream.
+      * 
+@@ -270,16 +266,18 @@ public class TarArchiveOutputStream extends ArchiveOutputStream {
+                                   + "' bytes exceeds size in header of '"
+                                   + currSize + "' bytes for entry '"
+                                   + currName + "'");
+-
+-            //
+-            // We have to deal with assembly!!!
+-            // The programmer can be writing little 32 byte chunks for all
+-            // we know, and we must assemble complete records for writing.
+-            // REVIEW Maybe this should be in TarBuffer? Could that help to
+-            // eliminate some of the buffer copying.
+-            //
+         }
+ 
++        // 
++        // We have to deal with assembly!!!
++        // The programmer can be writing little 32 byte chunks for all
++        // we know, and we must assemble complete records for writing.
++        // REVIEW Maybe this should be in TarBuffer? Could that help to
++        // eliminate some of the buffer copying.
++        // 
++        
++        count(numToWrite);
++        
+         if (assemLen > 0) {
+             if ((assemLen + numToWrite) >= recordBuf.length) {
+                 int aLen = recordBuf.length - assemLen;
+@@ -309,6 +307,7 @@ public class TarArchiveOutputStream extends ArchiveOutputStream {
+         // o An empty "assemble" buffer.
+         // o No bytes to write (numToWrite == 0)
+         //
++
+         while (numToWrite > 0) {
+             if (numToWrite < recordBuf.length) {
+                 System.arraycopy(wBuf, wOffset, assemBuf, assemLen,
+@@ -327,7 +326,7 @@ public class TarArchiveOutputStream extends ArchiveOutputStream {
+             numToWrite -= num;
+             wOffset += num;
+         }
+-        count(numToWrite);
++        // count(numToWrite); // Removed from end as per patch
+     }
+ 
+     /**
+@@ -356,4 +355,4 @@ public class TarArchiveOutputStream extends ArchiveOutputStream {
+         }
+         return new TarArchiveEntry(inputFile, entryName);
+     }
+-}
++}
+\ No newline at end of file
+
+
+# Untracked source files (not included in patch):
++ src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java.backup

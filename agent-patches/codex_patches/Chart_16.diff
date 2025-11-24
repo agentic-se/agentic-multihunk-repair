@@ -1,0 +1,168 @@
+diff --git a/source/org/jfree/data/category/DefaultIntervalCategoryDataset.java b/source/org/jfree/data/category/DefaultIntervalCategoryDataset.java
+index 2efdfcb..57f3f1c 100644
+--- a/source/org/jfree/data/category/DefaultIntervalCategoryDataset.java
++++ b/source/org/jfree/data/category/DefaultIntervalCategoryDataset.java
+@@ -237,16 +237,19 @@ public class DefaultIntervalCategoryDataset extends AbstractSeriesDataset
+      * @see #getRowIndex(Comparable)
+      * @see #getSeriesKey(int)
+      */
+-    public int getSeriesIndex(Comparable seriesKey) {
+-        int result = -1;
+-        for (int i = 0; i < this.seriesKeys.length; i++) {
+-            if (seriesKey.equals(this.seriesKeys[i])) {
+-                result = i;
+-                break;
+-            }
+-        }
+-        return result;
+-    }
++    public int getSeriesIndex(Comparable seriesKey) {
++        int result = -1;
++        if (this.seriesKeys == null) {
++            return -1;
++        }
++        for (int i = 0; i < this.seriesKeys.length; i++) {
++            if (seriesKey.equals(this.seriesKeys[i])) {
++                result = i;
++                break;
++            }
++        }
++        return result;
++    }
+ 
+     /**
+      * Returns the name of the specified series.
+@@ -331,24 +334,32 @@ public class DefaultIntervalCategoryDataset extends AbstractSeriesDataset
+      * @see #getRowKeys()
+      * @see #setSeriesKeys(Comparable[])
+      */
+-    public void setCategoryKeys(Comparable[] categoryKeys) {
+-        if (categoryKeys == null) {
+-            throw new IllegalArgumentException("Null 'categoryKeys' argument.");
+-        }
+-        if (categoryKeys.length != this.startData[0].length) {
+-            throw new IllegalArgumentException(
+-                    "The number of categories does not match the data.");
+-        }
+-        for (int i = 0; i < categoryKeys.length; i++) {
+-            if (categoryKeys[i] == null) {
+-                throw new IllegalArgumentException(
+-                    "DefaultIntervalCategoryDataset.setCategoryKeys(): "
+-                    + "null category not permitted.");
+-            }
+-        }
+-        this.categoryKeys = categoryKeys;
+-        fireDatasetChanged();
+-    }
++    public void setCategoryKeys(Comparable[] categoryKeys) {
++        if (categoryKeys == null) {
++            throw new IllegalArgumentException("Null 'categoryKeys' argument.");
++        }
++        int currentCount = getCategoryCount();
++        if (currentCount > 0) {
++            if (categoryKeys.length != currentCount) {
++                throw new IllegalArgumentException(
++                        "The number of categories does not match the data.");
++            }
++        } else {
++            if (categoryKeys.length != 0) {
++                throw new IllegalArgumentException(
++                        "The number of categories does not match the data.");
++            }
++        }
++        for (int i = 0; i < categoryKeys.length; i++) {
++            if (categoryKeys[i] == null) {
++                throw new IllegalArgumentException(
++                    "DefaultIntervalCategoryDataset.setCategoryKeys(): "
++                    + "null category not permitted.");
++            }
++        }
++        this.categoryKeys = categoryKeys;
++        fireDatasetChanged();
++    }
+ 
+     /**
+      * Returns the data value for one category in a series.
+@@ -569,16 +580,19 @@ public class DefaultIntervalCategoryDataset extends AbstractSeriesDataset
+      * 
+      * @see #getColumnIndex(Comparable)
+      */
+-    public int getCategoryIndex(Comparable category) {
+-        int result = -1;
+-        for (int i = 0; i < this.categoryKeys.length; i++) {
+-            if (category.equals(this.categoryKeys[i])) {
+-                result = i;
+-                break;
+-            }
+-        }
+-        return result;
+-    }
++    public int getCategoryIndex(Comparable category) {
++        int result = -1;
++        if (this.categoryKeys == null) {
++            return -1;
++        }
++        for (int i = 0; i < this.categoryKeys.length; i++) {
++            if (category.equals(this.categoryKeys[i])) {
++                result = i;
++                break;
++            }
++        }
++        return result;
++    }
+ 
+     /**
+      * Generates an array of keys, by appending a space plus an integer
+@@ -686,9 +700,9 @@ public class DefaultIntervalCategoryDataset extends AbstractSeriesDataset
+      * @see #getCategoryCount()
+      * @see #getRowCount()
+      */
+-    public int getColumnCount() {
+-        return this.categoryKeys.length;
+-    }
++    public int getColumnCount() {
++        return (this.categoryKeys != null) ? this.categoryKeys.length : 0;
++    }
+ 
+     /**
+      * Returns the number of series in the dataset (possibly zero).
+@@ -698,9 +712,9 @@ public class DefaultIntervalCategoryDataset extends AbstractSeriesDataset
+      * @see #getSeriesCount()
+      * @see #getColumnCount()
+      */
+-    public int getRowCount() {
+-        return this.seriesKeys.length;
+-    }
++    public int getRowCount() {
++        return (this.seriesKeys != null) ? this.seriesKeys.length : 0;
++    }
+     
+     /**
+      * Tests this dataset for equality with an arbitrary object.
+@@ -742,15 +756,17 @@ public class DefaultIntervalCategoryDataset extends AbstractSeriesDataset
+      * @throws CloneNotSupportedException if there is a problem cloning the
+      *         dataset.
+      */
+-    public Object clone() throws CloneNotSupportedException {
+-        DefaultIntervalCategoryDataset clone 
+-                = (DefaultIntervalCategoryDataset) super.clone();
+-        clone.categoryKeys = (Comparable[]) this.categoryKeys.clone();
+-        clone.seriesKeys = (Comparable[]) this.seriesKeys.clone();
+-        clone.startData = clone(this.startData);
+-        clone.endData = clone(this.endData);
+-        return clone;
+-    }
++    public Object clone() throws CloneNotSupportedException {
++        DefaultIntervalCategoryDataset clone 
++                = (DefaultIntervalCategoryDataset) super.clone();
++        clone.categoryKeys = (this.categoryKeys != null)
++                ? (Comparable[]) this.categoryKeys.clone() : null;
++        clone.seriesKeys = (this.seriesKeys != null)
++                ? (Comparable[]) this.seriesKeys.clone() : null;
++        clone.startData = clone(this.startData);
++        clone.endData = clone(this.endData);
++        return clone;
++    }
+     
+     /**
+      * Tests two double[][] arrays for equality.

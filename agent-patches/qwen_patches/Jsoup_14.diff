@@ -1,0 +1,16 @@
+diff --git a/src/main/java/org/jsoup/parser/TreeBuilderState.java b/src/main/java/org/jsoup/parser/TreeBuilderState.java
+index 0b36067..0297e8a 100644
+--- a/src/main/java/org/jsoup/parser/TreeBuilderState.java
++++ b/src/main/java/org/jsoup/parser/TreeBuilderState.java
+@@ -498,6 +498,11 @@ public enum TreeBuilderState {
+                         tb.markInsertionMode();
+                         tb.framesetOk(false);
+                         tb.transition(Text);
++                    } else if (name.equals("title")) {
++                        tb.insert(startTag);
++                        tb.tokeniser.transition(TokeniserState.Rcdata);
++                        tb.markInsertionMode();
++                        tb.transition(Text);
+                     } else if (name.equals("xmp")) {
+                         if (tb.inButtonScope("p")) {
+                             tb.process(new Token.EndTag("p"));

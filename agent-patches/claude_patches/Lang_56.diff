@@ -1,0 +1,37 @@
+diff --git a/src/java/org/apache/commons/lang/time/FastDateFormat.java b/src/java/org/apache/commons/lang/time/FastDateFormat.java
+index 89d8073e..eb1edfa2 100644
+--- a/src/java/org/apache/commons/lang/time/FastDateFormat.java
++++ b/src/java/org/apache/commons/lang/time/FastDateFormat.java
+@@ -137,7 +137,7 @@ public class FastDateFormat extends Format {
+     /**
+      * The parsed rules.
+      */
+-    private Rule[] mRules;
++    private transient Rule[] mRules;
+     /**
+      * The estimated maximum length.
+      */
+@@ -1019,7 +1019,18 @@ public class FastDateFormat extends Format {
+ 
+     // Serializing
+     //-----------------------------------------------------------------------
+-    
++    /**
++     * Performs the deserialization and reinitializes the transient properties.
++     *
++     * @param in the ObjectInputStream from which the object is being deserialized
++     * @throws IOException if an I/O error occurs
++     * @throws ClassNotFoundException if the class of a serialized object cannot be found
++     */
++    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
++        in.defaultReadObject();
++        init();
++    }
++
+     // Rules
+     //-----------------------------------------------------------------------
+     /**
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

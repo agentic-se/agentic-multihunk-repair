@@ -1,0 +1,104 @@
+diff --git a/src/main/java/org/jsoup/nodes/XmlDeclaration.java b/src/main/java/org/jsoup/nodes/XmlDeclaration.java
+index 24a9f16..2f0b075 100644
+--- a/src/main/java/org/jsoup/nodes/XmlDeclaration.java
++++ b/src/main/java/org/jsoup/nodes/XmlDeclaration.java
+@@ -44,19 +44,17 @@ public class XmlDeclaration extends Node {
+      */
+     public String getWholeDeclaration() {
+         final String decl = this.name;
+-        if(decl.equals("xml") && attributes.size() > 1 ) {
+-            StringBuilder sb = new StringBuilder(decl);
+-            final String version = attributes.get("version");
+-            if( version != null ) {
+-                sb.append(" version=\"").append(version).append("\"");
+-            }
+-            final String encoding = attributes.get("encoding");
+-            if( encoding != null ) {
+-                sb.append(" encoding=\"").append(encoding).append("\"");
++        if (decl.equals("xml")) {
++            // For XML declarations, return only attributes as a string (without leading space or the name)
++            StringBuilder sb = new StringBuilder();
++            boolean first = true;
++            for (Attribute attribute : attributes.asList()) {
++                if (!first) sb.append(' ');
++                sb.append(attribute.getKey()).append("=\"").append(attribute.getValue()).append("\"");
++                first = false;
+             }
+             return sb.toString();
+-        }
+-        else {
++        } else {
+             return this.name;
+         }
+     }
+@@ -65,8 +63,8 @@ public class XmlDeclaration extends Node {
+         accum
+             .append("<")
+             .append(isProcessingInstruction ? "!" : "?")
+-                .append(getWholeDeclaration())
+-            .append(">");
++            .append(declarationNameAndAttributes())
++            .append(isProcessingInstruction ? ">" : "?>");
+     }
+ 
+ 	void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {}
+@@ -75,4 +73,16 @@ public class XmlDeclaration extends Node {
+     public String toString() {
+         return outerHtml();
+     }
++
++    // Helper to include the name for non-xml declarations, and the name 'xml' for xml PIs
++    private String declarationNameAndAttributes() {
++        if (name.equals("xml")) {
++            String attrs = getWholeDeclaration();
++            if (attrs.length() > 0)
++                return "xml " + attrs;
++            else
++                return "xml";
++        }
++        return getWholeDeclaration();
++    }
+ }
+diff --git a/src/main/java/org/jsoup/parser/XmlTreeBuilder.java b/src/main/java/org/jsoup/parser/XmlTreeBuilder.java
+index 99807fc..9754a05 100644
+--- a/src/main/java/org/jsoup/parser/XmlTreeBuilder.java
++++ b/src/main/java/org/jsoup/parser/XmlTreeBuilder.java
+@@ -74,7 +74,37 @@ public class XmlTreeBuilder extends TreeBuilder {
+             String data = comment.getData();
+             if (data.length() > 1 && (data.startsWith("!") || data.startsWith("?"))) {
+                 String declaration = data.substring(1);
+-                insert = new XmlDeclaration(declaration, comment.baseUri(), data.startsWith("!"));
++                boolean isProcessingInstruction = data.startsWith("!");
++                // Remove trailing '?' from processing instructions like <?xml ...?>
++                if (declaration.endsWith("?"))
++                    declaration = declaration.substring(0, declaration.length() - 1);
++                declaration = declaration.trim();
++
++                TokenQueue tq = new TokenQueue(declaration);
++                String name = tq.consumeWord();
++                XmlDeclaration decl = new XmlDeclaration(name, comment.baseUri(), isProcessingInstruction);
++                // parse attributes
++                while (!tq.isEmpty()) {
++                    tq.consumeWhitespace();
++                    String key = tq.consumeAttributeKey();
++                    if (key.length() == 0)
++                        break;
++                    tq.consumeWhitespace();
++                    String value = "";
++                    if (tq.matchChomp("=")) {
++                        tq.consumeWhitespace();
++                        char quote = tq.peek();
++                        if (quote == '"' || quote == '\'') {
++                            tq.consume(); // consume quote
++                            value = tq.consumeTo(String.valueOf(quote));
++                            tq.matchChomp(String.valueOf(quote));
++                        } else {
++                            value = tq.consumeToAny(" ", "\t", "\n", "\r");
++                        }
++                    }
++                    decl.attr(key, value);
++                }
++                insert = decl;
+             }
+         }
+         insertNode(insert);

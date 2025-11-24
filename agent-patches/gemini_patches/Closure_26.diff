@@ -1,0 +1,506 @@
+--- a/run_bug_exposing_tests.sh
++++ b/run_bug_exposing_tests.sh
+@@ -1,6 +1,4 @@
+-for cls in $(defects4j export -p tests.trigger | cut -d: -f1 | sort -u); do
+-  echo "Running $cls" | tee -a "$LOGFILE"
+-  java -cp "$CP" org.junit.runner.JUnitCore "$cls" >> "$LOGFILE" 2>&1
+-done
+-
+-echo "Log saved to: $LOGFILE"
++for cls in $(defects4j export -p tests.trigger | cut -d: -f1 | sort -u); do
++  echo "Running $cls"
++  java -cp "$CP" org.junit.runner.JUnitCore "$cls"
++done
+@@ -1,4 +1,6 @@
+-for cls in $(defects4j export -p tests.trigger | cut -d: -f1 | sort -u); do
+-  echo "Running $cls"
+-  java -cp "$CP" org.junit.runner.JUnitCore "$cls"
+-done
++for cls in $(defects4j export -p tests.trigger | cut -d: -f1 | sort -u); do
++  echo "Running $cls" | tee -a "$LOGFILE"
++  java -cp "$CP" org.junit.runner.JUnitCore "$cls" >> "$LOGFILE" 2>&1
++done
++
++echo "Log saved to: $LOGFILE"
+
+--- a/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
++++ b/src/com/google/javascript/jscomp/ProcessCommonJSModules.java
+@@ -1,23 +1,31 @@
+-  private class ProcessCommonJsModulesCallback extends
+-      AbstractPostOrderCallback {
+-
+-    private int scriptNodeCount = 0;
+-
+-    @Override
+-    public void visit(NodeTraversal t, Node n, Node parent) {
+-      if (n.isCall() && n.getChildCount() == 2 &&
+-          "require".equals(n.getFirstChild().getQualifiedName()) &&
+-          n.getChildAtIndex(1).isString()) {
+-        visitRequireCall(t, n, parent);
+-      }
+-
+-      if (n.isScript()) {
+-        scriptNodeCount++;
+-        visitScript(t, n);
+-      }
+-
+-      if (n.isGetProp() &&
+-          "module.exports".equals(n.getQualifiedName())) {
+-        visitModuleExports(n);
+-      }
+-    }
++  private class ProcessCommonJsModulesCallback extends
++      AbstractPostOrderCallback {
++
++    private int scriptNodeCount = 0;
++    private Node moduleExportsAssignmentValue = null;
++
++    @Override
++    public void visit(NodeTraversal t, Node n, Node parent) {
++      if (n.isCall() && n.getChildCount() == 2 &&
++          "require".equals(n.getFirstChild().getQualifiedName()) &&
++          n.getChildAtIndex(1).isString()) {
++        visitRequireCall(t, n, parent);
++      }
++
++      if (n.isScript()) {
++        scriptNodeCount++;
++        visitScript(t, n);
++      }
++
++      if (n.isGetProp() &&
++          "module.exports".equals(n.getQualifiedName())) {
++        visitModuleExports(n);
++      }
++
++      if (n.isAssign() && n.getFirstChild().isGetProp() &&
++          "module.exports".equals(n.getFirstChild().getQualifiedName())) {
++        moduleExportsAssignmentValue = n.getLastChild().detachFromParent();
++        parent.removeChild(n);
++        compiler.reportCodeChange();
++      }
++    }
+@@ -1,27 +1,34 @@
+-    private void visitScript(NodeTraversal t, Node script) {
+-      Preconditions.checkArgument(scriptNodeCount == 1,
+-          "ProcessCommonJSModules supports only one invocation per " +
+-          "CompilerInput / script node");
+-      String moduleName = guessCJSModuleName(normalizeSourceName(script
+-          .getSourceFileName()));
+-      script.addChildToFront(IR.var(IR.name(moduleName), IR.objectlit())
+-          .copyInformationFromForTree(script));
+-      if (reportDependencies) {
+-        CompilerInput ci = t.getInput();
+-        ci.addProvide(moduleName);
+-        JSModule m = new JSModule(moduleName);
+-        m.addAndOverrideModule(ci);
+-        module = m;
+-      }
+-      script.addChildToFront(IR.exprResult(
+-          IR.call(IR.getprop(IR.name("goog"), IR.string("provide")),
+-              IR.string(moduleName))).copyInformationFromForTree(script));
+-
+-      emitOptionalModuleExportsOverride(script, moduleName);
+-
+-      // Rename vars to not conflict in global scope.
+-      NodeTraversal.traverse(compiler, script, new SuffixVarsCallback(
+-          moduleName));
+-
+-      compiler.reportCodeChange();
+-    }
++    private void visitScript(NodeTraversal t, Node script) {
++      Preconditions.checkArgument(scriptNodeCount == 1,
++          "ProcessCommonJSModules supports only one invocation per " +
++          "CompilerInput / script node");
++      String moduleName = guessCJSModuleName(normalizeSourceName(script
++          .getSourceFileName()));
++
++      Node moduleVar;
++      if (moduleExportsAssignmentValue != null) {
++        moduleVar = IR.var(IR.name(moduleName), moduleExportsAssignmentValue)
++            .copyInformationFromForTree(script);
++      } else {
++        moduleVar = IR.var(IR.name(moduleName), IR.objectlit())
++            .copyInformationFromForTree(script);
++      }
++      script.addChildToFront(moduleVar);
++
++      if (reportDependencies) {
++        CompilerInput ci = t.getInput();
++        ci.addProvide(moduleName);
++        JSModule m = new JSModule(moduleName);
++        m.addAndOverrideModule(ci);
++        module = m;
++      }
++      script.addChildToFront(IR.exprResult(
++          IR.call(IR.getprop(IR.name("goog"), IR.string("provide")),
++              IR.string(moduleName))).copyInformationFromForTree(script));
++
++      // Rename vars to not conflict in global scope.
++      NodeTraversal.traverse(compiler, script, new SuffixVarsCallback(
++          moduleName));
++
++      compiler.reportCodeChange();
++    }
+@@ -1,16 +1,1 @@
+-    /**
+-     * Emit <code>if (moduleName.module$exports) {
+-     *    moduleName = moduleName.module$export;
+-     * }</code> at end of file.
+-     */
+-    private void emitOptionalModuleExportsOverride(Node script,
+-        String moduleName) {
+-
+-      Node moduleExportsProp = IR.getprop(IR.name(moduleName),
+-          IR.string("module$exports"));
+-      script.addChildToBack(IR.ifNode(
+-          moduleExportsProp,
+-          IR.block(IR.exprResult(IR.assign(IR.name(moduleName),
+-              moduleExportsProp.cloneTree())))).copyInformationFromForTree(
+-          script));
+-    }
++
+@@ -1,3 +1,20 @@
+-    /**
+-     * Rewrite module.exports to moduleName.module$exports.
+-     */
++    /**
++     * Emit <code>if (moduleName.module$exports) {
++     *    moduleName = moduleName.module$export;
++     * }</code> at end of file.
++     */
++    private void emitOptionalModuleExportsOverride(Node script,
++        String moduleName) {
++
++      Node moduleExportsProp = IR.getprop(IR.name(moduleName),
++          IR.string("module$exports"));
++      script.addChildToBack(IR.ifNode(
++          moduleExportsProp,
++          IR.block(IR.exprResult(IR.assign(IR.name(moduleName),
++              moduleExportsProp.cloneTree())))).copyInformationFromForTree(
++          script));
++    }
++
++    /**
++     * Rewrite module.exports to moduleName.module$exports.
++     */
+@@ -1,1 +1,2 @@
+-    private int scriptNodeCount = 0;
++    private int scriptNodeCount = 0;
++    private Node moduleExportsAssignmentValue = null;
+@@ -1,3 +1,2 @@
+-    private int scriptNodeCount = 0;
+-    private Node moduleExportsAssignmentValue = null;
+-    private Node moduleExportsAssignmentValue = null;
++    private int scriptNodeCount = 0;
++    private Node moduleExportsAssignmentValue = null;
+
+--- a/test/com/google/javascript/jscomp/ProcessCommonJSModulesTest.java
++++ b/test/com/google/javascript/jscomp/ProcessCommonJSModulesTest.java
+@@ -1,7 +1,4 @@
+-        "goog.provide('module$test');" +
+-        "var module$test = {};" +
+-        "goog.require('module$name');" +
+-        "var name$$module$test = module$name;" +
+-        "module$test.module$exports = function() {};" +
+-        "if(module$test.module$exports)" +
+-        "module$test=module$test.module$exports");
++        "goog.provide('module$test');" +
++        "var module$test = function() {};" +
++        "goog.require('module$name');" +
++        "var name$$module$test = module$name;");
+@@ -1,4 +1,4 @@
+-        "goog.provide('module$test');" +
+-        "var module$test = function() {};" +
+-        "goog.require('module$name');" +
+-        "var name$module$test = module$name;");
++        "goog.provide('module$test');" +
++        "var module$test = function() {};" +
++        "goog.require('module$name');" +
++        "var name$$module$test = module$name;");
+@@ -1,18 +1,21 @@
+-  public void testExports() {
+-    setFilename("test");
+-    test(
+-        "var name = require('name');" +
+-        "exports.foo = 1;",
+-        "goog.provide('module$test');" +
+-        "var module$test = {};" +
+-        "goog.require('module$name');" +
+-        "var name$$module$test = module$name;" +
+-        "module$test.foo = 1;");
+-    test(
+-        "var name = require('name');" +
+-        "module.exports = function() {};",
+-        "goog.provide('module$test');" +
+-        "var module$test = function() {};" +
+-        "goog.require('module$name');" +
+-        "var name$$module$test = module$name;");
+-  }
++  public void testExports() {
++    setFilename("test");
++    test(
++        "var name = require('name');" +
++        "exports.foo = 1;",
++        "goog.provide('module$test');" +
++        "var module$test = {};" +
++        "goog.require('module$name');" +
++        "var name$$module$test = module$name;" +
++        "module$test.foo = 1;");
++    test(
++        "var name = require('name');" +
++        "module.exports = function() {};",
++        "goog.provide('module$test');" +
++        "var module$test = {};" +
++        "goog.require('module$name');" +
++        "var name$$module$test = module$name;" +
++        "module$test.module$exports = function() {};" +
++        "if(module$test.module$exports)" +
++        "module$test=module$test.module$exports");
++  }
+@@ -1,10 +1,7 @@
+-    test(
+-        "var name = require('name');" +
+-        "module.exports = function() {};",
+-        "goog.provide('module$test');" +
+-        "var module$test = {};" +
+-        "goog.require('module$name');" +
+-        "var name$$module$test = module$name;" +
+-        "module$test.module$exports = function() {};" +
+-        "if(module$test.module$exports)" +
+-        "module$test=module$test.module$exports");
++    test(
++        "var name = require('name');" +
++        "module.exports = function() {};",
++        "goog.provide('module$test');" +
++        "var module$test = function() {};" +
++        "goog.require('module$name');" +
++        "var name$$module$test = module$name;");
+@@ -1,9 +1,9 @@
+-        "var name$module$test = module$name;" +
+-        "module$test.foo = 1;");
+-        test(
+-        "var name = require('name');" +
+-        "module.exports = function() {};",
+-        "goog.provide('module$test');" +
+-        "var module$test = function() {};" +
+-        "goog.require('module$name');" +
+-        "var name$module$test = module$name;");
++        "var name$$module$test = module$name;" +
++        "module$test.foo = 1;");
++    test(
++        "var name = require('name');" +
++        "module.exports = function() {};",
++        "goog.provide('module$test');" +
++        "var module$test = function() {};" +
++        "goog.require('module$name');" +
++        "var name$$module$test = module$name;");
+@@ -1,9 +1,9 @@
+-        "var name$module$test = module$name;" +
+-        "module$test.foo = 1;");
+-    test(
+-        "var name = require('name');" +
+-        "module.exports = function() {};",
+-        "goog.provide('module$test');" +
+-        "var module$test = function() {};" +
+-        "goog.require('module$name');" +
+-        "var name$module$test = module$name;");
++        "var name$$module$test = module$name;" +
++        "module$test.foo = 1;");
++    test(
++        "var name = require('name');" +
++        "module.exports = function() {};",
++        "goog.provide('module$test');" +
++        "var module$test = function() {};" +
++        "goog.require('module$name');" +
++        "var name$$module$test = module$name;");
+@@ -1,9 +1,9 @@
+-        "var name$module$test = module$name;" +
+-        "module$test.foo = 1;");
+-    test(
+-        "var name = require('name');" +
+-        "module.exports = function() {};",
+-        "goog.provide('module$test');" +
+-        "var module$test = function() {};" +
+-        "goog.require('module$name');" +
+-        "var name$module$test = module$name;");
++        "var name$$module$test = module$name;" +
++        "module$test.foo = 1;");
++    test(
++        "var name = require('name');" +
++        "module.exports = function() {};",
++        "goog.provide('module$test');" +
++        "var module$test = function() {};" +
++        "goog.require('module$name');" +
++        "var name$$module$test = module$name;");
+@@ -1,9 +1,9 @@
+-        "var name$module$test = module$name;" +
+-        "module$test.foo = 1;");
+-    test(
+-        "var name = require('name');" +
+-        "module.exports = function() {};",
+-        "goog.provide('module$test');" +
+-        "var module$test = function() {};" +
+-        "goog.require('module$name');" +
+-        "var name$module$test = module$name;");
++        "var name$$module$test = module$name;" +
++        "module$test.foo = 1;");
++    test(
++        "var name = require('name');" +
++        "module.exports = function() {};",
++        "goog.provide('module$test');" +
++        "var module$test = function() {};" +
++        "goog.require('module$name');" +
++        "var name$$module$test = module$name;");
+@@ -1,9 +1,9 @@
+-        "var name$module$test = module$name;" +
+-        "module$test.foo = 1;");
+-    test(
+-        "var name = require('name');" +
+-        "module.exports = function() {};",
+-        "goog.provide('module$test');" +
+-        "var module$test = function() {};" +
+-        "goog.require('module$name');" +
+-        "var name$module$test = module$name;");
++        "var name$$module$test = module$name;" +
++        "module$test.foo = 1;");
++    test(
++        "var name = require('name');" +
++        "module.exports = function() {};",
++        "goog.provide('module$test');" +
++        "var module$test = function() {};" +
++        "goog.require('module$name');" +
++        "var name$$module$test = module$name;");
+@@ -1,9 +1,9 @@
+-        "var name$module$test = module$name;" +
+-        "module$test.foo = 1;");
+-    test(
+-        "var name = require('name');" +
+-        "module.exports = function() {};",
+-        "goog.provide('module$test');" +
+-        "var module$test = function() {};" +
+-        "goog.require('module$name');" +
+-        "var name$module$test = module$name;");
++        "var name$$module$test = module$name;" +
++        "module$test.foo = 1;");
++    test(
++        "var name = require('name');" +
++        "module.exports = function() {};",
++        "goog.provide('module$test');" +
++        "var module$test = function() {};" +
++        "goog.require('module$name');" +
++        "var name$$module$test = module$name;");
+@@ -1,9 +1,9 @@
+-        "var name$module$test = module$name;" +
+-        "module$test.foo = 1;");
+-    test(
+-        "var name = require('name');" +
+-        "module.exports = function() {};",
+-        "goog.provide('module$test');" +
+-        "var module$test = function() {};" +
+-        "goog.require('module$name');" +
+-        "var name$module$test = module$name;");
++        "var name$$module$test = module$name;" +
++        "module$test.foo = 1;");
++    test(
++        "var name = require('name');" +
++        "module.exports = function() {};",
++        "goog.provide('module$test');" +
++        "var module$test = function() {};" +
++        "goog.require('module$name');" +
++        "var name$$module$test = module$name;");
+@@ -1,9 +1,9 @@
+-        "var name$module$test = module$name;" +
+-        "module$test.foo = 1;");
+-    test(
+-        "var name = require('name');" +
+-        "module.exports = function() {};",
+-        "goog.provide('module$test');" +
+-        "var module$test = function() {};" +
+-        "goog.require('module$name');" +
+-        "var name$module$test = module$name;");
++        "var name$$module$test = module$name;" +
++        "module$test.foo = 1;");
++    test(
++        "var name = require('name');" +
++        "module.exports = function() {};",
++        "goog.provide('module$test');" +
++        "var module$test = function() {};" +
++        "goog.require('module$name');" +
++        "var name$$module$test = module$name;");
+@@ -1,9 +1,9 @@
+-        "var name$module$test = module$name;" +
+-        "module$test.foo = 1;");
+-    test(
+-        "var name = require('name');" +
+-        "module.exports = function() {};",
+-        "goog.provide('module$test');" +
+-        "var module$test = function() {};" +
+-        "goog.require('module$name');" +
+-        "var name$module$test = module$name;");
++        "var name$$module$test = module$name;" +
++        "module$test.foo = 1;");
++    test(
++        "var name = require('name');" +
++        "module.exports = function() {};",
++        "goog.provide('module$test');" +
++        "var module$test = function() {};" +
++        "goog.require('module$name');" +
++        "var name$$module$test = module$name;");
+@@ -1,9 +1,9 @@
+-        "var name$module$test = module$name;" +
+-        "module$test.foo = 1;");
+-    test(
+-        "var name = require('name');" +
+-        "module.exports = function() {};",
+-        "goog.provide('module$test');" +
+-        "var module$test = function() {};" +
+-        "goog.require('module$name');" +
+-        "var name$module$test = module$name;");
++        "var name$$module$test = module$name;" +
++        "module$test.foo = 1;");
++    test(
++        "var name = require('name');" +
++        "module.exports = function() {};",
++        "goog.provide('module$test');" +
++        "var module$test = function() {};" +
++        "goog.require('module$name');" +
++        "var name$$module$test = module$name;");
+@@ -1,9 +1,9 @@
+-        "var name$module$test = module$name;" +
+-        "module$test.foo = 1;");
+-    test(
+-        "var name = require('name');" +
+-        "module.exports = function() {};",
+-        "goog.provide('module$test');" +
+-        "var module$test = function() {};" +
+-        "goog.require('module$name');" +
+-        "var name$module$test = module$name;");
++        "var name$$module$test = module$name;" +
++        "module$test.foo = 1;");
++    test(
++        "var name = require('name');" +
++        "module.exports = function() {};",
++        "goog.provide('module$test');" +
++        "var module$test = function() {};" +
++        "goog.require('module$name');" +
++        "var name$$module$test = module$name;");
+@@ -1,9 +1,9 @@
+-        "var name$module$test = module$name;" +
+-        "module$test.foo = 1;");
+-    test(
+-        "var name = require('name');" +
+-        "module.exports = function() {};",
+-        "goog.provide('module$test');" +
+-        "var module$test = function() {};" +
+-        "goog.require('module$name');" +
+-        "var name$module$test = module$name;");
++        "var name$$module$test = module$name;" +
++        "module$test.foo = 1;");
++    test(
++        "var name = require('name');" +
++        "module.exports = function() {};",
++        "goog.provide('module$test');" +
++        "var module$test = function() {};" +
++        "goog.require('module$name');" +
++        "var name$$module$test = module$name;");

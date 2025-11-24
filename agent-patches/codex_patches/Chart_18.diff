@@ -1,0 +1,84 @@
+diff --git a/source/org/jfree/data/DefaultKeyedValues.java b/source/org/jfree/data/DefaultKeyedValues.java
+index 707eb0a..8dc7971 100644
+--- a/source/org/jfree/data/DefaultKeyedValues.java
++++ b/source/org/jfree/data/DefaultKeyedValues.java
+@@ -313,11 +313,19 @@ public class DefaultKeyedValues implements KeyedValues,
+      *     the specified range.
+      */
+     public void removeValue(int index) {
++        // Remove the key/value at the specified index and rebuild the
++        // index map so that all key->index mappings remain consistent.
++        // Previously, the index map was only rebuilt when removing an
++        // item that was not the last in the list. That left a stale
++        // mapping for the removed key when the last item was removed,
++        // which could cause getIndex() to return a non-negative index
++        // for a key that no longer exists. Subsequent setValue() calls
++        // would then attempt to update a position outside the current
++        // list bounds, triggering IndexOutOfBoundsException.
+         this.keys.remove(index);
+         this.values.remove(index);
+-        if (index < this.keys.size()) {
++        // Always rebuild to remove the deleted key and fix subsequent indices.
+         rebuildIndex();
+-        }
+     }
+ 
+     /**
+@@ -332,7 +340,9 @@ public class DefaultKeyedValues implements KeyedValues,
+     public void removeValue(Comparable key) {
+         int index = getIndex(key);
+         if (index < 0) {
+-			return;
++            // The API and tests expect an UnknownKeyException when attempting
++            // to remove a key that is not present.
++            throw new UnknownKeyException("Key not found: " + key);
+         }
+         removeValue(index);
+     }
+@@ -468,4 +478,4 @@ public class DefaultKeyedValues implements KeyedValues,
+         return clone;
+     }
+     
+-}
+\ No newline at end of file
++}
+diff --git a/source/org/jfree/data/DefaultKeyedValues2D.java b/source/org/jfree/data/DefaultKeyedValues2D.java
+index 798d5d0..bdea649 100644
+--- a/source/org/jfree/data/DefaultKeyedValues2D.java
++++ b/source/org/jfree/data/DefaultKeyedValues2D.java
+@@ -451,14 +451,27 @@ public class DefaultKeyedValues2D implements KeyedValues2D,
+      * @see #removeColumn(int)
+      * @see #removeRow(Comparable)
+      */
+-    public void removeColumn(Comparable columnKey) {
+-        Iterator iterator = this.rows.iterator();
+-        while (iterator.hasNext()) {
+-            DefaultKeyedValues rowData = (DefaultKeyedValues) iterator.next();
+-                rowData.removeValue(columnKey);
+-        }
+-        this.columnKeys.remove(columnKey);
+-    }
++    public void removeColumn(Comparable columnKey) {
++        if (columnKey == null) {
++            throw new IllegalArgumentException("Null 'columnKey' argument.");
++        }
++        if (!this.columnKeys.contains(columnKey)) {
++            throw new UnknownKeyException("Unrecognised columnKey: " 
++                    + columnKey);
++        }
++        // When removing a column, some rows may not contain an entry for
++        // the given column key. In that case, we should simply skip the
++        // row rather than throwing an UnknownKeyException (see bug 1835955).
++        Iterator iterator = this.rows.iterator();
++        while (iterator.hasNext()) {
++            DefaultKeyedValues rowData = (DefaultKeyedValues) iterator.next();
++            int index = rowData.getIndex(columnKey);
++            if (index >= 0) {
++                rowData.removeValue(index);
++            }
++        }
++        this.columnKeys.remove(columnKey);
++    }
+ 
+     /**
+      * Clears all the data and associated keys.

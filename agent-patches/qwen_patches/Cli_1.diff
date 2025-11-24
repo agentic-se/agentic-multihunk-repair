@@ -1,0 +1,26 @@
+diff --git a/src/java/org/apache/commons/cli/CommandLine.java b/src/java/org/apache/commons/cli/CommandLine.java
+index af1118d..e66dfd4 100644
+--- a/src/java/org/apache/commons/cli/CommandLine.java
++++ b/src/java/org/apache/commons/cli/CommandLine.java
+@@ -61,12 +61,19 @@ public class CommandLine {
+     /** 
+      * Query to see if an option has been set.
+      *
+-     * @param opt Short name of the option
++     * @param opt Short name or long name of the option
+      * @return true if set, false if not
+      */
+     public boolean hasOption(String opt)
+     {
+-        return options.containsKey(opt);
++        opt = Util.stripLeadingHyphens(opt);
++
++        String key = opt;
++        if (names.containsKey(opt))
++        {
++            key = (String) names.get(opt);
++        }
++        return options.containsKey(key);
+     }
+ 
+     /** 

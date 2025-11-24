@@ -1,0 +1,88 @@
+diff --git a/src/com/google/javascript/jscomp/NodeUtil.java b/src/com/google/javascript/jscomp/NodeUtil.java
+index c4f7f8da..4facea30 100644
+--- a/src/com/google/javascript/jscomp/NodeUtil.java
++++ b/src/com/google/javascript/jscomp/NodeUtil.java
+@@ -2364,9 +2364,12 @@ public final class NodeUtil {
+     if (nameNode.isName()) {
+       result = IR.var(nameNode, value);
+       result.setJSDocInfo(info);
+-    } else {
++    } else if (value != null) {
+       result = IR.exprResult(IR.assign(nameNode, value));
+       result.getFirstChild().setJSDocInfo(info);
++    } else {
++      result = IR.exprResult(nameNode);
++      result.getFirstChild().setJSDocInfo(info);
+     }
+     return result;
+   }
+diff --git a/src/com/google/javascript/jscomp/ScopedAliases.java b/src/com/google/javascript/jscomp/ScopedAliases.java
+index a4e503d0..15148b48 100644
+--- a/src/com/google/javascript/jscomp/ScopedAliases.java
++++ b/src/com/google/javascript/jscomp/ScopedAliases.java
+@@ -353,8 +353,8 @@ class ScopedAliases implements HotSwapCompilerPass {
+       for (Var v : scope.getVarIterable()) {
+         Node n = v.getNode();
+         Node parent = n.getParent();
+-        boolean isVarAssign = parent.isVar() && n.hasChildren();
+-        if (isVarAssign && n.getFirstChild().isQualifiedName()) {
++        boolean isVar = parent.isVar();
++        if (isVar && n.getFirstChild() != null && n.getFirstChild().isQualifiedName()) {
+           recordAlias(v);
+         } else if (v.isBleedingFunction()) {
+           // Bleeding functions already get a BAD_PARAMETERS error, so just
+@@ -362,8 +362,10 @@ class ScopedAliases implements HotSwapCompilerPass {
+         } else if (parent.getType() == Token.LP) {
+           // Parameters of the scope function also get a BAD_PARAMETERS
+           // error.
+-        } else if (isVarAssign) {
+-          Node value = v.getInitialValue().detachFromParent();
++        } else if (isVar) {
++          Node value = n.hasChildren() ?
++              v.getInitialValue().detachFromParent() :
++              null;
+           String name = n.getString();
+           int nameCount = scopedAliasNames.count(name);
+           scopedAliasNames.add(name);
+@@ -374,6 +376,7 @@ class ScopedAliases implements HotSwapCompilerPass {
+ 
+           // Add $jscomp.scope.name = EXPR;
+           // Make sure we copy over all the jsdoc and debug info.
++          if (value != null || v.getJSDocInfo() != null) {
+             Node newDecl = NodeUtil.newQualifiedNameNodeDeclaration(
+                 compiler.getCodingConvention(),
+                 globalName,
+@@ -383,6 +386,7 @@ class ScopedAliases implements HotSwapCompilerPass {
+             NodeUtil.setDebugInformation(
+                 newDecl.getFirstChild().getFirstChild(), n, name);
+             parent.getParent().addChildBefore(newDecl, parent);
++          }
+ 
+           // Rewrite "var name = EXPR;" to "var name = $jscomp.scope.name;"
+           v.getNameNode().addChildToFront(
+@@ -401,15 +405,17 @@ class ScopedAliases implements HotSwapCompilerPass {
+       String name = aliasVar.getName();
+       aliases.put(name, aliasVar);
+ 
+-      String qualifiedName =
+-        aliasVar.getInitialValue().getQualifiedName();
+-      transformation.addAlias(name, qualifiedName);
++      Node initialValue = aliasVar.getInitialValue();
++      if (initialValue != null) {
++        String qualifiedName = initialValue.getQualifiedName();
++        transformation.addAlias(name, qualifiedName);
+ 
+-      int rootIndex = qualifiedName.indexOf(".");
+-      if (rootIndex != -1) {
+-        String qNameRoot = qualifiedName.substring(0, rootIndex);
+-        if (!aliases.containsKey(qNameRoot)) {
+-          forbiddenLocals.add(qNameRoot);
++        int rootIndex = qualifiedName.indexOf(".");
++        if (rootIndex != -1) {
++          String qNameRoot = qualifiedName.substring(0, rootIndex);
++          if (!aliases.containsKey(qNameRoot)) {
++            forbiddenLocals.add(qNameRoot);
++          }
+         }
+       }
+     }

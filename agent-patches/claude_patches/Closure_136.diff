@@ -1,0 +1,47 @@
+diff --git a/src/com/google/javascript/jscomp/MakeDeclaredNamesUnique.java b/src/com/google/javascript/jscomp/MakeDeclaredNamesUnique.java
+index 24800731..242fdbb5 100644
+--- a/src/com/google/javascript/jscomp/MakeDeclaredNamesUnique.java
++++ b/src/com/google/javascript/jscomp/MakeDeclaredNamesUnique.java
+@@ -75,7 +75,10 @@ class MakeDeclaredNamesUnique
+       Node fnParams = declarationRoot.getFirstChild().getNext();
+       for (Node c = fnParams.getFirstChild(); c != null; c = c.getNext()) {
+         String name = c.getString();
+-        renamer.addDeclaredName(name);
++        // Skip if this is an exported local name
++        if (!t.getCompiler().getCodingConvention().isExported(name, true)) {
++          renamer.addDeclaredName(name);
++        }
+       }
+ 
+       // Add the function body declarations
+@@ -108,7 +111,8 @@ class MakeDeclaredNamesUnique
+           // If needed, add the function recursive name.
+           String name = n.getFirstChild().getString();
+           if (name != null && !name.isEmpty() && parent != null
+-              && !NodeUtil.isFunctionDeclaration(n)) {
++              && !NodeUtil.isFunctionDeclaration(n)
++              && !t.getCompiler().getCodingConvention().isExported(name, true)) {
+             renamer.addDeclaredName(name);
+           }
+ 
+diff --git a/src/com/google/javascript/jscomp/MethodCompilerPass.java b/src/com/google/javascript/jscomp/MethodCompilerPass.java
+index cd39b6ee..990af542 100644
+--- a/src/com/google/javascript/jscomp/MethodCompilerPass.java
++++ b/src/com/google/javascript/jscomp/MethodCompilerPass.java
+@@ -107,13 +107,9 @@ abstract class MethodCompilerPass implements CompilerPass {
+     } else if (node.getType() == Token.NAME) {
+       String functionName = node.getString();
+       Scope.Var v = t.getScope().getVar(functionName);
+-      if (v == null) {
+-        if (compiler.isIdeMode()) {
+-          return;
+-        } else {
+-          throw new IllegalStateException(
+-              "VarCheck should have caught this undefined function");
+-        }
++      if (v == null || v.isExtern()) {
++        // Don't try to add signatures for undefined or extern functions
++        return;
+       }
+       Node function = v.getInitialValue();
+       if (function != null &&

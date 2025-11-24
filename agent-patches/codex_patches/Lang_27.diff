@@ -1,0 +1,20 @@
+diff --git a/src/main/java/org/apache/commons/lang3/math/NumberUtils.java b/src/main/java/org/apache/commons/lang3/math/NumberUtils.java
+index fd03ab8f..1672177c 100644
+--- a/src/main/java/org/apache/commons/lang3/math/NumberUtils.java
++++ b/src/main/java/org/apache/commons/lang3/math/NumberUtils.java
+@@ -471,7 +471,14 @@ public class NumberUtils {
+         String dec;
+         String exp;
+         int decPos = str.indexOf('.');
+-        int expPos = str.indexOf('e') + str.indexOf('E') + 1;
++        // Determine the position of the exponent marker, handling both 'e' and 'E'.
++        // The previous implementation summed the indexes of 'e' and 'E' and added 1,
++        // which leads to out-of-bounds indexes when both are present (e.g., "1eE").
++        // Use the later occurrence of either 'e' or 'E' instead, ensuring a valid index
++        // or -1 when neither is present.
++        int ePos = str.indexOf('e');
++        int EPos = str.indexOf('E');
++        int expPos = Math.max(ePos, EPos);
+ 
+         if (decPos > -1) {
+ 

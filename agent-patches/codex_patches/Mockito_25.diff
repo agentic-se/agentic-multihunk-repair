@@ -1,0 +1,120 @@
+diff --git a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+index 6fa773f53..66b956c65 100644
+--- a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
++++ b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+@@ -35,27 +35,27 @@ import java.io.Serializable;
+  * @see org.mockito.Mockito#RETURNS_DEEP_STUBS
+  * @see org.mockito.Answers#RETURNS_DEEP_STUBS
+  */
+-public class ReturnsDeepStubs implements Answer<Object>, Serializable {
++public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+     
+     private static final long serialVersionUID = -7105341425736035847L;
+ 
+     private ReturnsEmptyValues delegate = new ReturnsEmptyValues();
+ 
+-    public Object answer(InvocationOnMock invocation) throws Throwable {
+-        GenericMetadataSupport returnTypeGenericMetadata =
+-                actualParameterizedType(invocation.getMock()).resolveGenericReturnType(invocation.getMethod());
+-
+-        Class<?> rawType = returnTypeGenericMetadata.rawType();
+-        if (!new MockCreationValidator().isTypeMockable(rawType)) {
+-            return delegate.returnValueFor(rawType);
+-        }
+-
+-        return getMock(invocation);
+-    }
+-
+-    private Object getMock(InvocationOnMock invocation) throws Throwable {
+-    	InternalMockHandler<Object> handler = new MockUtil().getMockHandler(invocation.getMock());
+-    	InvocationContainerImpl container = (InvocationContainerImpl) handler.getInvocationContainer();
++    public Object answer(InvocationOnMock invocation) throws Throwable {
++        GenericMetadataSupport returnTypeGenericMetadata =
++                actualParameterizedType(invocation.getMock()).resolveGenericReturnType(invocation.getMethod());
++
++        Class<?> rawType = returnTypeGenericMetadata.rawType();
++        if (!new MockCreationValidator().isTypeMockable(rawType)) {
++            return delegate.returnValueFor(rawType);
++        }
++
++        return getMock(invocation, returnTypeGenericMetadata);
++    }
++
++    private Object getMock(InvocationOnMock invocation, GenericMetadataSupport returnTypeGenericMetadata) throws Throwable {
++		InternalMockHandler<Object> handler = new MockUtil().getMockHandler(invocation.getMock());
++		InvocationContainerImpl container = (InvocationContainerImpl) handler.getInvocationContainer();
+ 
+         // matches invocation for verification
+         for (StubbedInvocationMatcher stubbedInvocationMatcher : container.getStubbedInvocations()) {
+@@ -64,9 +64,9 @@ public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+     		}
+ 		}
+ 
+-        // deep stub
+-        return recordDeepStubMock(invocation, container);
+-    }
++        // deep stub
++        return recordDeepStubMock(invocation, container, returnTypeGenericMetadata);
++    }
+ 
+     /**
+      * Creates a mock using the Generics Metadata.
+@@ -78,9 +78,23 @@ public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+ 
+ 
+ 
+-    private Object recordDeepStubMock(InvocationOnMock invocation, InvocationContainerImpl container) {
+-        Class<?> clz = invocation.getMethod().getReturnType();
+-        final Object mock = org.mockito.Mockito.mock(clz, this);
++    private Object recordDeepStubMock(InvocationOnMock invocation, InvocationContainerImpl container, GenericMetadataSupport returnTypeGenericMetadata) {
++        Class<?> rawType = returnTypeGenericMetadata.rawType();
++        // Create mock honoring extra interfaces inferred from generic bounds
++        org.mockito.MockSettings settings = org.mockito.Mockito.withSettings().defaultAnswer(new GenericAwareDeepStubber(returnTypeGenericMetadata));
++        Class<?>[] extraIfaces = returnTypeGenericMetadata.rawExtraInterfaces();
++        if (extraIfaces != null && extraIfaces.length > 0) {
++            java.util.List<Class<?>> onlyInterfaces = new java.util.ArrayList<Class<?>>();
++            for (Class<?> itf : extraIfaces) {
++                if (itf != null && itf.isInterface()) {
++                    onlyInterfaces.add(itf);
++                }
++            }
++            if (!onlyInterfaces.isEmpty()) {
++                settings = settings.extraInterfaces(onlyInterfaces.toArray(new Class[onlyInterfaces.size()]));
++            }
++        }
++        final Object mock = org.mockito.Mockito.mock(rawType, settings);
+ 
+         container.addAnswer(new Answer<Object>() {
+             public Object answer(InvocationOnMock invocation) throws Throwable {
+@@ -89,10 +103,24 @@ public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+         }, false);
+ 
+         return mock;
+-    }
+-
+-    protected GenericMetadataSupport actualParameterizedType(Object mock) {
+-        CreationSettings mockSettings = (CreationSettings) new MockUtil().getMockHandler(mock).getMockSettings();
+-        return GenericMetadataSupport.inferFrom(mockSettings.getTypeToMock());
+-    }
+-}
++    }
++
++    protected GenericMetadataSupport actualParameterizedType(Object mock) {
++        CreationSettings mockSettings = (CreationSettings) new MockUtil().getMockHandler(mock).getMockSettings();
++        return GenericMetadataSupport.inferFrom(mockSettings.getTypeToMock());
++    }
++
++    private static class GenericAwareDeepStubber extends ReturnsDeepStubs {
++        private static final long serialVersionUID = 1L;
++        private final GenericMetadataSupport parentMetadata;
++
++        GenericAwareDeepStubber(GenericMetadataSupport parentMetadata) {
++            this.parentMetadata = parentMetadata;
++        }
++
++        @Override
++        protected GenericMetadataSupport actualParameterizedType(Object mock) {
++            return parentMetadata;
++        }
++    }
++}

@@ -1,0 +1,230 @@
+--- a/gson/src/main/java/com/google/gson/stream/JsonWriter.java
++++ b/gson/src/main/java/com/google/gson/stream/JsonWriter.java
+@@ -1,12 +1,27 @@
+-  public JsonWriter value(boolean value) throws IOException {
+-    writeDeferredName();
+-    beforeValue();
+-    out.write(value ? "true" : "false");
+-    return this;
+-  }
+-
+-  /**
+-   * Encodes {@code value}.
+-   *
+-   * @return this writer.
+-   */
++  public JsonWriter value(boolean value) throws IOException {
++    writeDeferredName();
++    beforeValue();
++    out.write(value ? "true" : "false");
++    return this;
++  }
++
++  /**
++   * Encodes {@code value}.
++   *
++   * @return this writer.
++   */
++  public JsonWriter value(Boolean value) throws IOException {
++    if (value == null) {
++      return nullValue();
++    }
++    writeDeferredName();
++    beforeValue();
++    out.write(value ? "true" : "false");
++    return this;
++  }
++
++  /**
++   * Encodes {@code value}.
++   *
++   * @return this writer.
++   */
+@@ -1,12 +1,24 @@
+-  public JsonWriter value(boolean value) throws IOException {
+-    writeDeferredName();
+-    beforeValue();
+-    out.write(value ? "true" : "false");
+-    return this;
+-  }
+-
+-  /**
+-   * Encodes {@code value}.
+-   *
+-   * @return this writer.
+-   */
++  public JsonWriter value(boolean value) throws IOException {
++    writeDeferredName();
++    beforeValue();
++    out.write(value ? "true" : "false");
++    return this;
++  }
++
++  /**
++   * Encodes {@code value}.
++   *
++   * @return this writer.
++   */
++  public JsonWriter value(Boolean value) throws IOException {
++    if (value == null) {
++      return nullValue();
++    }
++    return value(value.booleanValue());
++  }
++
++  /**
++   * Encodes {@code value}.
++   *
++   * @return this writer.
++   */
+@@ -1,12 +1,24 @@
+-  public JsonWriter value(boolean value) throws IOException {
+-    writeDeferredName();
+-    beforeValue();
+-    out.write(value ? "true" : "false");
+-    return this;
+-  }
+-
+-  /**
+-   * Encodes {@code value}.
+-   *
+-   * @return this writer.
+-   */
++  public JsonWriter value(boolean value) throws IOException {
++    writeDeferredName();
++    beforeValue();
++    out.write(value ? "true" : "false");
++    return this;
++  }
++
++  /**
++   * Encodes {@code value}.
++   *
++   * @return this writer.
++   */
++  public JsonWriter value(Boolean value) throws IOException {
++    if (value == null) {
++      return nullValue();
++    }
++    return value(value.booleanValue());
++  }
++
++  /**
++   * Encodes {@code value}.
++   *
++   * @return this writer.
++   */
+@@ -1,15 +1,30 @@
+-  public JsonWriter value(Number value) throws IOException {
+-    if (value == null) {
+-      return nullValue();
+-    }
+-
+-    writeDeferredName();
+-    String string = value.toString();
+-    if (!lenient
+-        && (string.equals("-Infinity") || string.equals("Infinity") || string.equals("NaN"))) {
+-      throw new IllegalArgumentException("Numeric values must be finite, but was " + value);
+-    }
+-    beforeValue();
+-    out.append(string);
+-    return this;
+-  }
++  public JsonWriter value(Number value) throws IOException {
++    if (value == null) {
++      return nullValue();
++    }
++
++    writeDeferredName();
++    String string = value.toString();
++    if (!lenient
++        && (string.equals("-Infinity") || string.equals("Infinity") || string.equals("NaN"))) {
++      throw new IllegalArgumentException("Numeric values must be finite, but was " + value);
++    }
++    beforeValue();
++    out.append(string);
++    return this;
++  }
++
++  /**
++   * Encodes {@code value}.
++   *
++   * @return this writer.
++   */
++  public JsonWriter value(Boolean value) throws IOException {
++    if (value == null) {
++      return nullValue();
++    }
++    writeDeferredName();
++    beforeValue();
++    out.write(value ? "true" : "false");
++    return this;
++  }
+@@ -1,15 +1,18 @@
+-  public JsonWriter value(Number value) throws IOException {
+-    if (value == null) {
+-      return nullValue();
+-    }
+-
+-    writeDeferredName();
+-    String string = value.toString();
+-    if (!lenient
+-        && (string.equals("-Infinity") || string.equals("Infinity") || string.equals("NaN"))) {
+-      throw new IllegalArgumentException("Numeric values must be finite, but was " + value);
+-    }
+-    beforeValue();
+-    out.append(string);
+-    return this;
+-  }
++  public JsonWriter value(Number value) throws IOException {
++    if (value == null) {
++      return nullValue();
++    }
++
++    writeDeferredName();
++    if (value instanceof Boolean) {
++      return value(((Boolean) value).booleanValue());
++    }
++    String string = value.toString();
++    if (!lenient
++        && (string.equals("-Infinity") || string.equals("Infinity") || string.equals("NaN"))) {
++      throw new IllegalArgumentException("Numeric values must be finite, but was " + value);
++    }
++    beforeValue();
++    out.append(string);
++    return this;
++  }
+@@ -1,15 +1,18 @@
+-  public JsonWriter value(Number value) throws IOException {
+-    if (value == null) {
+-      return nullValue();
+-    }
+-
+-    writeDeferredName();
+-    String string = value.toString();
+-    if (!lenient
+-        && (string.equals("-Infinity") || string.equals("Infinity") || string.equals("NaN"))) {
+-      throw new IllegalArgumentException("Numeric values must be finite, but was " + value);
+-    }
+-    beforeValue();
+-    out.append(string);
+-    return this;
+-  }
++  public JsonWriter value(Number value) throws IOException {
++    if (value == null) {
++      return nullValue();
++    }
++
++    writeDeferredName();
++    if (value instanceof Boolean) {
++      return value(((Boolean) value).booleanValue());
++    }
++    String string = value.toString();
++    if (!lenient
++        && (string.equals("-Infinity") || string.equals("Infinity") || string.equals("NaN"))) {
++      throw new IllegalArgumentException("Numeric values must be finite, but was " + value);
++    }
++    beforeValue();
++    out.append(string);
++    return this;
++  }

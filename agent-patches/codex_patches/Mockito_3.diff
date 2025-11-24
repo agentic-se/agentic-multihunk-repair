@@ -1,0 +1,113 @@
+diff --git a/src/org/mockito/ArgumentCaptor.java b/src/org/mockito/ArgumentCaptor.java
+index 30d284e81..f33804418 100644
+--- a/src/org/mockito/ArgumentCaptor.java
++++ b/src/org/mockito/ArgumentCaptor.java
+@@ -4,9 +4,11 @@
+  */
+ package org.mockito;
+ 
+-import org.mockito.internal.matchers.CapturingMatcher;
++import org.mockito.exceptions.Reporter;
++import org.mockito.internal.matchers.VarargCapturingMatcher;
+ import org.mockito.internal.progress.HandyReturnValues;
+ 
++import java.util.ArrayList;
+ import java.util.List;
+ 
+ /**
+@@ -64,7 +66,9 @@ public class ArgumentCaptor<T> {
+     
+     HandyReturnValues handyReturnValues = new HandyReturnValues();
+ 
+-    private final CapturingMatcher<T> capturingMatcher = new CapturingMatcher<T>();
++    // Use a vararg-aware capturing matcher so that capturing works for
++    // both single arguments and varargs (captures and flattens elements).
++    private final VarargCapturingMatcher<T> capturingMatcher = new VarargCapturingMatcher<T>();
+     private final Class<? extends T> clazz;
+ 
+     /**
+@@ -116,7 +120,14 @@ public class ArgumentCaptor<T> {
+      * @return captured argument value
+      */
+     public T getValue() {
+-        return this.capturingMatcher.getLastValue();
++        List<T> lastCaptured = capturingMatcher.getLastVarargs();
++        if (lastCaptured == null || lastCaptured.isEmpty()) {
++            new Reporter().noArgumentValueWasCaptured();
++            return null;
++        }
++        // For varargs, return the last element of the last captured vararg list.
++        // For non-varargs, the list has a single element which is returned.
++        return lastCaptured.get(lastCaptured.size() - 1);
+     }
+ 
+     /**
+@@ -152,7 +163,15 @@ public class ArgumentCaptor<T> {
+      * @return captured argument value
+      */
+     public List<T> getAllValues() {
+-        return this.capturingMatcher.getAllValues();
++        // Flatten all captured vararg lists into a single list of values.
++        List<List<T>> all = capturingMatcher.getAllVarargs();
++        List<T> flattened = new ArrayList<T>();
++        for (List<T> group : all) {
++            if (group != null) {
++                flattened.addAll(group);
++            }
++        }
++        return flattened;
+     }
+ 
+     /**
+@@ -170,4 +189,4 @@ public class ArgumentCaptor<T> {
+     public static <U,S extends U> ArgumentCaptor<U> forClass(Class<S> clazz) {
+         return new ArgumentCaptor<U>(clazz);
+     }
+-}
+\ No newline at end of file
++}
+diff --git a/src/org/mockito/internal/invocation/InvocationMatcher.java b/src/org/mockito/internal/invocation/InvocationMatcher.java
+index a3a7c08df..9c740bf89 100644
+--- a/src/org/mockito/internal/invocation/InvocationMatcher.java
++++ b/src/org/mockito/internal/invocation/InvocationMatcher.java
+@@ -117,17 +117,36 @@ public class InvocationMatcher implements DescribedInvocation, CapturesArgumensF
+ 
+     public void captureArgumentsFrom(Invocation invocation) {
+         if (invocation.getMethod().isVarArgs()) {
++            // Index of the vararg array in the raw arguments
+             int indexOfVararg = invocation.getRawArguments().length - 1;
++
++            // Capture non-vararg arguments as usual (using expanded arguments)
+             for (int position = 0; position < indexOfVararg; position++) {
+                 Matcher m = matchers.get(position);
+                 if (m instanceof CapturesArguments) {
+                     ((CapturesArguments) m).captureFrom(invocation.getArgumentAt(position, Object.class));
+                 }
+             }
+-            for (int position = indexOfVararg; position < matchers.size(); position++) {
+-                Matcher m = matchers.get(position);
+-                if (m instanceof CapturesArguments) {
+-                    ((CapturesArguments) m).captureFrom(invocation.getRawArguments()[position - indexOfVararg]);
++
++            // Number of matchers that target the vararg portion
++            int varargMatchersCount = matchers.size() - indexOfVararg;
++
++            if (varargMatchersCount <= 1) {
++                // Single matcher for the entire vararg: pass the raw vararg array so
++                // vararg-aware captors can unpack and capture individual elements.
++                if (varargMatchersCount == 1) {
++                    Matcher m = matchers.get(indexOfVararg);
++                    if (m instanceof CapturesArguments) {
++                        ((CapturesArguments) m).captureFrom(invocation.getRawArguments()[indexOfVararg]);
++                    }
++                }
++            } else {
++                // Multiple matchers for vararg: capture each expanded vararg element separately.
++                for (int position = indexOfVararg; position < matchers.size(); position++) {
++                    Matcher m = matchers.get(position);
++                    if (m instanceof CapturesArguments) {
++                        ((CapturesArguments) m).captureFrom(invocation.getArgumentAt(position, Object.class));
++                    }
+                 }
+             }
+         } else {

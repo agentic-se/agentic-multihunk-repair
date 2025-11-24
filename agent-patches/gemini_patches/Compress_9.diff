@@ -1,0 +1,34 @@
+--- a/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/tar/TarArchiveOutputStream.java
+@@ -1,11 +1,12 @@
+-            //
+-            // We have to deal with assembly!!!
+-            // The programmer can be writing little 32 byte chunks for all
+-            // we know, and we must assemble complete records for writing.
+-            // REVIEW Maybe this should be in TarBuffer? Could that help to
+-            // eliminate some of the buffer copying.
+-            //
+-        }
+-
+-        if (assemLen > 0) {
+-            if ((assemLen + numToWrite) >= recordBuf.length) {
++            //
++            // We have to deal with assembly!!!
++            // The programmer can be writing little 32 byte chunks for all
++            // we know, and we must assemble complete records for writing.
++            // REVIEW Maybe this should be in TarBuffer? Could that help to
++            // eliminate some of the buffer copying.
++            //
++        }
++        count(numToWrite);
++
++        if (assemLen > 0) {
++            if ((assemLen + numToWrite) >= recordBuf.length) {
+@@ -1,4 +1,3 @@
+-            wOffset += num;
+-        }
+-        count(numToWrite);
+-    }
++            wOffset += num;
++        }
++    }

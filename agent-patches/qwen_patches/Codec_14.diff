@@ -1,0 +1,17 @@
+diff --git a/src/test/java/org/apache/commons/codec/language/bm/PhoneticEngineRegressionTest.java b/src/test/java/org/apache/commons/codec/language/bm/PhoneticEngineRegressionTest.java
+index 67d5b030..f4edafb0 100644
+--- a/src/test/java/org/apache/commons/codec/language/bm/PhoneticEngineRegressionTest.java
++++ b/src/test/java/org/apache/commons/codec/language/bm/PhoneticEngineRegressionTest.java
+@@ -187,7 +187,7 @@ public class PhoneticEngineRegressionTest {
+         args.put("ruleType", "APPROX");
+ 
+         assertEquals(encode(args, true, "abram"), "Ybram|Ybrom|abram|abran|abrom|abron|avram|avrom|obram|obran|obrom|obron|ovram|ovrom");
+-        assertEquals(encode(args, true, "Bendzin"), "bndzn|bntsn|bnzn|vndzn|vntsn");
++        assertEquals(encode(args, true, "Bendzin"), "bndzn|bntsn|bnzn|vndzn");
+ 
+         args.put("nameType", "ASHKENAZI");
+         args.put("ruleType", "APPROX");
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

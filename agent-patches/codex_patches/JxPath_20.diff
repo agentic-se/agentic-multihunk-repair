@@ -1,0 +1,41 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
+index 65ed1ed..29d220f 100644
+--- a/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
++++ b/src/java/org/apache/commons/jxpath/ri/compiler/CoreOperationRelationalExpression.java
+@@ -85,7 +85,9 @@ public abstract class CoreOperationRelationalExpression extends CoreOperation {
+             return containsMatch((Iterator) left, right);
+         }
+         if (right instanceof Iterator) {
+-            return containsMatch((Iterator) right, left);
++            // For relational ops, maintain operand order: evaluate
++            // originalLeft (value) against each element from right iterator.
++            return containsMatchRight((Iterator) right, left);
+         }
+         double ld = InfoSetUtil.doubleValue(left);
+         if (Double.isNaN(ld)) {
+@@ -129,6 +131,25 @@ public abstract class CoreOperationRelationalExpression extends CoreOperation {
+         return false;
+     }
+ 
++    /**
++     * Learn whether any element returned from an Iterator matches a given value,
++     * preserving the original operand order where the provided value is the
++     * left-hand side of the comparison and the iterator supplies right-hand
++     * side elements.
++     * @param it Iterator providing right-hand side elements
++     * @param value left-hand side value to compare against
++     * @return whether a match was found
++     */
++    private boolean containsMatchRight(Iterator it, Object value) {
++        while (it.hasNext()) {
++            Object element = it.next();
++            if (compute(value, element)) {
++                return true;
++            }
++        }
++        return false;
++    }
++
+     /**
+      * Learn whether any element returned from an Iterator matches a given value.
+      * @param it Iterator

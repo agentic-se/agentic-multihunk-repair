@@ -1,0 +1,88 @@
+--- a/src/main/java/org/jsoup/nodes/DocumentType.java
++++ b/src/main/java/org/jsoup/nodes/DocumentType.java
+@@ -1,2 +1,2 @@
+-        if (has(SYSTEM_ID))
+-            accum.append(" "").append(attr(SYSTEM_ID)).append('"');
++        if (has(SYSTEM_ID))
++            accum.append(" SYSTEM "").append(attr(SYSTEM_ID)).append('"');
+@@ -1,2 +1,2 @@
+-        if (has(SYSTEM_ID))
+-            accum.append(" SYSTEM "").append(attr(SYSTEM_ID)).append('"');
++        if (has(SYSTEM_ID))
++            accum.append(" SYSTEM \"").append(attr(SYSTEM_ID)).append("\"");
+@@ -1,1 +1,2 @@
+-    private static final String SYSTEM_ID = "systemId";
++    private static final String SYSTEM_ID = "systemId";
++    private boolean hasSystemKey = false;
+@@ -1,7 +1,12 @@
+-    public DocumentType(String name, String publicId, String systemId, String baseUri) {
+-        super(baseUri);
+-
+-        attr(NAME, name);
+-        attr(PUBLIC_ID, publicId);
+-        attr(SYSTEM_ID, systemId);
+-    }
++    public DocumentType(String name, String publicId, String systemId, String baseUri) {
++        this(name, publicId, systemId, baseUri, false);
++    }
++
++    public DocumentType(String name, String publicId, String systemId, String baseUri, boolean hasSystemKey) {
++        super(baseUri);
++
++        attr(NAME, name);
++        attr(PUBLIC_ID, publicId);
++        attr(SYSTEM_ID, systemId);
++        this.hasSystemKey = hasSystemKey;
++    }
+@@ -1,2 +1,2 @@
+-        if (has(SYSTEM_ID))
+-            accum.append(" SYSTEM \"").append(attr(SYSTEM_ID)).append("\"");
++        if (hasSystemKey)
++            accum.append(" SYSTEM \"").append(attr(SYSTEM_ID)).append("\"");
+
+--- a/src/main/java/org/jsoup/parser/Token.java
++++ b/src/main/java/org/jsoup/parser/Token.java
+@@ -1,2 +1,3 @@
+-        final StringBuilder systemIdentifier = new StringBuilder();
+-        boolean forceQuirks = false;
++        final StringBuilder systemIdentifier = new StringBuilder();
++        boolean forceQuirks = false;
++        boolean hasSystemKey = false;
+@@ -1,3 +1,4 @@
+-            reset(publicIdentifier);
+-            reset(systemIdentifier);
+-            forceQuirks = false;
++            reset(publicIdentifier);
++            reset(systemIdentifier);
++            forceQuirks = false;
++            hasSystemKey = false;
+
+--- a/src/main/java/org/jsoup/parser/TokeniserState.java
++++ b/src/main/java/org/jsoup/parser/TokeniserState.java
+@@ -1,2 +1,3 @@
+-            } else if (r.matchConsumeIgnoreCase(DocumentType.SYSTEM_KEY)) {
+-                t.transition(AfterDoctypeSystemKeyword);
++            } else if (r.matchConsumeIgnoreCase(DocumentType.SYSTEM_KEY)) {
++                t.doctypePending.hasSystemKey = true;
++                t.transition(AfterDoctypeSystemKeyword);
+
+--- a/src/main/java/org/jsoup/parser/XmlTreeBuilder.java
++++ b/src/main/java/org/jsoup/parser/XmlTreeBuilder.java
+@@ -1,4 +1,4 @@
+-    void insert(Token.Doctype d) {
+-        DocumentType doctypeNode = new DocumentType(settings.normalizeTag(d.getName()), d.getPublicIdentifier(), d.getSystemIdentifier(), baseUri);
+-        insertNode(doctypeNode);
+-    }
++    void insert(Token.Doctype d) {
++        DocumentType doctypeNode = new DocumentType(settings.normalizeTag(d.getName()), d.getPublicIdentifier(), d.getSystemIdentifier(), baseUri, d.hasSystemKey);
++        insertNode(doctypeNode);
++    }
+
+--- a/src/test/java/org/jsoup/nodes/DocumentTypeTest.java
++++ b/src/test/java/org/jsoup/nodes/DocumentTypeTest.java
+@@ -1,1 +1,1 @@
+-        assertEquals("<!DOCTYPE html \"http://www.ibm.com/data/dtd/v11/ibmxhtml1-transitional.dtd\">", systemDocType.outerHtml());
++        assertEquals("<!DOCTYPE html SYSTEM \"http://www.ibm.com/data/dtd/v11/ibmxhtml1-transitional.dtd\">", systemDocType.outerHtml());
+@@ -1,1 +1,1 @@
+-\">\n", systemDocType.outerHtml());
++\">", systemDocType.outerHtml());

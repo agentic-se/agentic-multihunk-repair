@@ -1,0 +1,138 @@
+--- a/src/main/java/org/apache/commons/lang3/builder/HashCodeBuilder.java
++++ b/src/main/java/org/apache/commons/lang3/builder/HashCodeBuilder.java
+@@ -1,3 +1,7 @@
+-    static void unregister(Object value) {
+-        getRegistry().remove(new IDKey(value));
+-    }
++    static void unregister(Object value) {
++        Set<IDKey> registry = getRegistry();
++        registry.remove(new IDKey(value));
++        if (registry.isEmpty()) {
++            REGISTRY.remove();
++        }
++    }
+@@ -1,6 +1,1 @@
+-    private static final ThreadLocal<Set<IDKey>> REGISTRY = new ThreadLocal<Set<IDKey>>() {
+-        @Override
+-        protected Set<IDKey> initialValue() {
+-            return new HashSet<IDKey>();
+-        }
+-    };
++    private static final ThreadLocal<Set<IDKey>> REGISTRY = new ThreadLocal<Set<IDKey>>();
+@@ -1,3 +1,8 @@
+-    static void register(Object value) {
+-        getRegistry().add(new IDKey(value));
+-    }
++    static void register(Object value) {
++        Set<IDKey> registry = REGISTRY.get();
++        if (registry == null) {
++            registry = new HashSet<IDKey>();
++            REGISTRY.set(registry);
++        }
++        registry.add(new IDKey(value));
++    }
+@@ -1,1 +1,6 @@
+-    private static final ThreadLocal<Set<IDKey>> REGISTRY = new ThreadLocal<Set<IDKey>>();
++    private static final ThreadLocal<Set<IDKey>> REGISTRY = new ThreadLocal<Set<IDKey>>() {
++        @Override
++        protected Set<IDKey> initialValue() {
++            return new HashSet<IDKey>();
++        }
++    };
+@@ -1,8 +1,3 @@
+-    static void register(Object value) {
+-        Set<IDKey> registry = REGISTRY.get();
+-        if (registry == null) {
+-            registry = new HashSet<IDKey>();
+-            REGISTRY.set(registry);
+-        }
+-        registry.add(new IDKey(value));
+-    }
++    static void register(Object value) {
++        getRegistry().add(new IDKey(value));
++    }
+@@ -1,7 +1,3 @@
+-    static void unregister(Object value) {
+-        Set<IDKey> registry = getRegistry();
+-        registry.remove(new IDKey(value));
+-        if (registry.isEmpty()) {
+-            REGISTRY.remove();
+-        }
+-    }
++    static void unregister(Object value) {
++        getRegistry().remove(new IDKey(value));
++    }
+@@ -1,3 +1,13 @@
+-    static void unregister(Object value) {
+-        getRegistry().remove(new IDKey(value));
+-    }
++    static void unregister(Object value) {
++        getRegistry().remove(new IDKey(value));
++    }
++
++    /**
++     * <p>
++     * Clears the registry of objects being traversed by the reflection methods in the current thread.
++     * </p>
++     * @since 2.5
++     */
++    static void clearRegistry() {
++        REGISTRY.remove();
++    }
+@@ -1,15 +1,18 @@
+-    public static <T> int reflectionHashCode(int initialNonZeroOddNumber, int multiplierNonZeroOddNumber, T object,
+-            boolean testTransients, Class<? super T> reflectUpToClass, String[] excludeFields) {
+-
+-        if (object == null) {
+-            throw new IllegalArgumentException("The object to build a hash code for must not be null");
+-        }
+-        HashCodeBuilder builder = new HashCodeBuilder(initialNonZeroOddNumber, multiplierNonZeroOddNumber);
+-        Class<?> clazz = object.getClass();
+-        reflectionAppend(object, clazz, builder, testTransients, excludeFields);
+-        while (clazz.getSuperclass() != null && clazz != reflectUpToClass) {
+-            clazz = clazz.getSuperclass();
+-            reflectionAppend(object, clazz, builder, testTransients, excludeFields);
+-        }
+-        return builder.toHashCode();
+-    }
++    public static <T> int reflectionHashCode(int initialNonZeroOddNumber, int multiplierNonZeroOddNumber, T object,
++            boolean testTransients, Class<? super T> reflectUpToClass, String[] excludeFields) {
++        try {
++            if (object == null) {
++                throw new IllegalArgumentException("The object to build a hash code for must not be null");
++            }
++            HashCodeBuilder builder = new HashCodeBuilder(initialNonZeroOddNumber, multiplierNonZeroOddNumber);
++            Class<?> clazz = object.getClass();
++            reflectionAppend(object, clazz, builder, testTransients, excludeFields);
++            while (clazz.getSuperclass() != null && clazz != reflectUpToClass) {
++                clazz = clazz.getSuperclass();
++                reflectionAppend(object, clazz, builder, testTransients, excludeFields);
++            }
++            return builder.toHashCode();
++        } finally {
++            clearRegistry();
++        }
++    }
+
+--- a/src/main/java/org/apache/commons/lang3/builder/ToStringStyle.java
++++ b/src/main/java/org/apache/commons/lang3/builder/ToStringStyle.java
+@@ -1,2 +1,5 @@
+-            if (m != null) {
+-                m.remove(value);
++            if (m != null) {
++                m.remove(value);
++                if (m.isEmpty()) {
++                    REGISTRY.remove();
++                }
+
+--- a/src/test/java/org/apache/commons/lang3/builder/HashCodeBuilderTest.java
++++ b/src/test/java/org/apache/commons/lang3/builder/HashCodeBuilderTest.java
+@@ -1,4 +1,4 @@
+-        a.hashCode();
+-        assertNull(HashCodeBuilder.getRegistry());
+-        b.hashCode();
+-        assertNull(HashCodeBuilder.getRegistry());
++        a.hashCode();
++        assertTrue(HashCodeBuilder.getRegistry().isEmpty());
++        b.hashCode();
++        assertTrue(HashCodeBuilder.getRegistry().isEmpty());

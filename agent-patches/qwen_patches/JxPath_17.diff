@@ -1,0 +1,32 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMAttributeIterator.java b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMAttributeIterator.java
+index a2ee4db..2188763 100644
+--- a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMAttributeIterator.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMAttributeIterator.java
+@@ -81,7 +81,7 @@ public class DOMAttributeIterator implements NodeIterator {
+         if (testLocalName.equals("*") || testLocalName.equals(nodeLocalName)) {
+             String testPrefix = name.getPrefix();
+ 
+-            if (equalStrings(testPrefix, nodePrefix)) {
++            if (testPrefix == null || equalStrings(testPrefix, nodePrefix)) {
+                 return true;
+             }
+             String testNS = null;
+diff --git a/src/java/org/apache/commons/jxpath/ri/model/jdom/JDOMAttributeIterator.java b/src/java/org/apache/commons/jxpath/ri/model/jdom/JDOMAttributeIterator.java
+index db0b14d..9b44139 100644
+--- a/src/java/org/apache/commons/jxpath/ri/model/jdom/JDOMAttributeIterator.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/jdom/JDOMAttributeIterator.java
+@@ -77,12 +77,8 @@ public class JDOMAttributeIterator implements NodeIterator {
+             else {
+                 attributes = new ArrayList();
+                 List allAttributes = element.getAttributes();
+-                for (int i = 0; i < allAttributes.size(); i++) {
+-                    Attribute attr = (Attribute) allAttributes.get(i);
+-                    if (attr.getNamespace().equals(ns)) {
+-                        attributes.add(attr);
+-                    }
+-                }
++                // For @*, include all attributes regardless of namespace
++                attributes.addAll(allAttributes);
+             }
+         }
+     }

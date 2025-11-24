@@ -1,0 +1,86 @@
+--- a/src/main/java/org/apache/commons/math3/util/FastMath.java
++++ b/src/main/java/org/apache/commons/math3/util/FastMath.java
+@@ -1,1 +1,2 @@
+-    /** StrictMath.log(Double.MAX_VALUE): {@value} */
++    /** StrictMath.log(Double.MAX_VALUE): {@value} */
++    private static final double LOG_MAX_VALUE = StrictMath.log(Double.MAX_VALUE);
+@@ -1,8 +1,10 @@
+-      if (x > 20) {
+-              // Avoid overflow (MATH-905).
+-              return 0.5 * exp(x);
+-          }
+-      if (x < -20) {
+-              // Avoid overflow (MATH-905).
+-              return 0.5 * exp(-x);
+-      }
++      if (x > LOG_MAX_VALUE) {
++          // Avoid overflow (MATH-905).
++          double t = exp(x * 0.5);
++          return (0.5 * t) * t;
++      }
++      if (x < -LOG_MAX_VALUE) {
++          // Avoid overflow (MATH-905).
++          double t = exp(-x * 0.5);
++          return (0.5 * t) * t;
++      }
+@@ -1,8 +1,10 @@
+-      if (x > 20) {
+-              // Avoid overflow (MATH-905).
+-              return 0.5 * exp(x);
+-          }
+-      if (x < -20) {
+-              // Avoid overflow (MATH-905).
+-              return -0.5 * exp(-x);
+-      }
++      if (x > LOG_MAX_VALUE) {
++          // Avoid overflow (MATH-905).
++          double t = exp(x * 0.5);
++          return (0.5 * t) * t;
++      }
++      if (x < -LOG_MAX_VALUE) {
++          // Avoid overflow (MATH-905).
++          double t = exp(-x * 0.5);
++          return (-0.5 * t) * t;
++      }
+@@ -1,10 +1,10 @@
+-      if (x > LOG_MAX_VALUE) {
+-          // Avoid overflow (MATH-905).
+-          double t = exp(x * 0.5);
+-          return (0.5 * t) * t;
+-      }
+-      if (x < -LOG_MAX_VALUE) {
+-          // Avoid overflow (MATH-905).
+-          double t = exp(-x * 0.5);
+-          return (0.5 * t) * t;
+-      }
++      if (x >= LOG_MAX_VALUE) {
++          // Avoid overflow (MATH-905).
++          double t = exp(x * 0.5);
++          return (0.5 * t) * t;
++      }
++      if (x <= -LOG_MAX_VALUE) {
++          // Avoid overflow (MATH-905).
++          double t = exp(-x * 0.5);
++          return (0.5 * t) * t;
++      }
+@@ -1,10 +1,10 @@
+-      if (x > LOG_MAX_VALUE) {
+-          // Avoid overflow (MATH-905).
+-          double t = exp(x * 0.5);
+-          return (0.5 * t) * t;
+-      }
+-      if (x < -LOG_MAX_VALUE) {
+-          // Avoid overflow (MATH-905).
+-          double t = exp(-x * 0.5);
+-          return (-0.5 * t) * t;
+-      }
++      if (x >= LOG_MAX_VALUE) {
++          // Avoid overflow (MATH-905).
++          double t = exp(x * 0.5);
++          return (0.5 * t) * t;
++      }
++      if (x <= -LOG_MAX_VALUE) {
++          // Avoid overflow (MATH-905).
++          double t = exp(-x * 0.5);
++          return (-0.5 * t) * t;
++      }

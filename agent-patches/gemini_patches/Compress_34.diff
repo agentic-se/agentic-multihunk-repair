@@ -1,0 +1,64 @@
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/X7875_NewUnix.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/X7875_NewUnix.java
+@@ -1,3 +1,3 @@
+-    public ZipShort getCentralDirectoryLength() {
+-        return getLocalFileDataLength();
+-    }
++    public ZipShort getCentralDirectoryLength() {
++        return new ZipShort(0);
++    }
+@@ -1,16 +1,38 @@
+-    public void parseFromLocalFileData(
+-            byte[] data, int offset, int length
+-    ) throws ZipException {
+-        reset();
+-        this.version = signedByteToUnsignedInt(data[offset++]);
+-        int uidSize = signedByteToUnsignedInt(data[offset++]);
+-        byte[] uidBytes = new byte[uidSize];
+-        System.arraycopy(data, offset, uidBytes, 0, uidSize);
+-        offset += uidSize;
+-        this.uid = new BigInteger(1, reverse(uidBytes)); // sign-bit forced positive
+-
+-        int gidSize = signedByteToUnsignedInt(data[offset++]);
+-        byte[] gidBytes = new byte[gidSize];
+-        System.arraycopy(data, offset, gidBytes, 0, gidSize);
+-        this.gid = new BigInteger(1, reverse(gidBytes)); // sign-bit forced positive
+-    }
++    public void parseFromLocalFileData(
++            byte[] data, int offset, int length
++    ) throws ZipException {
++        reset();
++        if (length < 1) { // Need at least 1 byte for version
++            return;
++        }
++        this.version = signedByteToUnsignedInt(data[offset++]);
++        length--;
++
++        if (length < 1) { // Need at least 1 byte for uidSize
++            return;
++        }
++        int uidSize = signedByteToUnsignedInt(data[offset++]);
++        length--;
++
++        if (length < uidSize) { // Need uidSize bytes for UID
++            throw new ZipException("X7875_NewUnix local file data is too short. Expected " + uidSize + " bytes for UID, got " + length);
++        }
++        byte[] uidBytes = new byte[uidSize];
++        System.arraycopy(data, offset, uidBytes, 0, uidSize);
++        offset += uidSize;
++        length -= uidSize;
++        this.uid = new BigInteger(1, reverse(uidBytes)); // sign-bit forced positive
++
++        if (length < 1) { // Need at least 1 byte for gidSize
++            return;
++        }
++        int gidSize = signedByteToUnsignedInt(data[offset++]);
++        length--;
++
++        if (length < gidSize) { // Need gidSize bytes for GID
++            throw new ZipException("X7875_NewUnix local file data is too short. Expected " + gidSize + " bytes for GID, got " + length);
++        }
++        byte[] gidBytes = new byte[gidSize];
++        System.arraycopy(data, offset, gidBytes, 0, gidSize);
++        this.gid = new BigInteger(1, reverse(gidBytes)); // sign-bit forced positive
++    }

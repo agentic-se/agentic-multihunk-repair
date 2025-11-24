@@ -1,0 +1,36 @@
+diff --git a/src/com/google/javascript/jscomp/Compiler.java b/src/com/google/javascript/jscomp/Compiler.java
+index 71f76d83..7e5bd368 100644
+--- a/src/com/google/javascript/jscomp/Compiler.java
++++ b/src/com/google/javascript/jscomp/Compiler.java
+@@ -1429,7 +1429,7 @@ public class Compiler extends AbstractCompiler {
+ 
+         // if LanguageMode is ECMASCRIPT5_STRICT, only print 'use strict'
+         // for the first input file
+-        String code = toSource(root, sourceMap);
++        String code = toSource(root, sourceMap, inputSeqNum);
+         if (!code.isEmpty()) {
+           cb.append(code);
+ 
+@@ -1465,13 +1465,21 @@ public class Compiler extends AbstractCompiler {
+    * Generates JavaScript source code for an AST.
+    */
+   private String toSource(Node n, SourceMap sourceMap) {
++    return toSource(n, sourceMap, 0);
++  }
++
++  /**
++   * Generates JavaScript source code for an AST.
++   */
++  private String toSource(Node n, SourceMap sourceMap, int inputSeqNum) {
+     CodePrinter.Builder builder = new CodePrinter.Builder(n);
+     builder.setPrettyPrint(options.prettyPrint);
+     builder.setLineBreak(options.lineBreak);
+     builder.setSourceMap(sourceMap);
+     builder.setSourceMapDetailLevel(options.sourceMapDetailLevel);
+     builder.setTagAsStrict(
+-        options.getLanguageOut() == LanguageMode.ECMASCRIPT5_STRICT);
++        options.getLanguageOut() == LanguageMode.ECMASCRIPT5_STRICT &&
++        inputSeqNum == 0);
+     builder.setLineLengthThreshold(options.lineLengthThreshold);
+ 
+     Charset charset = options.outputCharset != null ?

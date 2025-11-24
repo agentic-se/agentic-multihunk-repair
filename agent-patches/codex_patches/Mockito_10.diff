@@ -1,0 +1,19 @@
+diff --git a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+index e2ded558e..a61c0a918 100644
+--- a/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
++++ b/src/org/mockito/internal/stubbing/defaultanswers/ReturnsDeepStubs.java
+@@ -96,8 +96,12 @@ public class ReturnsDeepStubs implements Answer<Object>, Serializable {
+                 withSettings().extraInterfaces(returnTypeGenericMetadata.rawExtraInterfaces())
+                 : withSettings();
+ 
+-        return mockSettings.serializable()
+-                .defaultAnswer(returnsDeepStubsAnswerUsing(returnTypeGenericMetadata));
++        // Do not force deep-stubbed mocks to be serializable.
++        // Previously, forcing serializability caused failures when the return type
++        // was not Serializable and lacked a no-arg constructor.
++        // We only set the default deep stubs answer and leave serializability unchanged.
++        return mockSettings
++                .defaultAnswer(returnsDeepStubsAnswerUsing(returnTypeGenericMetadata));
+     }
+ 
+ 

@@ -1,0 +1,36 @@
+diff --git a/src/java/org/apache/commons/cli2/validation/FileValidator.java b/src/java/org/apache/commons/cli2/validation/FileValidator.java
+index 3b1e131..fcddfea 100644
+--- a/src/java/org/apache/commons/cli2/validation/FileValidator.java
++++ b/src/java/org/apache/commons/cli2/validation/FileValidator.java
+@@ -120,8 +120,16 @@ public class FileValidator implements Validator {
+      */
+     public void validate(final List values) throws InvalidArgumentException {
+         for (final ListIterator i = values.listIterator(); i.hasNext();) {
+-            final String name = (String)i.next();
+-            final File f = new File(name);
++            final Object next = i.next();
++            final File f;
++
++            // Check if the value is already a File (in case validate is called multiple times)
++            if (next instanceof File) {
++                f = (File) next;
++            } else {
++                final String name = (String) next;
++                f = new File(name);
++            }
+ 
+             if ((existing && !f.exists())
+                 || (file && !f.isFile())
+@@ -130,7 +138,7 @@ public class FileValidator implements Validator {
+                 || (readable && !f.canRead())
+                 || (writable && !f.canWrite())) {
+ 
+-                throw new InvalidArgumentException(name);
++                throw new InvalidArgumentException(f.getPath());
+             }
+ 
+             i.set(f);
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

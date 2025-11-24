@@ -1,0 +1,174 @@
+--- a/src/main/java/org/jsoup/parser/Token.java
++++ b/src/main/java/org/jsoup/parser/Token.java
+@@ -1,10 +1,16 @@
+-        void newAttribute() {
+-            if (pendingAttributeName != null) {
+-                if (pendingAttributeValue == null)
+-                    pendingAttributeValue = "";
+-                Attribute attribute = new Attribute(pendingAttributeName, pendingAttributeValue);
+-                attributes.put(attribute);
+-            }
+-            pendingAttributeName = null;
+-            pendingAttributeValue = null;
+-        }
++        void newAttribute() {
++            if (pendingAttributeName != null) {
++                if (pendingAttributeValue == null)
++                    pendingAttributeValue = "";
++                Attribute attribute = new Attribute(pendingAttributeName, pendingAttributeValue);
++                attributes.put(attribute);
++            }
++            pendingAttributeName = null;
++            pendingAttributeValue = null;
++        }
++
++        void startNewAttribute() {
++            if (pendingAttributeName == null) {
++                newAttribute();
++            }
++        }
+@@ -1,10 +1,10 @@
+-        void newAttribute() {
+-            if (pendingAttributeName != null) {
+-                if (pendingAttributeValue == null)
+-                    pendingAttributeValue = "";
+-                Attribute attribute = new Attribute(pendingAttributeName, pendingAttributeValue);
+-                attributes.put(attribute);
+-            }
+-            pendingAttributeName = null;
+-            pendingAttributeValue = null;
+-        }
++        void newAttribute() {
++            if (pendingAttributeName != null && pendingAttributeName.length() > 0) {
++                if (pendingAttributeValue == null)
++                    pendingAttributeValue = "";
++                Attribute attribute = new Attribute(pendingAttributeName, pendingAttributeValue);
++                attributes.put(attribute);
++            }
++            pendingAttributeName = null;
++            pendingAttributeValue = null;
++        }
+@@ -1,10 +1,10 @@
+-        void newAttribute() {
+-            if (pendingAttributeName != null && pendingAttributeName.length() > 0) {
+-                if (pendingAttributeValue == null)
+-                    pendingAttributeValue = "";
+-                Attribute attribute = new Attribute(pendingAttributeName, pendingAttributeValue);
+-                attributes.put(attribute);
+-            }
+-            pendingAttributeName = null;
+-            pendingAttributeValue = null;
+-        }
++        void newAttribute() {
++            if (pendingAttributeName != null) {
++                if (pendingAttributeValue == null)
++                    pendingAttributeValue = "";
++                Attribute attribute = new Attribute(pendingAttributeName, pendingAttributeValue);
++                attributes.put(attribute);
++            }
++            pendingAttributeName = null;
++            pendingAttributeValue = null;
++        }
+@@ -1,5 +1,1 @@
+-        void startNewAttribute() {
+-            if (pendingAttributeName == null) {
+-                newAttribute();
+-            }
+-        }
++
+
+--- a/src/main/java/org/jsoup/parser/TokeniserState.java
++++ b/src/main/java/org/jsoup/parser/TokeniserState.java
+@@ -1,1 +1,1 @@
+-            String name = r.consumeToAny('\t', '\n', '\f', ' ', '/', '=', '>', nullChar, '"', '\'', '<');
++            String name = r.consumeToAny('/', '=', '>', '\t', '\n', '\f', ' ', nullChar, '"', '\'', '<'); // Changed delimiters
+@@ -1,1 +1,1 @@
+-            String name = r.consumeToAny('/', '=', '>', '\t', '\n', '\f', ' ', nullChar, '"', '\'', '<'); // Changed delimiters
++            String name = r.consumeToAny('/', '=', '>', '\t', '\n', '\f', ' ', nullChar, '"', '\'', '<');
+@@ -1,2 +1,1 @@
+-                        String name = r.consumeToAny('/', '=', '>', '\t', '
+-', '', ' ', nullChar, '"', '\'', '<'); // Changed delimiters
++            String name = r.consumeToAny('/', '=', '>', '\t', '\n', '\f', ' ', nullChar, '"', '\'', '<');
+@@ -1,4 +1,4 @@
+-                    t.error(this);
+-                    t.tagPending.newAttribute();
+-                    t.tagPending.appendAttributeName(c);
+-                    t.transition(AttributeName);
++                    t.error(this);
++                    t.tagPending.startNewAttribute();
++                    t.tagPending.appendAttributeName(c);
++                    t.transition(AttributeName);
+@@ -1,4 +1,4 @@
+-                default: // A-Z, anything else
+-                    t.tagPending.newAttribute();
+-                    r.unconsume();
+-                    t.transition(AttributeName);
++                default: // A-Z, anything else
++                    t.tagPending.startNewAttribute();
++                    r.unconsume();
++                    t.transition(AttributeName);
+@@ -1,4 +1,4 @@
+-                    t.error(this);
+-                    t.tagPending.startNewAttribute();
+-                    t.tagPending.appendAttributeName(c);
+-                    t.transition(AttributeName);
++                    t.error(this);
++                    t.tagPending.newAttribute();
++                    t.tagPending.appendAttributeName(c);
++                    t.transition(AttributeName);
+@@ -1,4 +1,4 @@
+-                default: // A-Z, anything else
+-                    t.tagPending.startNewAttribute();
+-                    r.unconsume();
+-                    t.transition(AttributeName);
++                default: // A-Z, anything else
++                    t.tagPending.newAttribute();
++                    r.unconsume();
++                    t.transition(AttributeName);
+@@ -1,4 +1,3 @@
+-        void read(Tokeniser t, CharacterReader r) {
+-            t.tagPending.startNewAttribute(); // Use the new method
+-            String name = r.consumeToAny('/', '=', '>', '\t', '\n', '\f', ' ', nullChar, '"', '\'', '<');
+-            t.tagPending.appendAttributeName(name.toLowerCase());
++        void read(Tokeniser t, CharacterReader r) {
++            String name = r.consumeToAny('/', '=', '>', '\t', '\n', '\f', ' ', nullChar, '"', '\'', '<');
++            t.tagPending.appendAttributeName(name.toLowerCase());
+@@ -1,3 +1,4 @@
+-                default: // A-Z, anything else
+-                    r.unconsume();
+-                    t.transition(AttributeName);
++                default: // A-Z, anything else
++                    t.tagPending.newAttribute();
++                    r.unconsume();
++                    t.transition(AttributeName);
+
+--- a/src/test/java/org/jsoup/nodes/ElementTest.java
++++ b/src/test/java/org/jsoup/nodes/ElementTest.java
+@@ -1,10 +1,17 @@
+-
+-    @Test public void testHtmlContainsOuter() {
+-        Document doc = Jsoup.parse("<title>Check</title> <div>Hello there</div>");
+-        doc.outputSettings().indentAmount(0);
+-        assertTrue(doc.html().contains(doc.select("title").outerHtml()));
+-        assertTrue(doc.html().contains(doc.select("div").outerHtml()));
+-    }
+-
+-
+-}
++
++    @Test public void testHtmlContainsOuter() {
++        Document doc = Jsoup.parse("<title>Check</title> <div>Hello there</div>");
++        doc.outputSettings().indentAmount(0);
++        assertTrue(doc.html().contains(doc.select("title").outerHtml()));
++        assertTrue(doc.html().contains(doc.select("div").outerHtml()));
++    }
++
++    @Test public void testOuterHtmlWithNewlineInAttribute() {
++        String html = "<img alt=""\n         src="/imagelibraries/homepagebanners/british_10k_2010.jpg" />";
++        Document doc = Jsoup.parse(html);
++        Element img = doc.select("img").first();
++        assertEquals("<img alt="" src="/imagelibraries/homepagebanners/british_10k_2010.jpg" />", img.outerHtml());
++    }
++
++
++}

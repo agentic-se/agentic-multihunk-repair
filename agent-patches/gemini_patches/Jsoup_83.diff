@@ -1,0 +1,12 @@
+--- a/src/main/java/org/jsoup/parser/TokeniserState.java
++++ b/src/main/java/org/jsoup/parser/TokeniserState.java
+@@ -1,5 +1,4 @@
+-                case '"':
+-                case '\'':
+-                case '<':
+-                case '=':
+-                case '`':
++                case '"':
++                case '\'':
++                case '=':
++                case '`':

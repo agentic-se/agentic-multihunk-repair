@@ -1,0 +1,56 @@
+diff --git a/source/org/jfree/chart/renderer/category/StatisticalBarRenderer.java b/source/org/jfree/chart/renderer/category/StatisticalBarRenderer.java
+index ab65ba3..0fa3ee3 100644
+--- a/source/org/jfree/chart/renderer/category/StatisticalBarRenderer.java
++++ b/source/org/jfree/chart/renderer/category/StatisticalBarRenderer.java
+@@ -79,7 +79,8 @@ import org.jfree.chart.event.RendererChangeEvent;
+ import org.jfree.chart.labels.CategoryItemLabelGenerator;
+ import org.jfree.chart.plot.CategoryPlot;
+ import org.jfree.chart.plot.PlotOrientation;
+-import org.jfree.chart.util.PaintUtilities;
++import org.jfree.chart.util.PaintUtilities;
++import org.jfree.chart.util.ObjectUtilities;
+ import org.jfree.chart.util.PublicCloneable;
+ import org.jfree.chart.util.RectangleEdge;
+ import org.jfree.chart.util.SerialUtilities;
+@@ -506,23 +507,24 @@ public class StatisticalBarRenderer extends BarRenderer
+      * 
+      * @return A boolean.
+      */
+-    public boolean equals(Object obj) {
+-        if (obj == this) {
+-            return true;   
+-        }
+-        if (!(obj instanceof StatisticalBarRenderer)) {
+-            return false;   
+-        }
+-        if (!super.equals(obj)) {
+-            return false;   
+-        }
+-        StatisticalBarRenderer that = (StatisticalBarRenderer) obj;
+-        if (!PaintUtilities.equal(this.errorIndicatorPaint, 
+-                that.errorIndicatorPaint)) {
+-            return false;
+-        }
+-        return true;
+-    }
++    public boolean equals(Object obj) {
++        if (obj == this) {
++            return true;   
++        }
++        if (!(obj instanceof StatisticalBarRenderer)) {
++            return false;   
++        }
++        StatisticalBarRenderer that = (StatisticalBarRenderer) obj;
++        if (!PaintUtilities.equal(this.errorIndicatorPaint, 
++                that.errorIndicatorPaint)) {
++            return false;
++        }
++        if (!ObjectUtilities.equal(this.errorIndicatorStroke, 
++                that.errorIndicatorStroke)) {
++            return false;
++        }
++        return super.equals(obj);
++    }
+     
+     /**
+      * Provides serialization support.

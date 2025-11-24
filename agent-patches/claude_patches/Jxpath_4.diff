@@ -1,0 +1,156 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
+index 5236867..b071222 100644
+--- a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
+@@ -640,7 +640,10 @@ public class DOMNodePointer extends NodePointer {
+         }
+         if (nodeType == Node.TEXT_NODE || nodeType == Node.CDATA_SECTION_NODE) {
+             String text = node.getNodeValue();
+-            return text == null ? "" : text.trim();
++            if (text == null) {
++                return "";
++            }
++            return isPreserveSpace(node) ? text : text.trim();
+         }
+         if (nodeType == Node.PROCESSING_INSTRUCTION_NODE) {
+             String text = ((ProcessingInstruction) node).getData();
+@@ -650,14 +653,40 @@ public class DOMNodePointer extends NodePointer {
+         StringBuffer buf = new StringBuffer(16);
+         for (int i = 0; i < list.getLength(); i++) {
+             Node child = list.item(i);
+-            if (child.getNodeType() == Node.TEXT_NODE) {
+-                buf.append(child.getNodeValue());
++            int childType = child.getNodeType();
++            if (childType == Node.TEXT_NODE) {
++                String text = child.getNodeValue();
++                if (text != null) {
++                    buf.append(isPreserveSpace(child) ? text : text.trim());
++                }
+             }
+-            else {
+-            buf.append(stringValue(child));
++            else if (childType == Node.ELEMENT_NODE) {
++                buf.append(stringValue(child));
+             }
++            // Skip comments and other non-text, non-element nodes
+         }
+-        return buf.toString().trim();
++        return buf.toString();
++    }
++
++    /**
++     * Check if xml:space="preserve" is set for this node or its ancestors.
++     */
++    private boolean isPreserveSpace(Node node) {
++        Node n = node;
++        // For text nodes, check the parent element
++        if (n.getNodeType() == Node.TEXT_NODE || n.getNodeType() == Node.CDATA_SECTION_NODE) {
++            n = n.getParentNode();
++        }
++        // Traverse up the tree looking for xml:space attribute
++        while (n != null && n.getNodeType() == Node.ELEMENT_NODE) {
++            Element e = (Element) n;
++            String space = e.getAttribute("xml:space");
++            if (space != null && !space.equals("")) {
++                return "preserve".equals(space);
++            }
++            n = n.getParentNode();
++        }
++        return false;
+     }
+ 
+     /**
+diff --git a/src/java/org/apache/commons/jxpath/ri/model/jdom/JDOMNodePointer.java b/src/java/org/apache/commons/jxpath/ri/model/jdom/JDOMNodePointer.java
+index 975dbc4..cdf9582 100644
+--- a/src/java/org/apache/commons/jxpath/ri/model/jdom/JDOMNodePointer.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/jdom/JDOMNodePointer.java
+@@ -237,7 +237,7 @@ public class JDOMNodePointer extends NodePointer {
+ 
+     public Object getValue() {
+         if (node instanceof Element) {
+-            return ((Element) node).getTextTrim();
++            return stringValue((Element) node);
+         }
+         if (node instanceof Comment) {
+             String text = ((Comment) node).getText();
+@@ -247,10 +247,14 @@ public class JDOMNodePointer extends NodePointer {
+             return text;
+         }
+         if (node instanceof Text) {
+-            return ((Text) node).getTextTrim();
++            Text textNode = (Text) node;
++            String text = textNode.getText();
++            return isPreserveSpace(textNode) ? text : text.trim();
+         }
+         if (node instanceof CDATA) {
+-            return ((CDATA) node).getTextTrim();
++            CDATA cdataNode = (CDATA) node;
++            String text = cdataNode.getText();
++            return isPreserveSpace(cdataNode) ? text : text.trim();
+         }
+         if (node instanceof ProcessingInstruction) {
+             String text = ((ProcessingInstruction) node).getData();
+@@ -262,6 +266,59 @@ public class JDOMNodePointer extends NodePointer {
+         return null;
+     }
+ 
++    private String stringValue(Element element) {
++        List content = element.getContent();
++        if (content.isEmpty()) {
++            return "";
++        }
++        StringBuffer buf = new StringBuffer();
++        for (int i = 0; i < content.size(); i++) {
++            Object child = content.get(i);
++            if (child instanceof Text) {
++                Text text = (Text) child;
++                String value = text.getText();
++                if (value != null) {
++                    buf.append(isPreserveSpace(text) ? value : value.trim());
++                }
++            } else if (child instanceof CDATA) {
++                CDATA cdata = (CDATA) child;
++                String value = cdata.getText();
++                if (value != null) {
++                    buf.append(isPreserveSpace(cdata) ? value : value.trim());
++                }
++            } else if (child instanceof Element) {
++                buf.append(stringValue((Element) child));
++            }
++        }
++        return buf.toString();
++    }
++
++    /**
++     * Check if xml:space="preserve" is set for this node or its ancestors.
++     */
++    private boolean isPreserveSpace(Object n) {
++        Element element = null;
++        // For text/CDATA nodes, check the parent element
++        if (n instanceof Text) {
++            element = (Element) ((Text) n).getParent();
++        } else if (n instanceof CDATA) {
++            element = (Element) ((CDATA) n).getParent();
++        } else if (n instanceof Element) {
++            element = (Element) n;
++        }
++
++        // Traverse up the tree looking for xml:space attribute
++        while (element != null) {
++            String space = element.getAttributeValue("space", Namespace.XML_NAMESPACE);
++            if (space != null && !space.equals("")) {
++                return "preserve".equals(space);
++            }
++            Object parent = element.getParent();
++            element = (parent instanceof Element) ? (Element) parent : null;
++        }
++        return false;
++    }
++
+     public void setValue(Object value) {
+         if (node instanceof Text) {
+             String string = (String) TypeUtils.convert(value, String.class);
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

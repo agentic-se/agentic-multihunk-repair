@@ -1,0 +1,12 @@
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/std/NumberDeserializers.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/std/NumberDeserializers.java
+@@ -1,8 +1,1 @@
+-            switch (jp.getCurrentTokenId()) {
+-            case JsonTokenId.ID_NUMBER_INT:
+-            case JsonTokenId.ID_NUMBER_FLOAT:
+-            case JsonTokenId.ID_STRING:
+-                // can not point to type information: hence must be non-typed (int/double)
+-                return deserialize(jp, ctxt);
+-            }
+-            return typeDeserializer.deserializeTypedFromScalar(jp, ctxt);
++            return typeDeserializer.deserializeTypedFromScalar(jp, ctxt);

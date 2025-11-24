@@ -1,0 +1,44 @@
+diff --git a/src/main/java/org/apache/commons/math3/optimization/direct/CMAESOptimizer.java b/src/main/java/org/apache/commons/math3/optimization/direct/CMAESOptimizer.java
+index bc754a592..39f66e88e 100644
+--- a/src/main/java/org/apache/commons/math3/optimization/direct/CMAESOptimizer.java
++++ b/src/main/java/org/apache/commons/math3/optimization/direct/CMAESOptimizer.java
+@@ -424,6 +424,9 @@ public class CMAESOptimizer
+                     optimum = new PointValuePair(
+                             fitfun.repairAndDecode(bestArx.getColumn(0)),
+                             isMinimize ? bestFitness : -bestFitness);
++                    // DEBUG: print early progress
++                    // System.out.println("Iter " + iterations + ": bestFitness=" + bestFitness +
++                    //                    " point0=" + optimum.getPoint()[0]);
+                     if (getConvergenceChecker() != null && lastResult != null) {
+                         if (getConvergenceChecker().converged(iterations, optimum, lastResult)) {
+                             break generationLoop;
+@@ -550,6 +553,7 @@ public class CMAESOptimizer
+                         throw e;
+                     }
+                 }
++                // Keep default regeneration behavior.
+             }
+         } else {
+             // Convert API to internal handling of boundaries.
+@@ -954,8 +958,10 @@ public class CMAESOptimizer
+             }
+             double[] res = new double[x.length];
+             for (int i = 0; i < x.length; i++) {
+-                double diff = boundaries[1][i] - boundaries[0][i];
+-                res[i] = diff * x[i] + boundaries[0][i];
++                final double lower = boundaries[0][i];
++                final double diff  = boundaries[1][i] - lower;
++                // Use extended precision for the affine transform.
++                res[i] = org.apache.commons.math3.util.MathArrays.linearCombination(diff, x[i], 1.0, lower);
+             }
+             return res;
+         }
+@@ -986,8 +992,6 @@ public class CMAESOptimizer
+             if (boundaries == null) {
+                 return true;
+             }
+-
+-
+             for (int i = 0; i < x.length; i++) {
+                 if (x[i] < 0) {
+                     return false;

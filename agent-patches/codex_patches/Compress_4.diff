@@ -1,0 +1,42 @@
+diff --git a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveOutputStream.java b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveOutputStream.java
+index 5aa7c87c..be68a0c6 100644
+--- a/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveOutputStream.java
++++ b/src/main/java/org/apache/commons/compress/archivers/zip/ZipArchiveOutputStream.java
+@@ -220,6 +220,13 @@ public class ZipArchiveOutputStream extends ArchiveOutputStream {
+      */
+     private boolean fallbackToUTF8 = false;
+ 
++    /**
++     * Tracks whether {@link #finish()} has already been called to avoid
++     * writing the central directory twice (e.g., if users call finish()
++     * explicitly and then {@link #close()} which also calls finish()).
++     */
++    private boolean finished = false;
++
+     /**
+      * whether to create UnicodePathExtraField-s for each entry.
+      */
+@@ -332,10 +339,13 @@ public class ZipArchiveOutputStream extends ArchiveOutputStream {
+      * @see org.apache.commons.compress.archivers.ArchiveOutputStream#finish()
+      */
+     public void finish() throws IOException {
+-        if(entry != null) {
++        if (finished) {
++            return; // prevent double-finish corruption
++        }
++        if (entry != null) {
+             throw new IOException("This archives contains unclosed entries.");
+         }
+-        
++
+         cdOffset = written;
+         for (Iterator i = entries.iterator(); i.hasNext(); ) {
+             writeCentralFileHeader((ZipArchiveEntry) i.next());
+@@ -344,6 +354,7 @@ public class ZipArchiveOutputStream extends ArchiveOutputStream {
+         writeCentralDirectoryEnd();
+         offsets.clear();
+         entries.clear();
++        finished = true;
+     }
+ 
+     /**

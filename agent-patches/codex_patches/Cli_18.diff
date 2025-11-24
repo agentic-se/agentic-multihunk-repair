@@ -1,0 +1,16 @@
+diff --git a/src/java/org/apache/commons/cli/PosixParser.java b/src/java/org/apache/commons/cli/PosixParser.java
+index 8f03474..ce6886c 100644
+--- a/src/java/org/apache/commons/cli/PosixParser.java
++++ b/src/java/org/apache/commons/cli/PosixParser.java
+@@ -237,7 +237,10 @@ public class PosixParser extends Parser {
+         }
+         else if (stopAtNonOption)
+         {
+-            eatTheRest = true;
++            // when encountering an unrecognized token starting with '-'
++            // and stopAtNonOption is enabled, treat it as a non-option
++            // and stop further option processing, preserving the token.
++            process(token);
+         }
+     }
+ 

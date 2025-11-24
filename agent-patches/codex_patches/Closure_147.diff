@@ -1,0 +1,34 @@
+diff --git a/src/com/google/javascript/jscomp/CheckGlobalThis.java b/src/com/google/javascript/jscomp/CheckGlobalThis.java
+index d63c72b1..af74aff5 100644
+--- a/src/com/google/javascript/jscomp/CheckGlobalThis.java
++++ b/src/com/google/javascript/jscomp/CheckGlobalThis.java
+@@ -105,7 +105,10 @@ final class CheckGlobalThis implements Callback {
+       if (!(pType == Token.BLOCK ||
+             pType == Token.SCRIPT ||
+             pType == Token.NAME ||
+-            pType == Token.ASSIGN)) {
++            pType == Token.ASSIGN ||
++            // Allow functions that appear as values in object literals
++            // so we can properly flag uses of global 'this' inside them.
++            pType == Token.OBJECTLIT)) {
+         return false;
+       }
+     }
+diff --git a/src/com/google/javascript/jscomp/RuntimeTypeCheck.java b/src/com/google/javascript/jscomp/RuntimeTypeCheck.java
+index ed4a6b9a..2efb2a42 100644
+--- a/src/com/google/javascript/jscomp/RuntimeTypeCheck.java
++++ b/src/com/google/javascript/jscomp/RuntimeTypeCheck.java
+@@ -244,6 +244,13 @@ class RuntimeTypeCheck implements CompilerPass {
+ 
+       // To satisfy normalization constraints, the type checking must be
+       // added after any inner function declarations.
++      // Find the last function declaration at the top of the block and
++      // insert checks after it.
++      Node cursor = block.getFirstChild();
++      while (cursor != null && NodeUtil.isFunctionDeclaration(cursor)) {
++        insertionPoint = cursor;
++        cursor = cursor.getNext();
++      }
+ 
+       for (Node paramType : funType.getParameters()) {
+         // Can this ever happen?

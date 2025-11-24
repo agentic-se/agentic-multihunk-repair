@@ -1,0 +1,56 @@
+diff --git a/src/com/google/javascript/jscomp/PeepholeReplaceKnownMethods.java b/src/com/google/javascript/jscomp/PeepholeReplaceKnownMethods.java
+index ffe47d3d..82c5ecd8 100644
+--- a/src/com/google/javascript/jscomp/PeepholeReplaceKnownMethods.java
++++ b/src/com/google/javascript/jscomp/PeepholeReplaceKnownMethods.java
+@@ -373,6 +373,11 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
+ 
+     Node right = callTarget.getNext();
+     if (right != null) {
++      // Only support zero or one argument. If more than one argument is
++      // provided, bail out (see tests expecting no change in this case).
++      if (right.getNext() != null) {
++        return n;
++      }
+       if (!NodeUtil.isImmutableValue(right)) {
+         return n;
+       }
+@@ -389,6 +394,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
+       // "," is the default, it doesn't need to be explicit
+ 
+     String joinString = (right == null) ? "," : NodeUtil.getStringValue(right);
++    boolean dropRedundantJoinArg = right != null && ",".equals(joinString);
+     List<Node> arrayFoldedChildren = Lists.newLinkedList();
+     StringBuilder sb = null;
+     int foldedSize = 0;
+@@ -460,7 +466,11 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
+         }
+         int kJoinOverhead = "[].join()".length();
+         foldedSize += kJoinOverhead;
+-        foldedSize += (right != null) ? InlineCostEstimator.getCost(right) : 0;
++        // If the join argument is an explicit ",", it is redundant and can
++        // be dropped. Don't count its cost when deciding on the transformation.
++        if (!dropRedundantJoinArg) {
++          foldedSize += (right != null) ? InlineCostEstimator.getCost(right) : 0;
++        }
+         if (foldedSize > originalSize) {
+           return n;
+         }
+@@ -468,6 +478,11 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
+         for (Node node : arrayFoldedChildren) {
+           arrayNode.addChildToBack(node);
+         }
++        // If possible, remove the redundant explicit "," argument so we emit
++        // `.join()` instead of `.join(',')`.
++        if (dropRedundantJoinArg) {
++          n.removeChild(right);
++        }
+         reportCodeChange();
+         break;
+     }
+@@ -642,4 +657,4 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization{
+     reportCodeChange();
+     return resultNode;
+   }
+-}
+\ No newline at end of file
++}

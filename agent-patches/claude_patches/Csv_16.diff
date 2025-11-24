@@ -1,0 +1,81 @@
+diff --git a/src/main/java/org/apache/commons/csv/CSVParser.java b/src/main/java/org/apache/commons/csv/CSVParser.java
+index 1e3106e..d6aa159 100644
+--- a/src/main/java/org/apache/commons/csv/CSVParser.java
++++ b/src/main/java/org/apache/commons/csv/CSVParser.java
+@@ -303,6 +303,12 @@ public final class CSVParser implements Iterable<CSVRecord>, Closeable {
+ 
+     private final Token reusableToken = new Token();
+ 
++    /**
++     * The next record to be returned by the iterator. This is shared across all iterators
++     * to ensure that peeking with hasNext() on a new iterator doesn't consume a record.
++     */
++    private CSVRecord current;
++
+     /**
+      * Customized CSV parser using the given {@link CSVFormat}
+      *
+@@ -521,8 +527,7 @@ public final class CSVParser implements Iterable<CSVRecord>, Closeable {
+     @Override
+     public Iterator<CSVRecord> iterator() {
+         return new Iterator<CSVRecord>() {
+-        private CSVRecord current;
+-  
++
+         private CSVRecord getNextRecord() {
+             try {
+                 return CSVParser.this.nextRecord();
+@@ -531,27 +536,27 @@ public final class CSVParser implements Iterable<CSVRecord>, Closeable {
+                         e.getClass().getSimpleName() + " reading next record: " + e.toString(), e);
+             }
+         }
+-  
++
+         @Override
+         public boolean hasNext() {
+             if (CSVParser.this.isClosed()) {
+                 return false;
+             }
+-            if (this.current == null) {
+-                this.current = this.getNextRecord();
++            if (CSVParser.this.current == null) {
++                CSVParser.this.current = this.getNextRecord();
+             }
+-  
+-            return this.current != null;
++
++            return CSVParser.this.current != null;
+         }
+-  
++
+         @Override
+         public CSVRecord next() {
+             if (CSVParser.this.isClosed()) {
+                 throw new NoSuchElementException("CSVParser has been closed");
+             }
+-            CSVRecord next = this.current;
+-            this.current = null;
+-  
++            CSVRecord next = CSVParser.this.current;
++            CSVParser.this.current = null;
++
+             if (next == null) {
+                 // hasNext() wasn't called before
+                 next = this.getNextRecord();
+@@ -559,10 +564,10 @@ public final class CSVParser implements Iterable<CSVRecord>, Closeable {
+                     throw new NoSuchElementException("No more CSV records available");
+                 }
+             }
+-  
++
+             return next;
+         }
+-  
++
+         @Override
+         public void remove() {
+             throw new UnsupportedOperationException();
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

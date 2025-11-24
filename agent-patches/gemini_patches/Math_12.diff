@@ -1,0 +1,7 @@
+--- a/src/main/java/org/apache/commons/math3/random/BitsStreamGenerator.java
++++ b/src/main/java/org/apache/commons/math3/random/BitsStreamGenerator.java
+@@ -1,2 +1,2 @@
+-public abstract class BitsStreamGenerator
+-    implements RandomGenerator {
++public abstract class BitsStreamGenerator
++    implements RandomGenerator, java.io.Serializable {

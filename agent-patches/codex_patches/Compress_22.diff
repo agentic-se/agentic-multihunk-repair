@@ -1,0 +1,86 @@
+diff --git a/src/main/java/org/apache/commons/compress/compressors/bzip2/BZip2CompressorInputStream.java b/src/main/java/org/apache/commons/compress/compressors/bzip2/BZip2CompressorInputStream.java
+index 4f89e0e5..8bd4473b 100644
+--- a/src/main/java/org/apache/commons/compress/compressors/bzip2/BZip2CompressorInputStream.java
++++ b/src/main/java/org/apache/commons/compress/compressors/bzip2/BZip2CompressorInputStream.java
+@@ -79,6 +79,14 @@ public class BZip2CompressorInputStream extends CompressorInputStream implements
+     private int storedBlockCRC, storedCombinedCRC;
+     private int computedBlockCRC, computedCombinedCRC;
+ 
++    /**
++     * If a truncation is detected only after finishing a block (i.e., while
++     * trying to read the next block header or the end-of-stream trailer), we
++     * want to deliver the last byte(s) of the completed block and only throw
++     * on the next read attempt. This field holds such a deferred exception.
++     */
++    private IOException pendingException;
++
+     // Variables used by setup* methods exclusively
+ 
+     private int su_count;
+@@ -196,6 +204,14 @@ public class BZip2CompressorInputStream extends CompressorInputStream implements
+     }
+ 
+     private int read0() throws IOException {
++        // If a previous call detected a truncated stream after finishing a
++        // block, throw the deferred exception now, before attempting to read
++        // more data.
++        if (currentState == EOF && pendingException != null) {
++            IOException e = pendingException;
++            pendingException = null;
++            throw e;
++        }
+         final int retChar = this.currentChar;
+         switch (currentState) {
+         case EOF:
+@@ -272,13 +288,25 @@ public class BZip2CompressorInputStream extends CompressorInputStream implements
+         char magic5;
+ 
+         while (true) {
+-            // Get the block magic bytes.
+-            magic0 = bsGetUByte();
+-            magic1 = bsGetUByte();
+-            magic2 = bsGetUByte();
+-            magic3 = bsGetUByte();
+-            magic4 = bsGetUByte();
+-            magic5 = bsGetUByte();
++            // Get the block magic bytes. If the stream is truncated after a
++            // successfully decoded block, we may hit EOF here. Defer throwing
++            // the exception so the caller still receives the last decoded
++            // byte(s) from the previous block.
++            try {
++                magic0 = bsGetUByte();
++                magic1 = bsGetUByte();
++                magic2 = bsGetUByte();
++                magic3 = bsGetUByte();
++                magic4 = bsGetUByte();
++                magic5 = bsGetUByte();
++            } catch (IOException io) {
++                // Defer exception: mark EOF so read0() returns the last
++                // character for the previous block and throw on next read.
++                this.currentState = EOF;
++                this.data = null;
++                this.pendingException = io;
++                return;
++            }
+ 
+             // If isn't end of stream magic, break out of the loop.
+             if (magic0 != 0x17 || magic1 != 0x72 || magic2 != 0x45
+@@ -288,8 +316,16 @@ public class BZip2CompressorInputStream extends CompressorInputStream implements
+ 
+             // End of stream was reached. Check the combined CRC and
+             // advance to the next .bz2 stream if decoding concatenated
+-            // streams.
+-            if (complete()) {
++            // streams. If the stream is truncated and we can't read the
++            // trailer, defer the exception until the next read attempt.
++            try {
++                if (complete()) {
++                    return;
++                }
++            } catch (IOException io) {
++                this.currentState = EOF;
++                this.data = null;
++                this.pendingException = io;
+                 return;
+             }
+         }

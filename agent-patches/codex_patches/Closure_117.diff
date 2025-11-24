@@ -1,0 +1,22 @@
+diff --git a/src/com/google/javascript/jscomp/TypeValidator.java b/src/com/google/javascript/jscomp/TypeValidator.java
+index bcd024ac..dfef57c0 100644
+--- a/src/com/google/javascript/jscomp/TypeValidator.java
++++ b/src/com/google/javascript/jscomp/TypeValidator.java
+@@ -725,10 +725,13 @@ class TypeValidator {
+ 
+     // The best type name is the actual type name.
+ 
+-    // If we're analyzing a GETPROP, the property may be inherited by the
+-    // prototype chain. So climb the prototype chain and find out where
+-    // the property was originally defined.
+-    if (n.isGetProp()) {
++    // If we're analyzing a GETPROP, and we're not asked to dereference to the
++    // underlying object type, try to find a human-readable owner name by
++    // walking the prototype chain to where the property is defined.
++    // When dereference is true, prefer the type of the expression itself
++    // (e.g. the type of the RHS of the GETPROP), not the owner where it was
++    // originally defined.
++    if (n.isGetProp() && (!dereference || getJSType(n).isFunctionType())) {
+       ObjectType objectType = getJSType(n.getFirstChild()).dereference();
+       if (objectType != null) {
+         String propName = n.getLastChild().getString();

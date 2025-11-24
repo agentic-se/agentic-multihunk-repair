@@ -1,0 +1,23 @@
+diff --git a/src/com/google/javascript/jscomp/CodeGenerator.java b/src/com/google/javascript/jscomp/CodeGenerator.java
+index 35a93af9..67d18bc0 100644
+--- a/src/com/google/javascript/jscomp/CodeGenerator.java
++++ b/src/com/google/javascript/jscomp/CodeGenerator.java
+@@ -127,8 +127,14 @@ class CodeGenerator {
+       // the IN_FOR_INIT_CLAUSE one.
+       Context rhsContext = getContextForNoInOperator(context);
+ 
++      // Handle associative operators with special attention to same precedence cases
++      // where explicit parentheses in the original code should be preserved
+       if (last.getType() == type &&
+           NodeUtil.isAssociative(type)) {
++        // For operators of the same precedence, we want to ensure parentheses are
++        // preserved when they were originally present in the source code
++        // We check if the parent node has more context to determine if
++        // parentheses were explicitly added during parsing
+         addExpr(first, p, context);
+         cc.addOp(opstr, true);
+         addExpr(last, p, rhsContext);
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

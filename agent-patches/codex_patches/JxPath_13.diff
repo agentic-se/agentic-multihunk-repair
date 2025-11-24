@@ -1,0 +1,16 @@
+diff --git a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
+index f22f825..2f464d8 100644
+--- a/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
++++ b/src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
+@@ -412,7 +412,10 @@ public class DOMNodePointer extends NodePointer {
+         Element element = (Element) node;
+         String prefix = name.getPrefix();
+         if (prefix != null) {
+-            String ns = getNamespaceURI(prefix);
++            // Use the JXPathContext's namespace registration to resolve
++            // the prefix. Using the local DOM lookup here ignores namespaces
++            // registered externally on the context (JXPATH-97).
++            String ns = context.getNamespaceURI(prefix);
+             if (ns == null) {
+                 throw new JXPathException(
+                     "Unknown namespace prefix: " + prefix);

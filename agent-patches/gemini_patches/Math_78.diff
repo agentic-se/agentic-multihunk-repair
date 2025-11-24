@@ -1,0 +1,208 @@
+--- a/src/main/java/org/apache/commons/math/ode/events/EventState.java
++++ b/src/main/java/org/apache/commons/math/ode/events/EventState.java
+@@ -1,4 +1,4 @@
+-            // force the sign to its value "just after the event"
+-            previousEventTime = t;
+-            g0Positive        = increasing;
+-            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
++            // force the sign to its value "just before the event"
++            previousEventTime = t;
++            g0Positive        = !increasing; // Changed from increasing to !increasing
++            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
+@@ -1,4 +1,4 @@
+-            // force the sign to its value "just before the event"
+-            previousEventTime = t;
+-            g0Positive        = !increasing; // Changed from increasing to !increasing
+-            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
++            // force the sign to its value "just after the event"
++            previousEventTime = t;
++            g0Positive        = increasing;
++            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
+@@ -1,4 +1,4 @@
+-            // force the sign to its value "just after the event"
+-            previousEventTime = t;
+-            g0Positive        = increasing;
+-            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
++            // force the sign to its value "just before the event"
++            previousEventTime = t;
++            g0Positive        = !increasing; // Set to the sign *before* the event
++            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
+@@ -1,2 +1,3 @@
+-                    if ((Math.abs(root - ta) <= convergence) &&
+-                         (Math.abs(root - previousEventTime) <= convergence)) {
++                    if ((Math.abs(root - previousEventTime) <= convergence) &&
++                        (Math.abs(root - ta) <= convergence) &&
++                        (Double.isNaN(previousEventTime) || Math.abs(t0 - previousEventTime) > convergence)) {
+@@ -1,4 +1,4 @@
+-            // force the sign to its value "just before the event"
+-            previousEventTime = t;
+-            g0Positive        = !increasing; // Set to the sign *before* the event
+-            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
++            // force the sign to its value "just after the event"
++            previousEventTime = t;
++            g0Positive        = increasing;
++            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
+@@ -1,3 +1,2 @@
+-                    if ((Math.abs(root - previousEventTime) <= convergence) &&
+-                        (Math.abs(root - ta) <= convergence) &&
+-                        (Double.isNaN(previousEventTime) || Math.abs(t0 - previousEventTime) > convergence)) {
++                    if ((Math.abs(root - ta) <= convergence) &&
++                         (Math.abs(root - previousEventTime) <= convergence)) {
+@@ -1,2 +1,9 @@
+-        g0 = handler.g(tStart, yStart);
+-        g0Positive = g0 >= 0;
++        g0 = handler.g(tStart, yStart);
++        if (g0 == 0.0) {
++            // if g0 is zero, we use the sign of the function a small step after tStart
++            // to avoid false detections if we are exactly at an event time
++            final double tAfter = tStart + (forward ? convergence : -convergence);
++            g0Positive = handler.g(tAfter, yStart) >= 0;
++        } else {
++            g0Positive = g0 >= 0;
++        }
+@@ -1,5 +1,12 @@
+-        if (pendingEvent) {
+-            // force the sign to its value "just after the event"
+-            previousEventTime = t;
+-            g0Positive        = increasing;
+-            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
++        if (pendingEvent) {
++            // force the sign to its value "just after the event"
++            previousEventTime = t;
++            if (g0 == 0.0) {
++                // if g0 is zero, we use the sign of the function a small step after t
++                // to avoid false detections if we are exactly at an event time
++                final double tAfter = t + (forward ? convergence : -convergence);
++                g0Positive = handler.g(tAfter, y) >= 0;
++            } else {
++                g0Positive = increasing;
++            }
++            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
+@@ -1,9 +1,2 @@
+-        g0 = handler.g(tStart, yStart);
+-        if (g0 == 0.0) {
+-            // if g0 is zero, we use the sign of the function a small step after tStart
+-            // to avoid false detections if we are exactly at an event time
+-            final double tAfter = tStart + (forward ? convergence : -convergence);
+-            g0Positive = handler.g(tAfter, yStart) >= 0;
+-        } else {
+-            g0Positive = g0 >= 0;
+-        }
++        g0 = handler.g(tStart, yStart);
++        g0Positive = g0 >= 0;
+@@ -1,12 +1,5 @@
+-        if (pendingEvent) {
+-            // force the sign to its value "just after the event"
+-            previousEventTime = t;
+-            if (g0 == 0.0) {
+-                // if g0 is zero, we use the sign of the function a small step after t
+-                // to avoid false detections if we are exactly at an event time
+-                final double tAfter = t + (forward ? convergence : -convergence);
+-                g0Positive = handler.g(tAfter, y) >= 0;
+-            } else {
+-                g0Positive = increasing;
+-            }
+-            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
++        if (pendingEvent) {
++            // force the sign to its value "just after the event"
++            previousEventTime = t;
++            g0Positive        = increasing;
++            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
+@@ -1,5 +1,7 @@
+-        if (pendingEvent) {
+-            // force the sign to its value "just after the event"
+-            previousEventTime = t;
+-            g0Positive        = increasing;
+-            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
++        if (pendingEvent) {
++            // force the sign to its value "just after the event"
++            if (Double.isNaN(previousEventTime) || Math.abs(t - previousEventTime) > convergence) {
++                previousEventTime = t;
++            }
++            g0Positive        = increasing;
++            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
+@@ -1,7 +1,5 @@
+-        if (pendingEvent) {
+-            // force the sign to its value "just after the event"
+-            if (Double.isNaN(previousEventTime) || Math.abs(t - previousEventTime) > convergence) {
+-                previousEventTime = t;
+-            }
+-            g0Positive        = increasing;
+-            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
++        if (pendingEvent) {
++            // force the sign to its value "just after the event"
++            previousEventTime = t;
++            g0Positive        = increasing;
++            nextAction        = handler.eventOccurred(t, y, !(increasing ^ forward));
+@@ -1,12 +1,23 @@
+-            double ta = t0;
+-            double ga = g0;
+-            double tb = t0 + (interpolator.isForward() ? convergence : -convergence);
+-            for (int i = 0; i < n; ++i) {
+-
+-                // evaluate handler value at the end of the substep
+-                tb += h;
+-                interpolator.setInterpolatedTime(tb);
+-                final double gb = handler.g(tb, interpolator.getInterpolatedState());
+-
+-                // check events occurrence
+-                if (g0Positive ^ (gb >= 0)) {
++            double ta = t0;
++            double ga = g0;
++
++            // If g0 is zero, we need to determine the effective sign for bracketing.
++            // We use a small perturbation to determine the sign just after t0.
++            // This ensures that if t0 is an event time, we can still detect the next event.
++            boolean currentG0Positive = g0Positive;
++            if (g0 == 0.0) {
++                interpolator.setInterpolatedTime(t0 + (forward ? convergence : -convergence));
++                final double gAfterT0 = handler.g(interpolator.getInterpolatedTime(), interpolator.getInterpolatedState());
++                currentG0Positive = gAfterT0 >= 0;
++            }
++
++            double tb = t0 + (interpolator.isForward() ? convergence : -convergence);
++            for (int i = 0; i < n; ++i) {
++
++                // evaluate handler value at the end of the substep
++                tb += h;
++                interpolator.setInterpolatedTime(tb);
++                final double gb = handler.g(tb, interpolator.getInterpolatedState());
++
++                // check events occurrence
++                if (currentG0Positive ^ (gb >= 0)) {
+@@ -1,23 +1,12 @@
+-            double ta = t0;
+-            double ga = g0;
+-
+-            // If g0 is zero, we need to determine the effective sign for bracketing.
+-            // We use a small perturbation to determine the sign just after t0.
+-            // This ensures that if t0 is an event time, we can still detect the next event.
+-            boolean currentG0Positive = g0Positive;
+-            if (g0 == 0.0) {
+-                interpolator.setInterpolatedTime(t0 + (forward ? convergence : -convergence));
+-                final double gAfterT0 = handler.g(interpolator.getInterpolatedTime(), interpolator.getInterpolatedState());
+-                currentG0Positive = gAfterT0 >= 0;
+-            }
+-
+-            double tb = t0 + (interpolator.isForward() ? convergence : -convergence);
+-            for (int i = 0; i < n; ++i) {
+-
+-                // evaluate handler value at the end of the substep
+-                tb += h;
+-                interpolator.setInterpolatedTime(tb);
+-                final double gb = handler.g(tb, interpolator.getInterpolatedState());
+-
+-                // check events occurrence
+-                if (currentG0Positive ^ (gb >= 0)) {
++            double ta = t0;
++            double ga = g0;
++            double tb = t0 + (interpolator.isForward() ? convergence : -convergence);
++            for (int i = 0; i < n; ++i) {
++
++                // evaluate handler value at the end of the substep
++                tb += h;
++                interpolator.setInterpolatedTime(tb);
++                final double gb = handler.g(tb, interpolator.getInterpolatedState());
++
++                // check events occurrence
++                if (g0Positive ^ (gb >= 0)) {

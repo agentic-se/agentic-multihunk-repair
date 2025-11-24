@@ -1,0 +1,54 @@
+--- a/src/main/java/org/apache/commons/math/linear/OpenMapRealVector.java
++++ b/src/main/java/org/apache/commons/math/linear/OpenMapRealVector.java
+@@ -1,10 +1,14 @@
+-    public OpenMapRealVector ebeMultiply(RealVector v) {
+-        checkVectorDimensions(v.getDimension());
+-        OpenMapRealVector res = new OpenMapRealVector(this);
+-        Iterator iter = res.entries.iterator();
+-        while (iter.hasNext()) {
+-            iter.advance();
+-            res.setEntry(iter.key(), iter.value() * v.getEntry(iter.key()));
+-        }
+-        return res;
+-    }
++    public OpenMapRealVector ebeMultiply(RealVector v) {
++        checkVectorDimensions(v.getDimension());
++        OpenMapRealVector res = new OpenMapRealVector(virtualSize, epsilon);
++        Iterator iter = entries.iterator();
++        while (iter.hasNext()) {
++            iter.advance();
++            int key = iter.key();
++            double product = iter.value() * v.getEntry(key);
++            if (!res.isDefaultValue(product)) {
++                res.setEntry(key, product);
++            }
++        }
++        return res;
++    }
+@@ -1,11 +1,15 @@
+-    @Override
+-    public OpenMapRealVector ebeMultiply(double[] v) {
+-        checkVectorDimensions(v.length);
+-        OpenMapRealVector res = new OpenMapRealVector(this);
+-        Iterator iter = res.entries.iterator();
+-        while (iter.hasNext()) {
+-            iter.advance();
+-            res.setEntry(iter.key(), iter.value() * v[iter.key()]);
+-        }
+-        return res;
+-    }
++    @Override
++    public OpenMapRealVector ebeMultiply(double[] v) {
++        checkVectorDimensions(v.length);
++        OpenMapRealVector res = new OpenMapRealVector(virtualSize, epsilon);
++        Iterator iter = entries.iterator();
++        while (iter.hasNext()) {
++            iter.advance();
++            int key = iter.key();
++            double product = iter.value() * v[key];
++            if (!res.isDefaultValue(product)) {
++                res.setEntry(key, product);
++            }
++        }
++        return res;
++    }

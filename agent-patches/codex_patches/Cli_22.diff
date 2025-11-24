@@ -1,0 +1,34 @@
+diff --git a/src/java/org/apache/commons/cli/PosixParser.java b/src/java/org/apache/commons/cli/PosixParser.java
+index 47ad0f7..3284a19 100644
+--- a/src/java/org/apache/commons/cli/PosixParser.java
++++ b/src/java/org/apache/commons/cli/PosixParser.java
+@@ -105,8 +105,15 @@ public class PosixParser extends Parser
+             // get the next command line token
+             String token = (String) iter.next();
+ 
++            // explicit end of options marker
++            if ("--".equals(token))
++            {
++                tokens.add(token);
++                eatTheRest = true;
++            }
++
+             // handle long option --foo or --foo=bar
+-            if (token.startsWith("--"))
++            else if (token.startsWith("--"))
+             {
+                 int pos = token.indexOf('=');
+                 String opt = pos == -1 ? token : token.substring(0, pos); // --foo
+@@ -183,9 +190,9 @@ public class PosixParser extends Parser
+      */
+     private void processNonOptionToken(String value)
+     {
+-            eatTheRest = true;
+-            tokens.add("--");
+-
++        // when a non-option token is encountered in stop-at-non-option mode,
++        // stop bursting and pass through the remaining tokens as-is
++        eatTheRest = true;
+         tokens.add(value);
+     }
+ 

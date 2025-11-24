@@ -1,0 +1,11 @@
+--- a/src/java/org/apache/commons/cli/Parser.java
++++ b/src/java/org/apache/commons/cli/Parser.java
+@@ -1,4 +1,4 @@
+-    protected void setOptions(final Options options) {
+-        this.options = options;
+-        this.requiredOptions = options.getRequiredOptions();
+-    }
++    protected void setOptions(final Options options) {
++        this.options = options;
++        this.requiredOptions = new java.util.ArrayList(options.getRequiredOptions());
++    }

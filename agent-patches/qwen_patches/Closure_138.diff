@@ -1,0 +1,27 @@
+diff --git a/src/com/google/javascript/jscomp/ClosureReverseAbstractInterpreter.java b/src/com/google/javascript/jscomp/ClosureReverseAbstractInterpreter.java
+index 720b60b7..1589936e 100644
+--- a/src/com/google/javascript/jscomp/ClosureReverseAbstractInterpreter.java
++++ b/src/com/google/javascript/jscomp/ClosureReverseAbstractInterpreter.java
+@@ -24,6 +24,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
+ import static com.google.javascript.rhino.jstype.JSTypeNative.NO_OBJECT_TYPE;
+ import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
+ import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
++import static com.google.javascript.rhino.jstype.JSTypeNative.U2U_CONSTRUCTOR_TYPE;
+ 
+ import com.google.common.base.Function;
+ import com.google.common.collect.ImmutableMap;
+@@ -169,6 +170,10 @@ class ClosureReverseAbstractInterpreter
+       })
+       .put("isFunction", new Function<TypeRestriction, JSType>() {
+         public JSType apply(TypeRestriction p) {
++          if (p.type == null) {
++            return p.outcome ? getNativeType(U2U_CONSTRUCTOR_TYPE) : null;
++          }
++          
+           return getRestrictedByTypeOfResult(p.type, "function", p.outcome);
+         }
+       })
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

@@ -1,0 +1,11 @@
+--- a/src/java/org/apache/commons/codec/binary/Base64InputStream.java
++++ b/src/java/org/apache/commons/codec/binary/Base64InputStream.java
+@@ -1,3 +1,5 @@
+-                    if (c > 0 && b.length == len) {
+-                        base64.setInitialBuffer(b, offset, len);
+-                    }
++                    if (c > 0) {
++                        if (!doEncode && b.length == len) {
++                            base64.setInitialBuffer(b, offset, len);
++                        }
++                    }

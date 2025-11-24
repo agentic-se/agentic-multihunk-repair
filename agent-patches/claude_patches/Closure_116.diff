@@ -1,0 +1,50 @@
+diff --git a/src/com/google/javascript/jscomp/FunctionInjector.java b/src/com/google/javascript/jscomp/FunctionInjector.java
+index c3fc14b2..a8e9b9ba 100644
+--- a/src/com/google/javascript/jscomp/FunctionInjector.java
++++ b/src/com/google/javascript/jscomp/FunctionInjector.java
+@@ -694,6 +694,20 @@ class FunctionInjector {
+ 
+     Node block = fnNode.getLastChild();
+ 
++    // Check if the return value expression has side effects.
++    // For direct inlining, we only inline functions with a single return statement.
++    // If the return expression has side effects, those side effects might affect
++    // the call arguments' values, leading to incorrect behavior after inlining.
++    boolean returnValueHasSideEffects = false;
++    if (!block.hasChildren()) {
++      returnValueHasSideEffects = false;
++    } else {
++      Node returnNode = block.getFirstChild();
++      if (returnNode.isReturn() && returnNode.hasChildren()) {
++        returnValueHasSideEffects =
++            NodeUtil.mayHaveSideEffects(returnNode.getFirstChild(), compiler);
++      }
++    }
+ 
+     // CALL NODE: [ NAME, ARG1, ARG2, ... ]
+     Node cArg = callNode.getFirstChild().getNext();
+@@ -729,6 +743,16 @@ class FunctionInjector {
+                   block, fnParam.getString()) > 1) {
+             return CanInlineResult.NO;
+           }
++
++          // Don't inline if the return expression has side effects and the call
++          // argument is not a literal value (i.e., its value could be affected
++          // by those side effects).
++          // For example: don't inline function foo(a){return modifyX() + a;} foo(x);
++          // because modifyX() might change x's value.
++          if (returnValueHasSideEffects
++              && !NodeUtil.isLiteralValue(cArg, false)) {
++            return CanInlineResult.NO;
++          }
+         }
+ 
+         // Move to the next name.
+@@ -738,6 +762,7 @@ class FunctionInjector {
+       // For every call argument check for side-effects, even if there
+       // isn't a named parameter to match.
+       if (cArg != null) {
++        // Don't inline if the call argument has side effects.
+         if (NodeUtil.mayHaveSideEffects(cArg, compiler)) {
+           return CanInlineResult.NO;
+         }

@@ -1,0 +1,55 @@
+diff --git a/src/com/google/javascript/jscomp/FunctionInjector.java b/src/com/google/javascript/jscomp/FunctionInjector.java
+index 9d3fdd39..4007a22e 100644
+--- a/src/com/google/javascript/jscomp/FunctionInjector.java
++++ b/src/com/google/javascript/jscomp/FunctionInjector.java
+@@ -733,6 +733,50 @@ class FunctionInjector {
+       }
+     }
+ 
++    // Additional safety: if inlining would require aliasing temps to preserve
++    // evaluation order or mutable values, then direct inlining is unsafe.
++    // Use the same logic as block inlining to detect when temps are needed.
++    // Only perform this check when there are actual user arguments.
++    Node tmpArg = callNode.getFirstChild().getNext();
++    if (!callNode.getFirstChild().isName() && NodeUtil.isFunctionObjectCall(callNode)) {
++      // Skip the explicit 'this' value for Function.prototype.call.
++      tmpArg = (tmpArg == null) ? null : tmpArg.getNext();
++    }
++    boolean hasUserArgs = tmpArg != null
++        || NodeUtil.getFunctionParameters(fnNode).hasChildren();
++    if (hasUserArgs) {
++      // Build a lightweight arg map for analysis without creating
++      // anonymous parameter names (to avoid consuming unique IDs).
++      java.util.LinkedHashMap<String, Node> args =
++          new java.util.LinkedHashMap<String, Node>();
++      Node analysisArg = callNode.getFirstChild().getNext();
++      if (!callNode.getFirstChild().isName() && NodeUtil.isFunctionObjectCall(callNode)) {
++        // Use the provided 'this' value for .call invocations.
++        args.put(FunctionArgumentInjector.THIS_MARKER,
++            analysisArg != null ? analysisArg : NodeUtil.newUndefinedNode(callNode));
++        analysisArg = (analysisArg == null) ? null : analysisArg.getNext();
++      } else {
++        // No explicit 'this' provided.
++        args.put(FunctionArgumentInjector.THIS_MARKER, NodeUtil.newUndefinedNode(callNode));
++      }
++      for (Node fnArgNode : NodeUtil.getFunctionParameters(fnNode).children()) {
++        String paramName = fnArgNode.getString();
++        Node mapped = (analysisArg != null) ? analysisArg : NodeUtil.newUndefinedNode(callNode);
++        args.put(paramName, mapped);
++        if (analysisArg != null) {
++          analysisArg = analysisArg.getNext();
++        }
++      }
++      if (!args.isEmpty()) {
++        Set<String> namesNeedingTemps = Sets.newHashSet();
++        FunctionArgumentInjector.maybeAddTempsForCallArguments(
++            fnNode, args, namesNeedingTemps, compiler.getCodingConvention());
++        if (!namesNeedingTemps.isEmpty()) {
++          return CanInlineResult.NO;
++        }
++      }
++    }
++
+     return CanInlineResult.YES;
+   }
+ 

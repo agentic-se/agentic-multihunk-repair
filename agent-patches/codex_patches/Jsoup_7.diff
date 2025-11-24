@@ -1,0 +1,140 @@
+diff --git a/src/main/java/org/jsoup/nodes/Document.java b/src/main/java/org/jsoup/nodes/Document.java
+index 2f37b29..9d53481 100644
+--- a/src/main/java/org/jsoup/nodes/Document.java
++++ b/src/main/java/org/jsoup/nodes/Document.java
+@@ -104,6 +104,9 @@ public class Document extends Element {
+         if (body() == null)
+             htmlEl.appendElement("body");
+ 
++        // merge multiple <head> and <body> elements, ensure they are direct children of <html>
++        normaliseStructure(htmlEl);
++
+         // pull text nodes out of root, html, and head els, and push into body. non-text nodes are already taken care
+         // of. do in inverse order to maintain text order.
+         normaliseTextNodes(head());
+@@ -114,6 +117,55 @@ public class Document extends Element {
+         return this;
+     }
+ 
++    // merge multiple <head> or <body> contents into one, delete the remainder, and ensure they are owned by <html>
++    private void normaliseStructure(Element htmlEl) {
++        // Head
++        List<Element> heads = getElementsByTag("head");
++        Element headEl = heads.isEmpty() ? null : heads.get(0);
++        if (headEl == null) {
++            headEl = htmlEl.prependElement("head");
++        } else {
++            if (headEl.parent() != htmlEl) {
++                headEl.remove();
++                htmlEl.prependChild(headEl);
++            }
++            for (int i = 1; i < heads.size(); i++) {
++                Element dup = heads.get(i);
++                // move children into the head
++                int childSize = dup.childNodes.size();
++                for (int j = 0; j < childSize; j++) {
++                    Node child = dup.childNodes.get(0);
++                    dup.removeChild(child);
++                    headEl.appendChild(child);
++                }
++                dup.remove();
++            }
++        }
++
++        // Body
++        List<Element> bodies = getElementsByTag("body");
++        Element bodyEl = bodies.isEmpty() ? null : bodies.get(0);
++        if (bodyEl == null) {
++            bodyEl = htmlEl.appendElement("body");
++        } else {
++            if (bodyEl.parent() != htmlEl) {
++                bodyEl.remove();
++                htmlEl.appendChild(bodyEl);
++            }
++            for (int i = 1; i < bodies.size(); i++) {
++                Element dup = bodies.get(i);
++                // append children of subsequent bodies to the first body, then remove duplicate
++                int childSize = dup.childNodes.size();
++                for (int j = 0; j < childSize; j++) {
++                    Node child = dup.childNodes.get(0);
++                    dup.removeChild(child);
++                    bodyEl.appendChild(child);
++                }
++                dup.remove();
++            }
++        }
++    }
++
+     // does not recurse.
+     private void normaliseTextNodes(Element element) {
+         List<Node> toMove = new ArrayList<Node>();
+@@ -290,4 +342,3 @@ public class Document extends Element {
+         return outputSettings;
+     }
+ }
+-
+diff --git a/src/main/java/org/jsoup/parser/Parser.java b/src/main/java/org/jsoup/parser/Parser.java
+index 6852c51..cb8f490 100644
+--- a/src/main/java/org/jsoup/parser/Parser.java
++++ b/src/main/java/org/jsoup/parser/Parser.java
+@@ -239,6 +239,15 @@ public class Parser {
+         if (!validAncestor && !relaxed) {
+             // create implicit parent around this child
+             Tag parentTag = childTag.getImplicitParent();
++            if (parentTag == null) {
++                // No implicit parent specified (e.g., <html>): just append directly to current parent
++                if (parent == null)
++                    parent = last();
++                parent.appendChild(child);
++                if (!isEmptyElement)
++                    stack.addLast(child);
++                return parent;
++            }
+             Element implicit = new Element(parentTag, baseUri);
+             // special case: make sure there's a head before putting in body
+             if (child.tag().equals(bodyTag)) {
+@@ -280,13 +289,23 @@ public class Parser {
+     }
+ 
+     private Element popStackToSuitableContainer(Tag tag) {
+-        while (!stack.isEmpty()) {
++        // Special-case body: it must be under <html>, so pop until html (or root) is on top
++        if ("body".equals(tag.getName())) {
++            while (stack.size() > 1 && !"html".equals(last().tag().getName())) {
++                stack.removeLast();
++            }
++            return last();
++        }
++
++        // General case: pop elements until we find one that can contain the given tag, but never pop the document root.
++        while (stack.size() > 1) {
+             if (last().tag().canContain(tag))
+                 return last();
+             else
+                 stack.removeLast();
+         }
+-        return null;
++        // If nothing suitable found, return the root (may trigger implicit parent creation upstream).
++        return last();
+     }
+ 
+     private Element popStackToClose(Tag tag) {
+diff --git a/src/main/java/org/jsoup/parser/Tag.java b/src/main/java/org/jsoup/parser/Tag.java
+index d46e528..b0767f8 100644
+--- a/src/main/java/org/jsoup/parser/Tag.java
++++ b/src/main/java/org/jsoup/parser/Tag.java
+@@ -74,6 +74,14 @@ public class Tag {
+     boolean canContain(Tag child) {
+         Validate.notNull(child);
+ 
++        // Disallow nesting of document-structure tags in inappropriate places.
++        // Only <html> may directly contain <head> or <body>, and no element may contain <html>.
++        String childName = child.getName();
++        String thisName = this.getName();
++        // Body must only be a direct child of html
++        if ("body".equals(childName) && !"html".equals(thisName))
++            return false;
++
+         if (child.isBlock && !this.canContainBlock)
+             return false;
+ 

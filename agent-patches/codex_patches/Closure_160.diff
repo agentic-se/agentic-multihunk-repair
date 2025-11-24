@@ -1,0 +1,30 @@
+diff --git a/src/com/google/javascript/jscomp/Compiler.java b/src/com/google/javascript/jscomp/Compiler.java
+index 11850211..7fe1bebe 100644
+--- a/src/com/google/javascript/jscomp/Compiler.java
++++ b/src/com/google/javascript/jscomp/Compiler.java
+@@ -271,11 +271,20 @@ public class Compiler extends AbstractCompiler {
+     // checks the externs file for validity. If you don't want to warn
+     // about missing variable declarations, we shut that specific
+     // error off.
+-    if (!options.checkSymbols &&
+-        (warningsGuard == null || !warningsGuard.disables(
+-            DiagnosticGroups.CHECK_VARIABLES))) {
+-      guards.add(new DiagnosticGroupWarningsGuard(
+-          DiagnosticGroups.CHECK_VARIABLES, CheckLevel.OFF));
++    // By default, when symbol checking is disabled, suppress variable
++    // checking diagnostics to avoid noisy undefined/duplicate var reports.
++    // However, if the user explicitly enables any of the variable-check
++    // diagnostics via command-line flags (e.g. --jscomp_error=undefinedVars
++    // or --jscomp_error=checkVars), do not override them here.
++    if (!options.checkSymbols) {
++      WarningsGuard userGuards = options.getWarningsGuard();
++      boolean userEnabledVarChecks =
++          userGuards != null &&
++          userGuards.enables(DiagnosticGroups.CHECK_VARIABLES);
++      if (!userEnabledVarChecks) {
++        guards.add(new DiagnosticGroupWarningsGuard(
++            DiagnosticGroups.CHECK_VARIABLES, CheckLevel.OFF));
++      }
+     }
+ 
+     this.warningsGuard = new ComposeWarningsGuard(guards);

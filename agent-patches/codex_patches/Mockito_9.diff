@@ -1,0 +1,40 @@
+diff --git a/src/org/mockito/internal/stubbing/answers/CallsRealMethods.java b/src/org/mockito/internal/stubbing/answers/CallsRealMethods.java
+index 747655e88..4106a9690 100644
+--- a/src/org/mockito/internal/stubbing/answers/CallsRealMethods.java
++++ b/src/org/mockito/internal/stubbing/answers/CallsRealMethods.java
+@@ -2,12 +2,14 @@
+  * Copyright (c) 2007 Mockito contributors
+  * This program is made available under the terms of the MIT License.
+  */
+-package org.mockito.internal.stubbing.answers;
+-
++package org.mockito.internal.stubbing.answers;
++
+ import java.io.Serializable;
++import java.lang.reflect.Modifier;
+ 
+ import org.mockito.invocation.InvocationOnMock;
+ import org.mockito.stubbing.Answer;
++import org.mockito.internal.stubbing.defaultanswers.ReturnsEmptyValues;
+ 
+ /**
+  * Optional Answer that adds partial mocking support
+@@ -33,6 +35,14 @@ public class CallsRealMethods implements Answer<Object>, Serializable {
+     private static final long serialVersionUID = 9057165148930624087L;
+ 
+     public Object answer(InvocationOnMock invocation) throws Throwable {
+-        return invocation.callRealMethod();
+-    }
+-}
+\ No newline at end of file
++        // When spying on abstract classes, real methods may delegate to
++        // abstract methods. Calling the real implementation of an abstract
++        // method is not possible and used to trigger a Reporter error.
++        // Instead, for abstract methods, return the default empty values
++        // consistent with Mockito's default answer semantics.
++        if (Modifier.isAbstract(invocation.getMethod().getModifiers())) {
++            return new ReturnsEmptyValues().answer(invocation);
++        }
++        return invocation.callRealMethod();
++    }
++}

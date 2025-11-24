@@ -1,0 +1,33 @@
+diff --git a/src/java/org/apache/commons/cli/CommandLine.java b/src/java/org/apache/commons/cli/CommandLine.java
+index af1118d..beb79dd 100644
+--- a/src/java/org/apache/commons/cli/CommandLine.java
++++ b/src/java/org/apache/commons/cli/CommandLine.java
+@@ -58,7 +58,7 @@ public class CommandLine {
+         // nothing to do
+     }
+ 
+-    /** 
++    /**
+      * Query to see if an option has been set.
+      *
+      * @param opt Short name of the option
+@@ -66,7 +66,14 @@ public class CommandLine {
+      */
+     public boolean hasOption(String opt)
+     {
+-        return options.containsKey(opt);
++        opt = Util.stripLeadingHyphens(opt);
++
++        String key = opt;
++        if (names.containsKey(opt))
++        {
++            key = (String) names.get(opt);
++        }
++        return options.containsKey(key);
+     }
+ 
+     /** 
+
+
+# Untracked source files (not included in patch):
++ src/.DS_Store

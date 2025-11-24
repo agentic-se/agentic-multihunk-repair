@@ -1,0 +1,111 @@
+diff --git a/src/java/org/apache/commons/lang/time/DateUtils.java b/src/java/org/apache/commons/lang/time/DateUtils.java
+index 531e73fc..73eea0ad 100644
+--- a/src/java/org/apache/commons/lang/time/DateUtils.java
++++ b/src/java/org/apache/commons/lang/time/DateUtils.java
+@@ -626,18 +626,101 @@ public class DateUtils {
+         // see http://issues.apache.org/jira/browse/LANG-59
+         //
+         // Manually truncate milliseconds, seconds and minutes, rather than using
+-        // Calendar methods.
++        // Calendar#set(...) which can trigger DST recomputations even when
++        // setting a field to its existing value. This only applies to truncate
++        // (round == false). For larger fields we at least clear ms/sec/min via
++        // direct millisecond arithmetic before continuing with general logic.
++        if (!round) {
++            long time = val.getTime().getTime();
+ 
++            // Truncating to MILLISECOND changes nothing
++            if (field == Calendar.MILLISECOND) {
++                return;
++            }
+ 
+-        // truncate milliseconds
++            int millis = val.get(Calendar.MILLISECOND);
++            time -= millis;
+ 
+-        // truncate seconds
++            int seconds = val.get(Calendar.SECOND);
++            time = (time / 1000L) * 1000L; // truncate to whole second
++            if (field == Calendar.SECOND) {
++                val.setTime(new Date(time));
++                return;
++            }
+ 
+-        // truncate minutes
++            int minutes = val.get(Calendar.MINUTE);
++            // For truncating to MINUTE, do not remove minutes
++            // Only remove minutes when truncating to HOUR or larger
++            if (field == Calendar.MINUTE) {
++                time = (time / 60000L) * 60000L; // truncate to whole minute
++                val.setTime(new Date(time));
++                return;
++            }
++            // Ensure we are at exact minute boundary before removing minutes
++            time = (time / 60000L) * 60000L;
++            time -= (minutes * 60000L);
++            if (field == Calendar.MINUTE || field == Calendar.HOUR || field == Calendar.HOUR_OF_DAY) {
++                if (millis != 0 || seconds != 0 || minutes != 0) {
++                    val.setTime(new Date(time));
++                }
++                return;
++            }
+ 
+-        // reset time
++            if (millis != 0 || seconds != 0 || minutes != 0) {
++                val.setTime(new Date(time));
++            }
++        }
+         // ----------------- Fix for LANG-59 ----------------------- END ----------------
+ 
++        // Handle rounding for small fields using time arithmetic to avoid DST issues
++        if (round) {
++            if (field == Calendar.MILLISECOND) {
++                return;
++            }
++            long time = val.getTime().getTime();
++            switch (field) {
++                case Calendar.SECOND: {
++                    long rem = time % 1000L;
++                    if (rem >= 500L) {
++                        time += (1000L - rem);
++                    } else {
++                        time -= rem;
++                    }
++                    val.setTime(new Date(time));
++                    return;
++                }
++                case Calendar.MINUTE: {
++                    long rem = time % 60000L;
++                    if (rem >= 30000L) {
++                        time += (60000L - rem);
++                    } else {
++                        time -= rem;
++                    }
++                    val.setTime(new Date(time));
++                    return;
++                }
++                case Calendar.HOUR:
++                case Calendar.HOUR_OF_DAY: {
++                    int mins = val.get(Calendar.MINUTE);
++                    int secs = val.get(Calendar.SECOND);
++                    int ms = val.get(Calendar.MILLISECOND);
++                    long withinHour = mins * 60000L + secs * 1000L + ms;
++                    long base = time - withinHour;
++                    if (withinHour >= 30L * 60000L) {
++                        Calendar c = (Calendar) val.clone();
++                        c.setTime(new Date(base));
++                        c.add(Calendar.HOUR_OF_DAY, 1);
++                        val.setTime(c.getTime());
++                    } else {
++                        val.setTime(new Date(base));
++                    }
++                    return;
++                }
++                default:
++                    // fall through to general logic for larger fields
++            }
++        }
++
+         boolean roundUp = false;
+         for (int i = 0; i < fields.length; i++) {
+             for (int j = 0; j < fields[i].length; j++) {

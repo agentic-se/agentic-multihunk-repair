@@ -1,0 +1,256 @@
+diff --git a/src/com/google/javascript/jscomp/ScopedAliases.java b/src/com/google/javascript/jscomp/ScopedAliases.java
+index 7e9c8b89..99eec9bb 100644
+--- a/src/com/google/javascript/jscomp/ScopedAliases.java
++++ b/src/com/google/javascript/jscomp/ScopedAliases.java
+@@ -135,6 +135,11 @@ class ScopedAliases implements HotSwapCompilerPass {
+ 
+     if (!traversal.hasErrors()) {
+ 
++      // Apply function declaration aliases (these don't have dependencies).
++      for (FunctionDeclarationAliasUsage usage : traversal.functionDeclarationUsages) {
++        usage.applyAlias();
++      }
++
+       // Apply the aliases.
+       List<AliasUsage> aliasWorkQueue =
+           Lists.newArrayList(traversal.getAliasUsages());
+@@ -200,6 +205,9 @@ class ScopedAliases implements HotSwapCompilerPass {
+     /** Checks to see if this references another alias. */
+     public boolean referencesOtherAlias() {
+       Node aliasDefinition = aliasVar.getInitialValue();
++      if (aliasDefinition == null || !aliasDefinition.isQualifiedName()) {
++        return false;
++      }
+       Node root = NodeUtil.getRootOfQualifiedName(aliasDefinition);
+       Var otherAliasVar = aliasVar.getScope().getOwnSlot(root.getString());
+       return otherAliasVar != null;
+@@ -238,6 +246,23 @@ class ScopedAliases implements HotSwapCompilerPass {
+     }
+   }
+ 
++  /** Usage of a function declaration alias (transformed from function declaration). */
++  private class FunctionDeclarationAliasUsage {
++    final String qualifiedName;
++    final Node aliasReference;
++
++    FunctionDeclarationAliasUsage(String qualifiedName, Node aliasReference) {
++      this.qualifiedName = qualifiedName;
++      this.aliasReference = aliasReference;
++    }
++
++    public void applyAlias() {
++      Node replacement = NodeUtil.newQualifiedNameNode(
++          compiler.getCodingConvention(), qualifiedName, aliasReference, qualifiedName);
++      aliasReference.getParent().replaceChild(aliasReference, replacement);
++    }
++  }
++
+ 
+   private class Traversal implements NodeTraversal.ScopedCallback {
+     // The job of this class is to collect these three data sets.
+@@ -249,9 +274,16 @@ class ScopedAliases implements HotSwapCompilerPass {
+ 
+     private final List<AliasUsage> aliasUsages = Lists.newArrayList();
+ 
++    private final List<FunctionDeclarationAliasUsage> functionDeclarationUsages = Lists.newArrayList();
++
+     // This map is temporary and cleared for each scope.
+     private final Map<String, Var> aliases = Maps.newHashMap();
+ 
++    // Track function declaration transformations (name -> qualified name).
++    // Unlike aliases, function declarations don't have a Var that points to the
++    // transformed var statement, so we track them separately.
++    private final Map<String, String> functionDeclarationAliases = Maps.newHashMap();
++
+     // Suppose you create an alias.
+     // var x = goog.x;
+     // As a side-effect, this means you can shadow the namespace 'goog'
+@@ -309,6 +341,7 @@ class ScopedAliases implements HotSwapCompilerPass {
+       if (t.getScopeDepth() == 2) {
+         renameNamespaceShadows(t);
+         aliases.clear();
++        functionDeclarationAliases.clear();
+         forbiddenLocals.clear();
+         transformation = null;
+         hasNamespaceShadows = false;
+@@ -351,6 +384,11 @@ class ScopedAliases implements HotSwapCompilerPass {
+ 
+     private void findAliases(NodeTraversal t) {
+       Scope scope = t.getScope();
++      Node scopeRoot = t.getScopeRoot();
++      // For function declarations, we'll collect them and add them at the beginning
++      // of the scope to simulate hoisting.
++      List<Node> functionDeclarations = Lists.newArrayList();
++
+       for (Var v : scope.getVarIterable()) {
+         Node n = v.getNode();
+         Node parent = n.getParent();
+@@ -363,11 +401,10 @@ class ScopedAliases implements HotSwapCompilerPass {
+         } else if (parent.getType() == Token.LP) {
+           // Parameters of the scope function also get a BAD_PARAMETERS
+           // error.
+-        } else if (isVar) {
++        } else if (isVar || NodeUtil.isFunctionDeclaration(parent)) {
+           Node grandparent = parent.getParent();
+-          Node value = n.hasChildren() ?
+-              v.getInitialValue().detachFromParent() :
+-              null;
++          boolean isFunctionDeclaration = NodeUtil.isFunctionDeclaration(parent);
++          Node value;
+           Node varNode = parent;
+ 
+           String name = n.getString();
+@@ -393,9 +430,28 @@ class ScopedAliases implements HotSwapCompilerPass {
+               // If this is a VAR, we can just detach the expression and
+               // the tree will still be valid.
+ 
++          if (isFunctionDeclaration) {
++            // For function declarations, we need to convert to function expression
++            // by removing the name node
++            value = v.getInitialValue();
++            // Replace the name with an empty name to convert declaration to expression
++            value.replaceChild(value.getFirstChild(), IR.name("").srcref(value.getFirstChild()));
++            // Clone the value to preserve the original
++            value = value.cloneTree();
++          } else {
++            value = n.hasChildren() ?
++                v.getInitialValue() :
++                null;
++          }
++
+           // Add $jscomp.scope.name = EXPR;
+           // Make sure we copy over all the jsdoc and debug info.
+           if (value != null || v.getJSDocInfo() != null) {
++            // Detach value if needed before using it
++            if (value != null && !isFunctionDeclaration) {
++              value = value.detachFromParent();
++            }
++
+             Node newDecl = NodeUtil.newQualifiedNameNodeDeclaration(
+                 compiler.getCodingConvention(),
+                 globalName,
+@@ -405,20 +461,50 @@ class ScopedAliases implements HotSwapCompilerPass {
+             NodeUtil.setDebugInformation(
+                 newDecl.getFirstChild().getFirstChild(), n, name);
+ 
++            if (isFunctionDeclaration) {
++              // For function declarations, remove the original and save the new declaration
++              // to be added at the beginning of the scope (to simulate hoisting).
++              varNode.detachFromParent();
++              functionDeclarations.add(newDecl);
++
++              // Create a new var statement: var name = $jscomp.scope.name;
++              // This allows references to the function name to be properly aliased.
++              Node newVar = IR.var(IR.name(name).srcref(n))
++                  .useSourceInfoIfMissingFromForTree(varNode);
++              newVar.getFirstChild().addChildToFront(
++                  NodeUtil.newQualifiedNameNode(
++                      compiler.getCodingConvention(), globalName, n, name));
++              functionDeclarations.add(newVar);
++            } else {
+               grandparent.addChildBefore(newDecl, varNode);
++            }
+           }
+ 
+-          // Rewrite "var name = EXPR;" to "var name = $jscomp.scope.name;"
+-          v.getNameNode().addChildToFront(
+-              NodeUtil.newQualifiedNameNode(
+-                  compiler.getCodingConvention(), globalName, n, name));
+-
+-          recordAlias(v);
+-        } else {
++          if (!isFunctionDeclaration) {
++            // Rewrite "var name = EXPR;" to "var name = $jscomp.scope.name;"
++            v.getNameNode().addChildToFront(
++                NodeUtil.newQualifiedNameNode(
++                    compiler.getCodingConvention(), globalName, n, name));
++            recordAlias(v);
++          } else {
++            // For function declarations, we've created a var statement (var name = $jscomp.scope.name),
++            // but we don't have a Var object for it. Track the mapping separately so that
++            // references can be transformed.
++            functionDeclarationAliases.put(name, globalName);
++          }
++        } else if (!NodeUtil.isFunctionDeclaration(parent)) {
+           // Do not other kinds of local symbols, like catch params.
+           report(t, n, GOOG_SCOPE_NON_ALIAS_LOCAL, n.getString());
+         }
+       }
++
++      // Add function declarations at the beginning of the scope to simulate hoisting.
++      if (!functionDeclarations.isEmpty()) {
++        Node firstChild = scopeRoot.getFirstChild();
++        for (Node decl : functionDeclarations) {
++          scopeRoot.addChildBefore(decl, firstChild);
++        }
++      }
+     }
+ 
+     private void recordAlias(Var aliasVar) {
+@@ -427,13 +513,15 @@ class ScopedAliases implements HotSwapCompilerPass {
+ 
+       String qualifiedName =
+         aliasVar.getInitialValue().getQualifiedName();
+-      transformation.addAlias(name, qualifiedName);
+-
+-      int rootIndex = qualifiedName.indexOf(".");
+-      if (rootIndex != -1) {
+-        String qNameRoot = qualifiedName.substring(0, rootIndex);
+-        if (!aliases.containsKey(qNameRoot)) {
+-          forbiddenLocals.add(qNameRoot);
++      if (qualifiedName != null) {
++        transformation.addAlias(name, qualifiedName);
++
++        int rootIndex = qualifiedName.indexOf(".");
++        if (rootIndex != -1) {
++          String qNameRoot = qualifiedName.substring(0, rootIndex);
++          if (!aliases.containsKey(qNameRoot)) {
++            forbiddenLocals.add(qNameRoot);
++          }
+         }
+       }
+     }
+@@ -508,12 +596,17 @@ class ScopedAliases implements HotSwapCompilerPass {
+ 
+       int type = n.getType();
+       Var aliasVar = null;
++      String functionDeclarationAlias = null;
+       if (type == Token.NAME) {
+         String name = n.getString();
+         Var lexicalVar = t.getScope().getVar(n.getString());
+         if (lexicalVar != null && lexicalVar == aliases.get(name)) {
+           aliasVar = lexicalVar;
+         }
++        // Check if this is a function declaration alias.
++        if (aliasVar == null && functionDeclarationAliases.containsKey(name)) {
++          functionDeclarationAlias = functionDeclarationAliases.get(name);
++        }
+       }
+ 
+       // Validate the top-level of the goog.scope block.
+@@ -530,6 +623,14 @@ class ScopedAliases implements HotSwapCompilerPass {
+           }
+         }
+ 
++        // Handle function declaration aliases - if this is the L-value in the newly
++        // created var statement, add it to aliasDefinitionsInOrder.
++        if (functionDeclarationAlias != null && NodeUtil.isLValue(n)) {
++          aliasDefinitionsInOrder.add(n);
++          // Return early to avoid treating it as a reference.
++          return;
++        }
++
+         if (type == Token.RETURN) {
+           report(t, n, GOOG_SCOPE_USES_RETURN);
+         } else if (type == Token.THIS) {
+@@ -550,6 +651,10 @@ class ScopedAliases implements HotSwapCompilerPass {
+           // changes pass above with "goog".  If we cloned here, we'd end up
+           // with <code>g.dom.createElement('DIV')</code>.
+           aliasUsages.add(new AliasedNode(aliasVar, n));
++        } else if (functionDeclarationAlias != null && !NodeUtil.isLValue(n)) {
++          // This is a reference to a function declaration alias.
++          functionDeclarationUsages.add(
++              new FunctionDeclarationAliasUsage(functionDeclarationAlias, n));
+         }
+ 
+         JSDocInfo info = n.getJSDocInfo();

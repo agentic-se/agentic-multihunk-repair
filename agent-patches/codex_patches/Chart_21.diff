@@ -1,0 +1,77 @@
+diff --git a/source/org/jfree/data/statistics/DefaultBoxAndWhiskerCategoryDataset.java b/source/org/jfree/data/statistics/DefaultBoxAndWhiskerCategoryDataset.java
+index 7fd86f4..80ed4b1 100644
+--- a/source/org/jfree/data/statistics/DefaultBoxAndWhiskerCategoryDataset.java
++++ b/source/org/jfree/data/statistics/DefaultBoxAndWhiskerCategoryDataset.java
+@@ -732,14 +732,64 @@ public class DefaultBoxAndWhiskerCategoryDataset extends AbstractDataset
+         return result;
+     }
+     
+-    /**
+-     * Resets the cached bounds, by iterating over the entire dataset to find
+-     * the current bounds.
+-     */
+-    private void updateBounds() {
+-        this.minimumRangeValue = Double.NaN;
+-        this.maximumRangeValue = Double.NaN;
+-    }
++    /**
++     * Resets the cached bounds, by iterating over the entire dataset to find
++     * the current bounds.
++     */
++    private void updateBounds() {
++        // reset
++        this.minimumRangeValue = Double.NaN;
++        this.maximumRangeValue = Double.NaN;
++        this.minimumRangeValueRow = -1;
++        this.minimumRangeValueColumn = -1;
++        this.maximumRangeValueRow = -1;
++        this.maximumRangeValueColumn = -1;
++
++        // iterate over all items to recompute bounds based on outliers
++        int rowCount = getRowCount();
++        int columnCount = getColumnCount();
++        for (int r = 0; r < rowCount; r++) {
++            for (int c = 0; c < columnCount; c++) {
++                BoxAndWhiskerItem item = (BoxAndWhiskerItem) this.data
++                        .getObject(r, c);
++                if (item == null) {
++                    continue;
++                }
++                double minval = Double.NaN;
++                if (item.getMinOutlier() != null) {
++                    minval = item.getMinOutlier().doubleValue();
++                }
++                double maxval = Double.NaN;
++                if (item.getMaxOutlier() != null) {
++                    maxval = item.getMaxOutlier().doubleValue();
++                }
++
++                if (!Double.isNaN(minval)) {
++                    if (Double.isNaN(this.minimumRangeValue)
++                            || minval < this.minimumRangeValue) {
++                        this.minimumRangeValue = minval;
++                        this.minimumRangeValueRow = r;
++                        this.minimumRangeValueColumn = c;
++                    }
++                }
++                if (!Double.isNaN(maxval)) {
++                    if (Double.isNaN(this.maximumRangeValue)
++                            || maxval > this.maximumRangeValue) {
++                        this.maximumRangeValue = maxval;
++                        this.maximumRangeValueRow = r;
++                        this.maximumRangeValueColumn = c;
++                    }
++                }
++            }
++        }
++
++        // update the cached Range (only if we have valid bounds)
++        if (!Double.isNaN(this.minimumRangeValue)
++                && !Double.isNaN(this.maximumRangeValue)) {
++            this.rangeBounds = new Range(this.minimumRangeValue,
++                    this.maximumRangeValue);
++        }
++    }
+     
+     /**
+      * Tests this dataset for equality with an arbitrary object.

@@ -1,0 +1,19 @@
+diff --git a/src/java/org/apache/commons/math/linear/CholeskyDecompositionImpl.java b/src/java/org/apache/commons/math/linear/CholeskyDecompositionImpl.java
+index acd9222f6..44b379362 100644
+--- a/src/java/org/apache/commons/math/linear/CholeskyDecompositionImpl.java
++++ b/src/java/org/apache/commons/math/linear/CholeskyDecompositionImpl.java
+@@ -135,6 +135,14 @@ public class CholeskyDecompositionImpl implements CholeskyDecomposition {
+ 
+             // check diagonal element
+ 
++            // At this stage, ltI[i] is the updated diagonal term after
++            // previous eliminations. For a symmetric positive definite
++            // matrix, it must remain strictly positive. If it is not,
++            // the matrix is not positive definite and decomposition must fail.
++            if (ltI[i] <= absolutePositivityThreshold) {
++                throw new NotPositiveDefiniteMatrixException();
++            }
++
+             ltI[i] = Math.sqrt(ltI[i]);
+             final double inverse = 1.0 / ltI[i];
+ 

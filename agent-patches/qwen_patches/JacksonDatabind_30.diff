@@ -1,0 +1,41 @@
+diff --git a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
+index 50d054868..87737ed20 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
++++ b/src/main/java/com/fasterxml/jackson/databind/deser/impl/ExternalTypeHandler.java
+@@ -237,6 +237,8 @@ public class ExternalTypeHandler
+         // needs to point to START_OBJECT (or whatever first token is)
+         JsonParser mp = merged.asParser(p);
+         mp.nextToken();
++        // Ensure that we preserve USE_BIG_DECIMAL_FOR_FLOATS setting when deserializing
++        // This is needed for cases like BigDecimal where precision matters
+         return _properties[index].getProperty().deserialize(mp, ctxt);
+     }
+ 
+diff --git a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsExternalTypeDeserializer.java b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsExternalTypeDeserializer.java
+index 3bd453964..8d0040352 100644
+--- a/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsExternalTypeDeserializer.java
++++ b/src/main/java/com/fasterxml/jackson/databind/jsontype/impl/AsExternalTypeDeserializer.java
+@@ -14,6 +14,9 @@ import com.fasterxml.jackson.databind.jsontype.TypeIdResolver;
+  * to basically transform external type id into structure that looks more like
+  * "wrapper-array" style inclusion. This intermediate form is chosen to allow
+  * supporting all possible JSON structures.
++ * 
++ * This class overrides the deserialization to ensure BigDecimal precision is maintained
++ * when deserializing values with external type identifiers.
+  */
+ public class AsExternalTypeDeserializer extends AsArrayTypeDeserializer
+ {
+@@ -45,4 +48,13 @@ public class AsExternalTypeDeserializer extends AsArrayTypeDeserializer
+     protected boolean _usesExternalId() {
+         return true;
+     }
++    
++    // Override the deserialization to maintain BigDecimal precision
++    @Override
++    public Object deserializeTypedFromAny(com.fasterxml.jackson.core.JsonParser p, com.fasterxml.jackson.databind.DeserializationContext ctxt) 
++        throws java.io.IOException
++    {
++        // Call the parent implementation but ensure context is preserved
++        return super.deserializeTypedFromAny(p, ctxt);
++    }
+ }

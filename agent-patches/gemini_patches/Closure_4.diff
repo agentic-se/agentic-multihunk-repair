@@ -1,0 +1,742 @@
+--- a/src/com/google/javascript/jscomp/TypeCheck.java
++++ b/src/com/google/javascript/jscomp/TypeCheck.java
+@@ -1,23 +1,28 @@
+-  private static boolean hasUnknownOrEmptySupertype(FunctionType ctor) {
+-    Preconditions.checkArgument(ctor.isConstructor() || ctor.isInterface());
+-    Preconditions.checkArgument(!ctor.isUnknownType());
+-
+-    // The type system should notice inheritance cycles on its own
+-    // and break the cycle.
+-    while (true) {
+-      ObjectType maybeSuperInstanceType =
+-          ctor.getPrototype().getImplicitPrototype();
+-      if (maybeSuperInstanceType == null) {
+-        return false;
+-      }
+-      if (maybeSuperInstanceType.isUnknownType() ||
+-          maybeSuperInstanceType.isEmptyType()) {
+-        return true;
+-      }
+-      ctor = maybeSuperInstanceType.getConstructor();
+-      if (ctor == null) {
+-        return false;
+-      }
+-      Preconditions.checkState(ctor.isConstructor() || ctor.isInterface());
+-    }
+-  }
++  private static boolean hasUnknownOrEmptySupertype(FunctionType ctor) {
++    Preconditions.checkArgument(ctor.isConstructor() || ctor.isInterface());
++    Preconditions.checkArgument(!ctor.isUnknownType());
++
++    // The type system should notice inheritance cycles on its own
++    // and break the cycle.
++    Set<FunctionType> visitedCtors = Sets.newIdentityHashSet();
++    while (true) {
++      if (!visitedCtors.add(ctor)) {
++        // Cycle detected.
++        return true;
++      }
++      ObjectType maybeSuperInstanceType =
++          ctor.getPrototype().getImplicitPrototype();
++      if (maybeSuperInstanceType == null) {
++        return false;
++      }
++      if (maybeSuperInstanceType.isUnknownType() ||
++          maybeSuperInstanceType.isEmptyType()) {
++        return true;
++      }
++      ctor = maybeSuperInstanceType.getConstructor();
++      if (ctor == null) {
++        return false;
++      }
++      Preconditions.checkState(ctor.isConstructor() || ctor.isInterface());
++    }
++  }
+@@ -1,2 +1,3 @@
+-import com.google.common.base.Preconditions;
+-import com.google.javascript.jscomp.CheckLevel;
++import com.google.common.base.Preconditions;
++import com.google.common.collect.Sets;
++import com.google.javascript.jscomp.CheckLevel;
+@@ -1,28 +1,23 @@
+-  private static boolean hasUnknownOrEmptySupertype(FunctionType ctor) {
+-    Preconditions.checkArgument(ctor.isConstructor() || ctor.isInterface());
+-    Preconditions.checkArgument(!ctor.isUnknownType());
+-
+-    // The type system should notice inheritance cycles on its own
+-    // and break the cycle.
+-    Set<FunctionType> visitedCtors = Sets.newIdentityHashSet();
+-    while (true) {
+-      if (!visitedCtors.add(ctor)) {
+-        // Cycle detected.
+-        return true;
+-      }
+-      ObjectType maybeSuperInstanceType =
+-          ctor.getPrototype().getImplicitPrototype();
+-      if (maybeSuperInstanceType == null) {
+-        return false;
+-      }
+-      if (maybeSuperInstanceType.isUnknownType() ||
+-          maybeSuperInstanceType.isEmptyType()) {
+-        return true;
+-      }
+-      ctor = maybeSuperInstanceType.getConstructor();
+-      if (ctor == null) {
+-        return false;
+-      }
+-      Preconditions.checkState(ctor.isConstructor() || ctor.isInterface());
+-    }
+-  }
++  private static boolean hasUnknownOrEmptySupertype(FunctionType ctor) {
++    Preconditions.checkArgument(ctor.isConstructor() || ctor.isInterface());
++    Preconditions.checkArgument(!ctor.isUnknownType());
++
++    // The type system should notice inheritance cycles on its own
++    // and break the cycle.
++    while (true) {
++      ObjectType maybeSuperInstanceType =
++          ctor.getPrototype().getImplicitPrototype();
++      if (maybeSuperInstanceType == null) {
++        return false;
++      }
++      if (maybeSuperInstanceType.isUnknownType() ||
++          maybeSuperInstanceType.isEmptyType()) {
++        return true;
++      }
++      ctor = maybeSuperInstanceType.getConstructor();
++      if (ctor == null) {
++        return false;
++      }
++      Preconditions.checkState(ctor.isConstructor() || ctor.isInterface());
++    }
++  }
+@@ -1,3 +1,2 @@
+-import com.google.common.base.Preconditions;
+-import com.google.common.collect.Sets;
+-import com.google.javascript.jscomp.CheckLevel;
++import com.google.common.base.Preconditions;
++import com.google.javascript.jscomp.CheckLevel;
+
+--- a/src/com/google/javascript/rhino/jstype/FunctionType.java
++++ b/src/com/google/javascript/rhino/jstype/FunctionType.java
+@@ -1,10 +1,20 @@
+-  public Iterable<ObjectType> getImplementedInterfaces() {
+-    FunctionType superCtor = isConstructor() ?
+-        getSuperClassConstructor() : null;
+-    if (superCtor == null) {
+-      return implementedInterfaces;
+-    } else {
+-      return Iterables.concat(
+-          implementedInterfaces, superCtor.getImplementedInterfaces());
+-    }
+-  }
++  public Iterable<ObjectType> getImplementedInterfaces() {
++    return getImplementedInterfaces(Sets.<FunctionType>newIdentityHashSet());
++  }
++
++  private Iterable<ObjectType> getImplementedInterfaces(
++      Set<FunctionType> visited) {
++    if (!visited.add(this)) {
++      // Cycle detected.
++      return ImmutableList.of();
++    }
++
++    FunctionType superCtor = isConstructor() ?
++        getSuperClassConstructor() : null;
++    if (superCtor == null) {
++      return implementedInterfaces;
++    } else {
++      return Iterables.concat(
++          implementedInterfaces, superCtor.getImplementedInterfaces(visited));
++    }
++  }
+@@ -1,8 +1,21 @@
+-  public FunctionType getSuperClassConstructor() {
+-    Preconditions.checkArgument(isConstructor() || isInterface());
+-    ObjectType maybeSuperInstanceType = getPrototype().getImplicitPrototype();
+-    if (maybeSuperInstanceType == null) {
+-      return null;
+-    }
+-    return maybeSuperInstanceType.getConstructor();
+-  }
++  public FunctionType getSuperClassConstructor() {
++    return getSuperClassConstructor(Sets.<FunctionType>newIdentityHashSet());
++  }
++
++  FunctionType getSuperClassConstructor(Set<FunctionType> visited) {
++    if (!visited.add(this)) {
++      // Cycle detected.
++      return null;
++    }
++
++    Preconditions.checkArgument(isConstructor() || isInterface());
++    ObjectType maybeSuperInstanceType = getPrototype().getImplicitPrototype();
++    if (maybeSuperInstanceType == null) {
++      return null;
++    }
++    FunctionType superClassConstructor = maybeSuperInstanceType.getConstructor();
++    if (superClassConstructor != null && !visited.contains(superClassConstructor)) {
++      return superClassConstructor.getSuperClassConstructor(visited);
++    }
++    return superClassConstructor;
++  }
+@@ -1,8 +1,8 @@
+-    FunctionType superCtor = isConstructor() ?
+-        getSuperClassConstructor() : null;
+-    if (superCtor == null) {
+-      return implementedInterfaces;
+-    } else {
+-      return Iterables.concat(
+-          implementedInterfaces, superCtor.getImplementedInterfaces(visited));
+-    }
++    FunctionType superCtor = isConstructor() ?
++        getSuperClassConstructor(visited) : null;
++    if (superCtor == null) {
++      return implementedInterfaces;
++    } else {
++      return Iterables.concat(
++          implementedInterfaces, superCtor.getImplementedInterfaces(visited));
++    }
+@@ -1,17 +1,18 @@
+-  FunctionType getSuperClassConstructor(Set<FunctionType> visited) {
+-    if (!visited.add(this)) {
+-      // Cycle detected.
+-      return null;
+-    }
+-
+-    Preconditions.checkArgument(isConstructor() || isInterface());
+-    ObjectType maybeSuperInstanceType = getPrototype().getImplicitPrototype();
+-    if (maybeSuperInstanceType == null) {
+-      return null;
+-    }
+-    FunctionType superClassConstructor = maybeSuperInstanceType.getConstructor();
+-    if (superClassConstructor != null && !visited.contains(superClassConstructor)) {
+-      return superClassConstructor.getSuperClassConstructor(visited);
+-    }
+-    return superClassConstructor;
+-  }
++  FunctionType getSuperClassConstructor(Set<FunctionType> visited) {
++    if (!visited.add(this)) {
++      // Cycle detected.
++      return null;
++    }
++
++    Preconditions.checkArgument(isConstructor() || isInterface());
++    ObjectType maybeSuperInstanceType = getPrototype().getImplicitPrototype();
++    if (maybeSuperInstanceType == null) {
++      return null;
++    }
++    FunctionType superClassConstructor = maybeSuperInstanceType.getConstructor();
++    if (superClassConstructor != null && visited.contains(superClassConstructor)) {
++      // Cycle detected in super class constructor chain.
++      return null;
++    }
++    return superClassConstructor;
++  }
+@@ -1,22 +1,8 @@
+-  public FunctionType getSuperClassConstructor() {
+-    return getSuperClassConstructor(Sets.<FunctionType>newIdentityHashSet());
+-  }
+-
+-  FunctionType getSuperClassConstructor(Set<FunctionType> visited) {
+-    if (!visited.add(this)) {
+-      // Cycle detected.
+-      return null;
+-    }
+-
+-    Preconditions.checkArgument(isConstructor() || isInterface());
+-    ObjectType maybeSuperInstanceType = getPrototype().getImplicitPrototype();
+-    if (maybeSuperInstanceType == null) {
+-      return null;
+-    }
+-    FunctionType superClassConstructor = maybeSuperInstanceType.getConstructor();
+-    if (superClassConstructor != null && visited.contains(superClassConstructor)) {
+-      // Cycle detected in super class constructor chain.
+-      return null;
+-    }
+-    return superClassConstructor;
+-  }
++  public FunctionType getSuperClassConstructor() {
++    Preconditions.checkArgument(isConstructor() || isInterface());
++    ObjectType maybeSuperInstanceType = getPrototype().getImplicitPrototype();
++    if (maybeSuperInstanceType == null) {
++      return null;
++    }
++    return maybeSuperInstanceType.getConstructor();
++  }
+@@ -1,20 +1,10 @@
+-  public Iterable<ObjectType> getImplementedInterfaces() {
+-    return getImplementedInterfaces(Sets.<FunctionType>newIdentityHashSet());
+-  }
+-
+-  private Iterable<ObjectType> getImplementedInterfaces(
+-      Set<FunctionType> visited) {
+-    if (!visited.add(this)) {
+-      // Cycle detected.
+-      return ImmutableList.of();
+-    }
+-
+-    FunctionType superCtor = isConstructor() ?
+-        getSuperClassConstructor(visited) : null;
+-    if (superCtor == null) {
+-      return implementedInterfaces;
+-    } else {
+-      return Iterables.concat(
+-          implementedInterfaces, superCtor.getImplementedInterfaces(visited));
+-    }
+-  }
++  public Iterable<ObjectType> getImplementedInterfaces() {
++    FunctionType superCtor = isConstructor() ?
++        getSuperClassConstructor() : null;
++    if (superCtor == null) {
++      return implementedInterfaces;
++    } else {
++      return Iterables.concat(
++          implementedInterfaces, superCtor.getImplementedInterfaces());
++    }
++  }
+@@ -1,1 +1,10 @@
+-  private List<FunctionType> subTypes;
++  private List<FunctionType> subTypes;
++
++  // A set of types that are currently being traversed. Used to detect cycles
++  // in the type graph during traversal.
++  private final ThreadLocal<Set<FunctionType>> currentlyTraversing =
++      new ThreadLocal<Set<FunctionType>>() {
++        @Override protected Set<FunctionType> initialValue() {
++          return Sets.newIdentityHashSet();
++        }
++      };
+@@ -1,8 +1,16 @@
+-  public FunctionType getSuperClassConstructor() {
+-    Preconditions.checkArgument(isConstructor() || isInterface());
+-    ObjectType maybeSuperInstanceType = getPrototype().getImplicitPrototype();
+-    if (maybeSuperInstanceType == null) {
+-      return null;
+-    }
+-    return maybeSuperInstanceType.getConstructor();
+-  }
++  public FunctionType getSuperClassConstructor() {
++    if (!currentlyTraversing.get().add(this)) {
++      // Cycle detected.
++      return null;
++    }
++    try {
++      Preconditions.checkArgument(isConstructor() || isInterface());
++      ObjectType maybeSuperInstanceType = getPrototype().getImplicitPrototype();
++      if (maybeSuperInstanceType == null) {
++        return null;
++      }
++      return maybeSuperInstanceType.getConstructor();
++    } finally {
++      currentlyTraversing.get().remove(this);
++    }
++  }
+@@ -1,10 +1,18 @@
+-  public Iterable<ObjectType> getImplementedInterfaces() {
+-    FunctionType superCtor = isConstructor() ?
+-        getSuperClassConstructor() : null;
+-    if (superCtor == null) {
+-      return implementedInterfaces;
+-    } else {
+-      return Iterables.concat(
+-          implementedInterfaces, superCtor.getImplementedInterfaces());
+-    }
+-  }
++  public Iterable<ObjectType> getImplementedInterfaces() {
++    if (!currentlyTraversing.get().add(this)) {
++      // Cycle detected.
++      return ImmutableList.of();
++    }
++    try {
++      FunctionType superCtor = isConstructor() ?
++          getSuperClassConstructor() : null;
++      if (superCtor == null) {
++        return implementedInterfaces;
++      } else {
++        return Iterables.concat(
++            implementedInterfaces, superCtor.getImplementedInterfaces());
++      }
++    } finally {
++      currentlyTraversing.get().remove(this);
++    }
++  }
+@@ -1,3 +1,11 @@
+-  public Iterable<ObjectType> getExtendedInterfaces() {
+-    return extendedInterfaces;
+-  }
++  public Iterable<ObjectType> getExtendedInterfaces() {
++    if (!currentlyTraversing.get().add(this)) {
++      // Cycle detected.
++      return ImmutableList.of();
++    }
++    try {
++      return extendedInterfaces;
++    } finally {
++      currentlyTraversing.get().remove(this);
++    }
++  }
+@@ -1,8 +1,1 @@
+-  // A set of types that are currently being traversed. Used to detect cycles
+-  // in the type graph during traversal.
+-  private final ThreadLocal<Set<FunctionType>> currentlyTraversing =
+-      new ThreadLocal<Set<FunctionType>>() {
+-        @Override protected Set<FunctionType> initialValue() {
+-          return Sets.newIdentityHashSet();
+-        }
+-      };
++
+
+--- a/src/com/google/javascript/rhino/jstype/JSType.java
++++ b/src/com/google/javascript/rhino/jstype/JSType.java
+@@ -1,37 +1,45 @@
+-  static boolean isSubtypeHelper(JSType thisType, JSType thatType) {
+-    // unknown
+-    if (thatType.isUnknownType()) {
+-      return true;
+-    }
+-    // all type
+-    if (thatType.isAllType()) {
+-      return true;
+-    }
+-    // equality
+-    if (thisType.isEquivalentTo(thatType)) {
+-      return true;
+-    }
+-    // unions
+-    if (thatType.isUnionType()) {
+-      UnionType union = thatType.toMaybeUnionType();
+-      for (JSType element : union.alternates) {
+-        if (thisType.isSubtype(element)) {
+-          return true;
+-        }
+-      }
+-      return false;
+-    }
+-
+-    // parameterized types.
+-    if (thisType.isParameterizedType()) {
+-      return thisType.toMaybeParameterizedType().isParameterizeSubtypeOf(
+-          thatType);
+-    }
+-
+-    // proxy types
+-    if (thatType instanceof ProxyObjectType) {
+-      return thisType.isSubtype(
+-          ((ProxyObjectType) thatType).getReferencedTypeInternal());
+-    }
+-    return false;
+-  }
++  static boolean isSubtypeHelper(JSType thisType, JSType thatType) {
++    if (!thisType.registry.pushCurrentlyCheckingSubtype(thisType)) {
++      // Cycle detected.
++      return true;
++    }
++    try {
++      // unknown
++      if (thatType.isUnknownType()) {
++        return true;
++      }
++      // all type
++      if (thatType.isAllType()) {
++        return true;
++      }
++      // equality
++      if (thisType.isEquivalentTo(thatType)) {
++        return true;
++      }
++      // unions
++      if (thatType.isUnionType()) {
++        UnionType union = thatType.toMaybeUnionType();
++        for (JSType element : union.alternates) {
++          if (thisType.isSubtype(element)) {
++            return true;
++          }
++        }
++        return false;
++      }
++
++      // parameterized types.
++      if (thisType.isParameterizedType()) {
++        return thisType.toMaybeParameterizedType().isParameterizeSubtypeOf(
++            thatType);
++      }
++
++      // proxy types
++      if (thatType instanceof ProxyObjectType) {
++        return thisType.isSubtype(
++            ((ProxyObjectType) thatType).getReferencedTypeInternal());
++      }
++      return false;
++    } finally {
++      thisType.registry.popCurrentlyCheckingSubtype(thisType);
++    }
++  }
+@@ -1,3 +1,11 @@
+-  public boolean isSubtype(JSType that) {
+-    return isSubtypeHelper(this, that);
+-  }
++  public boolean isSubtype(JSType that) {
++    if (!registry.pushCurrentlyCheckingSubtypePair(this, that)) {
++      // Cycle detected.
++      return true;
++    }
++    try {
++      return isSubtypeHelper(this, that);
++    } finally {
++      registry.popCurrentlyCheckingSubtypePair(this, that);
++    }
++  }
+@@ -1,11 +1,3 @@
+-  public boolean isSubtype(JSType that) {
+-    if (!registry.pushCurrentlyCheckingSubtypePair(this, that)) {
+-      // Cycle detected.
+-      return true;
+-    }
+-    try {
+-      return isSubtypeHelper(this, that);
+-    } finally {
+-      registry.popCurrentlyCheckingSubtypePair(this, that);
+-    }
+-  }
++  public boolean isSubtype(JSType that) {
++    return isSubtypeHelper(this, that);
++  }
+
+--- a/src/com/google/javascript/rhino/jstype/JSTypeRegistry.java
++++ b/src/com/google/javascript/rhino/jstype/JSTypeRegistry.java
+@@ -1,1 +1,10 @@
+-  private final boolean tolerateUndefinedValues;
++  private final boolean tolerateUndefinedValues;
++
++  // A set of types that are currently being resolved. Used to detect cycles
++  // in the type graph.
++  private final ThreadLocal<Set<JSType>> currentlyResolving =
++      new ThreadLocal<Set<JSType>>() {
++        @Override protected Set<JSType> initialValue() {
++          return Sets.newIdentityHashSet();
++        }
++      };
+@@ -1,3 +1,19 @@
+-  public void clearTemplateTypeNames() {
+-    templateTypes.clear();
+-  }
++  public void clearTemplateTypeNames() {
++    templateTypes.clear();
++  }
++
++  /**
++   * Adds a type to the set of types currently being resolved.
++   * @return true if the type was added, false if it was already in the set
++   * (indicating a cycle).
++   */
++  boolean pushCurrentlyResolving(JSType type) {
++    return currentlyResolving.get().add(type);
++  }
++
++  /**
++   * Removes a type from the set of types currently being resolved.
++   */
++  void popCurrentlyResolving(JSType type) {
++    currentlyResolving.get().remove(type);
++  }
+@@ -1,8 +1,9 @@
+-import com.google.common.base.Preconditions;
+-import com.google.common.collect.ArrayListMultimap;
+-import com.google.common.collect.ImmutableList;
+-import com.google.common.collect.LinkedHashMultimap;
+-import com.google.common.collect.Lists;
+-import com.google.common.collect.Maps;
+-import com.google.common.collect.Multimap;
+-import com.google.javascript.rhino.ErrorReporter;
++import com.google.common.base.Preconditions;
++import com.google.common.collect.ArrayListMultimap;
++import com.google.common.collect.ImmutableList;
++import com.google.common.collect.LinkedHashMultimap;
++import com.google.common.collect.Lists;
++import com.google.common.collect.Maps;
++import com.google.common.collect.Multimap;
++import com.google.common.collect.Sets;
++import com.google.javascript.rhino.ErrorReporter;
+@@ -1,6 +1,15 @@
+-  private final ThreadLocal<Set<JSType>> currentlyResolving =
+-      new ThreadLocal<Set<JSType>>() {
+-        @Override protected Set<JSType> initialValue() {
+-          return Sets.newIdentityHashSet();
+-        }
+-      };
++  private final ThreadLocal<Set<JSType>> currentlyResolving =
++      new ThreadLocal<Set<JSType>>() {
++        @Override protected Set<JSType> initialValue() {
++          return Sets.newIdentityHashSet();
++        }
++      };
++
++  // A set of types that are currently being checked for subtyping. Used to
++  // detect cycles in the type graph during subtype checks.
++  private final ThreadLocal<Set<JSType>> currentlyCheckingSubtype =
++      new ThreadLocal<Set<JSType>>() {
++        @Override protected Set<JSType> initialValue() {
++          return Sets.newIdentityHashSet();
++        }
++      };
+@@ -1,3 +1,19 @@
+-  void popCurrentlyResolving(JSType type) {
+-    currentlyResolving.get().remove(type);
+-  }
++  void popCurrentlyResolving(JSType type) {
++    currentlyResolving.get().remove(type);
++  }
++
++  /**
++   * Adds a type to the set of types currently being checked for subtyping.
++   * @return true if the type was added, false if it was already in the set
++   * (indicating a cycle).
++   */
++  boolean pushCurrentlyCheckingSubtype(JSType type) {
++    return currentlyCheckingSubtype.get().add(type);
++  }
++
++  /**
++   * Removes a type from the set of types currently being checked for subtyping.
++   */
++  void popCurrentlyCheckingSubtype(JSType type) {
++    currentlyCheckingSubtype.get().remove(type);
++  }
+@@ -1,6 +1,15 @@
+-  private final ThreadLocal<Set<JSType>> currentlyCheckingSubtype =
+-      new ThreadLocal<Set<JSType>>() {
+-        @Override protected Set<JSType> initialValue() {
+-          return Sets.newIdentityHashSet();
+-        }
+-      };
++  private final ThreadLocal<Set<JSType>> currentlyCheckingSubtype =
++      new ThreadLocal<Set<JSType>>() {
++        @Override protected Set<JSType> initialValue() {
++          return Sets.newIdentityHashSet();
++        }
++      };
++
++  // A set of pairs of types that are currently being checked for subtyping.
++  // Used to detect cycles in the type graph during subtype checks.
++  private final ThreadLocal<Set<TypePair>> currentlyCheckingSubtypePair =
++      new ThreadLocal<Set<TypePair>>() {
++        @Override protected Set<TypePair> initialValue() {
++          return Sets.newIdentityHashSet();
++        }
++      };
+@@ -1,3 +1,19 @@
+-  void popCurrentlyCheckingSubtype(JSType type) {
+-    currentlyCheckingSubtype.get().remove(type);
+-  }
++  void popCurrentlyCheckingSubtype(JSType type) {
++    currentlyCheckingSubtype.get().remove(type);
++  }
++
++  /**
++   * Adds a type pair to the set of types currently being checked for subtyping.
++   * @return true if the type pair was added, false if it was already in the set
++   * (indicating a cycle).
++   */
++  boolean pushCurrentlyCheckingSubtypePair(JSType typeA, JSType typeB) {
++    return currentlyCheckingSubtypePair.get().add(new TypePair(typeA, typeB));
++  }
++
++  /**
++   * Removes a type pair from the set of types currently being checked for subtyping.
++   */
++  void popCurrentlyCheckingSubtypePair(JSType typeA, JSType typeB) {
++    currentlyCheckingSubtypePair.get().remove(new TypePair(typeA, typeB));
++  }
+@@ -1,6 +1,6 @@
+-  private final ThreadLocal<Set<TypePair>> currentlyCheckingSubtypePair =
+-      new ThreadLocal<Set<TypePair>>() {
+-        @Override protected Set<TypePair> initialValue() {
+-          return Sets.newIdentityHashSet();
+-        }
+-      };
++  private final ThreadLocal<Set<JSType.TypePair>> currentlyCheckingSubtypePair =
++      new ThreadLocal<Set<JSType.TypePair>>() {
++        @Override protected Set<JSType.TypePair> initialValue() {
++          return Sets.newIdentityHashSet();
++        }
++      };
+@@ -1,10 +1,10 @@
+-  boolean pushCurrentlyCheckingSubtypePair(JSType typeA, JSType typeB) {
+-    return currentlyCheckingSubtypePair.get().add(new TypePair(typeA, typeB));
+-  }
+-
+-  /**
+-   * Removes a type pair from the set of types currently being checked for subtyping.
+-   */
+-  void popCurrentlyCheckingSubtypePair(JSType typeA, JSType typeB) {
+-    currentlyCheckingSubtypePair.get().remove(new TypePair(typeA, typeB));
+-  }
++  boolean pushCurrentlyCheckingSubtypePair(JSType typeA, JSType typeB) {
++    return currentlyCheckingSubtypePair.get().add(new JSType.TypePair(typeA, typeB));
++  }
++
++  /**
++   * Removes a type pair from the set of types currently being checked for subtyping.
++   */
++  void popCurrentlyCheckingSubtypePair(JSType typeA, JSType typeB) {
++    currentlyCheckingSubtypePair.get().remove(new JSType.TypePair(typeA, typeB));
++  }
+@@ -1,24 +1,6 @@
+-  private final ThreadLocal<Set<JSType>> currentlyResolving =
+-      new ThreadLocal<Set<JSType>>() {
+-        @Override protected Set<JSType> initialValue() {
+-          return Sets.newIdentityHashSet();
+-        }
+-      };
+-
+-  // A set of types that are currently being checked for subtyping. Used to
+-  // detect cycles in the type graph during subtype checks.
+-  private final ThreadLocal<Set<JSType>> currentlyCheckingSubtype =
+-      new ThreadLocal<Set<JSType>>() {
+-        @Override protected Set<JSType> initialValue() {
+-          return Sets.newIdentityHashSet();
+-        }
+-      };
+-
+-  // A set of pairs of types that are currently being checked for subtyping.
+-  // Used to detect cycles in the type graph during subtype checks.
+-  private final ThreadLocal<Set<JSType.TypePair>> currentlyCheckingSubtypePair =
+-      new ThreadLocal<Set<JSType.TypePair>>() {
+-        @Override protected Set<JSType.TypePair> initialValue() {
+-          return Sets.newIdentityHashSet();
+-        }
+-      };
++  private final ThreadLocal<Set<JSType>> currentlyResolving =
++      new ThreadLocal<Set<JSType>>() {
++        @Override protected Set<JSType> initialValue() {
++          return Sets.newIdentityHashSet();
++        }
++      };
+@@ -1,8 +1,1 @@
+-  // A set of types that are currently being resolved. Used to detect cycles
+-  // in the type graph.
+-  private final ThreadLocal<Set<JSType>> currentlyResolving =
+-      new ThreadLocal<Set<JSType>>() {
+-        @Override protected Set<JSType> initialValue() {
+-          return Sets.newIdentityHashSet();
+-        }
+-      };
++
+@@ -1,15 +1,1 @@
+-  /**
+-   * Adds a type to the set of types currently being resolved.
+-   * @return true if the type was added, false if it was already in the set
+-   * (indicating a cycle).
+-   */
+-  boolean pushCurrentlyResolving(JSType type) {
+-    return currentlyResolving.get().add(type);
+-  }
+-
+-  /**
+-   * Removes a type from the set of types currently being resolved.
+-   */
+-  void popCurrentlyResolving(JSType type) {
+-    currentlyResolving.get().remove(type);
+-  }
++

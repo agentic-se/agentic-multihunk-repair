@@ -1,0 +1,73 @@
+diff --git a/src/main/java/com/fasterxml/jackson/core/sym/ByteQuadsCanonicalizer.java b/src/main/java/com/fasterxml/jackson/core/sym/ByteQuadsCanonicalizer.java
+index 976ef6e4..cbcf759d 100644
+--- a/src/main/java/com/fasterxml/jackson/core/sym/ByteQuadsCanonicalizer.java
++++ b/src/main/java/com/fasterxml/jackson/core/sym/ByteQuadsCanonicalizer.java
+@@ -766,7 +766,8 @@ public final class ByteQuadsCanonicalizer
+         if (_intern) {
+             name = InternCache.instance.intern(name);
+         }
+-        int offset = _findOffsetForAdd(calcHash(q1));
++        int hash = calcHash(q1);
++        int offset = _findOffsetForAdd(hash);
+         _hashArea[offset] = q1;
+         _hashArea[offset+3] = 1;
+         _names[offset >> 2] = name;
+@@ -796,7 +797,8 @@ public final class ByteQuadsCanonicalizer
+         if (_intern) {
+             name = InternCache.instance.intern(name);
+         }
+-        int offset = _findOffsetForAdd(calcHash(q1, q2, q3));
++        int h = calcHash(q1, q2, q3);
++        int offset = _findOffsetForAdd(h);
+         _hashArea[offset] = q1;
+         _hashArea[offset+1] = q2;
+         _hashArea[offset+2] = q3;
+@@ -862,7 +864,8 @@ public final class ByteQuadsCanonicalizer
+         // Yes if above 80%, or above 50% AND have ~1% spill-overs
+         if (_count > (_hashSize >> 1)) { // over 50%
+             int spillCount = (_spilloverEnd - _spilloverStart()) >> 2;
+-            if ((spillCount > (1 + _count >> 7))
++            // Use correct precedence for threshold: 1 + (_count >> 7)
++            if ((spillCount > (1 + (_count >> 7)))
+                     || (_count > (_hashSize * 0.80))) {
+                 _needRehash = true;
+             }
+@@ -922,12 +925,16 @@ public final class ByteQuadsCanonicalizer
+         /* 31-Jul-2015, tatu: Note that spillover area does NOT end at end of array,
+          *   since "long names" area follows. Instead, need to calculate from hash size.
+          */
+-        if (_spilloverEnd >= hashArea.length) {
++        // Important: spill-over area is confined to the fixed-size main hash area.
++        // Do NOT use current array length or the moving long-name pointer here,
++        // since long-name appends extend the backing array. The strict limit is
++        // the original end of the main hash area: `_hashSize << 3` ints.
++        final int mainEnd = (_hashSize << 3);
++        if (_spilloverEnd >= mainEnd) {
+             if (_failOnDoS) {
+                 _reportTooManyCollisions();
+             }
+-            // and if we didn't fail, we'll simply force rehash for next add
+-            // (which, in turn, may double up or nuke contents, depending on size etc)
++            // Spill-over exhausted: flag for rehash; caller must handle.
+             _needRehash = true;
+         }
+         return offset;
+@@ -1070,6 +1077,7 @@ public final class ByteQuadsCanonicalizer
+         final int oldSize = _hashSize;
+         final int oldCount = _count;
+         final int newSize = oldSize + oldSize;
++        // DEBUG: track rehashing behavior during tests (disabled)
+         final int oldEnd = _spilloverEnd;
+ 
+         /* 13-Mar-2010, tatu: Let's guard against OOME that could be caused by
+@@ -1192,8 +1200,8 @@ public final class ByteQuadsCanonicalizer
+         if (tertSlots < 64) {
+             return 4;
+         }
+-        if (tertSlots <= 256) { // buckets of 8 slots (up to 256 == 32 x 8)
+-            return 5;
++        if (tertSlots <= 256) { // use larger tertiary buckets to reduce spillovers
++            return 6; // 64-slot tertiary buckets
+         }
+         if (tertSlots <= 1024) { // buckets of 16 slots (up to 1024 == 64 x 16)
+             return 6;

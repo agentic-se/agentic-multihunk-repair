@@ -1,0 +1,39 @@
+diff --git a/src/main/java/org/apache/commons/math3/linear/OpenMapRealVector.java b/src/main/java/org/apache/commons/math3/linear/OpenMapRealVector.java
+index 821482744..508fd6b67 100644
+--- a/src/main/java/org/apache/commons/math3/linear/OpenMapRealVector.java
++++ b/src/main/java/org/apache/commons/math3/linear/OpenMapRealVector.java
+@@ -346,10 +346,8 @@ public class OpenMapRealVector extends SparseRealVector
+          * this only. Indeed, if this[i] = 0d and v[i] = 0d, then
+          * this[i] / v[i] = NaN, and not 0d.
+          */
+-        Iterator iter = entries.iterator();
+-        while (iter.hasNext()) {
+-            iter.advance();
+-            res.setEntry(iter.key(), iter.value() / v.getEntry(iter.key()));
++        for (int i = 0; i < getDimension(); i++) {
++            res.setEntry(i, getEntry(i) / v.getEntry(i));
+         }
+         return res;
+     }
+@@ -359,11 +357,6 @@ public class OpenMapRealVector extends SparseRealVector
+     public OpenMapRealVector ebeMultiply(RealVector v) {
+         checkVectorDimensions(v.getDimension());
+         OpenMapRealVector res = new OpenMapRealVector(this);
+-        Iterator iter = entries.iterator();
+-        while (iter.hasNext()) {
+-            iter.advance();
+-            res.setEntry(iter.key(), iter.value() * v.getEntry(iter.key()));
+-        }
+         /*
+          * MATH-803: the above loop assumes that 0d * x  = 0d for any double x,
+          * which allows to consider only the non-zero entries of this. However,
+@@ -371,6 +364,9 @@ public class OpenMapRealVector extends SparseRealVector
+          *
+          * These special cases are handled below.
+          */
++        for (int i = 0; i < getDimension(); i++) {
++            res.setEntry(i, getEntry(i) * v.getEntry(i));
++        }
+         return res;
+     }
+ 
