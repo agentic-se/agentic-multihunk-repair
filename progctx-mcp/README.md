@@ -1,6 +1,6 @@
 # 🍁 MAPLE - Model Context Protocol for Automated Lightweight Repository Context Extraction
 
-This document describes how to run the MAPLE MCP server in SSE (Server-Sent Events) mode and integrate it with Qwen Code for automated Java bug fixing.
+This document describes how to run the MAPLE MCP server in SSE (Server-Sent Events) mode and integrate it with agentic AI tools (such as Qwen Code, Gemini CLI, Codex, Claude Code) for code repair task.
 
 ## Overview
 
