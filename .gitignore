@@ -136,7 +136,13 @@ celerybeat.pid
 *.sage.py
 
 # Environments
+# Never commit secrets in .env files (matches .env at any depth, plus
+# variants like .env.local / .env.production). Keep committable templates.
 .env
+.env.*
+!.env.example
+!.env.sample
+!.env.template
 .envrc
 .venv
 env/
@@ -206,3 +212,6 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# mac related temp files
+.DS_Store
