@@ -1,0 +1,354 @@
+[
+  {
+    "instance_id": "astropy__astropy-13033",
+    "hunk_count": 2,
+    "divergence": 0.122,
+    "resolved_by": {
+      "qwen": true,
+      "gemini": true,
+      "codex": true,
+      "claude": true
+    }
+  },
+  {
+    "instance_id": "astropy__astropy-13579",
+    "hunk_count": 2,
+    "divergence": 0.0745,
+    "resolved_by": {
+      "qwen": true,
+      "gemini": true,
+      "codex": true,
+      "claude": true
+    }
+  },
+  {
+    "instance_id": "astropy__astropy-14365",
+    "hunk_count": 2,
+    "divergence": 0.1722,
+    "resolved_by": {
+      "qwen": false,
+      "gemini": true,
+      "codex": true,
+      "claude": true
+    }
+  },
+  {
+    "instance_id": "astropy__astropy-14369",
+    "hunk_count": 5,
+    "divergence": 0.5005,
+    "resolved_by": {
+      "qwen": false,
+      "gemini": false,
+      "codex": true,
+      "claude": true
+    }
+  },
+  {
+    "instance_id": "astropy__astropy-14598",
+    "hunk_count": 2,
+    "divergence": 0.1449,
+    "resolved_by": {
+      "qwen": false,
+      "gemini": false,
+      "codex": true,
+      "claude": true
+    }
+  },
+  {
+    "instance_id": "astropy__astropy-7606",
+    "hunk_count": 2,
+    "divergence": 0.1408,
+    "resolved_by": {
+      "qwen": false,
+      "gemini": false,
+      "codex": false,
+      "claude": false
+    }
+  },
+  {
+    "instance_id": "astropy__astropy-8707",
+    "hunk_count": 6,
+    "divergence": 0.4495,
+    "resolved_by": {
+      "qwen": false,
+      "gemini": false,
+      "codex": false,
+      "claude": false
+    }
+  },
+  {
+    "instance_id": "astropy__astropy-8872",
+    "hunk_count": 3,
+    "divergence": 0.1667,
+    "resolved_by": {
+      "qwen": false,
+      "gemini": false,
+      "codex": true,
+      "claude": false
+    }
+  },
+  {
+    "instance_id": "django__django-10554",
+    "hunk_count": 2,
+    "divergence": 0.3233,
+    "resolved_by": {
+      "qwen": false,
+      "gemini": false,
+      "codex": true,
+      "claude": false
+    }
+  },
+  {
+    "instance_id": "django__django-11138",
+    "hunk_count": 7,
+    "divergence": 0.7929,
+    "resolved_by": {
+      "qwen": false,
+      "gemini": false,
+      "codex": true,
+      "claude": true
+    }
+  },
+  {
+    "instance_id": "django__django-11400",
+    "hunk_count": 4,
+    "divergence": 0.8751,
+    "resolved_by": {
+      "qwen": false,
+      "gemini": true,
+      "codex": true,
+      "claude": true
+    }
+  },
+  {
+    "instance_id": "django__django-11532",
+    "hunk_count": 11,
+    "divergence": 1.2682,
+    "resolved_by": {
+      "qwen": true,
+      "gemini": true,
+      "codex": true,
+      "claude": true
+    }
+  },
+  {
+    "instance_id": "django__django-11728",
+    "hunk_count": 6,
+    "divergence": 0.2275,
+    "resolved_by": {
+      "qwen": false,
+      "gemini": false,
+      "codex": true,
+      "claude": true
+    }
+  },
+  {
+    "instance_id": "django__django-11740",
+    "hunk_count": 3,
+    "divergence": 0.1104,
+    "resolved_by": {
+      "qwen": true,
+      "gemini": true,
+      "codex": true,
+      "claude": true
+    }
+  },
+  {
+    "instance_id": "django__django-12406",
+    "hunk_count": 3,
+    "divergence": 0.689,
+    "resolved_by": {
+      "qwen": false,
+      "gemini": false,
+      "codex": true,
+      "claude": true
+    }
+  },
+  {
+    "instance_id": "django__django-13343",
+    "hunk_count": 2,
+    "divergence": 0.0752,
+    "resolved_by": {
+      "qwen": true,
+      "gemini": true,
+      "codex": true,
+      "claude": true
+    }
+  },
+  {
+    "instance_id": "django__django-13346",
+    "hunk_count": 2,
+    "divergence": 0.0,
+    "resolved_by": {
+      "qwen": false,
+      "gemini": false,
+      "codex": true,
+      "claude": true
+    }
+  },
+  {
+    "instance_id": "django__django-13449",
+    "hunk_count": 2,
+    "divergence": 0.0744,
+    "resolved_by": {
+      "qwen": true,
+      "gemini": true,
+      "codex": true,
+      "claude": true
+    }
+  },
+  {
+    "instance_id": "django__django-15128",
+    "hunk_count": 6,
+    "divergence": 0.1969,
+    "resolved_by": {
+      "qwen": false,
+      "gemini": false,
+      "codex": true,
+      "claude": true
+    }
+  },
+  {
+    "instance_id": "django__django-15503",
+    "hunk_count": 6,
+    "divergence": 0.3061,
+    "resolved_by": {
+      "qwen": false,
+      "gemini": false,
+      "codex": false,
+      "claude": true
+    }
+  },
+  {
+    "instance_id": "django__django-15563",
+    "hunk_count": 3,
+    "divergence": 0.3766,
+    "resolved_by": {
+      "qwen": false,
+      "gemini": false,
+      "codex": true,
+      "claude": true
+    }
+  },
+  {
+    "instance_id": "django__django-15572",
+    "hunk_count": 2,
+    "divergence": 0.1305,
+    "resolved_by": {
+      "qwen": false,
+      "gemini": true,
+      "codex": true,
+      "claude": true
+    }
+  },
+  {
+    "instance_id": "django__django-15732",
+    "hunk_count": 4,
+    "divergence": 0.1703,
+    "resolved_by": {
+      "qwen": true,
+      "gemini": true,
+      "codex": true,
+      "claude": true
+    }
+  },
+  {
+    "instance_id": "django__django-16631",
+    "hunk_count": 3,
+    "divergence": 0.4095,
+    "resolved_by": {
+      "qwen": true,
+      "gemini": true,
+      "codex": true,
+      "claude": true
+    }
+  },
+  {
+    "instance_id": "scikit-learn__scikit-learn-10297",
+    "hunk_count": 3,
+    "divergence": 0.1481,
+    "resolved_by": {
+      "qwen": true,
+      "gemini": true,
+      "codex": true,
+      "claude": true
+    }
+  },
+  {
+    "instance_id": "scikit-learn__scikit-learn-14087",
+    "hunk_count": 2,
+    "divergence": 0.0734,
+    "resolved_by": {
+      "qwen": true,
+      "gemini": true,
+      "codex": true,
+      "claude": true
+    }
+  },
+  {
+    "instance_id": "scikit-learn__scikit-learn-25232",
+    "hunk_count": 5,
+    "divergence": 0.2808,
+    "resolved_by": {
+      "qwen": true,
+      "gemini": true,
+      "codex": true,
+      "claude": true
+    }
+  },
+  {
+    "instance_id": "scikit-learn__scikit-learn-25747",
+    "hunk_count": 2,
+    "divergence": 0.0824,
+    "resolved_by": {
+      "qwen": false,
+      "gemini": true,
+      "codex": true,
+      "claude": true
+    }
+  },
+  {
+    "instance_id": "scikit-learn__scikit-learn-25931",
+    "hunk_count": 2,
+    "divergence": 0.0,
+    "resolved_by": {
+      "qwen": false,
+      "gemini": true,
+      "codex": true,
+      "claude": true
+    }
+  },
+  {
+    "instance_id": "scikit-learn__scikit-learn-26194",
+    "hunk_count": 4,
+    "divergence": 0.097,
+    "resolved_by": {
+      "qwen": false,
+      "gemini": true,
+      "codex": true,
+      "claude": true
+    }
+  },
+  {
+    "instance_id": "scikit-learn__scikit-learn-26323",
+    "hunk_count": 2,
+    "divergence": 0.0777,
+    "resolved_by": {
+      "qwen": true,
+      "gemini": true,
+      "codex": true,
+      "claude": true
+    }
+  },
+  {
+    "instance_id": "sympy__sympy-13877",
+    "hunk_count": 6,
+    "divergence": 0.5968,
+    "resolved_by": {
+      "qwen": true,
+      "gemini": true,
+      "codex": true,
+      "claude": true
+    }
+  }
+]

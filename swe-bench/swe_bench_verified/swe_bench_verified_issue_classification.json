@@ -1,0 +1,2502 @@
+{
+    "astropy__astropy-12907": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "astropy__astropy-13033": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 2
+    },
+    "astropy__astropy-13236": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Feature/Enhancement",
+        "num_hunks": 1
+    },
+    "astropy__astropy-13398": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Feature/Enhancement",
+        "num_hunks": 8
+    },
+    "astropy__astropy-13453": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "astropy__astropy-13579": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 2
+    },
+    "astropy__astropy-13977": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "astropy__astropy-14096": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "astropy__astropy-14182": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Feature/Enhancement",
+        "num_hunks": 3
+    },
+    "astropy__astropy-14309": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "astropy__astropy-14365": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 2
+    },
+    "astropy__astropy-14369": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 5
+    },
+    "astropy__astropy-14508": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "astropy__astropy-14539": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "astropy__astropy-14598": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 2
+    },
+    "astropy__astropy-14995": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "astropy__astropy-7166": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 3
+    },
+    "astropy__astropy-7336": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "astropy__astropy-7606": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 2
+    },
+    "astropy__astropy-7671": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "astropy__astropy-8707": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 6
+    },
+    "astropy__astropy-8872": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 3
+    },
+    "django__django-10097": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "django__django-10554": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 2
+    },
+    "django__django-10880": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "django__django-10914": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-10973": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "django__django-10999": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "django__django-11066": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "django__django-11087": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 4
+    },
+    "django__django-11095": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Feature/Enhancement",
+        "num_hunks": 2
+    },
+    "django__django-11099": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "django__django-11119": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "django__django-11133": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-11138": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 7
+    },
+    "django__django-11141": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "django__django-11149": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-11163": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-11179": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-11206": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-11211": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "django__django-11239": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "django__django-11265": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "django__django-11276": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 6
+    },
+    "django__django-11292": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 4
+    },
+    "django__django-11299": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-11333": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 3
+    },
+    "django__django-11400": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 4
+    },
+    "django__django-11433": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "django__django-11451": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-11477": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-11490": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-11532": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 11
+    },
+    "django__django-11551": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-11555": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "django__django-11603": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Feature/Enhancement",
+        "num_hunks": 2
+    },
+    "django__django-11728": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 6
+    },
+    "django__django-11734": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 3
+    },
+    "django__django-11740": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 3
+    },
+    "django__django-11749": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "django__django-11790": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-11815": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-11820": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "django__django-11848": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "django__django-11880": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-11885": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 10
+    },
+    "django__django-11951": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "django__django-11964": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-11999": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-12039": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "django__django-12050": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-12125": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-12143": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-12155": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 4
+    },
+    "django__django-12193": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "django__django-12209": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-12262": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "django__django-12273": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-12276": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "django__django-12304": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-12308": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "django__django-12325": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 3
+    },
+    "django__django-12406": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 3
+    },
+    "django__django-12419": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Feature/Enhancement",
+        "num_hunks": 1
+    },
+    "django__django-12663": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "django__django-12708": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-12713": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-12741": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "django__django-12754": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "django__django-12774": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-12858": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "django__django-12965": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-13012": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-13023": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "django__django-13028": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-13033": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-13089": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "django__django-13109": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-13112": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-13121": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 9
+    },
+    "django__django-13128": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 3
+    },
+    "django__django-13158": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "django__django-13195": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 3
+    },
+    "django__django-13212": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 13
+    },
+    "django__django-13279": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "django__django-13297": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 3
+    },
+    "django__django-13315": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-13343": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 2
+    },
+    "django__django-13344": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 7
+    },
+    "django__django-13346": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 2
+    },
+    "django__django-13363": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "django__django-13401": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "django__django-13406": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-13410": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-13417": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "django__django-13449": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 2
+    },
+    "django__django-13512": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 3
+    },
+    "django__django-13513": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 4
+    },
+    "django__django-13516": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-13551": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "django__django-13568": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-13569": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "django__django-13590": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-13658": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-13670": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "django__django-13741": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "django__django-13786": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-13794": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-13807": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-13809": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "django__django-13810": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "django__django-13820": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-13821": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-13837": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-13925": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "django__django-13933": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-13964": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-14007": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "django__django-14011": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 3
+    },
+    "django__django-14017": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-14034": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "django__django-14053": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "django__django-14089": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Feature/Enhancement",
+        "num_hunks": 1
+    },
+    "django__django-14122": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "django__django-14140": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-14155": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-14170": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "django__django-14238": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-14311": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Feature/Enhancement",
+        "num_hunks": 1
+    },
+    "django__django-14315": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "django__django-14349": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "django__django-14351": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-14373": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-14376": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 3
+    },
+    "django__django-14404": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "django__django-14434": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "django__django-14493": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "django__django-14500": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-14534": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-14539": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-14559": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "django__django-14580": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-14608": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "django__django-14631": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 7
+    },
+    "django__django-14672": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-14725": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 5
+    },
+    "django__django-14752": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "django__django-14765": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-14771": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-14787": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-14792": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "django__django-14855": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-14915": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-14999": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-15022": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "django__django-15037": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "django__django-15098": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-15103": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Feature/Enhancement",
+        "num_hunks": 3
+    },
+    "django__django-15104": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-15127": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-15128": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 6
+    },
+    "django__django-15161": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 6
+    },
+    "django__django-15252": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-15268": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "django__django-15277": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-15278": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "django__django-15280": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-15315": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-15368": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "django__django-15375": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-15380": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-15382": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "django__django-15467": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Feature/Enhancement",
+        "num_hunks": 1
+    },
+    "django__django-15499": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-15503": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 6
+    },
+    "django__django-15525": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-15554": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 9
+    },
+    "django__django-15561": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "django__django-15563": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 3
+    },
+    "django__django-15569": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-15572": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 2
+    },
+    "django__django-15629": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 6
+    },
+    "django__django-15695": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-15731": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "django__django-15732": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 4
+    },
+    "django__django-15741": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-15814": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "django__django-15851": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-15863": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-15916": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Feature/Enhancement",
+        "num_hunks": 3
+    },
+    "django__django-15930": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-15957": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Feature/Enhancement",
+        "num_hunks": 4
+    },
+    "django__django-15973": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "django__django-15987": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-16032": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 5
+    },
+    "django__django-16082": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-16100": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Feature/Enhancement",
+        "num_hunks": 1
+    },
+    "django__django-16116": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "django__django-16136": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "django__django-16139": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-16145": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "django__django-16255": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "django__django-16256": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 11
+    },
+    "django__django-16263": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 14
+    },
+    "django__django-16315": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 4
+    },
+    "django__django-16333": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-16429": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-16454": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "django__django-16485": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "django__django-16493": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "django__django-16502": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 3
+    },
+    "django__django-16527": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "django__django-16560": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Feature/Enhancement",
+        "num_hunks": 18
+    },
+    "django__django-16569": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-16595": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-16612": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-16631": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 3
+    },
+    "django__django-16642": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "django__django-16661": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "django__django-16662": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-16667": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "django__django-16801": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "django__django-16819": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-16877": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Feature/Enhancement",
+        "num_hunks": 1
+    },
+    "django__django-16899": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-16901": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "django__django-16938": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "django__django-16950": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-17029": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-17084": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 3
+    },
+    "django__django-17087": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "django__django-7530": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "django__django-9296": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Feature/Enhancement",
+        "num_hunks": 1
+    },
+    "matplotlib__matplotlib-13989": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "matplotlib__matplotlib-14623": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 6
+    },
+    "matplotlib__matplotlib-20488": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "matplotlib__matplotlib-20676": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "matplotlib__matplotlib-20826": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "matplotlib__matplotlib-20859": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "matplotlib__matplotlib-21568": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "matplotlib__matplotlib-22719": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "matplotlib__matplotlib-22865": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "matplotlib__matplotlib-22871": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "matplotlib__matplotlib-23299": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "matplotlib__matplotlib-23314": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "matplotlib__matplotlib-23412": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "matplotlib__matplotlib-23476": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "matplotlib__matplotlib-24026": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 3
+    },
+    "matplotlib__matplotlib-24149": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "matplotlib__matplotlib-24177": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "matplotlib__matplotlib-24570": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "matplotlib__matplotlib-24627": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "matplotlib__matplotlib-24637": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "matplotlib__matplotlib-24870": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Feature/Enhancement",
+        "num_hunks": 5
+    },
+    "matplotlib__matplotlib-24970": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "matplotlib__matplotlib-25122": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "matplotlib__matplotlib-25287": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 3
+    },
+    "matplotlib__matplotlib-25311": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "matplotlib__matplotlib-25332": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "matplotlib__matplotlib-25479": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "matplotlib__matplotlib-25775": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Feature/Enhancement",
+        "num_hunks": 12
+    },
+    "matplotlib__matplotlib-25960": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 2
+    },
+    "matplotlib__matplotlib-26113": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "matplotlib__matplotlib-26208": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "matplotlib__matplotlib-26291": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "matplotlib__matplotlib-26342": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Feature/Enhancement",
+        "num_hunks": 2
+    },
+    "matplotlib__matplotlib-26466": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 4
+    },
+    "mwaskom__seaborn-3069": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 4
+    },
+    "mwaskom__seaborn-3187": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 2
+    },
+    "pallets__flask-5014": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Feature/Enhancement",
+        "num_hunks": 1
+    },
+    "psf__requests-1142": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "psf__requests-1724": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "psf__requests-1766": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "psf__requests-1921": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "psf__requests-2317": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "psf__requests-2931": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "psf__requests-5414": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "psf__requests-6028": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "pydata__xarray-2905": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "pydata__xarray-3095": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 6
+    },
+    "pydata__xarray-3151": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "pydata__xarray-3305": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 5
+    },
+    "pydata__xarray-3677": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "pydata__xarray-3993": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 5
+    },
+    "pydata__xarray-4075": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "pydata__xarray-4094": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "pydata__xarray-4356": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "pydata__xarray-4629": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "pydata__xarray-4687": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 4
+    },
+    "pydata__xarray-4695": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "pydata__xarray-4966": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "pydata__xarray-6461": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "pydata__xarray-6599": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 2
+    },
+    "pydata__xarray-6721": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "pydata__xarray-6744": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "pydata__xarray-6938": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 6
+    },
+    "pydata__xarray-6992": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 8
+    },
+    "pydata__xarray-7229": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 2
+    },
+    "pydata__xarray-7233": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "pydata__xarray-7393": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "pylint-dev__pylint-4551": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Feature/Enhancement",
+        "num_hunks": 7
+    },
+    "pylint-dev__pylint-4604": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 3
+    },
+    "pylint-dev__pylint-4661": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Feature/Enhancement",
+        "num_hunks": 5
+    },
+    "pylint-dev__pylint-4970": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Feature/Enhancement",
+        "num_hunks": 1
+    },
+    "pylint-dev__pylint-6386": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 8
+    },
+    "pylint-dev__pylint-6528": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 5
+    },
+    "pylint-dev__pylint-6903": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "pylint-dev__pylint-7080": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "pylint-dev__pylint-7277": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "pylint-dev__pylint-8898": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 5
+    },
+    "pytest-dev__pytest-10051": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 3
+    },
+    "pytest-dev__pytest-10081": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "pytest-dev__pytest-10356": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Feature/Enhancement",
+        "num_hunks": 2
+    },
+    "pytest-dev__pytest-5262": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "pytest-dev__pytest-5631": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "pytest-dev__pytest-5787": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 4
+    },
+    "pytest-dev__pytest-5809": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "pytest-dev__pytest-5840": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 7
+    },
+    "pytest-dev__pytest-6197": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 3
+    },
+    "pytest-dev__pytest-6202": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "pytest-dev__pytest-7205": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "pytest-dev__pytest-7236": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 4
+    },
+    "pytest-dev__pytest-7324": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 3
+    },
+    "pytest-dev__pytest-7432": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "pytest-dev__pytest-7490": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 2
+    },
+    "pytest-dev__pytest-7521": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "pytest-dev__pytest-7571": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 3
+    },
+    "pytest-dev__pytest-7982": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "pytest-dev__pytest-8399": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 5
+    },
+    "scikit-learn__scikit-learn-10297": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 3
+    },
+    "scikit-learn__scikit-learn-10844": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "scikit-learn__scikit-learn-10908": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Feature/Enhancement",
+        "num_hunks": 1
+    },
+    "scikit-learn__scikit-learn-11310": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 4
+    },
+    "scikit-learn__scikit-learn-11578": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "scikit-learn__scikit-learn-12585": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "scikit-learn__scikit-learn-12682": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Feature/Enhancement",
+        "num_hunks": 24
+    },
+    "scikit-learn__scikit-learn-12973": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 3
+    },
+    "scikit-learn__scikit-learn-13124": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "scikit-learn__scikit-learn-13135": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "scikit-learn__scikit-learn-13142": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "scikit-learn__scikit-learn-13328": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "scikit-learn__scikit-learn-13439": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "scikit-learn__scikit-learn-13496": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 3
+    },
+    "scikit-learn__scikit-learn-13779": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "scikit-learn__scikit-learn-14053": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "scikit-learn__scikit-learn-14087": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 2
+    },
+    "scikit-learn__scikit-learn-14141": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "scikit-learn__scikit-learn-14496": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 6
+    },
+    "scikit-learn__scikit-learn-14629": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "scikit-learn__scikit-learn-14710": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "scikit-learn__scikit-learn-14894": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "scikit-learn__scikit-learn-14983": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "scikit-learn__scikit-learn-15100": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "scikit-learn__scikit-learn-25102": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Feature/Enhancement",
+        "num_hunks": 7
+    },
+    "scikit-learn__scikit-learn-25232": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 5
+    },
+    "scikit-learn__scikit-learn-25747": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 2
+    },
+    "scikit-learn__scikit-learn-25931": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 2
+    },
+    "scikit-learn__scikit-learn-25973": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 5
+    },
+    "scikit-learn__scikit-learn-26194": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 4
+    },
+    "scikit-learn__scikit-learn-26323": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 2
+    },
+    "scikit-learn__scikit-learn-9288": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "sphinx-doc__sphinx-10323": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sphinx-doc__sphinx-10435": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sphinx-doc__sphinx-10449": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 3
+    },
+    "sphinx-doc__sphinx-10466": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sphinx-doc__sphinx-10614": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "sphinx-doc__sphinx-10673": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Feature/Enhancement",
+        "num_hunks": 9
+    },
+    "sphinx-doc__sphinx-11445": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 3
+    },
+    "sphinx-doc__sphinx-11510": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 3
+    },
+    "sphinx-doc__sphinx-7440": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "sphinx-doc__sphinx-7454": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sphinx-doc__sphinx-7462": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "sphinx-doc__sphinx-7590": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Feature/Enhancement",
+        "num_hunks": 14
+    },
+    "sphinx-doc__sphinx-7748": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 4
+    },
+    "sphinx-doc__sphinx-7757": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sphinx-doc__sphinx-7889": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sphinx-doc__sphinx-7910": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 2
+    },
+    "sphinx-doc__sphinx-7985": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "sphinx-doc__sphinx-8035": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 6
+    },
+    "sphinx-doc__sphinx-8056": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "sphinx-doc__sphinx-8120": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 3
+    },
+    "sphinx-doc__sphinx-8265": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sphinx-doc__sphinx-8269": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "sphinx-doc__sphinx-8459": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sphinx-doc__sphinx-8475": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "sphinx-doc__sphinx-8548": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 4
+    },
+    "sphinx-doc__sphinx-8551": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "sphinx-doc__sphinx-8593": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 4
+    },
+    "sphinx-doc__sphinx-8595": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sphinx-doc__sphinx-8621": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sphinx-doc__sphinx-8638": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sphinx-doc__sphinx-8721": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sphinx-doc__sphinx-9229": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "sphinx-doc__sphinx-9230": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sphinx-doc__sphinx-9258": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sphinx-doc__sphinx-9281": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "sphinx-doc__sphinx-9320": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "sphinx-doc__sphinx-9367": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sphinx-doc__sphinx-9461": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 7
+    },
+    "sphinx-doc__sphinx-9591": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sphinx-doc__sphinx-9602": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 3
+    },
+    "sphinx-doc__sphinx-9658": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 3
+    },
+    "sphinx-doc__sphinx-9673": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sphinx-doc__sphinx-9698": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sphinx-doc__sphinx-9711": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "sympy__sympy-11618": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sympy__sympy-12096": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sympy__sympy-12419": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 3
+    },
+    "sympy__sympy-12481": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sympy__sympy-12489": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 26
+    },
+    "sympy__sympy-13031": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "sympy__sympy-13091": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 45
+    },
+    "sympy__sympy-13372": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sympy__sympy-13480": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sympy__sympy-13551": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sympy__sympy-13615": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sympy__sympy-13647": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sympy__sympy-13757": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sympy__sympy-13798": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sympy__sympy-13852": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Feature/Enhancement",
+        "num_hunks": 4
+    },
+    "sympy__sympy-13877": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 6
+    },
+    "sympy__sympy-13878": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 45
+    },
+    "sympy__sympy-13974": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 4
+    },
+    "sympy__sympy-14248": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 4
+    },
+    "sympy__sympy-14531": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 11
+    },
+    "sympy__sympy-14711": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sympy__sympy-14976": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sympy__sympy-15017": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sympy__sympy-15345": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "sympy__sympy-15349": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sympy__sympy-15599": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 4
+    },
+    "sympy__sympy-15809": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sympy__sympy-15875": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "sympy__sympy-15976": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "sympy__sympy-16450": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sympy__sympy-16597": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 14
+    },
+    "sympy__sympy-16766": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sympy__sympy-16792": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 3
+    },
+    "sympy__sympy-16886": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sympy__sympy-17139": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sympy__sympy-17318": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 3
+    },
+    "sympy__sympy-17630": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sympy__sympy-17655": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sympy__sympy-18189": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sympy__sympy-18199": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 3
+    },
+    "sympy__sympy-18211": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sympy__sympy-18698": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 3
+    },
+    "sympy__sympy-18763": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sympy__sympy-19040": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sympy__sympy-19346": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sympy__sympy-19495": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 4
+    },
+    "sympy__sympy-19637": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sympy__sympy-19783": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 3
+    },
+    "sympy__sympy-19954": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sympy__sympy-20154": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 3
+    },
+    "sympy__sympy-20428": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sympy__sympy-20438": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 6
+    },
+    "sympy__sympy-20590": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sympy__sympy-20801": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "sympy__sympy-20916": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "sympy__sympy-21379": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "sympy__sympy-21596": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 3
+    },
+    "sympy__sympy-21612": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sympy__sympy-21847": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "sympy__sympy-21930": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 3
+    },
+    "sympy__sympy-22080": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 3
+    },
+    "sympy__sympy-22456": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 4
+    },
+    "sympy__sympy-22714": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sympy__sympy-22914": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sympy__sympy-23262": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sympy__sympy-23413": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sympy__sympy-23534": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sympy__sympy-23824": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sympy__sympy-23950": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sympy__sympy-24066": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sympy__sympy-24213": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    },
+    "sympy__sympy-24443": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "sympy__sympy-24539": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Bug",
+        "num_hunks": 1
+    },
+    "sympy__sympy-24562": {
+        "hunk_type": "multi-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 2
+    },
+    "sympy__sympy-24661": {
+        "hunk_type": "single-hunk",
+        "issue_type": "Unlabeled",
+        "num_hunks": 1
+    }
+}
