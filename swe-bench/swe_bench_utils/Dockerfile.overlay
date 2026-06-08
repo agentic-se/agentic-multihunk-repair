@@ -1,0 +1,41 @@
+# Overlay on top of a SWE-bench instance image: adds Node.js + an npm-installed
+# coding-agent CLI (gemini-cli, qwen-code, ...) so the agent can run *inside*
+# the per-instance container.
+#
+# Build args (set by swe_bench_utils.build_overlay; the Python module is the
+# canonical source of truth -- see DEFAULT_NODE_MAJOR / DEFAULT_*_VERSION in
+# build_overlay.py. The defaults below only matter for standalone
+# `docker build -f Dockerfile.overlay` invocations.):
+#   BASE_IMAGE        - e.g. swebench/sweb.eval.x86_64.astropy_1776_astropy-12907:v2
+#   NODE_MAJOR        - Node.js major version
+#   CLI_NPM_PACKAGE   - npm package, e.g. @google/gemini-cli or @qwen-code/qwen-code or @openai/codex
+#   CLI_VERSION       - npm version spec for the agent CLI
+#   CLI_BINARY        - resulting CLI binary name on PATH (gemini, qwen, ...)
+
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE}
+
+ARG NODE_MAJOR=20
+ARG CLI_NPM_PACKAGE=@google/gemini-cli
+ARG CLI_VERSION=0.10.0
+ARG CLI_BINARY=gemini
+
+# Install Node.js via NodeSource. SWE-bench images are Debian-based.
+USER root
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends curl ca-certificates gnupg; \
+    curl -fsSL "https://deb.nodesource.com/setup_${NODE_MAJOR}.x" | bash -; \
+    apt-get install -y --no-install-recommends nodejs; \
+    rm -rf /var/lib/apt/lists/*; \
+    node --version; \
+    npm --version
+
+# Install the pinned agent CLI globally.
+RUN npm install -g "${CLI_NPM_PACKAGE}@${CLI_VERSION}" \
+    && "${CLI_BINARY}" --version || true
+
+# Marker file so we can detect overlay images.
+RUN echo "${CLI_NPM_PACKAGE}@${CLI_VERSION}" > /etc/swebench-cli-version
+
+WORKDIR /testbed

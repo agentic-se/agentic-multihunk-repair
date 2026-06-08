@@ -1,0 +1,826 @@
+{
+    "astropy__astropy-13033": {
+        "buggy_hunks": {
+            "0": {
+                "file": "astropy/timeseries/core.py",
+                "start_line": 55,
+                "end_line": 60,
+                "code": "@@ -55,6 +55,13 @@ class BaseTimeSeries(QTable):\n\n     _required_columns_relax = False\n \n     def _check_required_columns(self):\n \n         if not self._required_columns_enabled:\n             return"
+            },
+            "1": {
+                "file": "astropy/timeseries/core.py",
+                "start_line": 76,
+                "end_line": 84,
+                "code": "@@ -76,9 +83,10 @@ def _check_required_columns(self):\n\n \n             elif self.colnames[:len(required_columns)] != required_columns:\n \n-                raise ValueError(\"{} object is invalid - expected '{}' \"\n-                                 \"as the first column{} but found '{}'\"\n-                                 .format(self.__class__.__name__, required_columns[0], plural, self.colnames[0]))\n \n             if (self._required_columns_relax\n                     and self._required_columns == self.colnames[:len(self._required_columns)]):"
+            }
+        }
+    },
+    "astropy__astropy-13579": {
+        "buggy_hunks": {
+            "0": {
+                "file": "astropy/wcs/wcsapi/wrappers/sliced_wcs.py",
+                "start_line": 243,
+                "end_line": 248,
+                "code": "@@ -243,6 +243,8 @@ def pixel_to_world_values(self, *pixel_arrays):\n\n         return world_arrays\n \n     def world_to_pixel_values(self, *world_arrays):\n         world_arrays = tuple(map(np.asanyarray, world_arrays))\n         world_arrays_new = []\n         iworld_curr = -1"
+            },
+            "1": {
+                "file": "astropy/wcs/wcsapi/wrappers/sliced_wcs.py",
+                "start_line": 251,
+                "end_line": 257,
+                "code": "@@ -251,7 +253,7 @@ def world_to_pixel_values(self, *world_arrays):\n\n                 iworld_curr += 1\n                 world_arrays_new.append(world_arrays[iworld_curr])\n             else:\n-                world_arrays_new.append(1.)\n \n         world_arrays_new = np.broadcast_arrays(*world_arrays_new)\n         pixel_arrays = list(self._wcs.world_to_pixel_values(*world_arrays_new))"
+            }
+        }
+    },
+    "astropy__astropy-14365": {
+        "buggy_hunks": {
+            "0": {
+                "file": "astropy/io/ascii/qdp.py",
+                "start_line": 68,
+                "end_line": 74,
+                "code": "@@ -68,7 +68,7 @@ def _line_type(line, delimiter=None):\n\n     _new_re = rf\"NO({sep}NO)+\"\n     _data_re = rf\"({_decimal_re}|NO|[-+]?nan)({sep}({_decimal_re}|NO|[-+]?nan))*)\"\n     _type_re = rf\"^\\s*((?P<command>{_command_re})|(?P<new>{_new_re})|(?P<data>{_data_re})?\\s*(\\!(?P<comment>.*))?\\s*$\"\n-    _line_type_re = re.compile(_type_re)\n     line = line.strip()\n     if not line:\n         return \"comment\""
+            },
+            "1": {
+                "file": "astropy/io/ascii/qdp.py",
+                "start_line": 306,
+                "end_line": 312,
+                "code": "@@ -306,7 +306,7 @@ def _get_tables_from_qdp_file(qdp_file, input_colnames=None, delimiter=None):\n\n \n             values = []\n             for v in line.split(delimiter):\n-                if v == \"NO\":\n                     values.append(np.ma.masked)\n                 else:\n                     # Understand if number is int or float"
+            }
+        }
+    },
+    "astropy__astropy-14369": {
+        "buggy_hunks": {
+            "0": {
+                "file": "astropy/units/format/cds.py",
+                "start_line": 138,
+                "end_line": 145,
+                "code": "@@ -138,8 +138,7 @@ def _make_parser(cls):\n\n         for Astronomical Catalogues 2.0\n         <http://vizier.u-strasbg.fr/vizier/doc/catstd-3.2.htx>`_, which is not\n         terribly precise.  The exact grammar is here is based on the\n-        YACC grammar in the `unity library\n-        <https://bitbucket.org/nxg/unity/>`_.\n         \"\"\"\n         tokens = cls._tokens\n "
+            },
+            "1": {
+                "file": "astropy/units/format/cds.py",
+                "start_line": 182,
+                "end_line": 188,
+                "code": "@@ -182,7 +181,7 @@ def p_product_of_units(p):\n\n         def p_division_of_units(p):\n             \"\"\"\n             division_of_units : DIVISION unit_expression\n-                              | unit_expression DIVISION combined_units\n             \"\"\"\n             if len(p) == 3:\n                 p[0] = p[2] ** -1"
+            },
+            "2": {
+                "file": "astropy/units/format/cds_parsetab.py",
+                "start_line": 17,
+                "end_line": 25,
+                "code": "@@ -17,9 +17,9 @@\n\n \n _lr_method = 'LALR'\n \n-_lr_signature = 'CLOSE_BRACKET CLOSE_PAREN DIMENSIONLESS DIVISION OPEN_BRACKET OPEN_PAREN PRODUCT SIGN UFLOAT UINT UNIT X\\n            main : factor combined_units\\n                 | combined_units\\n                 | DIMENSIONLESS\\n                 | OPEN_BRACKET combined_units CLOSE_BRACKET\\n                 | OPEN_BRACKET DIMENSIONLESS CLOSE_BRACKET\\n                 | factor\\n            \\n            combined_units : product_of_units\\n                           | division_of_units\\n            \\n            product_of_units : unit_expression PRODUCT combined_units\\n                             | unit_expression\\n            \\n            division_of_units : DIVISION unit_expression\\n                              | unit_expression DIVISION combined_units\\n            \\n            unit_expression : unit_with_power\\n                            | OPEN_PAREN combined_units CLOSE_PAREN\\n            \\n            factor : signed_float X UINT signed_int\\n                   | UINT X UINT signed_int\\n                   | UINT signed_int\\n                   | UINT\\n                   | signed_float\\n            \\n            unit_with_power : UNIT numeric_power\\n                            | UNIT\\n            \\n            numeric_power : sign UINT\\n            \\n            sign : SIGN\\n                 |\\n            \\n            signed_int : SIGN UINT\\n            \\n            signed_float : sign UINT\\n                         | sign UFLOAT\\n            '\n     \n-_lr_action_items = {'DIMENSIONLESS':([0,5,],[4,19,]),'OPEN_BRACKET':([0,],[5,]),'UINT':([0,10,13,16,20,21,23,31,],[7,24,-23,-24,34,35,36,40,]),'DIVISION':([0,2,5,6,7,11,14,15,16,22,24,25,26,27,30,36,39,40,41,42,],[12,12,12,-19,-18,27,-13,12,-21,-17,-26,-27,12,12,-20,-25,-14,-22,-15,-16,]),'SIGN':([0,7,16,34,35,],[13,23,13,23,23,]),'UFLOAT':([0,10,13,],[-24,25,-23,]),'OPEN_PAREN':([0,2,5,6,7,12,15,22,24,25,26,27,36,41,42,],[15,15,15,-19,-18,15,15,-17,-26,-27,15,15,-25,-15,-16,]),'UNIT':([0,2,5,6,7,12,15,22,24,25,26,27,36,41,42,],[16,16,16,-19,-18,16,16,-17,-26,-27,16,16,-25,-15,-16,]),'$end':([1,2,3,4,6,7,8,9,11,14,16,17,22,24,25,28,30,32,33,36,37,38,39,40,41,42,],[0,-6,-2,-3,-19,-18,-7,-8,-10,-13,-21,-1,-17,-26,-27,-11,-20,-4,-5,-25,-9,-12,-14,-22,-15,-16,]),'X':([6,7,24,25,],[20,21,-26,-27,]),'CLOSE_BRACKET':([8,9,11,14,16,18,19,28,30,37,38,39,40,],[-7,-8,-10,-13,-21,32,33,-11,-20,-9,-12,-14,-22,]),'CLOSE_PAREN':([8,9,11,14,16,28,29,30,37,38,39,40,],[-7,-8,-10,-13,-21,-11,39,-20,-9,-12,-14,-22,]),'PRODUCT':([11,14,16,30,39,40,],[26,-13,-21,-20,-14,-22,]),}\n \n _lr_action = {}\n for _k, _v in _lr_action_items.items():"
+            },
+            "3": {
+                "file": "astropy/units/format/cds_parsetab.py",
+                "start_line": 28,
+                "end_line": 34,
+                "code": "@@ -28,7 +28,7 @@\n\n       _lr_action[_x][_k] = _y\n del _lr_action_items\n \n-_lr_goto_items = {'main':([0,],[1,]),'factor':([0,],[2,]),'combined_units':([0,2,5,15,26,27,],[3,17,18,29,37,38,]),'signed_float':([0,],[6,]),'product_of_units':([0,2,5,15,26,27,],[8,8,8,8,8,8,]),'division_of_units':([0,2,5,15,26,27,],[9,9,9,9,9,9,]),'sign':([0,16,],[10,31,]),'unit_expression':([0,2,5,12,15,26,27,],[11,11,11,28,11,11,11,]),'unit_with_power':([0,2,5,12,15,26,27,],[14,14,14,14,14,14,14,]),'signed_int':([7,34,35,],[22,41,42,]),'numeric_power':([16,],[30,]),}\n \n _lr_goto = {}\n for _k, _v in _lr_goto_items.items():"
+            },
+            "4": {
+                "file": "astropy/units/format/cds_parsetab.py",
+                "start_line": 38,
+                "end_line": 68,
+                "code": "@@ -38,31 +38,31 @@\n\n del _lr_goto_items\n _lr_productions = [\n   (\"S' -> main\",\"S'\",1,None,None,None),\n-  ('main -> factor combined_units','main',2,'p_main','cds.py',156),\n-  ('main -> combined_units','main',1,'p_main','cds.py',157),\n-  ('main -> DIMENSIONLESS','main',1,'p_main','cds.py',158),\n-  ('main -> OPEN_BRACKET combined_units CLOSE_BRACKET','main',3,'p_main','cds.py',159),\n-  ('main -> OPEN_BRACKET DIMENSIONLESS CLOSE_BRACKET','main',3,'p_main','cds.py',160),\n-  ('main -> factor','main',1,'p_main','cds.py',161),\n-  ('combined_units -> product_of_units','combined_units',1,'p_combined_units','cds.py',174),\n-  ('combined_units -> division_of_units','combined_units',1,'p_combined_units','cds.py',175),\n-  ('product_of_units -> unit_expression PRODUCT combined_units','product_of_units',3,'p_product_of_units','cds.py',181),\n-  ('product_of_units -> unit_expression','product_of_units',1,'p_product_of_units','cds.py',182),\n-  ('division_of_units -> DIVISION unit_expression','division_of_units',2,'p_division_of_units','cds.py',191),\n-  ('division_of_units -> unit_expression DIVISION combined_units','division_of_units',3,'p_division_of_units','cds.py',192),\n-  ('unit_expression -> unit_with_power','unit_expression',1,'p_unit_expression','cds.py',201),\n-  ('unit_expression -> OPEN_PAREN combined_units CLOSE_PAREN','unit_expression',3,'p_unit_expression','cds.py',202),\n-  ('factor -> signed_float X UINT signed_int','factor',4,'p_factor','cds.py',211),\n-  ('factor -> UINT X UINT signed_int','factor',4,'p_factor','cds.py',212),\n-  ('factor -> UINT signed_int','factor',2,'p_factor','cds.py',213),\n-  ('factor -> UINT','factor',1,'p_factor','cds.py',214),\n-  ('factor -> signed_float','factor',1,'p_factor','cds.py',215),\n-  ('unit_with_power -> UNIT numeric_power','unit_with_power',2,'p_unit_with_power','cds.py',232),\n-  ('unit_with_power -> UNIT','unit_with_power',1,'p_unit_with_power','cds.py',233),\n-  ('numeric_power -> sign UINT','numeric_power',2,'p_numeric_power','cds.py',242),\n-  ('sign -> SIGN','sign',1,'p_sign','cds.py',248),\n-  ('sign -> <empty>','sign',0,'p_sign','cds.py',249),\n-  ('signed_int -> SIGN UINT','signed_int',2,'p_signed_int','cds.py',258),\n-  ('signed_float -> sign UINT','signed_float',2,'p_signed_float','cds.py',264),\n-  ('signed_float -> sign UFLOAT','signed_float',2,'p_signed_float','cds.py',265),\n ]"
+            }
+        }
+    },
+    "astropy__astropy-14598": {
+        "buggy_hunks": {
+            "0": {
+                "file": "astropy/io/fits/card.py",
+                "start_line": 66,
+                "end_line": 72,
+                "code": "@@ -66,7 +66,7 @@ class Card(_Verify):\n\n     # followed by an optional comment\n     _strg = r\"\\'(?P<strg>([ -~]+?|\\'\\'|) *?)\\'(?=$|/| )\"\n     _comm_field = r\"(?P<comm_field>(?P<sepr>/ *)(?P<comm>(.|\\n)*))\"\n-    _strg_comment_RE = re.compile(f\"({_strg})? *{_comm_field}?\")\n \n     # FSC commentary card string which must contain printable ASCII characters.\n     # Note: \\Z matches the end of the string without allowing newlines"
+            },
+            "1": {
+                "file": "astropy/io/fits/card.py",
+                "start_line": 859,
+                "end_line": 865,
+                "code": "@@ -859,7 +859,7 @@ def _split(self):\n\n                     return kw, vc\n \n                 value = m.group(\"strg\") or \"\"\n-                value = value.rstrip().replace(\"''\", \"'\")\n                 if value and value[-1] == \"&\":\n                     value = value[:-1]\n                 values.append(value)"
+            }
+        }
+    },
+    "astropy__astropy-7606": {
+        "buggy_hunks": {
+            "0": {
+                "file": "astropy/units/core.py",
+                "start_line": 728,
+                "end_line": 734,
+                "code": "@@ -728,7 +728,7 @@ def __eq__(self, other):\n\n         try:\n             other = Unit(other, parse_strict='silent')\n         except (ValueError, UnitsError, TypeError):\n-            return False\n \n         # Other is Unit-like, but the test below requires it is a UnitBase\n         # instance; if it is not, give up (so that other can try)."
+            },
+            "1": {
+                "file": "astropy/units/core.py",
+                "start_line": 1710,
+                "end_line": 1717,
+                "code": "@@ -1710,8 +1710,12 @@ def _unrecognized_operator(self, *args, **kwargs):\n\n         _unrecognized_operator\n \n     def __eq__(self, other):\n-        other = Unit(other, parse_strict='silent')\n-        return isinstance(other, UnrecognizedUnit) and self.name == other.name\n \n     def __ne__(self, other):\n         return not (self == other)"
+            }
+        }
+    },
+    "astropy__astropy-8707": {
+        "buggy_hunks": {
+            "0": {
+                "file": "astropy/io/fits/card.py",
+                "start_line": 554,
+                "end_line": 559,
+                "code": "@@ -554,6 +554,13 @@ def fromstring(cls, image):\n\n         \"\"\"\n \n         card = cls()\n         card._image = _pad(image)\n         card._verified = False\n         return card"
+            },
+            "1": {
+                "file": "astropy/io/fits/header.py",
+                "start_line": 34,
+                "end_line": 40,
+                "code": "@@ -34,7 +34,8 @@\n\n END_CARD = 'END' + ' ' * 77\n \n \n-__doctest_skip__ = ['Header', 'Header.*']\n \n \n class Header:"
+            },
+            "2": {
+                "file": "astropy/io/fits/header.py",
+                "start_line": 334,
+                "end_line": 346,
+                "code": "@@ -334,13 +335,45 @@ def fromstring(cls, data, sep=''):\n\n \n         Parameters\n         ----------\n-        data : str\n-           String containing the entire header.\n \n         sep : str, optional\n             The string separating cards from each other, such as a newline.  By\n             default there is no card separator (as is the case in a raw FITS\n-            file).\n \n         Returns\n         -------"
+            },
+            "3": {
+                "file": "astropy/io/fits/header.py",
+                "start_line": 357,
+                "end_line": 362,
+                "code": "@@ -357,6 +390,23 @@ def fromstring(cls, data, sep=''):\n\n         # immediately at the separator\n         require_full_cardlength = set(sep).issubset(VALID_HEADER_CHARS)\n \n         # Split the header into individual cards\n         idx = 0\n         image = []"
+            },
+            "4": {
+                "file": "astropy/io/fits/header.py",
+                "start_line": 374,
+                "end_line": 390,
+                "code": "@@ -374,17 +424,17 @@ def fromstring(cls, data, sep=''):\n\n             idx = end_idx + len(sep)\n \n             if image:\n-                if next_image[:8] == 'CONTINUE':\n                     image.append(next_image)\n                     continue\n-                cards.append(Card.fromstring(''.join(image)))\n \n             if require_full_cardlength:\n-                if next_image == END_CARD:\n                     image = []\n                     break\n             else:\n-                if next_image.split(sep)[0].rstrip() == 'END':\n                     image = []\n                     break\n "
+            },
+            "5": {
+                "file": "astropy/io/fits/header.py",
+                "start_line": 392,
+                "end_line": 398,
+                "code": "@@ -392,7 +442,7 @@ def fromstring(cls, data, sep=''):\n\n \n         # Add the last image that was found before the end, if any\n         if image:\n-            cards.append(Card.fromstring(''.join(image)))\n \n         return cls._fromcards(cards)\n "
+            }
+        }
+    },
+    "astropy__astropy-8872": {
+        "buggy_hunks": {
+            "0": {
+                "file": "astropy/units/quantity.py",
+                "start_line": 215,
+                "end_line": 222,
+                "code": "@@ -215,8 +215,8 @@ class Quantity(np.ndarray, metaclass=InheritDocstrings):\n\n     dtype : ~numpy.dtype, optional\n         The dtype of the resulting Numpy array or scalar that will\n         hold the value.  If not provided, it is determined from the input,\n-        except that any input that cannot represent float (integer and bool)\n-        is converted to float.\n \n     copy : bool, optional\n         If `True` (default), then the value is copied.  Otherwise, a copy will"
+            },
+            "1": {
+                "file": "astropy/units/quantity.py",
+                "start_line": 296,
+                "end_line": 303,
+                "code": "@@ -296,8 +296,7 @@ def __new__(cls, value, unit=None, dtype=None, copy=True, order=None,\n\n                 if not copy:\n                     return value\n \n-                if not (np.can_cast(np.float32, value.dtype) or\n-                        value.dtype.fields):\n                     dtype = float\n \n             return np.array(value, dtype=dtype, copy=copy, order=order,"
+            },
+            "2": {
+                "file": "astropy/units/quantity.py",
+                "start_line": 377,
+                "end_line": 385,
+                "code": "@@ -377,9 +376,7 @@ def __new__(cls, value, unit=None, dtype=None, copy=True, order=None,\n\n                             \"Numpy numeric type.\")\n \n         # by default, cast any integer, boolean, etc., to float\n-        if dtype is None and (not (np.can_cast(np.float32, value.dtype)\n-                                   or value.dtype.fields)\n-                              or value.dtype.kind == 'O'):\n             value = value.astype(float)\n \n         value = value.view(cls)"
+            }
+        }
+    },
+    "django__django-10554": {
+        "buggy_hunks": {
+            "0": {
+                "file": "django/db/models/sql/compiler.py",
+                "start_line": 356,
+                "end_line": 362,
+                "code": "@@ -356,7 +356,12 @@ def get_order_by(self):\n\n                         resolved.set_source_expressions([RawSQL('%d' % (idx + 1), ())])\n                         break\n                 else:\n-                    raise DatabaseError('ORDER BY term does not match any column in the result set.')\n             sql, params = self.compile(resolved)\n             # Don't add the same column twice, but the order direction is\n             # not taken into account so we strip it. When this entire method"
+            },
+            "1": {
+                "file": "django/db/models/sql/query.py",
+                "start_line": 1774,
+                "end_line": 1779,
+                "code": "@@ -1774,6 +1774,10 @@ def clear_select_fields(self):\n\n         self.select = ()\n         self.values_select = ()\n \n     def set_select(self, cols):\n         self.default_cols = False\n         self.select = tuple(cols)"
+            }
+        }
+    },
+    "django__django-11138": {
+        "buggy_hunks": {
+            "0": {
+                "file": "django/db/backends/mysql/operations.py",
+                "start_line": 69,
+                "end_line": 76,
+                "code": "@@ -69,8 +69,8 @@ def date_trunc_sql(self, lookup_type, field_name):\n\n             return \"DATE(%s)\" % (field_name)\n \n     def _convert_field_to_tz(self, field_name, tzname):\n-        if settings.USE_TZ:\n-            field_name = \"CONVERT_TZ(%s, 'UTC', '%s')\" % (field_name, tzname)\n         return field_name\n \n     def datetime_cast_date_sql(self, field_name, tzname):"
+            },
+            "1": {
+                "file": "django/db/backends/oracle/operations.py",
+                "start_line": 99,
+                "end_line": 107,
+                "code": "@@ -99,9 +99,16 @@ def _convert_field_to_tz(self, field_name, tzname):\n\n             return field_name\n         if not self._tzname_re.match(tzname):\n             raise ValueError(\"Invalid time zone name: %s\" % tzname)\n-        # Convert from UTC to local time, returning TIMESTAMP WITH TIME ZONE\n-        # and cast it back to TIMESTAMP to strip the TIME ZONE details.\n-        return \"CAST((FROM_TZ(%s, '0:00') AT TIME ZONE '%s') AS TIMESTAMP)\" % (field_name, tzname)\n \n     def datetime_cast_date_sql(self, field_name, tzname):\n         field_name = self._convert_field_to_tz(field_name, tzname)"
+            },
+            "2": {
+                "file": "django/db/backends/sqlite3/base.py",
+                "start_line": 195,
+                "end_line": 204,
+                "code": "@@ -195,10 +195,10 @@ def get_new_connection(self, conn_params):\n\n         conn = Database.connect(**conn_params)\n         conn.create_function(\"django_date_extract\", 2, _sqlite_datetime_extract)\n         conn.create_function(\"django_date_trunc\", 2, _sqlite_date_trunc)\n-        conn.create_function(\"django_datetime_cast_date\", 2, _sqlite_datetime_cast_date)\n-        conn.create_function(\"django_datetime_cast_time\", 2, _sqlite_datetime_cast_time)\n-        conn.create_function(\"django_datetime_extract\", 3, _sqlite_datetime_extract)\n-        conn.create_function(\"django_datetime_trunc\", 3, _sqlite_datetime_trunc)\n         conn.create_function(\"django_time_extract\", 2, _sqlite_time_extract)\n         conn.create_function(\"django_time_trunc\", 2, _sqlite_time_trunc)\n         conn.create_function(\"django_time_diff\", 2, _sqlite_time_diff)"
+            },
+            "3": {
+                "file": "django/db/backends/sqlite3/base.py",
+                "start_line": 398,
+                "end_line": 411,
+                "code": "@@ -398,14 +398,16 @@ def convert_query(self, query):\n\n         return FORMAT_QMARK_REGEX.sub('?', query).replace('%%', '%')\n \n \n-def _sqlite_datetime_parse(dt, tzname=None):\n     if dt is None:\n         return None\n     try:\n         dt = backend_utils.typecast_timestamp(dt)\n     except (TypeError, ValueError):\n         return None\n-    if tzname is not None:\n         dt = timezone.localtime(dt, pytz.timezone(tzname))\n     return dt\n "
+            },
+            "4": {
+                "file": "django/db/backends/sqlite3/base.py",
+                "start_line": 443,
+                "end_line": 464,
+                "code": "@@ -443,22 +445,22 @@ def _sqlite_time_trunc(lookup_type, dt):\n\n         return \"%02i:%02i:%02i\" % (dt.hour, dt.minute, dt.second)\n \n \n-def _sqlite_datetime_cast_date(dt, tzname):\n-    dt = _sqlite_datetime_parse(dt, tzname)\n     if dt is None:\n         return None\n     return dt.date().isoformat()\n \n \n-def _sqlite_datetime_cast_time(dt, tzname):\n-    dt = _sqlite_datetime_parse(dt, tzname)\n     if dt is None:\n         return None\n     return dt.time().isoformat()\n \n \n-def _sqlite_datetime_extract(lookup_type, dt, tzname=None):\n-    dt = _sqlite_datetime_parse(dt, tzname)\n     if dt is None:\n         return None\n     if lookup_type == 'week_day':"
+            },
+            "5": {
+                "file": "django/db/backends/sqlite3/base.py",
+                "start_line": 473,
+                "end_line": 480,
+                "code": "@@ -473,8 +475,8 @@ def _sqlite_datetime_extract(lookup_type, dt, tzname=None):\n\n         return getattr(dt, lookup_type)\n \n \n-def _sqlite_datetime_trunc(lookup_type, dt, tzname):\n-    dt = _sqlite_datetime_parse(dt, tzname)\n     if dt is None:\n         return None\n     if lookup_type == 'year':"
+            },
+            "6": {
+                "file": "django/db/backends/sqlite3/operations.py",
+                "start_line": 84,
+                "end_line": 110,
+                "code": "@@ -84,27 +84,29 @@ def date_trunc_sql(self, lookup_type, field_name):\n\n     def time_trunc_sql(self, lookup_type, field_name):\n         return \"django_time_trunc('%s', %s)\" % (lookup_type.lower(), field_name)\n \n-    def _convert_tzname_to_sql(self, tzname):\n-        return \"'%s'\" % tzname if settings.USE_TZ else 'NULL'\n \n     def datetime_cast_date_sql(self, field_name, tzname):\n-        return \"django_datetime_cast_date(%s, %s)\" % (\n-            field_name, self._convert_tzname_to_sql(tzname),\n         )\n \n     def datetime_cast_time_sql(self, field_name, tzname):\n-        return \"django_datetime_cast_time(%s, %s)\" % (\n-            field_name, self._convert_tzname_to_sql(tzname),\n         )\n \n     def datetime_extract_sql(self, lookup_type, field_name, tzname):\n-        return \"django_datetime_extract('%s', %s, %s)\" % (\n-            lookup_type.lower(), field_name, self._convert_tzname_to_sql(tzname),\n         )\n \n     def datetime_trunc_sql(self, lookup_type, field_name, tzname):\n-        return \"django_datetime_trunc('%s', %s, %s)\" % (\n-            lookup_type.lower(), field_name, self._convert_tzname_to_sql(tzname),\n         )\n \n     def time_extract_sql(self, lookup_type, field_name):"
+            }
+        }
+    },
+    "django__django-11400": {
+        "buggy_hunks": {
+            "0": {
+                "file": "django/contrib/admin/filters.py",
+                "start_line": 193,
+                "end_line": 203,
+                "code": "@@ -193,11 +193,17 @@ def has_output(self):\n\n     def expected_parameters(self):\n         return [self.lookup_kwarg, self.lookup_kwarg_isnull]\n \n-    def field_choices(self, field, request, model_admin):\n-        ordering = ()\n         related_admin = model_admin.admin_site._registry.get(field.remote_field.model)\n         if related_admin is not None:\n-            ordering = related_admin.get_ordering(request)\n         return field.get_choices(include_blank=False, ordering=ordering)\n \n     def choices(self, changelist):"
+            },
+            "1": {
+                "file": "django/contrib/admin/filters.py",
+                "start_line": 419,
+                "end_line": 422,
+                "code": "@@ -419,4 +425,5 @@ def choices(self, changelist):\n\n class RelatedOnlyFieldListFilter(RelatedFieldListFilter):\n     def field_choices(self, field, request, model_admin):\n         pk_qs = model_admin.get_queryset(request).distinct().values_list('%s__pk' % self.field_path, flat=True)\n-        return field.get_choices(include_blank=False, limit_choices_to={'pk__in': pk_qs})"
+            },
+            "2": {
+                "file": "django/db/models/fields/__init__.py",
+                "start_line": 825,
+                "end_line": 833,
+                "code": "@@ -825,9 +825,11 @@ def get_choices(self, include_blank=True, blank_choice=BLANK_CHOICE_DASH, limit_\n\n             if hasattr(self.remote_field, 'get_related_field')\n             else 'pk'\n         )\n         return (blank_choice if include_blank else []) + [\n-            (choice_func(x), str(x))\n-            for x in rel_model._default_manager.complex_filter(limit_choices_to).order_by(*ordering)\n         ]\n \n     def value_to_string(self, obj):"
+            },
+            "3": {
+                "file": "django/db/models/fields/reverse_related.py",
+                "start_line": 122,
+                "end_line": 129,
+                "code": "@@ -122,8 +122,11 @@ def get_choices(self, include_blank=True, blank_choice=BLANK_CHOICE_DASH, orderi\n\n         Analog of django.db.models.fields.Field.get_choices(), provided\n         initially for utilization by RelatedFieldListFilter.\n         \"\"\"\n         return (blank_choice if include_blank else []) + [\n-            (x.pk, str(x)) for x in self.related_model._default_manager.order_by(*ordering)\n         ]\n \n     def is_hidden(self):"
+            }
+        }
+    },
+    "django__django-11532": {
+        "buggy_hunks": {
+            "0": {
+                "file": "django/core/mail/message.py",
+                "start_line": 16,
+                "end_line": 22,
+                "code": "@@ -16,7 +16,7 @@\n\n \n from django.conf import settings\n from django.core.mail.utils import DNS_NAME\n-from django.utils.encoding import force_str\n \n # Don't BASE64-encode UTF-8 messages so that we avoid unwanted attention from\n # some spam filters."
+            },
+            "1": {
+                "file": "django/core/mail/message.py",
+                "start_line": 102,
+                "end_line": 111,
+                "code": "@@ -102,10 +102,7 @@ def sanitize_address(addr, encoding):\n\n         localpart.encode('ascii')\n     except UnicodeEncodeError:\n         localpart = Header(localpart, encoding).encode()\n-    try:\n-        domain.encode('ascii')\n-    except UnicodeEncodeError:\n-        domain = domain.encode('idna').decode('ascii')\n \n     parsed_address = Address(nm, username=localpart, domain=domain)\n     return str(parsed_address)"
+            },
+            "2": {
+                "file": "django/core/mail/utils.py",
+                "start_line": 4,
+                "end_line": 9,
+                "code": "@@ -4,6 +4,8 @@\n\n \n import socket\n \n \n # Cache the hostname, but do it lazily: socket.getfqdn() can take a couple of\n # seconds, which slows down the restart of the server."
+            },
+            "3": {
+                "file": "django/core/mail/utils.py",
+                "start_line": 13,
+                "end_line": 19,
+                "code": "@@ -13,7 +15,7 @@ def __str__(self):\n\n \n     def get_fqdn(self):\n         if not hasattr(self, '_fqdn'):\n-            self._fqdn = socket.getfqdn()\n         return self._fqdn\n \n "
+            },
+            "4": {
+                "file": "django/core/validators.py",
+                "start_line": 5,
+                "end_line": 10,
+                "code": "@@ -5,6 +5,7 @@\n\n \n from django.core.exceptions import ValidationError\n from django.utils.deconstruct import deconstructible\n from django.utils.functional import SimpleLazyObject\n from django.utils.ipv6 import is_valid_ipv6_address\n from django.utils.translation import gettext_lazy as _, ngettext_lazy"
+            },
+            "5": {
+                "file": "django/core/validators.py",
+                "start_line": 124,
+                "end_line": 130,
+                "code": "@@ -124,7 +125,7 @@ def __call__(self, value):\n\n                 except ValueError:  # for example, \"Invalid IPv6 URL\"\n                     raise ValidationError(self.message, code=self.code)\n                 try:\n-                    netloc = netloc.encode('idna').decode('ascii')  # IDN -> ACE\n                 except UnicodeError:  # invalid domain part\n                     raise e\n                 url = urlunsplit((scheme, netloc, path, query, fragment))"
+            },
+            "6": {
+                "file": "django/core/validators.py",
+                "start_line": 199,
+                "end_line": 205,
+                "code": "@@ -199,7 +200,7 @@ def __call__(self, value):\n\n                 not self.validate_domain_part(domain_part)):\n             # Try for possible IDN domain-part\n             try:\n-                domain_part = domain_part.encode('idna').decode('ascii')\n             except UnicodeError:\n                 pass\n             else:"
+            },
+            "7": {
+                "file": "django/utils/encoding.py",
+                "start_line": 218,
+                "end_line": 223,
+                "code": "@@ -218,6 +218,11 @@ def escape_uri_path(path):\n\n     return quote(path, safe=\"/:@&+$,-_.!~*'()\")\n \n \n def repercent_broken_unicode(path):\n     \"\"\"\n     As per section 3.2 of RFC 3987, step three of converting a URI into an IRI,"
+            },
+            "8": {
+                "file": "django/utils/html.py",
+                "start_line": 8,
+                "end_line": 13,
+                "code": "@@ -8,6 +8,7 @@\n\n     parse_qsl, quote, unquote, urlencode, urlsplit, urlunsplit,\n )\n \n from django.utils.functional import Promise, keep_lazy, keep_lazy_text\n from django.utils.http import RFC3986_GENDELIMS, RFC3986_SUBDELIMS\n from django.utils.safestring import SafeData, SafeString, mark_safe"
+            },
+            "9": {
+                "file": "django/utils/html.py",
+                "start_line": 210,
+                "end_line": 216,
+                "code": "@@ -210,7 +211,7 @@ def unquote_quote(segment):\n\n         return unquote_quote(url)\n \n     try:\n-        netloc = netloc.encode('idna').decode('ascii')  # IDN -> ACE\n     except UnicodeError:  # invalid domain part\n         return unquote_quote(url)\n "
+            },
+            "10": {
+                "file": "django/utils/html.py",
+                "start_line": 319,
+                "end_line": 325,
+                "code": "@@ -319,7 +320,7 @@ def is_email_simple(value):\n\n             elif ':' not in middle and is_email_simple(middle):\n                 local, domain = middle.rsplit('@', 1)\n                 try:\n-                    domain = domain.encode('idna').decode('ascii')\n                 except UnicodeError:\n                     continue\n                 url = 'mailto:%s@%s' % (local, domain)"
+            }
+        }
+    },
+    "django__django-11728": {
+        "buggy_hunks": {
+            "0": {
+                "file": "django/contrib/admindocs/utils.py",
+                "start_line": 155,
+                "end_line": 160,
+                "code": "@@ -155,6 +155,8 @@ def replace_named_groups(pattern):\n\n     Find named groups in `pattern` and replace them with the group name. E.g.,\n     1. ^(?P<a>\\w+)/b/(\\w+)$ ==> ^<a>/b/(\\w+)$\n     2. ^(?P<a>\\w+)/b/(?P<c>\\w+)/$ ==> ^<a>/b/<c>/$\n     \"\"\"\n     named_group_indices = [\n         (m.start(0), m.end(0), m.group(1))"
+            },
+            "1": {
+                "file": "django/contrib/admindocs/utils.py",
+                "start_line": 167,
+                "end_line": 178,
+                "code": "@@ -167,12 +169,6 @@ def replace_named_groups(pattern):\n\n         # Handle nested parentheses, e.g. '^(?P<a>(x|y))/b'.\n         unmatched_open_brackets, prev_char = 1, None\n         for idx, val in enumerate(pattern[end:]):\n-            # If brackets are balanced, the end of the string for the current\n-            # named capture group pattern has been reached.\n-            if unmatched_open_brackets == 0:\n-                group_pattern_and_name.append((pattern[start:end + idx], group_name))\n-                break\n-\n             # Check for unescaped `(` and `)`. They mark the start and end of a\n             # nested group.\n             if val == '(' and prev_char != '\\\\':"
+            },
+            "2": {
+                "file": "django/contrib/admindocs/utils.py",
+                "start_line": 180,
+                "end_line": 185,
+                "code": "@@ -180,6 +176,11 @@ def replace_named_groups(pattern):\n\n             elif val == ')' and prev_char != '\\\\':\n                 unmatched_open_brackets -= 1\n             prev_char = val\n \n     # Replace the string for named capture groups with their group names.\n     for group_pattern, group_name in group_pattern_and_name:"
+            },
+            "3": {
+                "file": "django/contrib/admindocs/utils.py",
+                "start_line": 192,
+                "end_line": 197,
+                "code": "@@ -192,6 +193,8 @@ def replace_unnamed_groups(pattern):\n\n     Find unnamed groups in `pattern` and replace them with '<var>'. E.g.,\n     1. ^(?P<a>\\w+)/b/(\\w+)$ ==> ^(?P<a>\\w+)/b/<var>$\n     2. ^(?P<a>\\w+)/b/((x|y)\\w+)$ ==> ^(?P<a>\\w+)/b/<var>$\n     \"\"\"\n     unnamed_group_indices = [m.start(0) for m in unnamed_group_matcher.finditer(pattern)]\n     # Indices of the start of unnamed capture groups."
+            },
+            "4": {
+                "file": "django/contrib/admindocs/utils.py",
+                "start_line": 201,
+                "end_line": 210,
+                "code": "@@ -201,10 +204,6 @@ def replace_unnamed_groups(pattern):\n\n         # Handle nested parentheses, e.g. '^b/((x|y)\\w+)$'.\n         unmatched_open_brackets, prev_char = 1, None\n         for idx, val in enumerate(pattern[start + 1:]):\n-            if unmatched_open_brackets == 0:\n-                group_indices.append((start, start + 1 + idx))\n-                break\n-\n             # Check for unescaped `(` and `)`. They mark the start and end of\n             # a nested group.\n             if val == '(' and prev_char != '\\\\':"
+            },
+            "5": {
+                "file": "django/contrib/admindocs/utils.py",
+                "start_line": 213,
+                "end_line": 218,
+                "code": "@@ -213,6 +212,9 @@ def replace_unnamed_groups(pattern):\n\n                 unmatched_open_brackets -= 1\n             prev_char = val\n \n     # Remove unnamed group matches inside other unnamed capture groups.\n     group_start_end_indices = []\n     prev_end = None"
+            }
+        }
+    },
+    "django__django-11740": {
+        "buggy_hunks": {
+            "0": {
+                "file": "django/db/migrations/autodetector.py",
+                "start_line": 912,
+                "end_line": 917,
+                "code": "@@ -912,6 +912,7 @@ def generate_altered_fields(self):\n\n             old_field_name = self.renamed_fields.get((app_label, model_name, field_name), field_name)\n             old_field = self.old_apps.get_model(app_label, old_model_name)._meta.get_field(old_field_name)\n             new_field = self.new_apps.get_model(app_label, model_name)._meta.get_field(field_name)\n             # Implement any model renames on relations; these are handled by RenameModel\n             # so we need to exclude them from the comparison\n             if hasattr(new_field, \"remote_field\") and getattr(new_field.remote_field, \"model\", None):"
+            },
+            "1": {
+                "file": "django/db/migrations/autodetector.py",
+                "start_line": 939,
+                "end_line": 944,
+                "code": "@@ -939,6 +940,7 @@ def generate_altered_fields(self):\n\n                         self.renamed_fields.get(rename_key + (to_field,), to_field)\n                         for to_field in new_field.to_fields\n                     ])\n             if hasattr(new_field, \"remote_field\") and getattr(new_field.remote_field, \"through\", None):\n                 rename_key = (\n                     new_field.remote_field.through._meta.app_label,"
+            },
+            "2": {
+                "file": "django/db/migrations/autodetector.py",
+                "start_line": 970,
+                "end_line": 976,
+                "code": "@@ -970,7 +972,8 @@ def generate_altered_fields(self):\n\n                             name=field_name,\n                             field=field,\n                             preserve_default=preserve_default,\n-                        )\n                     )\n                 else:\n                     # We cannot alter between m2m and concrete fields"
+            }
+        }
+    },
+    "django__django-12406": {
+        "buggy_hunks": {
+            "0": {
+                "file": "django/db/models/fields/related.py",
+                "start_line": 980,
+                "end_line": 985,
+                "code": "@@ -980,6 +980,7 @@ def formfield(self, *, using=None, **kwargs):\n\n             'queryset': self.remote_field.model._default_manager.using(using),\n             'to_field_name': self.remote_field.field_name,\n             **kwargs,\n         })\n \n     def db_check(self, connection):"
+            },
+            "1": {
+                "file": "django/forms/models.py",
+                "start_line": 13,
+                "end_line": 19,
+                "code": "@@ -13,7 +13,7 @@\n\n from django.forms.formsets import BaseFormSet, formset_factory\n from django.forms.utils import ErrorList\n from django.forms.widgets import (\n-    HiddenInput, MultipleHiddenInput, SelectMultiple,\n )\n from django.utils.text import capfirst, get_text_list\n from django.utils.translation import gettext, gettext_lazy as _"
+            },
+            "2": {
+                "file": "django/forms/models.py",
+                "start_line": 1184,
+                "end_line": 1201,
+                "code": "@@ -1184,18 +1184,20 @@ class ModelChoiceField(ChoiceField):\n\n     def __init__(self, queryset, *, empty_label=\"---------\",\n                  required=True, widget=None, label=None, initial=None,\n                  help_text='', to_field_name=None, limit_choices_to=None,\n-                 **kwargs):\n-        if required and (initial is not None):\n-            self.empty_label = None\n-        else:\n-            self.empty_label = empty_label\n-\n         # Call Field instead of ChoiceField __init__() because we don't need\n         # ChoiceField.__init__().\n         Field.__init__(\n             self, required=required, widget=widget, label=label,\n             initial=initial, help_text=help_text, **kwargs\n         )\n         self.queryset = queryset\n         self.limit_choices_to = limit_choices_to   # limit the queryset later.\n         self.to_field_name = to_field_name"
+            }
+        }
+    },
+    "django__django-13343": {
+        "buggy_hunks": {
+            "0": {
+                "file": "django/db/models/fields/files.py",
+                "start_line": 229,
+                "end_line": 234,
+                "code": "@@ -229,6 +229,8 @@ def __init__(self, verbose_name=None, name=None, upload_to='', storage=None, **k\n\n \n         self.storage = storage or default_storage\n         if callable(self.storage):\n             self.storage = self.storage()\n             if not isinstance(self.storage, Storage):\n                 raise TypeError("
+            },
+            "1": {
+                "file": "django/db/models/fields/files.py",
+                "start_line": 279,
+                "end_line": 285,
+                "code": "@@ -279,7 +281,7 @@ def deconstruct(self):\n\n             del kwargs[\"max_length\"]\n         kwargs['upload_to'] = self.upload_to\n         if self.storage is not default_storage:\n-            kwargs['storage'] = self.storage\n         return name, path, args, kwargs\n \n     def get_internal_type(self):"
+            }
+        }
+    },
+    "django__django-13346": {
+        "buggy_hunks": {
+            "0": {
+                "file": "django/db/models/fields/json.py",
+                "start_line": 378,
+                "end_line": 383,
+                "code": "@@ -378,6 +378,30 @@ def as_sqlite(self, compiler, connection):\n\n         return super().as_sql(compiler, connection)\n \n \n class KeyTransformExact(JSONExact):\n     def process_lhs(self, compiler, connection):\n         lhs, lhs_params = super().process_lhs(compiler, connection)"
+            },
+            "1": {
+                "file": "django/db/models/fields/json.py",
+                "start_line": 479,
+                "end_line": 484,
+                "code": "@@ -479,6 +503,7 @@ class KeyTransformGte(KeyTransformNumericLookupMixin, lookups.GreaterThanOrEqual\n\n     pass\n \n \n KeyTransform.register_lookup(KeyTransformExact)\n KeyTransform.register_lookup(KeyTransformIExact)\n KeyTransform.register_lookup(KeyTransformIsNull)"
+            }
+        }
+    },
+    "django__django-13449": {
+        "buggy_hunks": {
+            "0": {
+                "file": "django/db/models/expressions.py",
+                "start_line": 1253,
+                "end_line": 1259,
+                "code": "@@ -1253,7 +1253,7 @@ def desc(self):\n\n         self.descending = True\n \n \n-class Window(Expression):\n     template = '%(expression)s OVER (%(window)s)'\n     # Although the main expression may either be an aggregate or an\n     # expression with an aggregate function, the GROUP BY that will"
+            },
+            "1": {
+                "file": "django/db/models/expressions.py",
+                "start_line": 1332,
+                "end_line": 1337,
+                "code": "@@ -1332,6 +1332,16 @@ def as_sql(self, compiler, connection, template=None):\n\n             'window': ''.join(window_sql).strip()\n         }, params\n \n     def __str__(self):\n         return '{} OVER ({}{}{})'.format(\n             str(self.source_expression),"
+            }
+        }
+    },
+    "django__django-15128": {
+        "buggy_hunks": {
+            "0": {
+                "file": "django/db/models/sql/query.py",
+                "start_line": 572,
+                "end_line": 577,
+                "code": "@@ -572,6 +572,15 @@ def combine(self, rhs, connector):\n\n         if self.distinct_fields != rhs.distinct_fields:\n             raise TypeError('Cannot combine queries with different distinct fields.')\n \n         # Work out how to relabel the rhs aliases, if necessary.\n         change_map = {}\n         conjunction = (connector == AND)"
+            },
+            "1": {
+                "file": "django/db/models/sql/query.py",
+                "start_line": 589,
+                "end_line": 597,
+                "code": "@@ -589,9 +598,6 @@ def combine(self, rhs, connector):\n\n         # the AND case. The results will be correct but this creates too many\n         # joins. This is something that could be fixed later on.\n         reuse = set() if conjunction else set(self.alias_map)\n-        # Base table must be present in the query - this is the same\n-        # table on both sides.\n-        self.get_initial_alias()\n         joinpromoter = JoinPromoter(connector, 2, False)\n         joinpromoter.add_votes(\n             j for j in self.alias_map if self.alias_map[j].join_type == INNER)"
+            },
+            "2": {
+                "file": "django/db/models/sql/query.py",
+                "start_line": 846,
+                "end_line": 851,
+                "code": "@@ -846,6 +852,9 @@ def change_aliases(self, change_map):\n\n         relabelling any references to them in select columns and the where\n         clause.\n         \"\"\"\n         assert set(change_map).isdisjoint(change_map.values())\n \n         # 1. Update references in \"select\" (normal columns plus aliases),"
+            },
+            "3": {
+                "file": "django/db/models/sql/query.py",
+                "start_line": 879,
+                "end_line": 890,
+                "code": "@@ -879,12 +888,12 @@ def change_aliases(self, change_map):\n\n             for alias, aliased in self.external_aliases.items()\n         }\n \n-    def bump_prefix(self, outer_query):\n         \"\"\"\n         Change the alias prefix to the next letter in the alphabet in a way\n-        that the outer query's aliases and this query's aliases will not\n         conflict. Even tables that previously had no alias will get an alias\n-        after this call.\n         \"\"\"\n         def prefix_gen():\n             \"\"\""
+            },
+            "4": {
+                "file": "django/db/models/sql/query.py",
+                "start_line": 904,
+                "end_line": 910,
+                "code": "@@ -904,7 +913,7 @@ def prefix_gen():\n\n                     yield ''.join(s)\n                 prefix = None\n \n-        if self.alias_prefix != outer_query.alias_prefix:\n             # No clashes between self and outer query should be possible.\n             return\n "
+            },
+            "5": {
+                "file": "django/db/models/sql/query.py",
+                "start_line": 922,
+                "end_line": 931,
+                "code": "@@ -922,10 +931,13 @@ def prefix_gen():\n\n                     'Maximum recursion depth exceeded: too many subqueries.'\n                 )\n         self.subq_aliases = self.subq_aliases.union([self.alias_prefix])\n-        outer_query.subq_aliases = outer_query.subq_aliases.union(self.subq_aliases)\n         self.change_aliases({\n             alias: '%s%d' % (self.alias_prefix, pos)\n             for pos, alias in enumerate(self.alias_map)\n         })\n \n     def get_initial_alias(self):"
+            }
+        }
+    },
+    "django__django-15503": {
+        "buggy_hunks": {
+            "0": {
+                "file": "django/db/models/fields/json.py",
+                "start_line": 172,
+                "end_line": 177,
+                "code": "@@ -172,6 +172,10 @@ def as_sql(self, compiler, connection):\n\n class HasKeyLookup(PostgresOperatorLookup):\n     logical_operator = None\n \n     def as_sql(self, compiler, connection, template=None):\n         # Process JSON path from the left-hand side.\n         if isinstance(self.lhs, KeyTransform):"
+            },
+            "1": {
+                "file": "django/db/models/fields/json.py",
+                "start_line": 193,
+                "end_line": 205,
+                "code": "@@ -193,13 +197,10 @@ def as_sql(self, compiler, connection, template=None):\n\n                 *_, rhs_key_transforms = key.preprocess_lhs(compiler, connection)\n             else:\n                 rhs_key_transforms = [key]\n-            rhs_params.append(\n-                \"%s%s\"\n-                % (\n-                    lhs_json_path,\n-                    compile_json_path(rhs_key_transforms, include_root=False),\n-                )\n-            )\n         # Add condition for each key.\n         if self.logical_operator:\n             sql = \"(%s)\" % self.logical_operator.join([sql] * len(rhs_params))"
+            },
+            "2": {
+                "file": "django/db/models/fields/json.py",
+                "start_line": 253,
+                "end_line": 258,
+                "code": "@@ -253,6 +254,11 @@ class HasAnyKeys(HasKeys):\n\n     logical_operator = \" OR \"\n \n \n class CaseInsensitiveMixin:\n     \"\"\"\n     Mixin to allow case-insensitive comparison of JSON values on MySQL."
+            },
+            "3": {
+                "file": "django/db/models/fields/json.py",
+                "start_line": 387,
+                "end_line": 393,
+                "code": "@@ -387,7 +393,7 @@ def __init__(self, key_transform, *args, **kwargs):\n\n class KeyTransformIsNull(lookups.IsNull):\n     # key__isnull=False is the same as has_key='key'\n     def as_oracle(self, compiler, connection):\n-        sql, params = HasKey(\n             self.lhs.lhs,\n             self.lhs.key_name,\n         ).as_oracle(compiler, connection)"
+            },
+            "4": {
+                "file": "django/db/models/fields/json.py",
+                "start_line": 401,
+                "end_line": 407,
+                "code": "@@ -401,7 +407,7 @@ def as_sqlite(self, compiler, connection):\n\n         template = \"JSON_TYPE(%s, %%s) IS NULL\"\n         if not self.rhs:\n             template = \"JSON_TYPE(%s, %%s) IS NOT NULL\"\n-        return HasKey(self.lhs.lhs, self.lhs.key_name).as_sql(\n             compiler,\n             connection,\n             template=template,"
+            },
+            "5": {
+                "file": "django/db/models/fields/json.py",
+                "start_line": 466,
+                "end_line": 472,
+                "code": "@@ -466,7 +472,7 @@ def as_oracle(self, compiler, connection):\n\n         rhs, rhs_params = super().process_rhs(compiler, connection)\n         if rhs_params == [\"null\"]:\n             # Field has key and it's NULL.\n-            has_key_expr = HasKey(self.lhs.lhs, self.lhs.key_name)\n             has_key_sql, has_key_params = has_key_expr.as_oracle(compiler, connection)\n             is_null_expr = self.lhs.get_lookup(\"isnull\")(self.lhs, True)\n             is_null_sql, is_null_params = is_null_expr.as_sql(compiler, connection)"
+            }
+        }
+    },
+    "django__django-15563": {
+        "buggy_hunks": {
+            "0": {
+                "file": "django/db/models/sql/compiler.py",
+                "start_line": 1836,
+                "end_line": 1842,
+                "code": "@@ -1836,7 +1836,23 @@ def pre_sql_setup(self):\n\n         query.clear_ordering(force=True)\n         query.extra = {}\n         query.select = []\n-        query.add_fields([query.get_meta().pk.name])\n         super().pre_sql_setup()\n \n         must_pre_select = ("
+            },
+            "1": {
+                "file": "django/db/models/sql/compiler.py",
+                "start_line": 1851,
+                "end_line": 1860,
+                "code": "@@ -1851,10 +1867,13 @@ def pre_sql_setup(self):\n\n             # don't want them to change), or the db backend doesn't support\n             # selecting from the updating table (e.g. MySQL).\n             idents = []\n             for rows in query.get_compiler(self.using).execute_sql(MULTI):\n                 idents.extend(r[0] for r in rows)\n             self.query.add_filter(\"pk__in\", idents)\n-            self.query.related_ids = idents\n         else:\n             # The fast path. Filters and updates in one query.\n             self.query.add_filter(\"pk__in\", query)"
+            },
+            "2": {
+                "file": "django/db/models/sql/subqueries.py",
+                "start_line": 134,
+                "end_line": 140,
+                "code": "@@ -134,7 +134,7 @@ def get_related_updates(self):\n\n             query = UpdateQuery(model)\n             query.values = values\n             if self.related_ids is not None:\n-                query.add_filter(\"pk__in\", self.related_ids)\n             result.append(query)\n         return result\n "
+            }
+        }
+    },
+    "django__django-15572": {
+        "buggy_hunks": {
+            "0": {
+                "file": "django/template/autoreload.py",
+                "start_line": 17,
+                "end_line": 23,
+                "code": "@@ -17,7 +17,7 @@ def get_template_directories():\n\n         if not isinstance(backend, DjangoTemplates):\n             continue\n \n-        items.update(cwd / to_path(dir) for dir in backend.engine.dirs)\n \n         for loader in backend.engine.template_loaders:\n             if not hasattr(loader, \"get_dirs\"):"
+            },
+            "1": {
+                "file": "django/template/autoreload.py",
+                "start_line": 25,
+                "end_line": 31,
+                "code": "@@ -25,7 +25,7 @@ def get_template_directories():\n\n             items.update(\n                 cwd / to_path(directory)\n                 for directory in loader.get_dirs()\n-                if not is_django_path(directory)\n             )\n     return items\n "
+            }
+        }
+    },
+    "django__django-15732": {
+        "buggy_hunks": {
+            "0": {
+                "file": "django/db/backends/base/schema.py",
+                "start_line": 528,
+                "end_line": 534,
+                "code": "@@ -528,7 +528,10 @@ def alter_unique_together(self, model, old_unique_together, new_unique_together)\n\n         # Deleted uniques\n         for fields in olds.difference(news):\n             self._delete_composed_index(\n-                model, fields, {\"unique\": True}, self.sql_delete_unique\n             )\n         # Created uniques\n         for field_names in news.difference(olds):"
+            },
+            "1": {
+                "file": "django/db/backends/base/schema.py",
+                "start_line": 568,
+                "end_line": 573,
+                "code": "@@ -568,6 +571,17 @@ def _delete_composed_index(self, model, fields, constraint_kwargs, sql):\n\n             exclude=meta_constraint_names | meta_index_names,\n             **constraint_kwargs,\n         )\n         if len(constraint_names) != 1:\n             raise ValueError(\n                 \"Found wrong number (%s) of constraints for %s(%s)\""
+            },
+            "2": {
+                "file": "django/db/backends/base/schema.py",
+                "start_line": 1560,
+                "end_line": 1575,
+                "code": "@@ -1560,16 +1574,13 @@ def _create_unique_sql(\n\n         ):\n             return None\n \n-        def create_unique_name(*args, **kwargs):\n-            return self.quote_name(self._create_index_name(*args, **kwargs))\n-\n         compiler = Query(model, alias_cols=False).get_compiler(\n             connection=self.connection\n         )\n         table = model._meta.db_table\n         columns = [field.column for field in fields]\n         if name is None:\n-            name = IndexName(table, columns, \"_uniq\", create_unique_name)\n         else:\n             name = self.quote_name(name)\n         if condition or include or opclasses or expressions:"
+            },
+            "3": {
+                "file": "django/db/backends/base/schema.py",
+                "start_line": 1592,
+                "end_line": 1597,
+                "code": "@@ -1592,6 +1603,17 @@ def create_unique_name(*args, **kwargs):\n\n             include=self._index_include_sql(model, include),\n         )\n \n     def _delete_unique_sql(\n         self,\n         model,"
+            }
+        }
+    },
+    "django__django-16631": {
+        "buggy_hunks": {
+            "0": {
+                "file": "django/contrib/auth/__init__.py",
+                "start_line": 199,
+                "end_line": 210,
+                "code": "@@ -199,12 +199,26 @@ def get_user(request):\n\n             # Verify the session\n             if hasattr(user, \"get_session_auth_hash\"):\n                 session_hash = request.session.get(HASH_SESSION_KEY)\n-                session_hash_verified = session_hash and constant_time_compare(\n-                    session_hash, user.get_session_auth_hash()\n-                )\n                 if not session_hash_verified:\n-                    request.session.flush()\n-                    user = None\n \n     return user or AnonymousUser()\n "
+            },
+            "1": {
+                "file": "django/contrib/auth/base_user.py",
+                "start_line": 5,
+                "end_line": 10,
+                "code": "@@ -5,6 +5,7 @@\n\n import unicodedata\n import warnings\n \n from django.contrib.auth import password_validation\n from django.contrib.auth.hashers import (\n     check_password,"
+            },
+            "2": {
+                "file": "django/contrib/auth/base_user.py",
+                "start_line": 135,
+                "end_line": 144,
+                "code": "@@ -135,10 +136,18 @@ def get_session_auth_hash(self):\n\n         \"\"\"\n         Return an HMAC of the password field.\n         \"\"\"\n         key_salt = \"django.contrib.auth.models.AbstractBaseUser.get_session_auth_hash\"\n         return salted_hmac(\n             key_salt,\n             self.password,\n             algorithm=\"sha256\",\n         ).hexdigest()\n "
+            }
+        }
+    },
+    "scikit-learn__scikit-learn-10297": {
+        "buggy_hunks": {
+            "0": {
+                "file": "sklearn/linear_model/ridge.py",
+                "start_line": 1212,
+                "end_line": 1229,
+                "code": "@@ -1212,18 +1212,18 @@ class RidgeCV(_BaseRidgeCV, RegressorMixin):\n\n \n     store_cv_values : boolean, default=False\n         Flag indicating if the cross-validation values corresponding to\n-        each alpha should be stored in the `cv_values_` attribute (see\n-        below). This flag is only compatible with `cv=None` (i.e. using\n         Generalized Cross-Validation).\n \n     Attributes\n     ----------\n     cv_values_ : array, shape = [n_samples, n_alphas] or \\\n         shape = [n_samples, n_targets, n_alphas], optional\n-        Cross-validation values for each alpha (if `store_cv_values=True` and \\\n-        `cv=None`). After `fit()` has been called, this attribute will \\\n-        contain the mean squared errors (by default) or the values of the \\\n-        `{loss,score}_func` function (if provided in the constructor).\n \n     coef_ : array, shape = [n_features] or [n_targets, n_features]\n         Weight vector(s)."
+            },
+            "1": {
+                "file": "sklearn/linear_model/ridge.py",
+                "start_line": 1301,
+                "end_line": 1314,
+                "code": "@@ -1301,14 +1301,19 @@ class RidgeClassifierCV(LinearClassifierMixin, _BaseRidgeCV):\n\n         weights inversely proportional to class frequencies in the input data\n         as ``n_samples / (n_classes * np.bincount(y))``\n \n     Attributes\n     ----------\n-    cv_values_ : array, shape = [n_samples, n_alphas] or \\\n-    shape = [n_samples, n_responses, n_alphas], optional\n-        Cross-validation values for each alpha (if `store_cv_values=True` and\n-    `cv=None`). After `fit()` has been called, this attribute will contain \\\n-    the mean squared errors (by default) or the values of the \\\n-    `{loss,score}_func` function (if provided in the constructor).\n \n     coef_ : array, shape = [n_features] or [n_targets, n_features]\n         Weight vector(s)."
+            },
+            "2": {
+                "file": "sklearn/linear_model/ridge.py",
+                "start_line": 1333,
+                "end_line": 1342,
+                "code": "@@ -1333,10 +1338,11 @@ class RidgeClassifierCV(LinearClassifierMixin, _BaseRidgeCV):\n\n     advantage of the multi-variate response support in Ridge.\n     \"\"\"\n     def __init__(self, alphas=(0.1, 1.0, 10.0), fit_intercept=True,\n-                 normalize=False, scoring=None, cv=None, class_weight=None):\n         super(RidgeClassifierCV, self).__init__(\n             alphas=alphas, fit_intercept=fit_intercept, normalize=normalize,\n-            scoring=scoring, cv=cv)\n         self.class_weight = class_weight\n \n     def fit(self, X, y, sample_weight=None):"
+            }
+        }
+    },
+    "scikit-learn__scikit-learn-14087": {
+        "buggy_hunks": {
+            "0": {
+                "file": "sklearn/linear_model/logistic.py",
+                "start_line": 2170,
+                "end_line": 2176,
+                "code": "@@ -2170,7 +2170,7 @@ def fit(self, X, y, sample_weight=None):\n\n                 # Take the best scores across every fold and the average of\n                 # all coefficients corresponding to the best scores.\n                 best_indices = np.argmax(scores, axis=1)\n-                if self.multi_class == 'ovr':\n                     w = np.mean([coefs_paths[i, best_indices[i], :]\n                                  for i in range(len(folds))], axis=0)\n                 else:"
+            },
+            "1": {
+                "file": "sklearn/linear_model/logistic.py",
+                "start_line": 2180,
+                "end_line": 2187,
+                "code": "@@ -2180,8 +2180,11 @@ def fit(self, X, y, sample_weight=None):\n\n                 best_indices_C = best_indices % len(self.Cs_)\n                 self.C_.append(np.mean(self.Cs_[best_indices_C]))\n \n-                best_indices_l1 = best_indices // len(self.Cs_)\n-                self.l1_ratio_.append(np.mean(l1_ratios_[best_indices_l1]))\n \n             if multi_class == 'multinomial':\n                 self.C_ = np.tile(self.C_, n_classes)"
+            }
+        }
+    },
+    "scikit-learn__scikit-learn-25232": {
+        "buggy_hunks": {
+            "0": {
+                "file": "sklearn/impute/_iterative.py",
+                "start_line": 117,
+                "end_line": 122,
+                "code": "@@ -117,6 +117,15 @@ class IterativeImputer(_BaseImputer):\n\n         Which strategy to use to initialize the missing values. Same as the\n         `strategy` parameter in :class:`~sklearn.impute.SimpleImputer`.\n \n     imputation_order : {'ascending', 'descending', 'roman', 'arabic', \\\n             'random'}, default='ascending'\n         The order in which the features will be imputed. Possible values:"
+            },
+            "1": {
+                "file": "sklearn/impute/_iterative.py",
+                "start_line": 281,
+                "end_line": 286,
+                "code": "@@ -281,6 +290,7 @@ class IterativeImputer(_BaseImputer):\n\n         \"initial_strategy\": [\n             StrOptions({\"mean\", \"median\", \"most_frequent\", \"constant\"})\n         ],\n         \"imputation_order\": [\n             StrOptions({\"ascending\", \"descending\", \"roman\", \"arabic\", \"random\"})\n         ],"
+            },
+            "2": {
+                "file": "sklearn/impute/_iterative.py",
+                "start_line": 301,
+                "end_line": 306,
+                "code": "@@ -301,6 +311,7 @@ def __init__(\n\n         tol=1e-3,\n         n_nearest_features=None,\n         initial_strategy=\"mean\",\n         imputation_order=\"ascending\",\n         skip_complete=False,\n         min_value=-np.inf,"
+            },
+            "3": {
+                "file": "sklearn/impute/_iterative.py",
+                "start_line": 322,
+                "end_line": 327,
+                "code": "@@ -322,6 +333,7 @@ def __init__(\n\n         self.tol = tol\n         self.n_nearest_features = n_nearest_features\n         self.initial_strategy = initial_strategy\n         self.imputation_order = imputation_order\n         self.skip_complete = skip_complete\n         self.min_value = min_value"
+            },
+            "4": {
+                "file": "sklearn/impute/_iterative.py",
+                "start_line": 613,
+                "end_line": 618,
+                "code": "@@ -613,6 +625,7 @@ def _initial_imputation(self, X, in_fit=False):\n\n             self.initial_imputer_ = SimpleImputer(\n                 missing_values=self.missing_values,\n                 strategy=self.initial_strategy,\n                 keep_empty_features=self.keep_empty_features,\n             )\n             X_filled = self.initial_imputer_.fit_transform(X)"
+            }
+        }
+    },
+    "scikit-learn__scikit-learn-25747": {
+        "buggy_hunks": {
+            "0": {
+                "file": "sklearn/utils/_set_output.py",
+                "start_line": 34,
+                "end_line": 40,
+                "code": "@@ -34,7 +34,7 @@ def _wrap_in_pandas_container(\n\n         `range(n_features)`.\n \n     index : array-like, default=None\n-        Index for data.\n \n     Returns\n     -------"
+            },
+            "1": {
+                "file": "sklearn/utils/_set_output.py",
+                "start_line": 55,
+                "end_line": 62,
+                "code": "@@ -55,8 +55,6 @@ def _wrap_in_pandas_container(\n\n     if isinstance(data_to_wrap, pd.DataFrame):\n         if columns is not None:\n             data_to_wrap.columns = columns\n-        if index is not None:\n-            data_to_wrap.index = index\n         return data_to_wrap\n \n     return pd.DataFrame(data_to_wrap, index=index, columns=columns)"
+            }
+        }
+    },
+    "scikit-learn__scikit-learn-25931": {
+        "buggy_hunks": {
+            "0": {
+                "file": "sklearn/ensemble/_iforest.py",
+                "start_line": 344,
+                "end_line": 351,
+                "code": "@@ -344,8 +344,10 @@ def fit(self, X, y=None, sample_weight=None):\n\n             self.offset_ = -0.5\n             return self\n \n-        # else, define offset_ wrt contamination parameter\n-        self.offset_ = np.percentile(self.score_samples(X), 100.0 * self.contamination)\n \n         return self\n "
+            },
+            "1": {
+                "file": "sklearn/ensemble/_iforest.py",
+                "start_line": 428,
+                "end_line": 442,
+                "code": "@@ -428,15 +430,21 @@ def score_samples(self, X):\n\n             The anomaly score of the input samples.\n             The lower, the more abnormal.\n         \"\"\"\n-        # code structure from ForestClassifier/predict_proba\n-\n-        check_is_fitted(self)\n-\n         # Check data\n         X = self._validate_data(X, accept_sparse=\"csr\", dtype=np.float32, reset=False)\n \n-        # Take the opposite of the scores as bigger is better (here less\n-        # abnormal)\n         return -self._compute_chunked_score_samples(X)\n \n     def _compute_chunked_score_samples(self, X):"
+            }
+        }
+    },
+    "scikit-learn__scikit-learn-26194": {
+        "buggy_hunks": {
+            "0": {
+                "file": "sklearn/metrics/_ranking.py",
+                "start_line": 1016,
+                "end_line": 1025,
+                "code": "@@ -1016,10 +1016,10 @@ def roc_curve(\n\n         Increasing true positive rates such that element `i` is the true\n         positive rate of predictions with score >= `thresholds[i]`.\n \n-    thresholds : ndarray of shape = (n_thresholds,)\n         Decreasing thresholds on the decision function used to compute\n         fpr and tpr. `thresholds[0]` represents no instances being predicted\n-        and is arbitrarily set to `max(y_score) + 1`.\n \n     See Also\n     --------"
+            },
+            "1": {
+                "file": "sklearn/metrics/_ranking.py",
+                "start_line": 1036,
+                "end_line": 1041,
+                "code": "@@ -1036,6 +1036,10 @@ def roc_curve(\n\n     are reversed upon returning them to ensure they correspond to both ``fpr``\n     and ``tpr``, which are sorted in reversed order during their calculation.\n \n     References\n     ----------\n     .. [1] `Wikipedia entry for the Receiver operating characteristic"
+            },
+            "2": {
+                "file": "sklearn/metrics/_ranking.py",
+                "start_line": 1056,
+                "end_line": 1062,
+                "code": "@@ -1056,7 +1060,7 @@ def roc_curve(\n\n     >>> tpr\n     array([0. , 0.5, 0.5, 1. , 1. ])\n     >>> thresholds\n-    array([1.8 , 0.8 , 0.4 , 0.35, 0.1 ])\n     \"\"\"\n     fps, tps, thresholds = _binary_clf_curve(\n         y_true, y_score, pos_label=pos_label, sample_weight=sample_weight"
+            },
+            "3": {
+                "file": "sklearn/metrics/_ranking.py",
+                "start_line": 1083,
+                "end_line": 1089,
+                "code": "@@ -1083,7 +1087,8 @@ def roc_curve(\n\n     # to make sure that the curve starts at (0, 0)\n     tps = np.r_[0, tps]\n     fps = np.r_[0, fps]\n-    thresholds = np.r_[thresholds[0] + 1, thresholds]\n \n     if fps[-1] <= 0:\n         warnings.warn("
+            }
+        }
+    },
+    "scikit-learn__scikit-learn-26323": {
+        "buggy_hunks": {
+            "0": {
+                "file": "sklearn/compose/_column_transformer.py",
+                "start_line": 293,
+                "end_line": 298,
+                "code": "@@ -293,6 +293,7 @@ def set_output(self, *, transform=None):\n\n             Estimator instance.\n         \"\"\"\n         super().set_output(transform=transform)\n         transformers = (\n             trans\n             for _, trans, _ in chain("
+            },
+            "1": {
+                "file": "sklearn/compose/_column_transformer.py",
+                "start_line": 303,
+                "end_line": 308,
+                "code": "@@ -303,6 +304,9 @@ def set_output(self, *, transform=None):\n\n         for trans in transformers:\n             _safe_set_output(trans, transform=transform)\n \n         return self\n \n     def get_params(self, deep=True):"
+            }
+        }
+    },
+    "sympy__sympy-13877": {
+        "buggy_hunks": {
+            "0": {
+                "file": "sympy/matrices/matrices.py",
+                "start_line": 5,
+                "end_line": 10,
+                "code": "@@ -5,6 +5,7 @@\n\n from sympy.core.add import Add\n from sympy.core.basic import Basic, Atom\n from sympy.core.expr import Expr\n from sympy.core.power import Pow\n from sympy.core.symbol import (Symbol, Dummy, symbols,\n     _uniquely_named_symbol)"
+            },
+            "1": {
+                "file": "sympy/matrices/matrices.py",
+                "start_line": 20,
+                "end_line": 27,
+                "code": "@@ -20,8 +21,8 @@\n\n \n from sympy.utilities.iterables import flatten, numbered_symbols\n from sympy.core.decorators import call_highest_priority\n-from sympy.core.compatibility import is_sequence, default_sort_key, range, \\\n-    NotIterable\n \n \n from types import FunctionType"
+            },
+            "2": {
+                "file": "sympy/matrices/matrices.py",
+                "start_line": 38,
+                "end_line": 43,
+                "code": "@@ -38,6 +39,12 @@ def _iszero(x):\n\n         return None\n \n \n class DeferredVector(Symbol, NotIterable):\n     \"\"\"A vector whose components are deferred (e.g. for use with lambdify)\n "
+            },
+            "3": {
+                "file": "sympy/matrices/matrices.py",
+                "start_line": 173,
+                "end_line": 186,
+                "code": "@@ -173,14 +180,6 @@ def _eval_det_bareiss(self):\n\n         http://www.eecis.udel.edu/~saunders/papers/sffge/it5.ps.\n         \"\"\"\n \n-        # XXX included as a workaround for issue #12362.  Should use `_find_reasonable_pivot` instead\n-        def _find_pivot(l):\n-            for pos,val in enumerate(l):\n-                if val:\n-                    return (pos, val, None, None)\n-            return (None, None, None, None)\n-\n-\n         # Recursively implemented Bareiss' algorithm as per Deanna Richelle Leggett's\n         # thesis http://www.math.usm.edu/perry/Research/Thesis_DRL.pdf\n         def bareiss(mat, cumm=1):"
+            },
+            "4": {
+                "file": "sympy/matrices/matrices.py",
+                "start_line": 190,
+                "end_line": 197,
+                "code": "@@ -190,8 +189,11 @@ def bareiss(mat, cumm=1):\n\n                 return mat[0, 0]\n \n             # find a pivot and extract the remaining matrix\n-            # XXX should use `_find_reasonable_pivot`.  Blocked by issue #12362\n-            pivot_pos, pivot_val, _, _ = _find_pivot(mat[:, 0])\n             if pivot_pos == None:\n                 return S.Zero\n "
+            },
+            "5": {
+                "file": "sympy/utilities/randtest.py",
+                "start_line": 13,
+                "end_line": 29,
+                "code": "@@ -13,17 +13,21 @@\n\n from sympy.core.compatibility import is_sequence, as_int\n \n \n-def random_complex_number(a=2, b=-1, c=3, d=1, rational=False):\n     \"\"\"\n     Return a random complex number.\n \n     To reduce chance of hitting branch cuts or anything, we guarantee\n     b <= Im z <= d, a <= Re z <= c\n     \"\"\"\n     A, B = uniform(a, c), uniform(b, d)\n     if not rational:\n         return A + I*B\n-    return nsimplify(A, rational=True) + I*nsimplify(B, rational=True)\n \n \n def verify_numerically(f, g, z=None, tol=1.0e-6, a=2, b=-1, c=3, d=1):"
+            }
+        }
+    }
+}

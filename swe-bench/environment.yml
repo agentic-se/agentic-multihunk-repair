@@ -1,0 +1,8 @@
+name: swe-bench-eval
+channels:
+  - defaults
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+      - swebench>=4.1.0

@@ -1,0 +1,322 @@
+[
+  {
+    "instance_id": "astropy__astropy-13033",
+    "base_image": "swebench/sweb.eval.x86_64.astropy_1776_astropy-13033:v2",
+    "base_digest": "swebench/sweb.eval.x86_64.astropy_1776_astropy-13033@sha256:42797a2c686ed35b43e28dd2f58149381c3bf79abea2346fb7062c009e9fa528",
+    "overlay_image": "qwen-eval/astropy_1776_astropy-13033:latest",
+    "overlay_digest": null,
+    "node_major": "20",
+    "cli_npm_package": "@qwen-code/qwen-code",
+    "cli_version": "0.15.6"
+  },
+  {
+    "instance_id": "astropy__astropy-13579",
+    "base_image": "swebench/sweb.eval.x86_64.astropy_1776_astropy-13579:v2",
+    "base_digest": "swebench/sweb.eval.x86_64.astropy_1776_astropy-13579@sha256:c645e9435a1499dab327b76fae926057a2f407a291b5d173bf1971b7a6fe911b",
+    "overlay_image": "qwen-eval/astropy_1776_astropy-13579:latest",
+    "overlay_digest": null,
+    "node_major": "20",
+    "cli_npm_package": "@qwen-code/qwen-code",
+    "cli_version": "0.15.6"
+  },
+  {
+    "instance_id": "astropy__astropy-14365",
+    "base_image": "swebench/sweb.eval.x86_64.astropy_1776_astropy-14365:v2",
+    "base_digest": "swebench/sweb.eval.x86_64.astropy_1776_astropy-14365@sha256:bb1ec8d27d478ab7469805680c824a4030fa3f32a592558f7a02485b76f3226b",
+    "overlay_image": "qwen-eval/astropy_1776_astropy-14365:latest",
+    "overlay_digest": null,
+    "node_major": "20",
+    "cli_npm_package": "@qwen-code/qwen-code",
+    "cli_version": "0.15.6"
+  },
+  {
+    "instance_id": "astropy__astropy-14369",
+    "base_image": "swebench/sweb.eval.x86_64.astropy_1776_astropy-14369:v2",
+    "base_digest": "swebench/sweb.eval.x86_64.astropy_1776_astropy-14369@sha256:113488bfd3a6fb9678705496c18791bf46d98ad0303a682a3d405223eb2e85c4",
+    "overlay_image": "qwen-eval/astropy_1776_astropy-14369:latest",
+    "overlay_digest": null,
+    "node_major": "20",
+    "cli_npm_package": "@qwen-code/qwen-code",
+    "cli_version": "0.15.6"
+  },
+  {
+    "instance_id": "astropy__astropy-14598",
+    "base_image": "swebench/sweb.eval.x86_64.astropy_1776_astropy-14598:v2",
+    "base_digest": "swebench/sweb.eval.x86_64.astropy_1776_astropy-14598@sha256:f1ff70694c403ee7018fef2a00638caa1555948d1c9b821175a7f4bdf2933a52",
+    "overlay_image": "qwen-eval/astropy_1776_astropy-14598:latest",
+    "overlay_digest": null,
+    "node_major": "20",
+    "cli_npm_package": "@qwen-code/qwen-code",
+    "cli_version": "0.15.6"
+  },
+  {
+    "instance_id": "astropy__astropy-7606",
+    "base_image": "swebench/sweb.eval.x86_64.astropy_1776_astropy-7606:v2",
+    "base_digest": "swebench/sweb.eval.x86_64.astropy_1776_astropy-7606@sha256:f4bcd149eb4cfcd9017d798f2b5b40a0b4c85c62390667f2b2f751cff29a184f",
+    "overlay_image": "qwen-eval/astropy_1776_astropy-7606:latest",
+    "overlay_digest": null,
+    "node_major": "20",
+    "cli_npm_package": "@qwen-code/qwen-code",
+    "cli_version": "0.15.6"
+  },
+  {
+    "instance_id": "astropy__astropy-8707",
+    "base_image": "swebench/sweb.eval.x86_64.astropy_1776_astropy-8707:v2",
+    "base_digest": "swebench/sweb.eval.x86_64.astropy_1776_astropy-8707@sha256:55e63ac83d4ab4a2e1e584adbd7b47f5a2fd43d131fe26d0e12103024915f13b",
+    "overlay_image": "qwen-eval/astropy_1776_astropy-8707:latest",
+    "overlay_digest": null,
+    "node_major": "20",
+    "cli_npm_package": "@qwen-code/qwen-code",
+    "cli_version": "0.15.6"
+  },
+  {
+    "instance_id": "astropy__astropy-8872",
+    "base_image": "swebench/sweb.eval.x86_64.astropy_1776_astropy-8872:v2",
+    "base_digest": "swebench/sweb.eval.x86_64.astropy_1776_astropy-8872@sha256:d6c5c8dc8f0ec1fb651e9088f4aabbaea858613ac56e03cf43eb694d77dc063c",
+    "overlay_image": "qwen-eval/astropy_1776_astropy-8872:latest",
+    "overlay_digest": null,
+    "node_major": "20",
+    "cli_npm_package": "@qwen-code/qwen-code",
+    "cli_version": "0.15.6"
+  },
+  {
+    "instance_id": "django__django-10554",
+    "base_image": "swebench/sweb.eval.x86_64.django_1776_django-10554:v2",
+    "base_digest": "swebench/sweb.eval.x86_64.django_1776_django-10554@sha256:6fe93aa03ebb21c114775461a745e2c5645086436333fc9094aad9c357519117",
+    "overlay_image": "qwen-eval/django_1776_django-10554:latest",
+    "overlay_digest": null,
+    "node_major": "20",
+    "cli_npm_package": "@qwen-code/qwen-code",
+    "cli_version": "0.15.6"
+  },
+  {
+    "instance_id": "django__django-11138",
+    "base_image": "swebench/sweb.eval.x86_64.django_1776_django-11138:v2",
+    "base_digest": "swebench/sweb.eval.x86_64.django_1776_django-11138@sha256:dc815d469dcb8ed3f93a2a93970912c144c2125bb8e53ba1c0f6b705c38346fc",
+    "overlay_image": "qwen-eval/django_1776_django-11138:latest",
+    "overlay_digest": null,
+    "node_major": "20",
+    "cli_npm_package": "@qwen-code/qwen-code",
+    "cli_version": "0.15.6"
+  },
+  {
+    "instance_id": "django__django-11400",
+    "base_image": "swebench/sweb.eval.x86_64.django_1776_django-11400:v2",
+    "base_digest": "swebench/sweb.eval.x86_64.django_1776_django-11400@sha256:435433409f08e5fce3f1385aced327baac5df8d14377b00616238729721e323a",
+    "overlay_image": "qwen-eval/django_1776_django-11400:latest",
+    "overlay_digest": null,
+    "node_major": "20",
+    "cli_npm_package": "@qwen-code/qwen-code",
+    "cli_version": "0.15.6"
+  },
+  {
+    "instance_id": "django__django-11532",
+    "base_image": "swebench/sweb.eval.x86_64.django_1776_django-11532:v2",
+    "base_digest": "swebench/sweb.eval.x86_64.django_1776_django-11532@sha256:71cca6e07b2f4a6b86822259c7a99061b0a57d12b3714c390098f9b9c461c660",
+    "overlay_image": "qwen-eval/django_1776_django-11532:latest",
+    "overlay_digest": null,
+    "node_major": "20",
+    "cli_npm_package": "@qwen-code/qwen-code",
+    "cli_version": "0.15.6"
+  },
+  {
+    "instance_id": "django__django-11728",
+    "base_image": "swebench/sweb.eval.x86_64.django_1776_django-11728:v2",
+    "base_digest": "swebench/sweb.eval.x86_64.django_1776_django-11728@sha256:255b1c4a27e82e12def85b987c9926b37e60b1de006c4fdb3d30c928c4ee60d4",
+    "overlay_image": "qwen-eval/django_1776_django-11728:latest",
+    "overlay_digest": null,
+    "node_major": "20",
+    "cli_npm_package": "@qwen-code/qwen-code",
+    "cli_version": "0.15.6"
+  },
+  {
+    "instance_id": "django__django-11740",
+    "base_image": "swebench/sweb.eval.x86_64.django_1776_django-11740:v2",
+    "base_digest": "swebench/sweb.eval.x86_64.django_1776_django-11740@sha256:70df1c2492fd12dc3012591ad6b51aa0559647e88ddd27139ceea4283fc3b063",
+    "overlay_image": "qwen-eval/django_1776_django-11740:latest",
+    "overlay_digest": null,
+    "node_major": "20",
+    "cli_npm_package": "@qwen-code/qwen-code",
+    "cli_version": "0.15.6"
+  },
+  {
+    "instance_id": "django__django-12406",
+    "base_image": "swebench/sweb.eval.x86_64.django_1776_django-12406:v2",
+    "base_digest": "swebench/sweb.eval.x86_64.django_1776_django-12406@sha256:74a58dbb5362594e482eeeb3c76e3a8aeba2285c67506bf1847001078822d6d0",
+    "overlay_image": "qwen-eval/django_1776_django-12406:latest",
+    "overlay_digest": null,
+    "node_major": "20",
+    "cli_npm_package": "@qwen-code/qwen-code",
+    "cli_version": "0.15.6"
+  },
+  {
+    "instance_id": "django__django-13343",
+    "base_image": "swebench/sweb.eval.x86_64.django_1776_django-13343:v2",
+    "base_digest": "swebench/sweb.eval.x86_64.django_1776_django-13343@sha256:c9dd0b680810267d008f4d46ffb5b03b0b2d67c93db6d616ec89659855c1c91d",
+    "overlay_image": "qwen-eval/django_1776_django-13343:latest",
+    "overlay_digest": null,
+    "node_major": "20",
+    "cli_npm_package": "@qwen-code/qwen-code",
+    "cli_version": "0.15.6"
+  },
+  {
+    "instance_id": "django__django-13346",
+    "base_image": "swebench/sweb.eval.x86_64.django_1776_django-13346:v2",
+    "base_digest": "swebench/sweb.eval.x86_64.django_1776_django-13346@sha256:a7e6400da2430fa6e0460f9ceab44d7e19f3212126d4c3d3599692935a780e31",
+    "overlay_image": "qwen-eval/django_1776_django-13346:latest",
+    "overlay_digest": null,
+    "node_major": "20",
+    "cli_npm_package": "@qwen-code/qwen-code",
+    "cli_version": "0.15.6"
+  },
+  {
+    "instance_id": "django__django-13449",
+    "base_image": "swebench/sweb.eval.x86_64.django_1776_django-13449:v2",
+    "base_digest": "swebench/sweb.eval.x86_64.django_1776_django-13449@sha256:0d6bc13f6bedf6c649a1d9696d3ae25eafa80421b8a0c112eb744ab86dc4a691",
+    "overlay_image": "qwen-eval/django_1776_django-13449:latest",
+    "overlay_digest": null,
+    "node_major": "20",
+    "cli_npm_package": "@qwen-code/qwen-code",
+    "cli_version": "0.15.6"
+  },
+  {
+    "instance_id": "django__django-15128",
+    "base_image": "swebench/sweb.eval.x86_64.django_1776_django-15128:v2",
+    "base_digest": "swebench/sweb.eval.x86_64.django_1776_django-15128@sha256:9c204a7613d8575d2ae17999fa243a9430893f890824ad6e81c4f36badcbf7aa",
+    "overlay_image": "qwen-eval/django_1776_django-15128:latest",
+    "overlay_digest": null,
+    "node_major": "20",
+    "cli_npm_package": "@qwen-code/qwen-code",
+    "cli_version": "0.15.6"
+  },
+  {
+    "instance_id": "django__django-15503",
+    "base_image": "swebench/sweb.eval.x86_64.django_1776_django-15503:v2",
+    "base_digest": "swebench/sweb.eval.x86_64.django_1776_django-15503@sha256:9c5e6a5e116372eb634915409044a2c690b6b570fe45412fcaa7d84c4595923e",
+    "overlay_image": "qwen-eval/django_1776_django-15503:latest",
+    "overlay_digest": null,
+    "node_major": "20",
+    "cli_npm_package": "@qwen-code/qwen-code",
+    "cli_version": "0.15.6"
+  },
+  {
+    "instance_id": "django__django-15563",
+    "base_image": "swebench/sweb.eval.x86_64.django_1776_django-15563:v2",
+    "base_digest": "swebench/sweb.eval.x86_64.django_1776_django-15563@sha256:cfdb1bd02be1de69cbc47ab8f56ca17be627085a4f67cf261d4ecd581a2e084f",
+    "overlay_image": "qwen-eval/django_1776_django-15563:latest",
+    "overlay_digest": null,
+    "node_major": "20",
+    "cli_npm_package": "@qwen-code/qwen-code",
+    "cli_version": "0.15.6"
+  },
+  {
+    "instance_id": "django__django-15572",
+    "base_image": "swebench/sweb.eval.x86_64.django_1776_django-15572:v2",
+    "base_digest": "swebench/sweb.eval.x86_64.django_1776_django-15572@sha256:5db47597f27b8097bb1f182a754470a16fd76d93c388f9c09f21fa8dfb30bca7",
+    "overlay_image": "qwen-eval/django_1776_django-15572:latest",
+    "overlay_digest": null,
+    "node_major": "20",
+    "cli_npm_package": "@qwen-code/qwen-code",
+    "cli_version": "0.15.6"
+  },
+  {
+    "instance_id": "django__django-15732",
+    "base_image": "swebench/sweb.eval.x86_64.django_1776_django-15732:v2",
+    "base_digest": "swebench/sweb.eval.x86_64.django_1776_django-15732@sha256:0cdd47236c86b5e2a699003c5d237ca912ecf6ae4c48d666a2e51736b8366281",
+    "overlay_image": "qwen-eval/django_1776_django-15732:latest",
+    "overlay_digest": null,
+    "node_major": "20",
+    "cli_npm_package": "@qwen-code/qwen-code",
+    "cli_version": "0.15.6"
+  },
+  {
+    "instance_id": "django__django-16631",
+    "base_image": "swebench/sweb.eval.x86_64.django_1776_django-16631:v2",
+    "base_digest": "swebench/sweb.eval.x86_64.django_1776_django-16631@sha256:5e8908f0da66997852541183a80a4a7408c47a8958c083b4a9c453835cbd4712",
+    "overlay_image": "qwen-eval/django_1776_django-16631:latest",
+    "overlay_digest": null,
+    "node_major": "20",
+    "cli_npm_package": "@qwen-code/qwen-code",
+    "cli_version": "0.15.6"
+  },
+  {
+    "instance_id": "scikit-learn__scikit-learn-10297",
+    "base_image": "swebench/sweb.eval.x86_64.scikit-learn_1776_scikit-learn-10297:v2",
+    "base_digest": "swebench/sweb.eval.x86_64.scikit-learn_1776_scikit-learn-10297@sha256:3fff87093463f36cf764abeeda281d89458c7f085b0b066b417c877c090ca960",
+    "overlay_image": "qwen-eval/scikit-learn_1776_scikit-learn-10297:latest",
+    "overlay_digest": null,
+    "node_major": "20",
+    "cli_npm_package": "@qwen-code/qwen-code",
+    "cli_version": "0.15.6"
+  },
+  {
+    "instance_id": "scikit-learn__scikit-learn-14087",
+    "base_image": "swebench/sweb.eval.x86_64.scikit-learn_1776_scikit-learn-14087:v2",
+    "base_digest": "swebench/sweb.eval.x86_64.scikit-learn_1776_scikit-learn-14087@sha256:5d9fd1159824d0c8f0b96435e3e636951acb41f063198fc1e1881b922727be02",
+    "overlay_image": "qwen-eval/scikit-learn_1776_scikit-learn-14087:latest",
+    "overlay_digest": null,
+    "node_major": "20",
+    "cli_npm_package": "@qwen-code/qwen-code",
+    "cli_version": "0.15.6"
+  },
+  {
+    "instance_id": "scikit-learn__scikit-learn-25232",
+    "base_image": "swebench/sweb.eval.x86_64.scikit-learn_1776_scikit-learn-25232:v2",
+    "base_digest": "swebench/sweb.eval.x86_64.scikit-learn_1776_scikit-learn-25232@sha256:e2cd6866f2ecf42742a3629ae6c9b63e698ff4d5c0624f0806ba85ea31ad6734",
+    "overlay_image": "qwen-eval/scikit-learn_1776_scikit-learn-25232:latest",
+    "overlay_digest": null,
+    "node_major": "20",
+    "cli_npm_package": "@qwen-code/qwen-code",
+    "cli_version": "0.15.6"
+  },
+  {
+    "instance_id": "scikit-learn__scikit-learn-25747",
+    "base_image": "swebench/sweb.eval.x86_64.scikit-learn_1776_scikit-learn-25747:v2",
+    "base_digest": "swebench/sweb.eval.x86_64.scikit-learn_1776_scikit-learn-25747@sha256:c8addf04cfb5c17e674dfa7dbb93a82fbfb0ef11a1f46cbe1996d6611f2bb4a8",
+    "overlay_image": "qwen-eval/scikit-learn_1776_scikit-learn-25747:latest",
+    "overlay_digest": null,
+    "node_major": "20",
+    "cli_npm_package": "@qwen-code/qwen-code",
+    "cli_version": "0.15.6"
+  },
+  {
+    "instance_id": "scikit-learn__scikit-learn-25931",
+    "base_image": "swebench/sweb.eval.x86_64.scikit-learn_1776_scikit-learn-25931:v2",
+    "base_digest": "swebench/sweb.eval.x86_64.scikit-learn_1776_scikit-learn-25931@sha256:e34539040deb3056de55f7ea1f68b7e7a273838044a0d688657f77b3c2832076",
+    "overlay_image": "qwen-eval/scikit-learn_1776_scikit-learn-25931:latest",
+    "overlay_digest": null,
+    "node_major": "20",
+    "cli_npm_package": "@qwen-code/qwen-code",
+    "cli_version": "0.15.6"
+  },
+  {
+    "instance_id": "scikit-learn__scikit-learn-26194",
+    "base_image": "swebench/sweb.eval.x86_64.scikit-learn_1776_scikit-learn-26194:v2",
+    "base_digest": "swebench/sweb.eval.x86_64.scikit-learn_1776_scikit-learn-26194@sha256:288ded23df68027baefc818ef9d980de6488b7dfe9faffcd5f75037a3882f7d3",
+    "overlay_image": "qwen-eval/scikit-learn_1776_scikit-learn-26194:latest",
+    "overlay_digest": null,
+    "node_major": "20",
+    "cli_npm_package": "@qwen-code/qwen-code",
+    "cli_version": "0.15.6"
+  },
+  {
+    "instance_id": "scikit-learn__scikit-learn-26323",
+    "base_image": "swebench/sweb.eval.x86_64.scikit-learn_1776_scikit-learn-26323:v2",
+    "base_digest": "swebench/sweb.eval.x86_64.scikit-learn_1776_scikit-learn-26323@sha256:d8c978bca0eeb9da25c4b2f2935ee1c0240b321656dbab42254e5f23975df0e7",
+    "overlay_image": "qwen-eval/scikit-learn_1776_scikit-learn-26323:latest",
+    "overlay_digest": null,
+    "node_major": "20",
+    "cli_npm_package": "@qwen-code/qwen-code",
+    "cli_version": "0.15.6"
+  },
+  {
+    "instance_id": "sympy__sympy-13877",
+    "base_image": "swebench/sweb.eval.x86_64.sympy_1776_sympy-13877:v2",
+    "base_digest": "swebench/sweb.eval.x86_64.sympy_1776_sympy-13877@sha256:24cf2c1163b2dd86f6fa6249d77e94d31a4482036a09c743eb0f9e1ab6a928ab",
+    "overlay_image": "qwen-eval/sympy_1776_sympy-13877:latest",
+    "overlay_digest": null,
+    "node_major": "20",
+    "cli_npm_package": "@qwen-code/qwen-code",
+    "cli_version": "0.15.6"
+  }
+]
