@@ -1,0 +1,3275 @@
+{
+  "dataset": "PolyHunk",
+  "description": "Merged dataset of Hunk4J (Defects4J, 372 Java multi-hunk bugs) + HunkSWE (SWE-bench Verified, 32 Python multi-hunk bugs) = 404 instances total.",
+  "n_total": 404,
+  "n_hunk4j": 372,
+  "n_hunkswe": 32,
+  "patch_statistics": {
+    "hunks_per_patch": {
+      "median": 3.0,
+      "mean": 3.84,
+      "max": 47
+    },
+    "hunk_divergence": {
+      "median": 0.411,
+      "mean": 0.452,
+      "max": 1.599
+    }
+  },
+  "spatial_proximity_distribution": {
+    "Nucleus": {
+      "count": 65,
+      "share_pct": 16.1
+    },
+    "Cluster": {
+      "count": 201,
+      "share_pct": 49.8
+    },
+    "Orbit": {
+      "count": 72,
+      "share_pct": 17.8
+    },
+    "Sprawl": {
+      "count": 51,
+      "share_pct": 12.6
+    },
+    "Fragment": {
+      "count": 15,
+      "share_pct": 3.7
+    }
+  },
+  "bugs": [
+    {
+      "bug_id": "Chart_14",
+      "benchmark": "hunk4j",
+      "project": "Chart",
+      "hunk_count": 4,
+      "hunk_divergence": 0.0,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Chart_15",
+      "benchmark": "hunk4j",
+      "project": "Chart",
+      "hunk_count": 2,
+      "hunk_divergence": 0.2668,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Chart_16",
+      "benchmark": "hunk4j",
+      "project": "Chart",
+      "hunk_count": 2,
+      "hunk_divergence": 0.4693,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Chart_18",
+      "benchmark": "hunk4j",
+      "project": "Chart",
+      "hunk_count": 3,
+      "hunk_divergence": 0.6569,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Chart_19",
+      "benchmark": "hunk4j",
+      "project": "Chart",
+      "hunk_count": 2,
+      "hunk_divergence": 0.0,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Chart_2",
+      "benchmark": "hunk4j",
+      "project": "Chart",
+      "hunk_count": 2,
+      "hunk_divergence": 0.0234,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Chart_21",
+      "benchmark": "hunk4j",
+      "project": "Chart",
+      "hunk_count": 3,
+      "hunk_divergence": 0.6929,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Chart_22",
+      "benchmark": "hunk4j",
+      "project": "Chart",
+      "hunk_count": 4,
+      "hunk_divergence": 0.7375,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Chart_25",
+      "benchmark": "hunk4j",
+      "project": "Chart",
+      "hunk_count": 6,
+      "hunk_divergence": 0.6392,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Chart_4",
+      "benchmark": "hunk4j",
+      "project": "Chart",
+      "hunk_count": 2,
+      "hunk_divergence": 0.2093,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Cli_1",
+      "benchmark": "hunk4j",
+      "project": "Cli",
+      "hunk_count": 10,
+      "hunk_divergence": 0.928,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Cli_10",
+      "benchmark": "hunk4j",
+      "project": "Cli",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3527,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Cli_13",
+      "benchmark": "hunk4j",
+      "project": "Cli",
+      "hunk_count": 3,
+      "hunk_divergence": 0.6066,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Cli_14",
+      "benchmark": "hunk4j",
+      "project": "Cli",
+      "hunk_count": 2,
+      "hunk_divergence": 0.1311,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Cli_16",
+      "benchmark": "hunk4j",
+      "project": "Cli",
+      "hunk_count": 6,
+      "hunk_divergence": 0.85,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Cli_18",
+      "benchmark": "hunk4j",
+      "project": "Cli",
+      "hunk_count": 3,
+      "hunk_divergence": 0.6314,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Cli_21",
+      "benchmark": "hunk4j",
+      "project": "Cli",
+      "hunk_count": 6,
+      "hunk_divergence": 0.8336,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Cli_22",
+      "benchmark": "hunk4j",
+      "project": "Cli",
+      "hunk_count": 7,
+      "hunk_divergence": 1.0491,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Cli_23",
+      "benchmark": "hunk4j",
+      "project": "Cli",
+      "hunk_count": 2,
+      "hunk_divergence": 0.227,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Cli_26",
+      "benchmark": "hunk4j",
+      "project": "Cli",
+      "hunk_count": 2,
+      "hunk_divergence": 0.0,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Cli_30",
+      "benchmark": "hunk4j",
+      "project": "Cli",
+      "hunk_count": 2,
+      "hunk_divergence": 0.0227,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Cli_31",
+      "benchmark": "hunk4j",
+      "project": "Cli",
+      "hunk_count": 3,
+      "hunk_divergence": 0.466,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Cli_33",
+      "benchmark": "hunk4j",
+      "project": "Cli",
+      "hunk_count": 2,
+      "hunk_divergence": 0.2562,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Cli_34",
+      "benchmark": "hunk4j",
+      "project": "Cli",
+      "hunk_count": 2,
+      "hunk_divergence": 0.2433,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Cli_36",
+      "benchmark": "hunk4j",
+      "project": "Cli",
+      "hunk_count": 3,
+      "hunk_divergence": 0.3925,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Cli_39",
+      "benchmark": "hunk4j",
+      "project": "Cli",
+      "hunk_count": 2,
+      "hunk_divergence": 0.4628,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Cli_7",
+      "benchmark": "hunk4j",
+      "project": "Cli",
+      "hunk_count": 2,
+      "hunk_divergence": 0.2329,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Closure_100",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3824,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Closure_103",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3851,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Closure_105",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 2,
+      "hunk_divergence": 0.2015,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Closure_106",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 2,
+      "hunk_divergence": 0.4544,
+      "proximity_class": "Fragment"
+    },
+    {
+      "bug_id": "Closure_108",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 4,
+      "hunk_divergence": 0.908,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Closure_115",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3925,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Closure_116",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3688,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Closure_117",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 2,
+      "hunk_divergence": 0.0,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Closure_134",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 6,
+      "hunk_divergence": 0.9513,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Closure_135",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 3,
+      "hunk_divergence": 0.6944,
+      "proximity_class": "Fragment"
+    },
+    {
+      "bug_id": "Closure_136",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3806,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Closure_137",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 10,
+      "hunk_divergence": 1.114,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Closure_138",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 3,
+      "hunk_divergence": 0.5721,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Closure_139",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 4,
+      "hunk_divergence": 0.5309,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Closure_140",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 3,
+      "hunk_divergence": 0.4613,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Closure_141",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 3,
+      "hunk_divergence": 0.4671,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Closure_142",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 3,
+      "hunk_divergence": 0.5527,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Closure_143",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3635,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Closure_144",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 9,
+      "hunk_divergence": 1.3062,
+      "proximity_class": "Fragment"
+    },
+    {
+      "bug_id": "Closure_147",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3678,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Closure_148",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 16,
+      "hunk_divergence": 0.6198,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Closure_149",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 7,
+      "hunk_divergence": 0.988,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Closure_151",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 3,
+      "hunk_divergence": 0.2275,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Closure_153",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 12,
+      "hunk_divergence": 1.1288,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Closure_154",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 6,
+      "hunk_divergence": 0.8958,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Closure_155",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 7,
+      "hunk_divergence": 0.8895,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Closure_156",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 7,
+      "hunk_divergence": 0.7298,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Closure_157",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 7,
+      "hunk_divergence": 1.0781,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Closure_158",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 11,
+      "hunk_divergence": 1.1637,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Closure_16",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 2,
+      "hunk_divergence": 0.4551,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Closure_160",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 2,
+      "hunk_divergence": 0.0,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Closure_162",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 6,
+      "hunk_divergence": 0.9989,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Closure_163",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 18,
+      "hunk_divergence": 0.7487,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Closure_164",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 2,
+      "hunk_divergence": 0.1318,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Closure_165",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 10,
+      "hunk_divergence": 1.1176,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Closure_167",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 6,
+      "hunk_divergence": 1.0522,
+      "proximity_class": "Fragment"
+    },
+    {
+      "bug_id": "Closure_169",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 21,
+      "hunk_divergence": 1.4079,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Closure_171",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3635,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Closure_173",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3657,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Closure_174",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 7,
+      "hunk_divergence": 1.0005,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Closure_175",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 4,
+      "hunk_divergence": 0.5506,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Closure_176",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 3,
+      "hunk_divergence": 0.1168,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Closure_21",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 2,
+      "hunk_divergence": 0.2097,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Closure_24",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 2,
+      "hunk_divergence": 0.0,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Closure_25",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 2,
+      "hunk_divergence": 0.0,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Closure_26",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 3,
+      "hunk_divergence": 0.4892,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Closure_27",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 3,
+      "hunk_divergence": 0.4207,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Closure_29",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 3,
+      "hunk_divergence": 0.554,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Closure_3",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 3,
+      "hunk_divergence": 0.6851,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Closure_30",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 4,
+      "hunk_divergence": 0.8159,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Closure_32",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 4,
+      "hunk_divergence": 0.5253,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Closure_34",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 3,
+      "hunk_divergence": 0.6586,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Closure_37",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3859,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Closure_39",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3401,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Closure_4",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 2,
+      "hunk_divergence": 0.0,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Closure_41",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3579,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Closure_43",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 3,
+      "hunk_divergence": 0.4136,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Closure_45",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 3,
+      "hunk_divergence": 0.6311,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Closure_47",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 2,
+      "hunk_divergence": 0.5038,
+      "proximity_class": "Fragment"
+    },
+    {
+      "bug_id": "Closure_49",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 3,
+      "hunk_divergence": 0.5451,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Closure_50",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3201,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Closure_51",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 2,
+      "hunk_divergence": 0.2796,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Closure_53",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 2,
+      "hunk_divergence": 0.2159,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Closure_54",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 3,
+      "hunk_divergence": 0.7453,
+      "proximity_class": "Fragment"
+    },
+    {
+      "bug_id": "Closure_6",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 3,
+      "hunk_divergence": 0.384,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Closure_60",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 2,
+      "hunk_divergence": 0.4113,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Closure_64",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 2,
+      "hunk_divergence": 0.4077,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Closure_68",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 3,
+      "hunk_divergence": 0.5748,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Closure_72",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3791,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Closure_74",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 2,
+      "hunk_divergence": 0.2081,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Closure_75",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3633,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Closure_76",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 4,
+      "hunk_divergence": 0.6529,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Closure_79",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3754,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Closure_80",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 2,
+      "hunk_divergence": 0.1939,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Closure_84",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 3,
+      "hunk_divergence": 0.471,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Closure_85",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 3,
+      "hunk_divergence": 0.6454,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Closure_89",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3663,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Closure_9",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3538,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Closure_90",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 2,
+      "hunk_divergence": 0.4665,
+      "proximity_class": "Fragment"
+    },
+    {
+      "bug_id": "Closure_98",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 3,
+      "hunk_divergence": 0.3879,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Closure_99",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 2,
+      "hunk_divergence": 0.5171,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Codec_1",
+      "benchmark": "hunk4j",
+      "project": "Codec",
+      "hunk_count": 3,
+      "hunk_divergence": 0.3572,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Codec_11",
+      "benchmark": "hunk4j",
+      "project": "Codec",
+      "hunk_count": 7,
+      "hunk_divergence": 0.474,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Codec_12",
+      "benchmark": "hunk4j",
+      "project": "Codec",
+      "hunk_count": 2,
+      "hunk_divergence": 0.0,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Codec_13",
+      "benchmark": "hunk4j",
+      "project": "Codec",
+      "hunk_count": 3,
+      "hunk_divergence": 0.5858,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Codec_14",
+      "benchmark": "hunk4j",
+      "project": "Codec",
+      "hunk_count": 5,
+      "hunk_divergence": 0.7006,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Codec_6",
+      "benchmark": "hunk4j",
+      "project": "Codec",
+      "hunk_count": 3,
+      "hunk_divergence": 0.4685,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Codec_8",
+      "benchmark": "hunk4j",
+      "project": "Codec",
+      "hunk_count": 2,
+      "hunk_divergence": 0.338,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Collections_25",
+      "benchmark": "hunk4j",
+      "project": "Collections",
+      "hunk_count": 3,
+      "hunk_divergence": 0.0784,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Compress_10",
+      "benchmark": "hunk4j",
+      "project": "Compress",
+      "hunk_count": 2,
+      "hunk_divergence": 0.2093,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Compress_11",
+      "benchmark": "hunk4j",
+      "project": "Compress",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3961,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Compress_2",
+      "benchmark": "hunk4j",
+      "project": "Compress",
+      "hunk_count": 6,
+      "hunk_divergence": 0.5406,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Compress_20",
+      "benchmark": "hunk4j",
+      "project": "Compress",
+      "hunk_count": 6,
+      "hunk_divergence": 0.5219,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Compress_22",
+      "benchmark": "hunk4j",
+      "project": "Compress",
+      "hunk_count": 7,
+      "hunk_divergence": 0.854,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Compress_29",
+      "benchmark": "hunk4j",
+      "project": "Compress",
+      "hunk_count": 14,
+      "hunk_divergence": 0.8019,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Compress_3",
+      "benchmark": "hunk4j",
+      "project": "Compress",
+      "hunk_count": 4,
+      "hunk_divergence": 0.5396,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Compress_33",
+      "benchmark": "hunk4j",
+      "project": "Compress",
+      "hunk_count": 3,
+      "hunk_divergence": 0.4669,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Compress_34",
+      "benchmark": "hunk4j",
+      "project": "Compress",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3288,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Compress_35",
+      "benchmark": "hunk4j",
+      "project": "Compress",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3817,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Compress_39",
+      "benchmark": "hunk4j",
+      "project": "Compress",
+      "hunk_count": 2,
+      "hunk_divergence": 0.2865,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Compress_4",
+      "benchmark": "hunk4j",
+      "project": "Compress",
+      "hunk_count": 4,
+      "hunk_divergence": 0.3766,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Compress_40",
+      "benchmark": "hunk4j",
+      "project": "Compress",
+      "hunk_count": 3,
+      "hunk_divergence": 0.421,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Compress_42",
+      "benchmark": "hunk4j",
+      "project": "Compress",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3196,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Compress_43",
+      "benchmark": "hunk4j",
+      "project": "Compress",
+      "hunk_count": 4,
+      "hunk_divergence": 0.6706,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Compress_47",
+      "benchmark": "hunk4j",
+      "project": "Compress",
+      "hunk_count": 3,
+      "hunk_divergence": 0.5763,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Compress_6",
+      "benchmark": "hunk4j",
+      "project": "Compress",
+      "hunk_count": 2,
+      "hunk_divergence": 0.4138,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Compress_9",
+      "benchmark": "hunk4j",
+      "project": "Compress",
+      "hunk_count": 2,
+      "hunk_divergence": 0.2798,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Csv_13",
+      "benchmark": "hunk4j",
+      "project": "Csv",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3325,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Csv_16",
+      "benchmark": "hunk4j",
+      "project": "Csv",
+      "hunk_count": 4,
+      "hunk_divergence": 0.615,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Csv_7",
+      "benchmark": "hunk4j",
+      "project": "Csv",
+      "hunk_count": 2,
+      "hunk_divergence": 0.4943,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Csv_8",
+      "benchmark": "hunk4j",
+      "project": "Csv",
+      "hunk_count": 2,
+      "hunk_divergence": 0.2832,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Gson_1",
+      "benchmark": "hunk4j",
+      "project": "Gson",
+      "hunk_count": 2,
+      "hunk_divergence": 0.4149,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Gson_14",
+      "benchmark": "hunk4j",
+      "project": "Gson",
+      "hunk_count": 2,
+      "hunk_divergence": 0.0926,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Gson_3",
+      "benchmark": "hunk4j",
+      "project": "Gson",
+      "hunk_count": 2,
+      "hunk_divergence": 0.411,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Gson_4",
+      "benchmark": "hunk4j",
+      "project": "Gson",
+      "hunk_count": 12,
+      "hunk_divergence": 0.5309,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Gson_7",
+      "benchmark": "hunk4j",
+      "project": "Gson",
+      "hunk_count": 2,
+      "hunk_divergence": 0.0,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Gson_8",
+      "benchmark": "hunk4j",
+      "project": "Gson",
+      "hunk_count": 5,
+      "hunk_divergence": 0.7323,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Gson_9",
+      "benchmark": "hunk4j",
+      "project": "Gson",
+      "hunk_count": 3,
+      "hunk_divergence": 0.4268,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Jacksoncore_1",
+      "benchmark": "hunk4j",
+      "project": "Jacksoncore",
+      "hunk_count": 3,
+      "hunk_divergence": 0.5461,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Jacksoncore_10",
+      "benchmark": "hunk4j",
+      "project": "Jacksoncore",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3797,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jacksoncore_12",
+      "benchmark": "hunk4j",
+      "project": "Jacksoncore",
+      "hunk_count": 8,
+      "hunk_divergence": 0.7706,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Jacksoncore_16",
+      "benchmark": "hunk4j",
+      "project": "Jacksoncore",
+      "hunk_count": 3,
+      "hunk_divergence": 0.4179,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jacksoncore_17",
+      "benchmark": "hunk4j",
+      "project": "Jacksoncore",
+      "hunk_count": 3,
+      "hunk_divergence": 0.5867,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jacksoncore_18",
+      "benchmark": "hunk4j",
+      "project": "Jacksoncore",
+      "hunk_count": 4,
+      "hunk_divergence": 0.5565,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Jacksoncore_19",
+      "benchmark": "hunk4j",
+      "project": "Jacksoncore",
+      "hunk_count": 2,
+      "hunk_divergence": 0.0,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Jacksoncore_2",
+      "benchmark": "hunk4j",
+      "project": "Jacksoncore",
+      "hunk_count": 8,
+      "hunk_divergence": 0.6674,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Jacksoncore_21",
+      "benchmark": "hunk4j",
+      "project": "Jacksoncore",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3138,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Jacksoncore_22",
+      "benchmark": "hunk4j",
+      "project": "Jacksoncore",
+      "hunk_count": 7,
+      "hunk_divergence": 0.9955,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jacksoncore_24",
+      "benchmark": "hunk4j",
+      "project": "Jacksoncore",
+      "hunk_count": 4,
+      "hunk_divergence": 0.5049,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Jacksoncore_9",
+      "benchmark": "hunk4j",
+      "project": "Jacksoncore",
+      "hunk_count": 6,
+      "hunk_divergence": 0.0,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Jacksondatabind_10",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 5,
+      "hunk_divergence": 0.659,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Jacksondatabind_103",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 26,
+      "hunk_divergence": 1.5986,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Jacksondatabind_104",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 3,
+      "hunk_divergence": 0.463,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jacksondatabind_105",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 2,
+      "hunk_divergence": 0.5879,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jacksondatabind_108",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 2,
+      "hunk_divergence": 0.2682,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jacksondatabind_109",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 5,
+      "hunk_divergence": 0.7022,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Jacksondatabind_110",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 3,
+      "hunk_divergence": 0.5842,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jacksondatabind_111",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 9,
+      "hunk_divergence": 0.6818,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Jacksondatabind_13",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 2,
+      "hunk_divergence": 0.0,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Jacksondatabind_14",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3138,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jacksondatabind_15",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 11,
+      "hunk_divergence": 1.147,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Jacksondatabind_18",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 9,
+      "hunk_divergence": 0.8512,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jacksondatabind_20",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3313,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jacksondatabind_21",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 2,
+      "hunk_divergence": 0.2301,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jacksondatabind_22",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 12,
+      "hunk_divergence": 1.0804,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Jacksondatabind_23",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 7,
+      "hunk_divergence": 0.3753,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jacksondatabind_25",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 4,
+      "hunk_divergence": 0.5261,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Jacksondatabind_29",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 2,
+      "hunk_divergence": 0.2608,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jacksondatabind_3",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 2,
+      "hunk_divergence": 0.5418,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jacksondatabind_30",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 6,
+      "hunk_divergence": 0.7909,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Jacksondatabind_31",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 13,
+      "hunk_divergence": 0.7629,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jacksondatabind_32",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 2,
+      "hunk_divergence": 0.4673,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jacksondatabind_36",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 2,
+      "hunk_divergence": 0.2734,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jacksondatabind_38",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 6,
+      "hunk_divergence": 0.7749,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Jacksondatabind_4",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 4,
+      "hunk_divergence": 0.5489,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jacksondatabind_41",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 2,
+      "hunk_divergence": 0.1565,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jacksondatabind_43",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3828,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jacksondatabind_48",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 2,
+      "hunk_divergence": 0.1142,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Jacksondatabind_50",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 6,
+      "hunk_divergence": 0.7237,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jacksondatabind_52",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3628,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Jacksondatabind_53",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 7,
+      "hunk_divergence": 0.762,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Jacksondatabind_54",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3715,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Jacksondatabind_55",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 3,
+      "hunk_divergence": 0.593,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jacksondatabind_56",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3253,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jacksondatabind_59",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 4,
+      "hunk_divergence": 0.5816,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Jacksondatabind_6",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 2,
+      "hunk_divergence": 0.277,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Jacksondatabind_60",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 4,
+      "hunk_divergence": 0.6181,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jacksondatabind_61",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 3,
+      "hunk_divergence": 0.2418,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Jacksondatabind_65",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 3,
+      "hunk_divergence": 0.6511,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Jacksondatabind_66",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 3,
+      "hunk_divergence": 0.5067,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jacksondatabind_68",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 10,
+      "hunk_divergence": 0.4392,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jacksondatabind_69",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 6,
+      "hunk_divergence": 0.9105,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jacksondatabind_72",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 2,
+      "hunk_divergence": 0.0,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jacksondatabind_73",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 4,
+      "hunk_divergence": 0.6578,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Jacksondatabind_75",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 3,
+      "hunk_divergence": 0.729,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jacksondatabind_77",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 2,
+      "hunk_divergence": 0.2107,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jacksondatabind_78",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 3,
+      "hunk_divergence": 0.2236,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jacksondatabind_79",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 4,
+      "hunk_divergence": 0.5917,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Jacksondatabind_8",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 2,
+      "hunk_divergence": 0.1345,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Jacksondatabind_80",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 3,
+      "hunk_divergence": 0.4138,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jacksondatabind_81",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 7,
+      "hunk_divergence": 1.1579,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jacksondatabind_87",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 8,
+      "hunk_divergence": 1.1163,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jacksondatabind_90",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 2,
+      "hunk_divergence": 0.2955,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Jacksondatabind_94",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 2,
+      "hunk_divergence": 0.4826,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jacksondatabind_95",
+      "benchmark": "hunk4j",
+      "project": "Jacksondatabind",
+      "hunk_count": 4,
+      "hunk_divergence": 0.4802,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Jacksonxml_1",
+      "benchmark": "hunk4j",
+      "project": "Jacksonxml",
+      "hunk_count": 2,
+      "hunk_divergence": 0.2139,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Jacksonxml_2",
+      "benchmark": "hunk4j",
+      "project": "Jacksonxml",
+      "hunk_count": 4,
+      "hunk_divergence": 0.5082,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jacksonxml_6",
+      "benchmark": "hunk4j",
+      "project": "Jacksonxml",
+      "hunk_count": 2,
+      "hunk_divergence": 0.0,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jsoup_11",
+      "benchmark": "hunk4j",
+      "project": "Jsoup",
+      "hunk_count": 4,
+      "hunk_divergence": 0.6521,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jsoup_12",
+      "benchmark": "hunk4j",
+      "project": "Jsoup",
+      "hunk_count": 2,
+      "hunk_divergence": 0.2573,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jsoup_14",
+      "benchmark": "hunk4j",
+      "project": "Jsoup",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3562,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Jsoup_16",
+      "benchmark": "hunk4j",
+      "project": "Jsoup",
+      "hunk_count": 3,
+      "hunk_divergence": 0.6716,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jsoup_18",
+      "benchmark": "hunk4j",
+      "project": "Jsoup",
+      "hunk_count": 2,
+      "hunk_divergence": 0.412,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jsoup_21",
+      "benchmark": "hunk4j",
+      "project": "Jsoup",
+      "hunk_count": 3,
+      "hunk_divergence": 0.5798,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Jsoup_22",
+      "benchmark": "hunk4j",
+      "project": "Jsoup",
+      "hunk_count": 6,
+      "hunk_divergence": 0.7505,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Jsoup_23",
+      "benchmark": "hunk4j",
+      "project": "Jsoup",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3631,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Jsoup_28",
+      "benchmark": "hunk4j",
+      "project": "Jsoup",
+      "hunk_count": 6,
+      "hunk_divergence": 0.9281,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Jsoup_29",
+      "benchmark": "hunk4j",
+      "project": "Jsoup",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3827,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jsoup_3",
+      "benchmark": "hunk4j",
+      "project": "Jsoup",
+      "hunk_count": 13,
+      "hunk_divergence": 1.1402,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Jsoup_30",
+      "benchmark": "hunk4j",
+      "project": "Jsoup",
+      "hunk_count": 3,
+      "hunk_divergence": 0.3184,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jsoup_31",
+      "benchmark": "hunk4j",
+      "project": "Jsoup",
+      "hunk_count": 3,
+      "hunk_divergence": 0.5628,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Jsoup_36",
+      "benchmark": "hunk4j",
+      "project": "Jsoup",
+      "hunk_count": 4,
+      "hunk_divergence": 0.7263,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jsoup_4",
+      "benchmark": "hunk4j",
+      "project": "Jsoup",
+      "hunk_count": 2,
+      "hunk_divergence": 0.4174,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jsoup_42",
+      "benchmark": "hunk4j",
+      "project": "Jsoup",
+      "hunk_count": 2,
+      "hunk_divergence": 0.4355,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Jsoup_50",
+      "benchmark": "hunk4j",
+      "project": "Jsoup",
+      "hunk_count": 2,
+      "hunk_divergence": 0.2212,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Jsoup_52",
+      "benchmark": "hunk4j",
+      "project": "Jsoup",
+      "hunk_count": 4,
+      "hunk_divergence": 0.8606,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Jsoup_56",
+      "benchmark": "hunk4j",
+      "project": "Jsoup",
+      "hunk_count": 10,
+      "hunk_divergence": 1.2341,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Jsoup_58",
+      "benchmark": "hunk4j",
+      "project": "Jsoup",
+      "hunk_count": 4,
+      "hunk_divergence": 0.7439,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Jsoup_59",
+      "benchmark": "hunk4j",
+      "project": "Jsoup",
+      "hunk_count": 2,
+      "hunk_divergence": 0.2337,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Jsoup_60",
+      "benchmark": "hunk4j",
+      "project": "Jsoup",
+      "hunk_count": 2,
+      "hunk_divergence": 0.4078,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Jsoup_63",
+      "benchmark": "hunk4j",
+      "project": "Jsoup",
+      "hunk_count": 5,
+      "hunk_divergence": 0.7828,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Jsoup_65",
+      "benchmark": "hunk4j",
+      "project": "Jsoup",
+      "hunk_count": 3,
+      "hunk_divergence": 0.4385,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Jsoup_66",
+      "benchmark": "hunk4j",
+      "project": "Jsoup",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3061,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jsoup_67",
+      "benchmark": "hunk4j",
+      "project": "Jsoup",
+      "hunk_count": 2,
+      "hunk_divergence": 0.2619,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jsoup_7",
+      "benchmark": "hunk4j",
+      "project": "Jsoup",
+      "hunk_count": 3,
+      "hunk_divergence": 0.3581,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jsoup_71",
+      "benchmark": "hunk4j",
+      "project": "Jsoup",
+      "hunk_count": 3,
+      "hunk_divergence": 0.4969,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Jsoup_73",
+      "benchmark": "hunk4j",
+      "project": "Jsoup",
+      "hunk_count": 4,
+      "hunk_divergence": 0.7241,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jsoup_74",
+      "benchmark": "hunk4j",
+      "project": "Jsoup",
+      "hunk_count": 2,
+      "hunk_divergence": 0.4013,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jsoup_78",
+      "benchmark": "hunk4j",
+      "project": "Jsoup",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3706,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jsoup_79",
+      "benchmark": "hunk4j",
+      "project": "Jsoup",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3082,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jsoup_81",
+      "benchmark": "hunk4j",
+      "project": "Jsoup",
+      "hunk_count": 2,
+      "hunk_divergence": 0.494,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jsoup_83",
+      "benchmark": "hunk4j",
+      "project": "Jsoup",
+      "hunk_count": 4,
+      "hunk_divergence": 0.7004,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Jsoup_87",
+      "benchmark": "hunk4j",
+      "project": "Jsoup",
+      "hunk_count": 47,
+      "hunk_divergence": 1.5569,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Jsoup_91",
+      "benchmark": "hunk4j",
+      "project": "Jsoup",
+      "hunk_count": 3,
+      "hunk_divergence": 0.5007,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Jsoup_92",
+      "benchmark": "hunk4j",
+      "project": "Jsoup",
+      "hunk_count": 8,
+      "hunk_divergence": 1.051,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Jxpath_1",
+      "benchmark": "hunk4j",
+      "project": "Jxpath",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3545,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Jxpath_11",
+      "benchmark": "hunk4j",
+      "project": "Jxpath",
+      "hunk_count": 5,
+      "hunk_divergence": 0.834,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Jxpath_13",
+      "benchmark": "hunk4j",
+      "project": "Jxpath",
+      "hunk_count": 11,
+      "hunk_divergence": 1.0808,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Jxpath_15",
+      "benchmark": "hunk4j",
+      "project": "Jxpath",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3393,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jxpath_16",
+      "benchmark": "hunk4j",
+      "project": "Jxpath",
+      "hunk_count": 2,
+      "hunk_divergence": 0.307,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Jxpath_17",
+      "benchmark": "hunk4j",
+      "project": "Jxpath",
+      "hunk_count": 5,
+      "hunk_divergence": 0.8808,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Jxpath_18",
+      "benchmark": "hunk4j",
+      "project": "Jxpath",
+      "hunk_count": 4,
+      "hunk_divergence": 0.5263,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jxpath_19",
+      "benchmark": "hunk4j",
+      "project": "Jxpath",
+      "hunk_count": 3,
+      "hunk_divergence": 0.5072,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Jxpath_2",
+      "benchmark": "hunk4j",
+      "project": "Jxpath",
+      "hunk_count": 4,
+      "hunk_divergence": 0.7017,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jxpath_20",
+      "benchmark": "hunk4j",
+      "project": "Jxpath",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3902,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jxpath_3",
+      "benchmark": "hunk4j",
+      "project": "Jxpath",
+      "hunk_count": 4,
+      "hunk_divergence": 0.6089,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Jxpath_4",
+      "benchmark": "hunk4j",
+      "project": "Jxpath",
+      "hunk_count": 7,
+      "hunk_divergence": 0.7705,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Jxpath_7",
+      "benchmark": "hunk4j",
+      "project": "Jxpath",
+      "hunk_count": 7,
+      "hunk_divergence": 0.5472,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Jxpath_9",
+      "benchmark": "hunk4j",
+      "project": "Jxpath",
+      "hunk_count": 5,
+      "hunk_divergence": 0.5906,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Lang_13",
+      "benchmark": "hunk4j",
+      "project": "Lang",
+      "hunk_count": 3,
+      "hunk_divergence": 0.5752,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Lang_15",
+      "benchmark": "hunk4j",
+      "project": "Lang",
+      "hunk_count": 2,
+      "hunk_divergence": 0.4254,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Lang_19",
+      "benchmark": "hunk4j",
+      "project": "Lang",
+      "hunk_count": 3,
+      "hunk_divergence": 0.1416,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Lang_20",
+      "benchmark": "hunk4j",
+      "project": "Lang",
+      "hunk_count": 2,
+      "hunk_divergence": 0.0382,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Lang_23",
+      "benchmark": "hunk4j",
+      "project": "Lang",
+      "hunk_count": 2,
+      "hunk_divergence": 0.1394,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Lang_27",
+      "benchmark": "hunk4j",
+      "project": "Lang",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3073,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Lang_30",
+      "benchmark": "hunk4j",
+      "project": "Lang",
+      "hunk_count": 7,
+      "hunk_divergence": 0.758,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Lang_32",
+      "benchmark": "hunk4j",
+      "project": "Lang",
+      "hunk_count": 4,
+      "hunk_divergence": 0.5369,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Lang_34",
+      "benchmark": "hunk4j",
+      "project": "Lang",
+      "hunk_count": 2,
+      "hunk_divergence": 0.336,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Lang_35",
+      "benchmark": "hunk4j",
+      "project": "Lang",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3313,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Lang_36",
+      "benchmark": "hunk4j",
+      "project": "Lang",
+      "hunk_count": 2,
+      "hunk_divergence": 0.4074,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Lang_4",
+      "benchmark": "hunk4j",
+      "project": "Lang",
+      "hunk_count": 3,
+      "hunk_divergence": 0.5379,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Lang_41",
+      "benchmark": "hunk4j",
+      "project": "Lang",
+      "hunk_count": 3,
+      "hunk_divergence": 0.3382,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Lang_46",
+      "benchmark": "hunk4j",
+      "project": "Lang",
+      "hunk_count": 7,
+      "hunk_divergence": 0.9582,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Lang_47",
+      "benchmark": "hunk4j",
+      "project": "Lang",
+      "hunk_count": 2,
+      "hunk_divergence": 0.0,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Lang_5",
+      "benchmark": "hunk4j",
+      "project": "Lang",
+      "hunk_count": 2,
+      "hunk_divergence": 0.231,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Lang_50",
+      "benchmark": "hunk4j",
+      "project": "Lang",
+      "hunk_count": 2,
+      "hunk_divergence": 0.0,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Lang_56",
+      "benchmark": "hunk4j",
+      "project": "Lang",
+      "hunk_count": 2,
+      "hunk_divergence": 0.0,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Lang_60",
+      "benchmark": "hunk4j",
+      "project": "Lang",
+      "hunk_count": 2,
+      "hunk_divergence": 0.1343,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Lang_62",
+      "benchmark": "hunk4j",
+      "project": "Lang",
+      "hunk_count": 2,
+      "hunk_divergence": 0.223,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Lang_63",
+      "benchmark": "hunk4j",
+      "project": "Lang",
+      "hunk_count": 2,
+      "hunk_divergence": 0.2535,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Lang_64",
+      "benchmark": "hunk4j",
+      "project": "Lang",
+      "hunk_count": 2,
+      "hunk_divergence": 0.2128,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Lang_65",
+      "benchmark": "hunk4j",
+      "project": "Lang",
+      "hunk_count": 3,
+      "hunk_divergence": 0.315,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Lang_7",
+      "benchmark": "hunk4j",
+      "project": "Lang",
+      "hunk_count": 2,
+      "hunk_divergence": 0.2444,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Lang_8",
+      "benchmark": "hunk4j",
+      "project": "Lang",
+      "hunk_count": 3,
+      "hunk_divergence": 0.4701,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Math_1",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 2,
+      "hunk_divergence": 0.0,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Math_100",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 2,
+      "hunk_divergence": 0.2902,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Math_106",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 2,
+      "hunk_divergence": 0.0,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Math_12",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 2,
+      "hunk_divergence": 0.1404,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Math_14",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 2,
+      "hunk_divergence": 0.212,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Math_15",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3044,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Math_16",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 3,
+      "hunk_divergence": 0.1176,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Math_18",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 3,
+      "hunk_divergence": 0.4374,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Math_21",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 3,
+      "hunk_divergence": 0.503,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Math_22",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 2,
+      "hunk_divergence": 0.195,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Math_23",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 3,
+      "hunk_divergence": 0.4977,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Math_24",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 2,
+      "hunk_divergence": 0.0,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Math_26",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3405,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Math_28",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 4,
+      "hunk_divergence": 0.3775,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Math_29",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 2,
+      "hunk_divergence": 0.2085,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Math_31",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 3,
+      "hunk_divergence": 0.2351,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Math_35",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 2,
+      "hunk_divergence": 0.0,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Math_36",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 2,
+      "hunk_divergence": 0.0635,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Math_37",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 2,
+      "hunk_divergence": 0.1391,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Math_38",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 2,
+      "hunk_divergence": 0.2717,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Math_4",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 2,
+      "hunk_divergence": 0.0921,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Math_44",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 3,
+      "hunk_divergence": 0.4213,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Math_46",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 2,
+      "hunk_divergence": 0.0,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Math_47",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 4,
+      "hunk_divergence": 0.8268,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Math_49",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 4,
+      "hunk_divergence": 0.0,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Math_52",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 2,
+      "hunk_divergence": 0.1243,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Math_54",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 2,
+      "hunk_divergence": 0.4592,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Math_55",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 2,
+      "hunk_divergence": 0.0,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Math_6",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 12,
+      "hunk_divergence": 1.0935,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Math_61",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 2,
+      "hunk_divergence": 0.4455,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Math_62",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3868,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Math_64",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 10,
+      "hunk_divergence": 1.1211,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Math_65",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3619,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Math_66",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 6,
+      "hunk_divergence": 0.636,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Math_68",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 5,
+      "hunk_divergence": 0.6137,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Math_7",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 2,
+      "hunk_divergence": 0.0,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Math_71",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 2,
+      "hunk_divergence": 0.0645,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Math_72",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 2,
+      "hunk_divergence": 0.1693,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Math_76",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 2,
+      "hunk_divergence": 0.0198,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Math_77",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 2,
+      "hunk_divergence": 0.302,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Math_78",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 2,
+      "hunk_divergence": 0.0,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Math_81",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 3,
+      "hunk_divergence": 0.7743,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Math_83",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3031,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Math_84",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 2,
+      "hunk_divergence": 0.2806,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Math_86",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 2,
+      "hunk_divergence": 0.093,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Math_90",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 2,
+      "hunk_divergence": 0.1773,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Math_92",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 3,
+      "hunk_divergence": 0.3219,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Math_93",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 3,
+      "hunk_divergence": 0.4007,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Math_98",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 2,
+      "hunk_divergence": 0.1564,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Math_99",
+      "benchmark": "hunk4j",
+      "project": "Math",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3754,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Mockito_10",
+      "benchmark": "hunk4j",
+      "project": "Mockito",
+      "hunk_count": 3,
+      "hunk_divergence": 0.5801,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Mockito_14",
+      "benchmark": "hunk4j",
+      "project": "Mockito",
+      "hunk_count": 4,
+      "hunk_divergence": 0.7337,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Mockito_15",
+      "benchmark": "hunk4j",
+      "project": "Mockito",
+      "hunk_count": 2,
+      "hunk_divergence": 0.5614,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Mockito_16",
+      "benchmark": "hunk4j",
+      "project": "Mockito",
+      "hunk_count": 3,
+      "hunk_divergence": 0.7631,
+      "proximity_class": "Fragment"
+    },
+    {
+      "bug_id": "Mockito_17",
+      "benchmark": "hunk4j",
+      "project": "Mockito",
+      "hunk_count": 4,
+      "hunk_divergence": 0.815,
+      "proximity_class": "Fragment"
+    },
+    {
+      "bug_id": "Mockito_19",
+      "benchmark": "hunk4j",
+      "project": "Mockito",
+      "hunk_count": 9,
+      "hunk_divergence": 1.0507,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Mockito_2",
+      "benchmark": "hunk4j",
+      "project": "Mockito",
+      "hunk_count": 3,
+      "hunk_divergence": 0.3955,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Mockito_20",
+      "benchmark": "hunk4j",
+      "project": "Mockito",
+      "hunk_count": 2,
+      "hunk_divergence": 0.4586,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Mockito_21",
+      "benchmark": "hunk4j",
+      "project": "Mockito",
+      "hunk_count": 2,
+      "hunk_divergence": 0.0,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Mockito_23",
+      "benchmark": "hunk4j",
+      "project": "Mockito",
+      "hunk_count": 5,
+      "hunk_divergence": 0.6523,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Mockito_25",
+      "benchmark": "hunk4j",
+      "project": "Mockito",
+      "hunk_count": 5,
+      "hunk_divergence": 0.5339,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Mockito_3",
+      "benchmark": "hunk4j",
+      "project": "Mockito",
+      "hunk_count": 2,
+      "hunk_divergence": 0.2578,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Mockito_30",
+      "benchmark": "hunk4j",
+      "project": "Mockito",
+      "hunk_count": 2,
+      "hunk_divergence": 0.5317,
+      "proximity_class": "Fragment"
+    },
+    {
+      "bug_id": "Mockito_31",
+      "benchmark": "hunk4j",
+      "project": "Mockito",
+      "hunk_count": 2,
+      "hunk_divergence": 0.4475,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Mockito_32",
+      "benchmark": "hunk4j",
+      "project": "Mockito",
+      "hunk_count": 2,
+      "hunk_divergence": 0.5005,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Mockito_35",
+      "benchmark": "hunk4j",
+      "project": "Mockito",
+      "hunk_count": 3,
+      "hunk_divergence": 0.2683,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Mockito_36",
+      "benchmark": "hunk4j",
+      "project": "Mockito",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3424,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Mockito_4",
+      "benchmark": "hunk4j",
+      "project": "Mockito",
+      "hunk_count": 3,
+      "hunk_divergence": 0.4681,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Mockito_6",
+      "benchmark": "hunk4j",
+      "project": "Mockito",
+      "hunk_count": 20,
+      "hunk_divergence": 0.4665,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Mockito_9",
+      "benchmark": "hunk4j",
+      "project": "Mockito",
+      "hunk_count": 2,
+      "hunk_divergence": 0.36,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Time_1",
+      "benchmark": "hunk4j",
+      "project": "Time",
+      "hunk_count": 2,
+      "hunk_divergence": 0.4043,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Time_10",
+      "benchmark": "hunk4j",
+      "project": "Time",
+      "hunk_count": 2,
+      "hunk_divergence": 0.2891,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Time_12",
+      "benchmark": "hunk4j",
+      "project": "Time",
+      "hunk_count": 4,
+      "hunk_divergence": 0.4187,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "Time_13",
+      "benchmark": "hunk4j",
+      "project": "Time",
+      "hunk_count": 3,
+      "hunk_divergence": 0.6217,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Time_2",
+      "benchmark": "hunk4j",
+      "project": "Time",
+      "hunk_count": 3,
+      "hunk_divergence": 0.6818,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Time_23",
+      "benchmark": "hunk4j",
+      "project": "Time",
+      "hunk_count": 2,
+      "hunk_divergence": 0.1468,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "Time_26",
+      "benchmark": "hunk4j",
+      "project": "Time",
+      "hunk_count": 8,
+      "hunk_divergence": 0.613,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "Time_3",
+      "benchmark": "hunk4j",
+      "project": "Time",
+      "hunk_count": 10,
+      "hunk_divergence": 0.4919,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Time_6",
+      "benchmark": "hunk4j",
+      "project": "Time",
+      "hunk_count": 3,
+      "hunk_divergence": 0.5221,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Time_9",
+      "benchmark": "hunk4j",
+      "project": "Time",
+      "hunk_count": 3,
+      "hunk_divergence": 0.3134,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "Closure_110",
+      "benchmark": "hunk4j",
+      "project": "Closure",
+      "hunk_count": 6,
+      "hunk_divergence": 0.7764,
+      "proximity_class": "Fragment"
+    },
+    {
+      "bug_id": "astropy__astropy-13033",
+      "benchmark": "hunkswe",
+      "project": "astropy",
+      "hunk_count": 2,
+      "hunk_divergence": 0.122,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "astropy__astropy-13579",
+      "benchmark": "hunkswe",
+      "project": "astropy",
+      "hunk_count": 2,
+      "hunk_divergence": 0.0745,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "astropy__astropy-14365",
+      "benchmark": "hunkswe",
+      "project": "astropy",
+      "hunk_count": 2,
+      "hunk_divergence": 0.1722,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "astropy__astropy-14369",
+      "benchmark": "hunkswe",
+      "project": "astropy",
+      "hunk_count": 5,
+      "hunk_divergence": 0.5005,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "astropy__astropy-14598",
+      "benchmark": "hunkswe",
+      "project": "astropy",
+      "hunk_count": 2,
+      "hunk_divergence": 0.1449,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "astropy__astropy-7606",
+      "benchmark": "hunkswe",
+      "project": "astropy",
+      "hunk_count": 2,
+      "hunk_divergence": 0.1408,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "astropy__astropy-8707",
+      "benchmark": "hunkswe",
+      "project": "astropy",
+      "hunk_count": 6,
+      "hunk_divergence": 0.4495,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "astropy__astropy-8872",
+      "benchmark": "hunkswe",
+      "project": "astropy",
+      "hunk_count": 3,
+      "hunk_divergence": 0.1667,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "django__django-10554",
+      "benchmark": "hunkswe",
+      "project": "django",
+      "hunk_count": 2,
+      "hunk_divergence": 0.3233,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "django__django-11138",
+      "benchmark": "hunkswe",
+      "project": "django",
+      "hunk_count": 7,
+      "hunk_divergence": 0.7929,
+      "proximity_class": "Sprawl"
+    },
+    {
+      "bug_id": "django__django-11400",
+      "benchmark": "hunkswe",
+      "project": "django",
+      "hunk_count": 4,
+      "hunk_divergence": 0.8751,
+      "proximity_class": "Fragment"
+    },
+    {
+      "bug_id": "django__django-11532",
+      "benchmark": "hunkswe",
+      "project": "django",
+      "hunk_count": 11,
+      "hunk_divergence": 1.2682,
+      "proximity_class": "Fragment"
+    },
+    {
+      "bug_id": "django__django-11728",
+      "benchmark": "hunkswe",
+      "project": "django",
+      "hunk_count": 6,
+      "hunk_divergence": 0.2275,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "django__django-11740",
+      "benchmark": "hunkswe",
+      "project": "django",
+      "hunk_count": 3,
+      "hunk_divergence": 0.1104,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "django__django-12406",
+      "benchmark": "hunkswe",
+      "project": "django",
+      "hunk_count": 3,
+      "hunk_divergence": 0.689,
+      "proximity_class": "Fragment"
+    },
+    {
+      "bug_id": "django__django-13343",
+      "benchmark": "hunkswe",
+      "project": "django",
+      "hunk_count": 2,
+      "hunk_divergence": 0.0752,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "django__django-13346",
+      "benchmark": "hunkswe",
+      "project": "django",
+      "hunk_count": 2,
+      "hunk_divergence": 0.0,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "django__django-13449",
+      "benchmark": "hunkswe",
+      "project": "django",
+      "hunk_count": 2,
+      "hunk_divergence": 0.0744,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "django__django-15128",
+      "benchmark": "hunkswe",
+      "project": "django",
+      "hunk_count": 6,
+      "hunk_divergence": 0.1969,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "django__django-15503",
+      "benchmark": "hunkswe",
+      "project": "django",
+      "hunk_count": 6,
+      "hunk_divergence": 0.3061,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "django__django-15563",
+      "benchmark": "hunkswe",
+      "project": "django",
+      "hunk_count": 3,
+      "hunk_divergence": 0.3766,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "django__django-15572",
+      "benchmark": "hunkswe",
+      "project": "django",
+      "hunk_count": 2,
+      "hunk_divergence": 0.1305,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "django__django-15732",
+      "benchmark": "hunkswe",
+      "project": "django",
+      "hunk_count": 4,
+      "hunk_divergence": 0.1703,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "django__django-16631",
+      "benchmark": "hunkswe",
+      "project": "django",
+      "hunk_count": 3,
+      "hunk_divergence": 0.4095,
+      "proximity_class": "Orbit"
+    },
+    {
+      "bug_id": "scikit-learn__scikit-learn-10297",
+      "benchmark": "hunkswe",
+      "project": "scikit-learn",
+      "hunk_count": 3,
+      "hunk_divergence": 0.1481,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "scikit-learn__scikit-learn-14087",
+      "benchmark": "hunkswe",
+      "project": "scikit-learn",
+      "hunk_count": 2,
+      "hunk_divergence": 0.0734,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "scikit-learn__scikit-learn-25232",
+      "benchmark": "hunkswe",
+      "project": "scikit-learn",
+      "hunk_count": 5,
+      "hunk_divergence": 0.2808,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "scikit-learn__scikit-learn-25747",
+      "benchmark": "hunkswe",
+      "project": "scikit-learn",
+      "hunk_count": 2,
+      "hunk_divergence": 0.0824,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "scikit-learn__scikit-learn-25931",
+      "benchmark": "hunkswe",
+      "project": "scikit-learn",
+      "hunk_count": 2,
+      "hunk_divergence": 0.0,
+      "proximity_class": "Cluster"
+    },
+    {
+      "bug_id": "scikit-learn__scikit-learn-26194",
+      "benchmark": "hunkswe",
+      "project": "scikit-learn",
+      "hunk_count": 4,
+      "hunk_divergence": 0.097,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "scikit-learn__scikit-learn-26323",
+      "benchmark": "hunkswe",
+      "project": "scikit-learn",
+      "hunk_count": 2,
+      "hunk_divergence": 0.0777,
+      "proximity_class": "Nucleus"
+    },
+    {
+      "bug_id": "sympy__sympy-13877",
+      "benchmark": "hunkswe",
+      "project": "sympy",
+      "hunk_count": 6,
+      "hunk_divergence": 0.5968,
+      "proximity_class": "Fragment"
+    }
+  ]
+}

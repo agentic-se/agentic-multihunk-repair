@@ -1,0 +1,10 @@
+{
+  "total_bugs": 372,
+  "compile_success_total": 347,
+  "compile_success_avg": 93.28,
+  "repair_success_total": 155,
+  "repair_success_avg": 41.67,
+  "regression_reduction_total": -666,
+  "regression_reduction_count": 347,
+  "regression_reduction_avg": -1.92
+}

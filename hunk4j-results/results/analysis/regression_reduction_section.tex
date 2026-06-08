@@ -1,0 +1,111 @@
+\subsection{Regression Reduction Analysis}
+\label{subsec:regression-reduction}
+
+While traditional metrics such as compilation success and repair rate provide insight into the correctness of automated fixes, they fail to capture a critical dimension of repair quality: whether fixes improve or degrade the overall health of the codebase. We introduce \textbf{regression reduction} as a complementary metric that measures the net change in test suite health following an automated repair attempt.
+
+\subsubsection{Metric Definition}
+
+For each bug repair attempt, we define regression reduction as:
+
+\begin{equation}
+\text{regression\_reduction} = \text{failed\_tests}_{\text{prior}} - \text{failed\_tests}_{\text{after}}
+\label{eq:regression-reduction}
+\end{equation}
+
+where $\text{failed\_tests}_{\text{prior}}$ represents the number of failing tests before the repair attempt, and $\text{failed\_tests}_{\text{after}}$ represents the number after. A positive value indicates the tool reduced test failures (desirable), while a negative value indicates it introduced new failures (undesirable). When compilation fails, regression reduction is undefined and excluded from average calculations.
+
+This metric reveals whether a tool exhibits \textit{regression-introducing} or \textit{regression-reducing} behavior, providing insight into production-readiness beyond binary repair success.
+
+\subsubsection{Quantitative Results}
+
+Table~\ref{tab:regression-reduction-results} presents regression reduction statistics across all four tools evaluated on the 372 Defects4J bugs.
+
+\begin{table}[t]
+\centering
+\caption{Regression Reduction Analysis Results}
+\label{tab:regression-reduction-results}
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+\textbf{Tool} & \textbf{Compile} & \textbf{Repair} & \textbf{Valid RR} & \textbf{RR Total} & \textbf{RR Avg} \\
+              & \textbf{Success} & \textbf{Success} & \textbf{Count} & & \\
+\midrule
+Claude Code   & 372 (100.0\%) & 347 (93.28\%) & 372 & +920 & \textbf{+2.47} \\
+OpenAI Codex  & 367 (98.66\%) & 324 (87.10\%) & 367 & +824 & \textbf{+2.25} \\
+Qwen Code     & 364 (97.85\%) & 96 (25.81\%)  & 364 & -486 & \textbf{-1.34} \\
+Gemini CLI    & 347 (93.28\%) & 155 (41.67\%) & 347 & -666 & \textbf{-1.92} \\
+\bottomrule
+\end{tabular}
+\vspace{0.1cm}
+\begin{tablenotes}
+\small
+\item RR = Regression Reduction. Valid RR Count excludes cases where compilation failed.
+\item All tools evaluated on 372 Defects4J bugs.
+\end{tablenotes}
+\end{table}
+
+Our results reveal a stark performance divide. Claude Code and OpenAI Codex achieve positive regression reduction (+2.47 and +2.25 respectively), indicating they not only fix target bugs but often resolve related test failures. In contrast, Qwen Code and Gemini CLI exhibit negative regression reduction (-1.34 and -1.92 respectively), introducing an average of 1--2 new test failures per repair attempt.
+
+\subsubsection{The Quality-Quantity Correlation}
+
+We observe a strong positive correlation between repair success rate and regression reduction (Pearson $r = 0.96$, $p = 0.045$, $n = 4$). Claude Code achieves both the highest repair rate (93.28\%) and highest regression reduction (+2.47), while Qwen Code exhibits both the lowest repair rate (25.81\%) and lowest regression reduction (-1.34). Although the sample size is small, our observation suggests that higher repair rates do not sacrifice code quality for quantity.
+
+This finding suggests that effective bug repair requires not aggressive code generation, but rather \textit{context-aware} and \textit{dependency-conscious} program synthesis. Tools exhibiting positive regression reduction demonstrate deeper understanding of code structure and test relationships.
+
+\subsubsection{The Regression Introduction Problem}
+
+The negative regression reduction exhibited by Qwen Code and Gemini CLI represents a critical failure mode we term \textit{regression introduction}. Analysis of individual repair attempts reveals two primary causes:
+
+\begin{enumerate}[leftmargin=*]
+\item \textbf{Overfitting to target tests:} Tools generate patches that satisfy the initially failing test(s) but violate assumptions made by other tests, causing new failures.
+\item \textbf{Insufficient context analysis:} Generated patches fail to account for method dependencies, class invariants, or API contracts, leading to cascading failures in related functionality.
+\end{enumerate}
+
+\noindent\textbf{Production Impact:} In real-world deployment, regression introduction is particularly problematic. A ``repair'' that fixes one bug while introducing two new failures creates net negative value, imposing a \textit{regression tax} on development teams who must debug both the original issue and the newly introduced failures. Our results suggest that Qwen Code and Gemini CLI, despite achieving non-trivial repair rates (25.81\% and 41.67\%), would require extensive human review before production deployment.
+
+\subsubsection{Implications for Tool Evaluation}
+
+Our findings challenge the conventional evaluation paradigm for automated program repair tools. We argue that repair success rate alone provides an incomplete and potentially misleading assessment of tool quality. Consider the following scenario: Tool A achieves 60\% repair success with -2.0 average regression reduction, while Tool B achieves 50\% repair success with +1.0 average regression reduction. Traditional evaluation would favor Tool A, yet Tool B provides greater practical value by avoiding regression introduction.
+
+We propose a \textbf{multi-dimensional evaluation framework} incorporating:
+
+\begin{itemize}[leftmargin=*]
+\item \textbf{Correctness:} Does the fix resolve the target bug? (repair success rate)
+\item \textbf{Safety:} Does the fix avoid breaking existing functionality? (regression reduction)
+\item \textbf{Compilability:} Does the generated code compile? (compilation success rate)
+\end{itemize}
+
+Tools should be considered production-ready only when achieving positive regression reduction in addition to high repair rates. By this criterion, Claude Code and OpenAI Codex qualify for production deployment with appropriate code review, while Qwen Code and Gemini CLI require more restrictive human oversight.
+
+\subsubsection{Threats to Validity}
+
+\textbf{Internal Validity:} Our regression reduction metric assumes adequate test suite quality and coverage. In projects with poor test coverage, the metric may not fully capture code quality degradation. Additionally, tool configurations and prompting strategies were held constant; different configurations might yield different results.
+
+\textbf{External Validity:} Results are derived from Defects4J, a curated benchmark of real-world Java bugs. Generalizability to other programming languages, project domains, and bug categories requires further investigation. The structured nature of Defects4J projects may not reflect the complexity of large-scale industrial codebases.
+
+\textbf{Construct Validity:} We define repair success as ``all previously failing tests now pass,'' which may not capture semantic correctness in cases where tests are incomplete or incorrect. Regression reduction measures test-level impact but does not directly assess code quality dimensions such as maintainability or performance.
+
+\subsubsection{Summary and Recommendations}
+
+Our regression reduction analysis yields three key findings:
+
+\begin{enumerate}[leftmargin=*]
+\item \textbf{Two-tier performance:} Tools exhibit either regression-reducing (Claude, Codex) or regression-introducing (Qwen, Gemini) behavior, with no intermediate cases in our evaluation.
+\item \textbf{Quality-quantity correlation:} Higher repair rates strongly correlate with positive regression reduction, suggesting that effective repair requires sophisticated context understanding rather than aggressive patching.
+\item \textbf{Evaluation paradigm shift:} Regression reduction should be adopted as a standard metric in APR evaluation, as repair rate alone fails to capture production-readiness.
+\end{enumerate}
+
+For practitioners selecting automated repair tools, we recommend prioritizing positive regression reduction as a non-negotiable criterion for production deployment. For researchers developing APR techniques, we advocate for evaluation frameworks that explicitly measure and report regression reduction alongside traditional metrics. Future work should investigate the root causes of regression introduction and develop techniques for context-aware, dependency-conscious program repair.
+
+\begin{tcolorbox}[colback=gray!10, colframe=black!50, title=Key Takeaway]
+\textbf{Regression reduction reveals the hidden cost of automated repairs.} Tools with negative regression reduction impose a ``regression tax'' on development teams, potentially creating more problems than they solve. This metric should be mandatory in future APR evaluations.
+\end{tcolorbox}
+
+%% Optional: Add a figure showing the correlation between repair success and regression reduction
+%% Uncomment if you create a corresponding visualization
+
+% \begin{figure}[t]
+% \centering
+% \includegraphics[width=0.8\columnwidth]{figures/regression_reduction_correlation.pdf}
+% \caption{Correlation between repair success rate and regression reduction across four agentic coding tools. Error bars represent 95\% confidence intervals.}
+% \label{fig:regression-correlation}
+% \end{figure}

@@ -1,0 +1,22 @@
+\begin{table*}[htbp]
+\centering
+\caption{Tool Category Usage: Pass (Fixed) vs Fail (Not Fixed) Repairs Across All Agents}
+\label{tab:all_agents_tool_category_pass_fail}
+\scriptsize
+\setlength{\tabcolsep}{4pt} % Reduces space between columns
+\begin{tabular}{l|rrr|rrr|rrr|rrr}
+\toprule
+\multirow{2}{*}{\textbf{Category}} & \multicolumn{3}{c|}{\textbf{\qwencode}} & \multicolumn{3}{c|}{\textbf{\geminicli}} & \multicolumn{3}{c|}{\textbf{\codex}} & \multicolumn{3}{c}{\textbf{\claudecode}} \\
+\cline{2-13}
+ & \textbf{\makecell{Pass \\ (\%)}} & \textbf{\makecell{Fail \\ (\%)}} & \textbf{\makecell{Total \\ (\%)}} & \textbf{\makecell{Pass \\ (\%)}} & \textbf{\makecell{Fail \\ (\%)}} & \textbf{\makecell{Total \\ (\%)}} & \textbf{\makecell{Pass \\ (\%)}} & \textbf{\makecell{Fail \\ (\%)}} & \textbf{\makecell{Total \\ (\%)}} & \textbf{\makecell{Pass \\ (\%)}} & \textbf{\makecell{Fail \\ (\%)}} & \textbf{\makecell{Total \\ (\%)}} \\
+\midrule
+WRITE & 14.4 & 15.1 & 14.9 & 25.6 & 41.7 & 36.9 & 44.6 & 41.4 & 44.0 & 22.1 & 17.3 & 21.5 \\
+READ & 25.2 & 23.1 & 23.6 & 26.6 & 22.4 & 23.6 & 5.6 & 5.0 & 5.5 & 22.8 & 24.1 & 23.0 \\
+TEST & 16.8 & 15.6 & 15.9 & 22.8 & 17.0 & 18.7 & 14.9 & 14.6 & 14.8 & 14.9 & 15.3 & 14.9 \\
+BUILD & 9.2 & 10.6 & 10.3 & 13.0 & 12.0 & 12.3 & 6.1 & 10.2 & 7.0 & 12.3 & 12.8 & 12.3 \\
+SEARCH\_CONTENT & 8.8 & 8.3 & 8.4 & 2.0 & 1.7 & 1.8 & 9.4 & 10.3 & 9.6 & 8.9 & 13.9 & 9.5 \\
+SEARCH\_FILES & 6.7 & 6.3 & 6.4 & 4.7 & 2.1 & 2.8 & 5.9 & 4.1 & 5.5 & 11.0 & 7.5 & 10.6 \\
+NAVIGATE & 14.9 & 16.2 & 15.9 & 0.0 & 0.0 & 0.0 & 0.0 & 0.0 & 0.0 & 0.8 & 1.4 & 0.9 \\
+\bottomrule
+\end{tabular}
+\end{table*}

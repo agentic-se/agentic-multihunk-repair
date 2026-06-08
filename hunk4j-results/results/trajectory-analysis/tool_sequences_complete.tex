@@ -1,0 +1,26 @@
+\header{Tool Sequence Patterns in Successful vs Unsuccessful Repairs} To understand how repair strategies differ between successful and unsuccessful attempts, we analyze tool sequence patterns using a sliding window approach with $w=3$. We extract consecutive 3-step tool invocations from each trajectory and count pattern frequencies for the two lowest-performing agents, \qwencode and \geminicli. Figures~\ref{fig:qwen_pass_fail_sequences} and \ref{fig:gemini_pass_fail_sequences} show the top five patterns separated by repair outcome (abbreviated as WR=WRITE, RD=READ, TST=TEST, BLD=BUILD, NAV=NAVIGATE, SC=SEARCH\_CONTENT).
+
+% \paragraph{Qwen Code: Structural Navigation Overhead}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.95\textwidth]{diagrams/tool-sequences/qwen_pass_fail_sequences.png}
+\caption{Tool sequence patterns for \qwencode.}
+\label{fig:qwen_pass_fail_sequences}
+\end{figure}
+
+\qwencode exhibits navigation overhead in both successful and unsuccessful repairs. The most frequent pattern is NAVIGATE $\rightarrow$ TEST $\rightarrow$ NAVIGATE (4.13\% successful, 2.93\% unsuccessful). NAVIGATE appears in 3/5 successful patterns and 4/5 unsuccessful patterns. WRITE $\rightarrow$ NAVIGATE $\rightarrow$ BUILD occurs at 2.64\% in successful repairs and 2.86\% in unsuccessful repairs. Navigation overhead persists regardless of outcome.
+
+% \paragraph{Gemini CLI: Behavioral Shift Toward Over-Modification}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.95\textwidth]{diagrams/tool-sequences/gemini_pass_fail_sequences.png}
+\caption{Tool sequence patterns for \geminicli.}
+\label{fig:gemini_pass_fail_sequences}
+\end{figure}
+
+\geminicli exhibits different patterns in successful versus unsuccessful repairs. Successful repairs use WRITE $\rightarrow$ BUILD $\rightarrow$ TEST most frequently (9.09\%). Unsuccessful repairs use WRITE $\rightarrow$ WRITE $\rightarrow$ WRITE most frequently (10.37\%), a 2.24-fold increase over successful repairs (4.63\%). WRITE $\rightarrow$ READ $\rightarrow$ WRITE occurs at 6.06\% in unsuccessful repairs. Unsuccessful repairs accumulate consecutive modifications without intermediate compilation or testing.
+
+
+\qwencode and \geminicli exhibit distinct failure modes. \qwencode shows navigation overhead in both successful and unsuccessful repairs. \geminicli shows a behavioral shift: successful repairs use WRITE $\rightarrow$ BUILD $\rightarrow$ TEST (9.09\%), while unsuccessful repairs use WRITE $\rightarrow$ WRITE $\rightarrow$ WRITE (10.37\%). \qwencode requires architectural changes to reduce navigation overhead. \geminicli requires strategies to prevent consecutive modifications without validation.

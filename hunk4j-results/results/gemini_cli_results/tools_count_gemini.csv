@@ -1,0 +1,2101 @@
+bug,function_name,count,command
+Chart-14,glob,2,
+Chart-14,read_file,10,
+Chart-14,replace,4,
+Chart-14,run_shell_command,1,./run_bug_exposing_tests.sh
+Chart-14,run_shell_command,2,defects4j compile
+Chart-14,run_shell_command,2,defects4j test
+Chart-14,run_shell_command,1,defects4j test -t org.jfree.chart.plot.junit.CategoryPlotTests::testRemoveRangeMarker
+Chart-14,run_shell_command,1,git diff
+Chart-14,search_file_content,2,
+Chart-15,glob,5,
+Chart-15,read_file,14,
+Chart-15,replace,9,
+Chart-15,run_shell_command,4,./run_bug_exposing_tests.sh
+Chart-15,run_shell_command,6,defects4j compile
+Chart-15,run_shell_command,4,defects4j test
+Chart-15,run_shell_command,1,git diff
+Chart-16,glob,1,
+Chart-16,read_file,8,
+Chart-16,replace,8,
+Chart-16,run_shell_command,4,./run_bug_exposing_tests.sh
+Chart-16,run_shell_command,3,defects4j compile
+Chart-16,run_shell_command,1,defects4j test
+Chart-16,run_shell_command,1,git diff > fix.patch
+Chart-18,glob,3,
+Chart-18,read_file,15,
+Chart-18,replace,7,
+Chart-18,run_shell_command,1,./run_all_tests_trace.sh
+Chart-18,run_shell_command,8,./run_bug_exposing_tests.sh
+Chart-18,run_shell_command,7,defects4j compile
+Chart-18,run_shell_command,1,git diff
+Chart-21,glob,1,
+Chart-21,list_directory,1,
+Chart-21,read_file,6,
+Chart-21,replace,2,
+Chart-21,run_shell_command,1,./run_bug_exposing_tests.sh
+Chart-21,run_shell_command,2,defects4j compile
+Chart-21,run_shell_command,1,defects4j export -p cp.test
+Chart-21,run_shell_command,1,defects4j test
+Chart-21,run_shell_command,2,defects4j test -t org.jfree.data.statistics.junit.DefaultBoxAndWhiskerCategoryDatasetTests::testGetRangeBounds
+Chart-21,run_shell_command,1,git diff
+Chart-22,glob,1,
+Chart-22,read_file,10,
+Chart-22,replace,6,
+Chart-22,run_shell_command,5,./run_bug_exposing_tests.sh
+Chart-22,run_shell_command,4,defects4j compile
+Chart-22,run_shell_command,1,defects4j test
+Chart-22,run_shell_command,1,git diff > /Users/danielding/Desktop/example_dir/Chart_22/fix.patch
+Chart-25,read_file,1,
+Cli-10,read_file,4,
+Cli-10,replace,1,
+Cli-10,run_shell_command,1,./run_bug_exposing_tests.sh
+Cli-10,run_shell_command,1,defects4j compile
+Cli-10,run_shell_command,1,defects4j test
+Cli-10,run_shell_command,1,defects4j test -t org.apache.commons.cli.ParseRequiredTest
+Cli-10,run_shell_command,2,defects4j test -t org.apache.commons.cli.ParseRequiredTest::testReuseOptionsTwice
+Cli-10,run_shell_command,1,git diff
+Cli-13,read_file,10,
+Cli-13,replace,11,
+Cli-13,run_shell_command,1,./run_all_tests_trace.sh -t org.apache.commons.cli2.bug.BugCLI145Test::testWithMaximumUsingDefaultValues
+Cli-13,run_shell_command,1,./run_bug_exposing_tests.sh
+Cli-13,run_shell_command,6,defects4j compile
+Cli-13,run_shell_command,5,defects4j test
+Cli-13,run_shell_command,2,defects4j test -t org.apache.commons.cli2.bug.BugLoopingOptionLookAlikeTest::testLoopingOptionLookAlike2
+Cli-13,run_shell_command,1,git diff > fix.patch
+Cli-14,list_directory,1,
+Cli-14,read_file,6,
+Cli-14,replace,2,
+Cli-14,run_shell_command,1,./run_all_tests_trace.sh
+Cli-14,run_shell_command,3,defects4j compile
+Cli-14,run_shell_command,1,"find . -name ""*.jar"""
+Cli-14,run_shell_command,1,git diff
+Cli-14,run_shell_command,2,java -cp target/classes:target/lib/junit/jars/junit-3.8.1.jar:target/lib/commons-lang/jars/commons-lang-2.1.jar org.apache.commons.cli2.issues.CLI2Sample --file-name /Users/danielding/Desktop/example_dir/Cli_14/dummy.txt
+Cli-14,run_shell_command,1,rm /Users/danielding/Desktop/example_dir/Cli_14/src/java/org/apache/commons/cli2/issues/CLI2Sample.java /Users/danielding/Desktop/example_dir/Cli_14/dummy.txt
+Cli-14,write_file,2,
+Cli-16,read_file,42,
+Cli-16,replace,65,
+Cli-16,run_shell_command,10,./run_bug_exposing_tests.sh
+Cli-16,run_shell_command,24,defects4j compile
+Cli-16,run_shell_command,1,defects4j compile -c
+Cli-16,run_shell_command,1,git checkout /Users/danielding/Desktop/example_dir/Cli_16/src/java/org/apache/commons/cli2/Option.java /Users/danielding/Desktop/example_dir/Cli_16/src/java/org/apache/commons/cli2/option/OptionImpl.java
+Cli-16,run_shell_command,2,git checkout /Users/danielding/Desktop/example_dir/Cli_16/src/java/org/apache/commons/cli2/commandline/WriteableCommandLineImpl.java
+Cli-16,run_shell_command,1,git checkout /Users/danielding/Desktop/example_dir/Cli_16/src/java/org/apache/commons/cli2/commandline/WriteableCommandLineImpl.java /Users/danielding/Desktop/example_dir/Cli_16/src/java/org/apache/commons/cli2/Group.java /Users/danielding/Desktop/example_dir/Cli_16/src/java/org/apache/commons/cli2/option/OptionImpl.java /Users/danielding/Desktop/example_dir/Cli_16/src/java/org/apache/commons/cli2/builder/GroupBuilder.java
+Cli-16,run_shell_command,1,git checkout /Users/danielding/Desktop/example_dir/Cli_16/src/java/org/apache/commons/cli2/option/GroupImpl.java
+Cli-16,run_shell_command,1,rm -rf target
+Cli-18,read_file,4,
+Cli-18,replace,1,
+Cli-18,run_shell_command,2,./run_bug_exposing_tests.sh
+Cli-18,run_shell_command,1,defects4j compile
+Cli-18,run_shell_command,2,defects4j test
+Cli-18,run_shell_command,1,git diff
+Cli-1,glob,1,
+Cli-1,read_file,9,
+Cli-1,replace,1,
+Cli-1,run_shell_command,1,./run_bug_exposing_tests.sh
+Cli-1,run_shell_command,2,defects4j compile
+Cli-1,run_shell_command,1,defects4j test
+Cli-1,run_shell_command,1,defects4j test -t org.apache.commons.cli.bug.BugCLI13Test
+Cli-1,run_shell_command,2,defects4j test -t org.apache.commons.cli.bug.BugCLI13Test::testCLI13
+Cli-1,run_shell_command,1,git diff
+Cli-22,read_file,8,
+Cli-22,replace,5,
+Cli-22,run_shell_command,2,./run_bug_exposing_tests.sh
+Cli-22,run_shell_command,1,defects4j compile
+Cli-22,run_shell_command,2,defects4j test
+Cli-22,run_shell_command,1,defects4j test -t org.apache.commons.cli.ApplicationTest::testGroovy
+Cli-22,run_shell_command,2,defects4j test -t org.apache.commons.cli.PosixParserTest
+Cli-22,run_shell_command,2,defects4j test -t org.apache.commons.cli.PosixParserTest::testStopAtExpectedArg
+Cli-22,run_shell_command,1,git diff
+Cli-26,read_file,4,
+Cli-26,replace,1,
+Cli-26,run_shell_command,1,./run_bug_exposing_tests.sh
+Cli-26,run_shell_command,1,defects4j compile
+Cli-26,run_shell_command,2,defects4j test
+Cli-26,run_shell_command,1,defects4j test -t org.apache.commons.cli.OptionBuilderTest
+Cli-26,run_shell_command,1,defects4j test -t org.apache.commons.cli.OptionBuilderTest::testBuilderIsResettedAlways
+Cli-26,run_shell_command,1,git diff
+Cli-30,read_file,7,
+Cli-30,read_many_files,1,
+Cli-30,replace,30,
+Cli-30,run_shell_command,2,./run_bug_exposing_tests.sh
+Cli-30,run_shell_command,1,defects4j compile
+Cli-30,run_shell_command,8,defects4j test
+Cli-30,run_shell_command,1,defects4j test -t org.apache.commons.cli.BasicParserTest::testPropertyOptionGroup && defects4j test -t org.apache.commons.cli.BasicParserTest::testPropertyOptionUnexpected && defects4j test -t org.apache.commons.cli.DefaultParserTest::testPropertyOptionGroup && defects4j test -t org.apache.commons.cli.DefaultParserTest::testPropertyOptionUnexpected && defects4j test -t org.apache.commons.cli.GnuParserTest::testPropertyOptionGroup && defects4j test -t org.apache.commons.cli.GnuParserTest::testPropertyOptionUnexpected && defects4j test -t org.apache.commons.cli.OptionGroupTest::testTwoOptionsFromGroupWithProperties && defects4j test -t org.apache.commons.cli.PosixParserTest::testPropertyOptionGroup && defects4j test -t org.apache.commons.cli.PosixParserTest::testPropertyOptionUnexpected
+Cli-30,run_shell_command,1,git diff > /Users/danielding/Desktop/example_dir/Cli_30/fix.patch
+Cli-31,read_file,7,
+Cli-31,replace,1,
+Cli-31,run_shell_command,3,./run_bug_exposing_tests.sh
+Cli-31,run_shell_command,1,defects4j compile
+Cli-33,read_file,4,
+Cli-33,replace,1,
+Cli-33,run_shell_command,1,./run_bug_exposing_tests.sh
+Cli-34,glob,4,
+Cli-34,read_file,6,
+Cli-34,replace,5,
+Cli-34,run_shell_command,1,./run_all_tests_trace.sh
+Cli-34,run_shell_command,1,./run_bug_exposing_tests.sh
+Cli-34,run_shell_command,3,defects4j compile
+Cli-34,run_shell_command,3,defects4j test
+Cli-34,run_shell_command,1,git diff
+Cli-36,read_file,1,
+Cli-7,read_file,3,
+Cli-7,replace,2,
+Cli-7,run_shell_command,1,defects4j test
+Cli-7,run_shell_command,3,defects4j test -t org.apache.commons.cli2.bug.Bug27575Test::testRequiredOptions
+Cli-7,run_shell_command,1,git diff HEAD
+Cli-7,search_file_content,1,
+Closure-103,glob,6,
+Closure-103,read_file,36,
+Closure-103,replace,29,
+Closure-103,run_shell_command,19,./run_bug_exposing_tests.sh
+Closure-103,run_shell_command,1,defects4j test
+Closure-103,search_file_content,1,
+Closure-105,glob,2,
+Closure-105,read_file,6,
+Closure-105,replace,4,
+Closure-105,run_shell_command,1,./run_all_tests_trace.sh
+Closure-105,run_shell_command,1,./run_bug_exposing_tests.sh
+Closure-105,run_shell_command,1,defects4j compile
+Closure-105,run_shell_command,4,defects4j test
+Closure-105,run_shell_command,1,git diff
+Closure-106,read_file,14,
+Closure-106,replace,18,
+Closure-106,run_shell_command,1,./run_all_tests_trace.sh
+Closure-106,run_shell_command,1,./run_bug_exposing_tests.sh
+Closure-106,run_shell_command,16,defects4j compile
+Closure-106,run_shell_command,9,defects4j test
+Closure-106,run_shell_command,1,defects4j test -t com.google.javascript.jscomp.CollapsePropertiesTest
+Closure-108,glob,1,
+Closure-108,read_file,6,
+Closure-108,replace,1,
+Closure-108,run_shell_command,3,./run_bug_exposing_tests.sh
+Closure-108,run_shell_command,2,defects4j compile
+Closure-110,glob,2,
+Closure-110,read_file,22,
+Closure-110,replace,36,
+Closure-110,run_shell_command,1,./run_bug_exposing_tests.sh
+Closure-110,run_shell_command,1,defects4j clean
+Closure-110,run_shell_command,13,defects4j compile
+Closure-110,run_shell_command,9,defects4j test
+Closure-110,run_shell_command,6,git checkout /Users/danielding/Desktop/example_dir/Closure_110/src/com/google/javascript/jscomp/ScopedAliases.java
+Closure-115,read_file,10,
+Closure-115,replace,8,
+Closure-115,run_shell_command,1,./run_all_tests_trace.sh
+Closure-115,run_shell_command,1,./run_bug_exposing_tests.sh
+Closure-115,run_shell_command,7,defects4j compile
+Closure-115,run_shell_command,7,defects4j test
+Closure-115,run_shell_command,1,git diff HEAD
+Closure-116,read_file,3,
+Closure-116,run_shell_command,1,./run_bug_exposing_tests.sh
+Closure-116,run_shell_command,1,ant compile-tests
+Closure-117,list_directory,1,
+Closure-117,read_file,15,
+Closure-117,replace,14,
+Closure-117,run_shell_command,1,./run_bug_exposing_tests.sh
+Closure-117,run_shell_command,1,defects4j compile
+Closure-117,run_shell_command,1,defects4j export -p cp.test
+Closure-117,run_shell_command,2,defects4j test
+Closure-117,run_shell_command,2,defects4j test -t com.google.javascript.jscomp.TypeCheckTest
+Closure-117,run_shell_command,4,defects4j test -t com.google.javascript.jscomp.TypeCheckTest::testIssue1047
+Closure-117,search_file_content,3,
+Closure-134,glob,6,
+Closure-134,read_file,38,
+Closure-134,replace,31,
+Closure-134,run_shell_command,4,./run_bug_exposing_tests.sh
+Closure-134,run_shell_command,1,defects4j compile
+Closure-134,run_shell_command,1,defects4j export -p tests.trigger
+Closure-134,run_shell_command,1,defects4j test -t com.google.javascript.jscomp.TypeCheckTest::testInheritDocWithInterface
+Closure-134,search_file_content,4,
+Closure-135,glob,2,
+Closure-135,read_file,8,
+Closure-135,replace,1,
+Closure-135,run_shell_command,1,./run_bug_exposing_tests.sh
+Closure-135,run_shell_command,2,defects4j compile
+Closure-135,run_shell_command,2,defects4j test
+Closure-135,search_file_content,5,
+Closure-136,read_file,6,
+Closure-136,replace,10,
+Closure-136,run_shell_command,1,./run_bug_exposing_tests.sh
+Closure-136,run_shell_command,6,defects4j compile
+Closure-136,run_shell_command,6,defects4j test
+Closure-136,search_file_content,11,
+Closure-139,read_file,44,
+Closure-139,replace,32,
+Closure-139,run_shell_command,28,./run_bug_exposing_tests.sh
+Closure-139,run_shell_command,33,defects4j compile
+Closure-139,run_shell_command,14,git restore /Users/danielding/Desktop/example_dir/Closure_139/src/com/google/javascript/jscomp/Normalize.java
+Closure-139,search_file_content,1,
+Closure-141,glob,2,
+Closure-141,read_file,7,
+Closure-141,replace,11,
+Closure-141,run_shell_command,1,./run_bug_exposing_tests.sh
+Closure-141,run_shell_command,8,defects4j test
+Closure-144,glob,9,
+Closure-144,read_file,18,
+Closure-144,replace,5,
+Closure-144,run_shell_command,2,./run_bug_exposing_tests.sh
+Closure-144,run_shell_command,2,defects4j compile
+Closure-144,run_shell_command,1,defects4j test
+Closure-153,list_directory,2,
+Closure-153,read_file,35,
+Closure-153,read_many_files,1,
+Closure-153,replace,46,
+Closure-153,run_shell_command,1,./run_all_tests_trace.sh
+Closure-153,run_shell_command,3,./run_bug_exposing_tests.sh
+Closure-153,run_shell_command,1,./run_bug_exposing_tests.sh > check_state_output.log 2>&1
+Closure-153,run_shell_command,1,./run_bug_exposing_tests.sh > debug_make_declared_names_unique.log 2>&1
+Closure-153,run_shell_command,1,./run_bug_exposing_tests.sh > debug_normalize_onredeclaration.log 2>&1
+Closure-153,run_shell_command,2,./run_bug_exposing_tests.sh > full_debug_output.log 2>&1
+Closure-153,run_shell_command,1,./run_bug_exposing_tests.sh > test_results_after_all_fixes_final.log 2>&1
+Closure-153,run_shell_command,1,./run_bug_exposing_tests.sh > test_results_after_all_fixes_final_2.log 2>&1
+Closure-153,run_shell_command,1,./run_bug_exposing_tests.sh > test_results_after_all_fixes_final_3.log 2>&1
+Closure-153,run_shell_command,2,./run_bug_exposing_tests.sh > test_results_after_all_fixes_final_4.log 2>&1
+Closure-153,run_shell_command,1,./run_bug_exposing_tests.sh > test_results_after_both_fixes.log 2>&1
+Closure-153,run_shell_command,1,./run_bug_exposing_tests.sh > test_results_after_make_declared_names_unique_fix.log 2>&1
+Closure-153,run_shell_command,1,defects4j export -p cp.test
+Closure-153,run_shell_command,1,defects4j export -p tests.all
+Closure-153,run_shell_command,2,defects4j export -p tests.trigger
+Closure-153,run_shell_command,1,defects4j test -t com.google.javascript.jscomp.NormalizeTest::testDuplicateVarInExterns
+Closure-153,run_shell_command,1,defects4j test -t com.google.javascript.jscomp.NormalizeTest::testDuplicateVarInExterns -v
+Closure-153,run_shell_command,1,"java -cp ""/Users/danielding/Desktop/example_dir/Closure_153/build/classes:/Users/danielding/Desktop/example_dir/Closure_153/build/test:/Users/danielding/Desktop/example_dir/Closure_153/lib/junit.jar"" org.junit.runner.JUnitCore com.google.javascript.jscomp.NormalizeTest 2> debug_output.log"
+Closure-153,run_shell_command,9,"java -cp ""/Users/danielding/Desktop/example_dir/Closure_153/build/classes:/Users/danielding/Desktop/example_dir/Closure_153/lib/ant-launcher.jar:/Users/danielding/Desktop/example_dir/Closure_153/lib/ant.jar:/Users/danielding/Desktop/example_dir/Closure_153/lib/args4j.jar:/Users/danielding/Desktop/example_dir/Closure_153/lib/guava.jar:/Users/danielding/Desktop/example_dir/Closure_153/lib/json.jar:/Users/danielding/Desktop/example_dir/Closure_153/lib/jsr305.jar:/Users/danielding/Desktop/example_dir/Closure_153/lib/junit.jar:/Users/danielding/Desktop/example_dir/Closure_153/lib/libtrunk_rhino_parser_jarjared.jar:/Users/danielding/Desktop/example_dir/Closure_153/lib/protobuf-java.jar:/Users/danielding/Desktop/example_dir/Closure_153/build/test"" org.junit.runner.JUnitCore com.google.javascript.jscomp.NormalizeTest"
+Closure-153,run_shell_command,1,"java -cp ""/Users/danielding/Desktop/example_dir/Closure_153/build/classes:/Users/danielding/Desktop/example_dir/Closure_153/lib/ant-launcher.jar:/Users/danielding/Desktop/example_dir/Closure_153/lib/ant.jar:/Users/danielding/Desktop/example_dir/Closure_153/lib/args4j.jar:/Users/danielding/Desktop/example_dir/Closure_153/lib/guava.jar:/Users/danielding/Desktop/example_dir/Closure_153/lib/json.jar:/Users/danielding/Desktop/example_dir/Closure_153/lib/jsr305.jar:/Users/danielding/Desktop/example_dir/Closure_153/lib/junit.jar:/Users/danielding/Desktop/example_dir/Closure_153/lib/libtrunk_rhino_parser_jarjared.jar:/Users/danielding/Desktop/example_dir/Closure_153/lib/protobuf-java.jar:/Users/danielding/Desktop/example_dir/Closure_153/build/test"" org.junit.runner.JUnitCore com.google.javascript.jscomp.NormalizeTest 2> debug_output.log"
+Closure-156,glob,3,
+Closure-156,read_file,22,
+Closure-156,replace,45,
+Closure-156,run_shell_command,1,./run_all_tests_trace.sh
+Closure-156,run_shell_command,14,./run_bug_exposing_tests.sh
+Closure-156,run_shell_command,1,defects4j compile
+Closure-157,read_file,8,
+Closure-157,replace,53,
+Closure-157,run_shell_command,1,./run_bug_exposing_tests.sh
+Closure-157,run_shell_command,21,defects4j compile
+Closure-157,run_shell_command,18,defects4j test
+Closure-157,run_shell_command,1,defects4j test -t com.google.javascript.jscomp.CodePrinterTest
+Closure-157,run_shell_command,4,defects4j test -t com.google.javascript.jscomp.CodePrinterTest::testObjectLit
+Closure-157,run_shell_command,1,git diff src/com/google/javascript/jscomp/CodeGenerator.java
+Closure-157,run_shell_command,20,git restore src/com/google/javascript/jscomp/CodeGenerator.java
+Closure-157,search_file_content,5,
+Closure-158,glob,5,
+Closure-158,read_file,42,
+Closure-158,replace,73,
+Closure-158,run_shell_command,3,./run_bug_exposing_tests.sh
+Closure-158,run_shell_command,6,defects4j compile
+Closure-158,run_shell_command,2,git checkout /Users/danielding/Desktop/example_dir/Closure_158/src/com/google/javascript/jscomp/AbstractCommandLineRunner.java
+Closure-158,run_shell_command,2,git checkout /Users/danielding/Desktop/example_dir/Closure_158/src/com/google/javascript/jscomp/CommandLineRunner.java
+Closure-160,glob,16,
+Closure-160,read_file,19,
+Closure-160,replace,28,
+Closure-160,run_shell_command,2,./run_bug_exposing_tests.sh
+Closure-160,run_shell_command,9,defects4j compile
+Closure-160,run_shell_command,1,defects4j test
+Closure-160,run_shell_command,1,defects4j test -t com.google.javascript.jscomp.CommandLineRunnerTest
+Closure-160,run_shell_command,4,defects4j test -t com.google.javascript.jscomp.CommandLineRunnerTest::testCheckSymbolsOverrideForQuiet
+Closure-160,run_shell_command,1,git checkout -- src/com/google/javascript/jscomp/AbstractCommandLineRunner.java
+Closure-160,run_shell_command,1,git checkout -- src/com/google/javascript/jscomp/CommandLineRunner.java
+Closure-160,run_shell_command,2,git checkout -- src/com/google/javascript/jscomp/DiagnosticGroups.java
+Closure-160,run_shell_command,1,git checkout -- src/com/google/javascript/jscomp/WarningLevel.java
+Closure-160,run_shell_command,1,git show HEAD:src/com/google/javascript/jscomp/AbstractCommandLineRunner.java
+Closure-160,run_shell_command,2,git show HEAD:src/com/google/javascript/jscomp/DiagnosticGroups.java
+Closure-160,run_shell_command,1,git show HEAD:src/com/google/javascript/jscomp/WarningLevel.java
+Closure-160,search_file_content,8,
+Closure-160,write_file,7,
+Closure-162,read_file,5,
+Closure-162,replace,3,
+Closure-162,run_shell_command,1,./run_bug_exposing_tests.sh
+Closure-162,run_shell_command,2,defects4j compile
+Closure-162,run_shell_command,2,defects4j test
+Closure-162,run_shell_command,1,defects4j test -t com.google.javascript.jscomp.ScopedAliasesTest::testForwardJsDoc
+Closure-162,run_shell_command,1,git diff > fix.patch
+Closure-163,glob,3,
+Closure-163,read_file,6,
+Closure-163,replace,2,
+Closure-163,run_shell_command,1,./run_bug_exposing_tests.sh
+Closure-163,run_shell_command,1,defects4j compile
+Closure-163,run_shell_command,2,defects4j test
+Closure-163,run_shell_command,1,defects4j test -t com.google.javascript.jscomp.CrossModuleMethodMotionTest
+Closure-163,run_shell_command,1,defects4j test -t com.google.javascript.jscomp.CrossModuleMethodMotionTest::testMovePrototypeMethod1
+Closure-164,read_file,8,
+Closure-164,replace,11,
+Closure-164,run_shell_command,1,./run_bug_exposing_tests.sh
+Closure-164,run_shell_command,1,defects4j compile
+Closure-164,run_shell_command,1,defects4j export -p cp.test
+Closure-164,run_shell_command,2,defects4j test
+Closure-164,run_shell_command,2,defects4j test -t com.google.javascript.jscomp.LooseTypeCheckTest::testMethodInference7
+Closure-164,run_shell_command,1,defects4j test -t com.google.javascript.jscomp.TypeCheckTest::testMethodInference7
+Closure-164,run_shell_command,2,defects4j test -t com.google.javascript.rhino.jstype.FunctionTypeTest::testSupAndInfOfReturnTypesWithDifferentParams
+Closure-164,run_shell_command,3,defects4j test -t com.google.javascript.rhino.jstype.FunctionTypeTest::testSupAndInfOfReturnTypesWithNumOfParams
+Closure-164,run_shell_command,1,defects4j test -t com.google.javascript.rhino.jstype.FunctionTypeTest::testSupAndInfWithDifferentParams
+Closure-164,search_file_content,1,
+Closure-165,glob,1,
+Closure-165,read_file,24,
+Closure-165,replace,12,
+Closure-165,run_shell_command,5,./run_all_tests_trace.sh
+Closure-165,run_shell_command,7,./run_bug_exposing_tests.sh
+Closure-165,run_shell_command,13,defects4j compile
+Closure-165,run_shell_command,2,git restore /Users/danielding/Desktop/example_dir/Closure_165/src/com/google/javascript/rhino/jstype/RecordType.java
+Closure-165,run_shell_command,1,git restore /Users/danielding/Desktop/example_dir/Closure_165/src/com/google/javascript/rhino/jstype/RecordTypeBuilder.java
+Closure-165,run_shell_command,1,git restore /Users/danielding/Desktop/example_dir/Closure_165/test/com/google/javascript/rhino/jstype/RecordTypeTest.java
+Closure-165,search_file_content,4,
+Closure-169,glob,10,
+Closure-169,read_file,31,
+Closure-169,replace,11,
+Closure-169,run_shell_command,1,./run_all_tests_trace.sh
+Closure-169,run_shell_command,9,./run_bug_exposing_tests.sh
+Closure-169,run_shell_command,10,defects4j compile
+Closure-169,run_shell_command,2,git diff > /Users/danielding/Desktop/example_dir/Closure_169/fix_closure_169.patch
+Closure-169,search_file_content,1,
+Closure-174,glob,3,
+Closure-174,read_file,13,
+Closure-174,replace,79,
+Closure-174,run_shell_command,1,./run_bug_exposing_tests.sh
+Closure-174,run_shell_command,1,defects4j compile
+Closure-174,run_shell_command,1,defects4j test
+Closure-174,run_shell_command,1,defects4j test -t com.google.javascript.jscomp.ScopedAliasesTest
+Closure-174,run_shell_command,14,defects4j test -t com.google.javascript.jscomp.ScopedAliasesTest::testIssue1103a
+Closure-174,run_shell_command,1,defects4j test -t com.google.javascript.jscomp.ScopedAliasesTest::testOneLevel
+Closure-21,glob,3,
+Closure-21,read_file,19,
+Closure-21,replace,9,
+Closure-21,run_shell_command,9,./run_bug_exposing_tests.sh
+Closure-21,run_shell_command,11,defects4j compile
+Closure-21,run_shell_command,1,git diff /Users/danielding/Desktop/example_dir/Closure_21/src/com/google/javascript/jscomp/CheckSideEffects.java
+Closure-21,write_file,6,
+Closure-24,glob,1,
+Closure-24,read_file,21,
+Closure-24,replace,32,
+Closure-24,run_shell_command,15,./run_bug_exposing_tests.sh
+Closure-24,run_shell_command,32,defects4j compile
+Closure-24,run_shell_command,15,git show HEAD:src/com/google/javascript/jscomp/ScopedAliases.java
+Closure-24,write_file,1,
+Closure-25,glob,3,
+Closure-25,read_file,7,
+Closure-25,replace,2,
+Closure-25,run_shell_command,3,./run_bug_exposing_tests.sh
+Closure-25,run_shell_command,3,defects4j compile
+Closure-25,run_shell_command,1,defects4j export -p cp.test
+Closure-25,run_shell_command,1,defects4j test
+Closure-25,run_shell_command,1,git diff
+Closure-25,search_file_content,1,
+Closure-26,list_directory,2,
+Closure-26,read_file,23,
+Closure-26,replace,30,
+Closure-26,run_shell_command,2,./run_bug_exposing_tests.sh
+Closure-26,run_shell_command,20,defects4j compile
+Closure-26,run_shell_command,18,defects4j test
+Closure-26,run_shell_command,1,defects4j test -t com.google.javascript.jscomp.ProcessCommonJSModulesTest
+Closure-26,run_shell_command,1,defects4j test -t com.google.javascript.jscomp.ProcessCommonJSModulesTest::testExports
+Closure-27,glob,3,
+Closure-27,read_file,6,
+Closure-27,replace,7,
+Closure-27,run_shell_command,1,./run_all_tests_trace.sh
+Closure-27,run_shell_command,1,./run_bug_exposing_tests.sh
+Closure-27,run_shell_command,4,defects4j test
+Closure-27,run_shell_command,1,defects4j test -t com.google.javascript.rhino.IRTest::testIssue727_1
+Closure-27,run_shell_command,1,git diff
+Closure-30,glob,1,
+Closure-30,read_file,3,
+Closure-30,read_many_files,1,
+Closure-30,replace,1,
+Closure-30,run_shell_command,1,./run_bug_exposing_tests.sh
+Closure-30,run_shell_command,2,defects4j compile
+Closure-30,run_shell_command,2,defects4j test
+Closure-32,glob,3,
+Closure-32,read_file,5,
+Closure-32,replace,2,
+Closure-32,run_shell_command,2,./run_bug_exposing_tests.sh
+Closure-32,run_shell_command,1,defects4j test
+Closure-32,search_file_content,1,
+Closure-34,read_file,15,
+Closure-34,replace,25,
+Closure-34,run_shell_command,3,./run_all_tests_trace.sh
+Closure-34,run_shell_command,1,./run_bug_exposing_tests.sh
+Closure-34,run_shell_command,1,defects4j compile
+Closure-34,run_shell_command,1,defects4j test
+Closure-34,run_shell_command,13,defects4j test -t com.google.javascript.jscomp.CodePrinterTest::testManyAdds
+Closure-34,run_shell_command,2,git checkout -- src/com/google/javascript/jscomp/CodeGenerator.java
+Closure-34,search_file_content,1,
+Closure-34,write_file,1,
+Closure-37,glob,2,
+Closure-37,read_file,10,
+Closure-37,replace,8,
+Closure-37,run_shell_command,1,./run_bug_exposing_tests.sh
+Closure-37,run_shell_command,3,defects4j compile
+Closure-37,run_shell_command,1,defects4j test
+Closure-37,run_shell_command,3,defects4j test -t com.google.javascript.jscomp.IntegrationTest::testIncompleteFunction
+Closure-37,search_file_content,1,
+Closure-41,glob,4,
+Closure-41,list_directory,1,
+Closure-41,read_file,27,
+Closure-41,replace,34,
+Closure-41,run_shell_command,5,./run_bug_exposing_tests.sh
+Closure-41,run_shell_command,1,defects4j compile
+Closure-41,run_shell_command,1,defects4j export -p cp.test
+Closure-41,run_shell_command,2,defects4j test -t com.google.javascript.jscomp.TypeCheckTest
+Closure-41,run_shell_command,1,"java -cp ""/Users/danielding/Desktop/example_dir/Closure_41/build/classes:/Users/danielding/Desktop/example_dir/Closure_41/lib/args4j.jar:/Users/danielding/Desktop/example_dir/Closure_41/lib/guava.jar:/Users/danielding/Desktop/example_dir/Closure_41/lib/json.jar:/Users/danielding/Desktop/example_dir/Closure_41/lib/jsr305.jar:/Users/danielding/Desktop/example_dir/Closure_41/lib/protobuf-java.jar:/Users/danielding/Desktop/example_dir/Closure_41/build/lib/rhino.jar:/Users/danielding/Desktop/example_dir/Closure_41/lib/ant.jar:/Users/danielding/Desktop/example_dir/Closure_41/lib/ant-launcher.jar:/Users/danielding/Desktop/example_dir/Closure_41/lib/caja-r4314.jar:/Users/danielding/Desktop/example_dir/Closure_41/lib/jarjar.jar:/Users/danielding/Desktop/example_dir/Closure_41/lib/junit.jar:/Users/danielding/Desktop/example_dir/Closure_41/build/test"" org.junit.runner.JUnitCore com.google.javascript.jscomp.TypeCheckTest"
+Closure-41,search_file_content,3,
+Closure-45,glob,2,
+Closure-45,read_file,37,
+Closure-45,replace,56,
+Closure-45,run_shell_command,1,./run_bug_exposing_tests.sh
+Closure-45,run_shell_command,3,defects4j test
+Closure-45,run_shell_command,13,defects4j test -t com.google.javascript.jscomp.RemoveUnusedVarsTest::testIssue618_1
+Closure-47,glob,4,
+Closure-47,read_file,11,
+Closure-47,replace,45,
+Closure-47,run_shell_command,1,./run_bug_exposing_tests.sh
+Closure-47,run_shell_command,18,defects4j compile
+Closure-47,run_shell_command,18,defects4j test
+Closure-47,run_shell_command,1,defects4j test -t com.google.debugging.sourcemap.SourceMapGeneratorV3Test
+Closure-49,glob,5,
+Closure-49,read_file,6,
+Closure-49,replace,7,
+Closure-49,run_shell_command,1,./run_bug_exposing_tests.sh
+Closure-49,run_shell_command,6,defects4j compile
+Closure-49,run_shell_command,7,defects4j test
+Closure-49,run_shell_command,1,defects4j test -t com.google.javascript.jscomp.MakeDeclaredNamesUniqueTest::testMakeLocalNamesUniqueWithoutContext
+Closure-49,run_shell_command,1,git restore src/com/google/javascript/jscomp/FunctionInjector.java
+Closure-49,run_shell_command,28,git restore src/com/google/javascript/jscomp/MakeDeclaredNamesUnique.java
+Closure-4,glob,6,
+Closure-4,read_file,24,
+Closure-4,replace,38,
+Closure-4,run_shell_command,8,./run_bug_exposing_tests.sh
+Closure-4,run_shell_command,10,defects4j compile
+Closure-4,run_shell_command,1,defects4j test
+Closure-4,search_file_content,2,
+Closure-51,glob,3,
+Closure-51,read_file,6,
+Closure-51,replace,1,
+Closure-51,run_shell_command,1,./run_bug_exposing_tests.sh
+Closure-51,run_shell_command,2,defects4j compile
+Closure-51,run_shell_command,1,defects4j test
+Closure-51,run_shell_command,1,defects4j test -t com.google.javascript.jscomp.CodePrinterTest
+Closure-51,run_shell_command,2,defects4j test -t com.google.javascript.jscomp.CodePrinterTest::testIssue582
+Closure-51,run_shell_command,1,git diff
+Closure-53,read_file,5,
+Closure-53,replace,1,
+Closure-53,run_shell_command,3,./run_bug_exposing_tests.sh
+Closure-53,run_shell_command,2,defects4j compile
+Closure-53,run_shell_command,1,defects4j test
+Closure-53,run_shell_command,1,git diff
+Closure-60,glob,3,
+Closure-60,read_file,19,
+Closure-60,replace,31,
+Closure-60,run_shell_command,9,./run_bug_exposing_tests.sh
+Closure-60,run_shell_command,2,defects4j compile
+Closure-60,run_shell_command,16,defects4j test
+Closure-60,run_shell_command,1,git diff > fix.patch
+Closure-60,search_file_content,7,
+Closure-64,glob,2,
+Closure-64,read_file,8,
+Closure-64,read_many_files,2,
+Closure-64,replace,14,
+Closure-64,run_shell_command,1,./run_all_tests_trace.sh
+Closure-64,run_shell_command,4,./run_bug_exposing_tests.sh
+Closure-64,run_shell_command,3,defects4j compile
+Closure-64,run_shell_command,1,git diff HEAD
+Closure-64,search_file_content,1,
+Closure-6,glob,4,
+Closure-6,read_file,8,
+Closure-6,replace,3,
+Closure-6,run_shell_command,3,./run_bug_exposing_tests.sh
+Closure-6,run_shell_command,2,defects4j compile
+Closure-6,run_shell_command,1,defects4j test
+Closure-6,run_shell_command,1,git diff
+Closure-74,glob,1,
+Closure-74,list_directory,1,
+Closure-74,read_file,36,
+Closure-74,replace,52,
+Closure-74,run_shell_command,5,./run_bug_exposing_tests.sh
+Closure-74,run_shell_command,6,defects4j compile
+Closure-75,read_file,32,
+Closure-75,replace,31,
+Closure-75,run_shell_command,1,./run_all_tests_trace.sh
+Closure-75,run_shell_command,18,./run_bug_exposing_tests.sh
+Closure-75,run_shell_command,19,defects4j compile
+Closure-76,glob,2,
+Closure-76,read_file,11,
+Closure-76,replace,5,
+Closure-76,run_shell_command,7,./run_bug_exposing_tests.sh
+Closure-76,run_shell_command,6,defects4j compile
+Closure-79,glob,1,
+Closure-79,read_file,13,
+Closure-79,replace,4,
+Closure-79,run_shell_command,2,./run_all_tests_trace.sh
+Closure-79,run_shell_command,1,./run_bug_exposing_tests.sh
+Closure-79,run_shell_command,1,defects4j compile
+Closure-79,run_shell_command,1,defects4j export -p tests.trigger
+Closure-79,run_shell_command,1,defects4j test
+Closure-79,run_shell_command,3,defects4j test -t com.google.javascript.jscomp.NormalizeTest::testIssue
+Closure-79,run_shell_command,1,rm -f /Users/danielding/Desktop/example_dir/Closure_79/all_tests_trace.*.log
+Closure-79,run_shell_command,1,rm -f /Users/danielding/Desktop/example_dir/Closure_79/bug_triggering_tests.*.log
+Closure-79,search_file_content,3,
+Closure-80,glob,2,
+Closure-80,read_file,9,
+Closure-80,replace,3,
+Closure-80,run_shell_command,1,./run_all_tests_trace.sh
+Closure-80,run_shell_command,1,./run_bug_exposing_tests.sh
+Closure-80,run_shell_command,1,defects4j compile
+Closure-80,run_shell_command,1,defects4j export -p cp.test
+Closure-80,run_shell_command,2,defects4j test
+Closure-80,run_shell_command,1,git diff
+Closure-80,search_file_content,1,
+Closure-98,glob,2,
+Closure-98,read_file,7,
+Closure-98,replace,14,
+Closure-98,run_shell_command,1,./run_bug_exposing_tests.sh
+Closure-98,run_shell_command,6,defects4j compile
+Closure-98,run_shell_command,3,defects4j test
+Closure-98,run_shell_command,2,defects4j test -t com.google.javascript.jscomp.InlineVariablesTest::testNoInlineAliasesInLoop
+Closure-98,run_shell_command,1,git diff > /Users/danielding/Desktop/example_dir/Closure_98/fix.patch
+Closure-99,glob,1,
+Closure-99,read_file,6,
+Closure-99,read_many_files,1,
+Closure-99,replace,53,
+Closure-99,run_shell_command,1,./run_bug_exposing_tests.sh
+Closure-99,run_shell_command,1,defects4j compile
+Closure-99,run_shell_command,26,defects4j compile && defects4j test
+Closure-99,run_shell_command,1,defects4j test
+Closure-99,search_file_content,1,
+Codec-11,glob,2,
+Codec-11,read_file,4,
+Codec-11,replace,136,
+Codec-11,run_shell_command,1,./run_bug_exposing_tests.sh
+Codec-11,run_shell_command,48,defects4j test
+Codec-11,run_shell_command,1,defects4j test -t org.apache.commons.codec.net.QuotedPrintableCodecTest
+Codec-12,read_file,10,
+Codec-12,replace,17,
+Codec-12,run_shell_command,8,defects4j compile
+Codec-12,run_shell_command,5,defects4j test
+Codec-12,run_shell_command,2,defects4j test -t org.apache.commons.codec.binary.Base64Test::testSkip
+Codec-12,run_shell_command,1,git diff
+Codec-13,read_file,5,
+Codec-13,replace,5,
+Codec-13,run_shell_command,3,./run_bug_exposing_tests.sh
+Codec-13,run_shell_command,4,defects4j compile
+Codec-13,run_shell_command,1,defects4j test
+Codec-13,run_shell_command,4,defects4j test -t org.apache.commons.codec.language.DoubleMetaphoneTest::test1
+Codec-13,run_shell_command,1,git diff
+Codec-14,glob,3,
+Codec-14,google_web_search,1,commons codec beider morse lang.txt content
+Codec-14,list_directory,1,
+Codec-14,read_file,12,
+Codec-14,read_many_files,1,
+Codec-14,run_shell_command,2,./run_bug_exposing_tests.sh
+Codec-14,run_shell_command,1,defects4j compile
+Codec-14,search_file_content,1,
+Codec-6,list_directory,3,
+Codec-6,read_file,13,
+Codec-6,replace,4,
+Codec-6,run_shell_command,1,./run_bug_exposing_tests.sh
+Codec-6,run_shell_command,4,defects4j compile
+Codec-6,run_shell_command,2,defects4j test
+Codec-6,run_shell_command,5,defects4j test -t org.apache.commons.codec.binary.Base64InputStreamTest::testCodec101
+Codec-6,run_shell_command,1,git diff
+Codec-8,read_file,4,
+Codec-8,replace,1,
+Codec-8,run_shell_command,1,./run_bug_exposing_tests.sh
+Codec-8,run_shell_command,1,defects4j compile
+Codec-8,run_shell_command,2,defects4j test
+Codec-8,run_shell_command,1,defects4j test -t org.apache.commons.codec.binary.Base64InputStreamTest::testCodec105
+Codec-8,run_shell_command,1,git diff > /Users/danielding/Desktop/example_dir/Codec_8/fix.patch
+Compress-11,read_file,4,
+Compress-11,replace,1,
+Compress-11,run_shell_command,1,./run_bug_exposing_tests.sh
+Compress-11,run_shell_command,1,defects4j compile
+Compress-11,run_shell_command,1,defects4j test
+Compress-11,run_shell_command,2,defects4j test -t org.apache.commons.compress.archivers.ArchiveStreamFactoryTest::shortTextFilesAreNoTARs
+Compress-11,run_shell_command,1,git diff
+Compress-29,glob,11,
+Compress-29,read_file,18,
+Compress-29,replace,24,
+Compress-29,run_shell_command,5,./run_all_tests_trace.sh
+Compress-29,run_shell_command,1,./run_bug_exposing_tests.sh
+Compress-29,run_shell_command,9,defects4j compile
+Compress-29,run_shell_command,4,defects4j test
+Compress-29,run_shell_command,1,git diff
+Compress-34,list_directory,1,
+Compress-34,read_file,6,
+Compress-34,replace,2,
+Compress-34,run_shell_command,3,./run_bug_exposing_tests.sh
+Compress-34,run_shell_command,3,defects4j compile
+Compress-34,run_shell_command,1,defects4j test
+Compress-34,run_shell_command,1,git diff
+Compress-35,glob,2,
+Compress-35,read_file,7,
+Compress-35,replace,1,
+Compress-35,run_shell_command,1,./run_all_tests_trace.sh
+Compress-35,run_shell_command,2,./run_bug_exposing_tests.sh
+Compress-35,run_shell_command,1,defects4j test
+Compress-35,run_shell_command,1,git diff > /Users/danielding/Desktop/example_dir/Compress_35/fix.patch
+Compress-35,search_file_content,1,
+Compress-47,read_file,7,
+Compress-47,replace,5,
+Compress-47,run_shell_command,1,./run_bug_exposing_tests.sh
+Compress-47,run_shell_command,4,defects4j compile
+Compress-47,run_shell_command,1,defects4j export -p cp.test
+Compress-47,run_shell_command,1,defects4j export -p tests.trigger
+Compress-47,run_shell_command,1,defects4j test
+Compress-47,run_shell_command,1,defects4j test -t org.apache.commons.compress.archivers.zip.ZipArchiveInputStreamTest
+Compress-47,run_shell_command,4,defects4j test -t org.apache.commons.compress.archivers.zip.ZipArchiveInputStreamTest::properlyMarksEntriesAsUnreadableIfUncompressedSizeIsUnknown
+Compress-47,run_shell_command,1,git diff
+Compress-6,read_file,3,
+Compress-6,replace,1,
+Compress-6,run_shell_command,1,./run_bug_exposing_tests.sh
+Compress-6,run_shell_command,1,defects4j compile
+Compress-6,run_shell_command,2,defects4j test
+Compress-6,run_shell_command,1,git diff
+Compress-9,read_file,6,
+Compress-9,replace,9,
+Compress-9,run_shell_command,2,./run_bug_exposing_tests.sh
+Compress-9,run_shell_command,2,defects4j compile
+Csv-16,read_file,2,
+Csv-16,read_many_files,1,
+Csv-16,replace,5,
+Csv-16,run_shell_command,1,./run_bug_exposing_tests.sh
+Csv-16,run_shell_command,2,defects4j compile
+Csv-16,run_shell_command,2,defects4j test
+Csv-16,run_shell_command,1,defects4j test -t org.apache.commons.csv.CSVParserTest
+Csv-16,run_shell_command,1,defects4j test -t org.apache.commons.csv.CSVParserTest::testIteratorSequenceBreaking
+Csv-16,run_shell_command,1,git diff
+Csv-7,read_file,4,
+Csv-7,replace,2,
+Csv-7,run_shell_command,1,./run_bug_exposing_tests.sh
+Csv-7,run_shell_command,2,defects4j compile
+Csv-7,run_shell_command,2,defects4j test
+Csv-7,run_shell_command,1,defects4j test -t org.apache.commons.csv.CSVParserTest::testDuplicateHeaderEntries
+Csv-7,run_shell_command,1,git diff
+Csv-8,read_file,5,
+Csv-8,replace,3,
+Csv-8,run_shell_command,1,./run_bug_exposing_tests.sh
+Csv-8,run_shell_command,2,defects4j compile
+Csv-8,run_shell_command,3,defects4j test
+Csv-8,run_shell_command,1,git diff
+Gson-14,glob,1,
+Gson-14,read_file,9,
+Gson-14,replace,8,
+Gson-14,run_shell_command,1,./run_all_tests_trace.sh
+Gson-14,run_shell_command,6,./run_bug_exposing_tests.sh
+Gson-14,run_shell_command,5,defects4j compile
+Gson-14,run_shell_command,1,git diff
+Gson-1,read_file,7,
+Gson-1,read_many_files,1,
+Gson-1,replace,3,
+Gson-1,run_shell_command,3,./run_bug_exposing_tests.sh
+Gson-1,run_shell_command,3,defects4j compile
+Gson-1,run_shell_command,1,defects4j test
+Gson-1,run_shell_command,1,git diff > /Users/danielding/Desktop/example_dir/Gson_1/fix.patch
+Gson-7,read_file,4,
+Gson-7,replace,3,
+Gson-7,run_shell_command,1,./run_bug_exposing_tests.sh
+Gson-7,run_shell_command,1,defects4j compile
+Gson-7,run_shell_command,2,defects4j test -t com.google.gson.functional.MapTest::test
+Gson-7,search_file_content,1,
+Gson-8,glob,1,
+Gson-8,read_file,3,
+Gson-8,replace,4,
+Gson-8,run_shell_command,1,./run_bug_exposing_tests.sh
+Gson-8,run_shell_command,2,defects4j compile
+Gson-8,run_shell_command,1,defects4j test
+Gson-9,glob,2,
+Gson-9,read_file,18,
+Gson-9,replace,10,
+Gson-9,run_shell_command,2,./run_bug_exposing_tests.sh
+Gson-9,run_shell_command,18,defects4j compile
+Gson-9,run_shell_command,1,defects4j test
+Gson-9,run_shell_command,4,defects4j test -t com.google.gson.stream.JsonWriterTest::testBoxedBooleans
+Gson-9,run_shell_command,7,git restore /Users/danielding/Desktop/example_dir/Gson_9/gson/src/main/java/com/google/gson/stream/JsonWriter.java
+Gson-9,write_file,9,
+JacksonCore-10,glob,2,
+JacksonCore-10,google_web_search,1,Defects4J JacksonCore_10 patch
+JacksonCore-10,google_web_search,1,JacksonCore_10 bug fix
+JacksonCore-10,google_web_search,1,defects4j add test dependency classpath
+JacksonCore-10,google_web_search,1,maven jackson-databind 2.6.1 jar
+JacksonCore-10,google_web_search,1,maven jcommander 1.27 jar
+JacksonCore-10,google_web_search,1,maven testng 6.8 jar
+JacksonCore-10,read_file,14,
+JacksonCore-10,replace,16,
+JacksonCore-10,run_shell_command,2,./run_bug_exposing_tests.sh
+JacksonCore-10,run_shell_command,1,curl -o /Users/danielding/Desktop/example_dir/JacksonCore_10/lib/jackson-databind-2.6.1.jar https://repo.maven.apache.org/maven2/com/fasterxml/jackson/core/jackson-databind/2.6.1/jackson-databind-2.6.1.jar
+JacksonCore-10,run_shell_command,1,curl -o /Users/danielding/Desktop/example_dir/JacksonCore_10/lib/jcommander-1.27.jar https://repo.maven.apache.org/maven2/com/beust/jcommander/1.27/jcommander-1.27.jar
+JacksonCore-10,run_shell_command,1,curl -o /Users/danielding/Desktop/example_dir/JacksonCore_10/lib/testng-6.8.8.jar https://repo.maven.apache.org/maven2/org/testng/testng/6.8.8/testng-6.8.8.jar
+JacksonCore-10,run_shell_command,1,defects4j checkout -p JacksonCore -v 10f -w /Users/danielding/Desktop/example_dir/JacksonCore_10/fixed_version_temp
+JacksonCore-10,run_shell_command,1,defects4j checkout -p JacksonCore -v 10f -w /Users/danielding/Desktop/example_dir/JacksonCore_10_fixed
+JacksonCore-10,run_shell_command,14,defects4j compile
+JacksonCore-10,run_shell_command,5,defects4j test
+JacksonCore-10,run_shell_command,5,defects4j test -t com.fasterxml.jackson.core.UTF8ByteStreamTest::testRead
+JacksonCore-10,run_shell_command,1,defects4j test -t com.fasterxml.jackson.core.UTF8ByteStreamTest::testRead > utf8bytestreamtest_bug_trace_with_print.log 2>&1
+JacksonCore-10,run_shell_command,1,defects4j test -t com.fasterxml.jackson.core.sym.TestSymbolTables::testCollisionsWithBytesNew187b
+JacksonCore-10,run_shell_command,1,git diff --no-index /Users/danielding/Desktop/example_dir/JacksonCore_10/src/main/java/com/fasterxml/jackson/core/sym/ByteQuadsCanonicalizer.java /Users/danielding/Desktop/example_dir/JacksonCore_10/fixed_version_temp/src/main/java/com/fasterxml/jackson/core/sym/ByteQuadsCanonicalizer.java > jacksoncore_10.patch
+JacksonCore-10,run_shell_command,1,git diff src/main/java/com/fasterxml/jackson/core/sym/ByteQuadsCanonicalizer.java > /Users/danielding/Desktop/example_dir/JacksonCore_10/jacksoncore_10_final.patch
+JacksonCore-10,run_shell_command,2,git restore src/main/java/com/fasterxml/jackson/core/sym/ByteQuadsCanonicalizer.java
+JacksonCore-10,run_shell_command,1,"java -cp ""/Users/danielding/Desktop/defects4j/framework/projects/JacksonCore/lib/junit/junit/4.11/junit-4.11.jar:/Users/danielding/Desktop/defects4j/framework/projects/JacksonCore/lib/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar:/Users/danielding/Desktop/example_dir/JacksonCore_10/lib/jackson-databind-2.6.1.jar:/Users/danielding/Desktop/example_dir/JacksonCore_10/lib/testng-6.8.8.jar:/Users/danielding/Desktop/example_dir/JacksonCore_10/lib/jcommander-1.27.jar:/Users/danielding/Desktop/example_dir/JacksonCore_10/target/classes:/Users/danielding/Desktop/example_dir/JacksonCore_10/target/test-classes:/Users/danielding/Desktop/defects4j/framework/projects/lib/junit-4.11.jar:/Users/danielding/Desktop/defects4j/framework/projects/JacksonCore/lib/junit/junit/4.12/junit-4.12.jar:/Users/danielding/Desktop/defects4j/framework/projects/JacksonCore/lib/junit/junit/4.8.2/junit-4.8.2.jar"" org.testng.TestNG -testclass com.fasterxml.jackson.core.UTF8ByteStreamTest > utf8bytestreamtest_bug_trace.log 2>&1"
+JacksonCore-10,run_shell_command,1,"java -cp ""/Users/danielding/Desktop/defects4j/framework/projects/JacksonCore/lib/junit/junit/4.11/junit-4.11.jar:/Users/danielding/Desktop/defects4j/framework/projects/JacksonCore/lib/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar:/Users/danielding/Desktop/example_dir/JacksonCore_10/lib/jackson-databind-2.6.1.jar:/Users/danielding/Desktop/example_dir/JacksonCore_10/lib/testng-6.8.8.jar:/Users/danielding/Desktop/example_dir/JacksonCore_10/lib/jcommander-1.27.jar:/Users/danielding/Desktop/example_dir/JacksonCore_10/target/classes:/Users/danielding/Desktop/example_dir/JacksonCore_10/target/test-classes:/Users/danielding/Desktop/defects4j/framework/projects/lib/junit-4.11.jar:/Users/danielding/Desktop/defects4j/framework/projects/JacksonCore/lib/junit/junit/4.12/junit-4.12.jar:/Users/danielding/Desktop/defects4j/framework/projects/JacksonCore/lib/junit/junit/4.8.2/junit-4.8.2.jar"" org.testng.TestNG -testclass com.fasterxml.jackson.core.UTF8ByteStreamTest > utf8bytestreamtest_bug_trace_direct.log 2>&1"
+JacksonCore-10,run_shell_command,1,"java -cp ""/Users/danielding/Desktop/defects4j/framework/projects/JacksonCore/lib/junit/junit/4.11/junit-4.11.jar:/Users/danielding/Desktop/defects4j/framework/projects/JacksonCore/lib/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar:/Users/danielding/Desktop/example_dir/JacksonCore_10/lib/jackson-databind-2.6.1.jar:/Users/danielding/Desktop/example_dir/JacksonCore_10/lib/testng-6.8.8.jar:/Users/danielding/Desktop/example_dir/JacksonCore_10/lib/jcommander-1.27.jar:/Users/danielding/Desktop/example_dir/JacksonCore_10/target/classes:/Users/danielding/Desktop/example_dir/JacksonCore_10/target/test-classes:/Users/danielding/Desktop/defects4j/framework/projects/lib/junit-4.11.jar:/Users/danielding/Desktop/defects4j/framework/projects/JacksonCore/lib/junit/junit/4.12/junit-4.12.jar:/Users/danielding/Desktop/defects4j/framework/projects/JacksonCore/lib/junit/junit/4.8.2/junit-4.8.2.jar"" org.testng.TestNG -testclass com.fasterxml.jackson.core.UTF8ByteStreamTest > utf8bytestreamtest_final_trace.log 2>&1"
+JacksonCore-10,run_shell_command,1,"java -cp ""/Users/danielding/Desktop/defects4j/framework/projects/JacksonCore/lib/junit/junit/4.11/junit-4.11.jar:/Users/danielding/Desktop/defects4j/framework/projects/JacksonCore/lib/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar:/Users/danielding/Desktop/example_dir/JacksonCore_10/lib/jackson-databind-2.6.1.jar:/Users/danielding/Desktop/example_dir/JacksonCore_10/lib/testng-6.8.8.jar:/Users/danielding/Desktop/example_dir/JacksonCore_10/lib/jcommander-1.27.jar:/Users/danielding/Desktop/example_dir/JacksonCore_10/target/classes:/Users/danielding/Desktop/example_dir/JacksonCore_10/target/test-classes:/Users/danielding/Desktop/defects4j/framework/projects/lib/junit-4.11.jar:/Users/danielding/Desktop/defects4j/framework/projects/JacksonCore/lib/junit/junit/4.12/junit-4.12.jar:/Users/danielding/Desktop/defects4j/framework/projects/JacksonCore/lib/junit/junit/4.8.2/junit-4.8.2.jar"" org.testng.TestNG -testclass com.fasterxml.jackson.core.UTF8ByteStreamTest > utf8bytestreamtest_post_fix_trace.log 2>&1"
+JacksonCore-10,run_shell_command,1,"java -cp ""/Users/danielding/Desktop/defects4j/framework/projects/JacksonCore/lib/junit/junit/4.11/junit-4.11.jar:/Users/danielding/Desktop/defects4j/framework/projects/JacksonCore/lib/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar:/Users/danielding/Desktop/example_dir/JacksonCore_10/lib/jackson-databind-2.6.1.jar:/Users/danielding/Desktop/example_dir/JacksonCore_10/lib/testng-6.8.8.jar:/Users/danielding/Desktop/example_dir/JacksonCore_10/lib/jcommander-1.27.jar:/Users/danielding/Desktop/example_dir/JacksonCore_10/target/classes:/Users/danielding/Desktop/example_dir/JacksonCore_10/target/test-classes:/Users/danielding/Desktop/defects4j/framework/projects/lib/junit-4.11.jar:/Users/danielding/Desktop/defects4j/framework/projects/JacksonCore/lib/junit/junit/4.12/junit-4.12.jar:/Users/danielding/Desktop/defects4j/framework/projects/JacksonCore/lib/junit/junit/4.8.2/junit-4.8.2.jar"" org.testng.TestNG com.fasterxml.jackson.core.UTF8ByteStreamTest > utf8bytestreamtest_bug_trace.log 2>&1"
+JacksonCore-10,run_shell_command,1,"java -cp ""/Users/danielding/Desktop/defects4j/framework/projects/JacksonCore/lib/junit/junit/4.11/junit-4.11.jar:/Users/danielding/Desktop/defects4j/framework/projects/JacksonCore/lib/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar:/Users/danielding/Desktop/example_dir/JacksonCore_10/lib/jackson-databind-2.6.1.jar:/Users/danielding/Desktop/example_dir/JacksonCore_10/lib/testng-6.8.8.jar:/Users/danielding/Desktop/example_dir/JacksonCore_10/target/classes:/Users/danielding/Desktop/example_dir/JacksonCore_10/target/test-classes:/Users/danielding/Desktop/defects4j/framework/projects/lib/junit-4.11.jar:/Users/danielding/Desktop/defects4j/framework/projects/JacksonCore/lib/junit/junit/4.12/junit-4.12.jar:/Users/danielding/Desktop/defects4j/framework/projects/JacksonCore/lib/junit/junit/4.8.2/junit-4.8.2.jar"" org.testng.TestNG com.fasterxml.jackson.core.UTF8ByteStreamTest > utf8bytestreamtest.log 2>&1"
+JacksonCore-10,run_shell_command,1,mkdir -p /Users/danielding/Desktop/example_dir/JacksonCore_10/lib
+JacksonCore-10,run_shell_command,1,rm -rf /Users/danielding/Desktop/example_dir/JacksonCore_10/fixed_version_temp
+JacksonCore-10,run_shell_command,1,rm -rf /Users/danielding/Desktop/example_dir/JacksonCore_10/lib
+JacksonCore-10,run_shell_command,1,rm /Users/danielding/Desktop/example_dir/JacksonCore_10/src/test/java/com/fasterxml/jackson/core/UTF8ByteStreamTest.java
+JacksonCore-10,write_file,1,
+JacksonCore-12,glob,1,
+JacksonCore-12,read_file,6,
+JacksonCore-12,replace,2,
+JacksonCore-12,run_shell_command,3,./run_bug_exposing_tests.sh
+JacksonCore-12,run_shell_command,2,defects4j compile
+JacksonCore-12,run_shell_command,1,defects4j test
+JacksonCore-12,run_shell_command,1,git diff
+JacksonCore-16,read_file,6,
+JacksonCore-16,replace,2,
+JacksonCore-16,run_shell_command,3,./run_bug_exposing_tests.sh
+JacksonCore-16,run_shell_command,2,defects4j compile
+JacksonCore-16,run_shell_command,1,defects4j test
+JacksonCore-16,run_shell_command,1,git diff
+JacksonCore-24,read_file,15,
+JacksonCore-24,replace,14,
+JacksonCore-24,run_shell_command,4,./run_bug_exposing_tests.sh
+JacksonCore-24,run_shell_command,6,defects4j compile
+JacksonCore-24,run_shell_command,1,defects4j test
+JacksonCore-24,run_shell_command,1,git diff
+JacksonCore-24,write_file,1,
+JacksonDatabind-103,glob,2,
+JacksonDatabind-103,read_file,22,
+JacksonDatabind-103,replace,55,
+JacksonDatabind-103,run_shell_command,17,./run_bug_exposing_tests.sh
+JacksonDatabind-103,run_shell_command,17,defects4j compile
+JacksonDatabind-108,glob,1,
+JacksonDatabind-108,read_file,24,
+JacksonDatabind-108,replace,27,
+JacksonDatabind-108,run_shell_command,2,./run_all_tests_trace.sh
+JacksonDatabind-108,run_shell_command,14,./run_bug_exposing_tests.sh
+JacksonDatabind-108,run_shell_command,13,defects4j compile
+JacksonDatabind-108,search_file_content,5,
+JacksonDatabind-110,glob,3,
+JacksonDatabind-110,read_file,9,
+JacksonDatabind-110,replace,23,
+JacksonDatabind-110,run_shell_command,1,./run_bug_exposing_tests.sh
+JacksonDatabind-110,run_shell_command,7,defects4j compile
+JacksonDatabind-110,run_shell_command,7,defects4j test -t com.fasterxml.jackson.databind.deser.jdk.JDKCollectionsDeserTest::testUnmodifiableNonRandomAccessList
+JacksonDatabind-110,run_shell_command,1,java -cp target/test-classes:/Users/danielding/Desktop/defects4j/framework/projects/JacksonDatabind/lib/junit/junit/4.12/junit-4.12.jar:/Users/danielding/Desktop/defects4j/framework/projects/JacksonDatabind/lib/com/fasterxml/jackson/core/jackson-annotations/2.9.0/jackson-annotations-2.9.0.jar:/Users/danielding/Desktop/defects4j/framework/projects/JacksonDatabind/lib/com/fasterxml/jackson/core/jackson-core/2.9.9/jackson-core-2.9.9.jar com.fasterxml.jackson.databind.TempClassNames
+JacksonDatabind-110,run_shell_command,1,rm /Users/danielding/Desktop/example_dir/JacksonDatabind_110/src/test/java/com/fasterxml/jackson/databind/TempClassNames.java
+JacksonDatabind-110,write_file,1,
+JacksonDatabind-111,glob,2,
+JacksonDatabind-111,read_file,6,
+JacksonDatabind-111,replace,2,
+JacksonDatabind-111,run_shell_command,1,defects4j compile
+JacksonDatabind-111,run_shell_command,1,defects4j test
+JacksonDatabind-111,run_shell_command,3,defects4j test -t com.fasterxml.jackson.databind.deser.jdk.JDKAtomicTypesDeserTest::testNullWithinNested
+JacksonDatabind-111,search_file_content,2,
+JacksonDatabind-13,glob,4,
+JacksonDatabind-13,read_file,7,
+JacksonDatabind-13,replace,4,
+JacksonDatabind-13,run_shell_command,1,./run_all_tests_trace.sh
+JacksonDatabind-13,run_shell_command,2,./run_bug_exposing_tests.sh
+JacksonDatabind-13,run_shell_command,4,defects4j compile
+JacksonDatabind-13,run_shell_command,1,defects4j test -t com.fasterxml.jackson.databind.struct.TestObjectIdDeserialization
+JacksonDatabind-13,run_shell_command,2,defects4j test -t com.fasterxml.jackson.databind.struct.TestObjectIdDeserialization::testNullObjectId
+JacksonDatabind-14,glob,3,
+JacksonDatabind-14,read_file,6,
+JacksonDatabind-14,replace,14,
+JacksonDatabind-14,run_shell_command,13,defects4j compile
+JacksonDatabind-14,run_shell_command,3,defects4j test
+JacksonDatabind-14,run_shell_command,7,defects4j test -t com.fasterxml.jackson.failing.TestDeserTest::test
+JacksonDatabind-14,run_shell_command,1,git diff
+JacksonDatabind-14,run_shell_command,1,rm /Users/danielding/Desktop/example_dir/JacksonDatabind_14/src/test/java/com/fasterxml/jackson/failing/TestDeserTest.java
+JacksonDatabind-14,write_file,1,
+JacksonDatabind-15,glob,1,
+JacksonDatabind-15,read_file,6,
+JacksonDatabind-15,replace,1,
+JacksonDatabind-15,run_shell_command,1,./run_bug_exposing_tests.sh
+JacksonDatabind-15,run_shell_command,2,defects4j compile
+JacksonDatabind-15,run_shell_command,1,mkdir -p /Users/danielding/Desktop/example_dir/JacksonDatabind_15/lib
+JacksonDatabind-15,run_shell_command,1,mkdir -p /Users/danielding/Desktop/example_dir/JacksonDatabind_15/src/test/java/com/fasterxml/jackson/databind/bug
+JacksonDatabind-15,run_shell_command,1,mvn clean install
+JacksonDatabind-15,web_fetch,1,Download https://repo.maven.apache.org/maven2/com/google/guava/guava/18.0/guava-18.0.jar
+JacksonDatabind-15,web_fetch,1,Get the content of https://github.com/Spikhalskiy/jackson_xmladapter__bug/blob/master/src/test/java/IntegerListXmlAdapterTest.java
+JacksonDatabind-15,write_file,1,
+JacksonDatabind-18,glob,2,
+JacksonDatabind-18,read_file,23,
+JacksonDatabind-18,replace,41,
+JacksonDatabind-18,run_shell_command,18,./run_bug_exposing_tests.sh
+JacksonDatabind-18,run_shell_command,19,defects4j compile
+JacksonDatabind-18,write_file,5,
+JacksonDatabind-22,glob,2,
+JacksonDatabind-22,read_file,11,
+JacksonDatabind-22,replace,9,
+JacksonDatabind-22,run_shell_command,1,./run_bug_exposing_tests.sh
+JacksonDatabind-22,run_shell_command,7,defects4j compile
+JacksonDatabind-22,run_shell_command,1,defects4j export -p cp.test
+JacksonDatabind-22,run_shell_command,1,defects4j export -p tests.trigger
+JacksonDatabind-22,run_shell_command,5,defects4j test
+JacksonDatabind-22,run_shell_command,2,defects4j test -t com.fasterxml.jackson.databind.ser.TestJsonValue::testJsonValueWithCustomOverride
+JacksonDatabind-22,run_shell_command,1,git diff
+JacksonDatabind-22,search_file_content,1,
+JacksonDatabind-23,glob,9,
+JacksonDatabind-23,read_file,15,
+JacksonDatabind-23,replace,16,
+JacksonDatabind-23,run_shell_command,1,./run_bug_exposing_tests.sh
+JacksonDatabind-23,run_shell_command,4,defects4j compile
+JacksonDatabind-23,run_shell_command,3,defects4j test
+JacksonDatabind-23,run_shell_command,2,defects4j test -t com.fasterxml.jackson.databind.ser.TestJsonSerialize2::testEmptyInclusionScalars
+JacksonDatabind-23,run_shell_command,1,git add src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializers.java
+JacksonDatabind-23,run_shell_command,1,git checkout HEAD -- src/main/java/com/fasterxml/jackson/databind/ser/std/NumberSerializer.java
+JacksonDatabind-23,run_shell_command,1,"git commit -m ""Fix: Handle NON_EMPTY inclusion for scalar numbers in NumberSerializers"""
+JacksonDatabind-23,run_shell_command,2,git diff
+JacksonDatabind-23,run_shell_command,1,git status
+JacksonDatabind-23,search_file_content,3,
+JacksonDatabind-29,read_file,11,
+JacksonDatabind-29,replace,27,
+JacksonDatabind-29,run_shell_command,1,./run_bug_exposing_tests.sh
+JacksonDatabind-29,run_shell_command,6,defects4j compile
+JacksonDatabind-29,run_shell_command,2,defects4j test
+JacksonDatabind-29,run_shell_command,5,defects4j test -t com.fasterxml.jackson.databind.jsontype.TestExternalId::testExternalTypeIdWithNull
+JacksonDatabind-29,run_shell_command,1,git diff
+JacksonDatabind-29,search_file_content,2,
+JacksonDatabind-30,read_file,5,
+JacksonDatabind-30,replace,1,
+JacksonDatabind-30,run_shell_command,2,defects4j compile
+JacksonDatabind-30,run_shell_command,2,defects4j test -t com.fasterxml.jackson.databind.failing.JacksonTest::test
+JacksonDatabind-30,search_file_content,2,
+JacksonDatabind-30,write_file,1,
+JacksonDatabind-32,read_many_files,1,
+JacksonDatabind-36,list_directory,1,
+JacksonDatabind-36,read_file,27,
+JacksonDatabind-36,replace,108,
+JacksonDatabind-36,run_shell_command,1,./run_bug_exposing_tests.sh
+JacksonDatabind-36,run_shell_command,1,defects4j compile
+JacksonDatabind-36,run_shell_command,1,defects4j export -p cp.test
+JacksonDatabind-36,run_shell_command,2,defects4j test -t com.fasterxml.jackson.databind.TestStdDateFormat
+JacksonDatabind-36,run_shell_command,20,defects4j test -t com.fasterxml.jackson.databind.TestStdDateFormat::testLenient
+JacksonDatabind-36,run_shell_command,6,git reset --hard HEAD
+JacksonDatabind-3,read_file,4,
+JacksonDatabind-3,replace,1,
+JacksonDatabind-3,run_shell_command,1,./run_bug_exposing_tests.sh
+JacksonDatabind-3,run_shell_command,2,defects4j test
+JacksonDatabind-3,run_shell_command,1,defects4j test -t com.fasterxml.jackson.databind.deser.TestArrayDeserialization::testStringArray
+JacksonDatabind-3,run_shell_command,1,git diff
+JacksonDatabind-3,search_file_content,1,
+JacksonDatabind-41,glob,3,
+JacksonDatabind-41,read_file,5,
+JacksonDatabind-41,replace,1,
+JacksonDatabind-41,run_shell_command,1,./run_all_tests_trace.sh
+JacksonDatabind-41,run_shell_command,2,./run_bug_exposing_tests.sh
+JacksonDatabind-41,run_shell_command,2,defects4j compile
+JacksonDatabind-43,glob,1,
+JacksonDatabind-43,read_file,14,
+JacksonDatabind-43,replace,4,
+JacksonDatabind-43,run_shell_command,2,./run_bug_exposing_tests.sh
+JacksonDatabind-43,run_shell_command,4,defects4j compile
+JacksonDatabind-43,run_shell_command,1,defects4j test
+JacksonDatabind-43,run_shell_command,4,defects4j test -t com.fasterxml.jackson.databind.objectid.TestObjectIdSerialization::testNullIdValue
+JacksonDatabind-43,run_shell_command,1,git diff
+JacksonDatabind-43,search_file_content,3,
+JacksonDatabind-52,read_file,6,
+JacksonDatabind-52,replace,2,
+JacksonDatabind-52,run_shell_command,1,./run_bug_exposing_tests.sh
+JacksonDatabind-52,run_shell_command,1,defects4j compile
+JacksonDatabind-52,run_shell_command,1,defects4j info
+JacksonDatabind-52,run_shell_command,1,defects4j test
+JacksonDatabind-52,run_shell_command,1,defects4j test -r
+JacksonDatabind-52,run_shell_command,1,defects4j test -t com.fasterxml.jackson.databind.jsontype.ext.ExternalTypeId999Test::testExternalTypeId
+JacksonDatabind-52,run_shell_command,1,git diff > fix.patch
+JacksonDatabind-52,search_file_content,3,
+JacksonDatabind-53,glob,3,
+JacksonDatabind-53,read_file,7,
+JacksonDatabind-53,replace,1,
+JacksonDatabind-53,run_shell_command,1,./run_all_tests_trace.sh
+JacksonDatabind-53,run_shell_command,3,./run_bug_exposing_tests.sh
+JacksonDatabind-53,run_shell_command,1,defects4j compile
+JacksonDatabind-56,read_file,3,
+JacksonDatabind-56,replace,1,
+JacksonDatabind-56,run_shell_command,1,./run_bug_exposing_tests.sh
+JacksonDatabind-56,run_shell_command,1,defects4j compile
+JacksonDatabind-56,run_shell_command,1,defects4j test
+JacksonDatabind-56,run_shell_command,1,defects4j test -t com.fasterxml.jackson.databind.deser.TestJdkTypes::testLocale
+JacksonDatabind-56,run_shell_command,1,git diff
+JacksonDatabind-56,search_file_content,1,
+JacksonDatabind-59,read_file,38,
+JacksonDatabind-59,replace,47,
+JacksonDatabind-59,run_shell_command,10,defects4j compile
+JacksonDatabind-59,run_shell_command,2,defects4j test
+JacksonDatabind-59,run_shell_command,5,defects4j test -t com.fasterxml.jackson.databind.failing.TestJacksonDatabind59::testFails
+JacksonDatabind-59,search_file_content,8,
+JacksonDatabind-59,write_file,3,
+JacksonDatabind-60,read_file,6,
+JacksonDatabind-60,replace,1,
+JacksonDatabind-60,run_shell_command,1,./run_bug_exposing_tests.sh
+JacksonDatabind-60,run_shell_command,2,defects4j compile
+JacksonDatabind-60,run_shell_command,1,defects4j export -p cp.test
+JacksonDatabind-60,run_shell_command,1,defects4j export -p tests.trigger
+JacksonDatabind-60,run_shell_command,1,defects4j test
+JacksonDatabind-60,run_shell_command,2,defects4j test -t com.fasterxml.jackson.databind.jsontype.TestDefaultWithCreators::testWithCreatorAndJsonValue
+JacksonDatabind-60,run_shell_command,1,git diff
+JacksonDatabind-60,search_file_content,1,
+JacksonDatabind-61,read_file,7,
+JacksonDatabind-61,replace,2,
+JacksonDatabind-61,run_shell_command,5,./run_all_tests_trace.sh
+JacksonDatabind-61,run_shell_command,2,./run_bug_exposing_tests.sh
+JacksonDatabind-61,run_shell_command,2,defects4j compile
+JacksonDatabind-61,run_shell_command,1,git diff
+JacksonDatabind-61,run_shell_command,1,ls -t all_tests_trace.*.log | head -n 1
+JacksonDatabind-65,glob,1,
+JacksonDatabind-65,read_file,5,
+JacksonDatabind-65,replace,1,
+JacksonDatabind-65,run_shell_command,3,./run_bug_exposing_tests.sh
+JacksonDatabind-65,run_shell_command,2,defects4j compile
+JacksonDatabind-65,run_shell_command,1,defects4j test
+JacksonDatabind-65,run_shell_command,1,git diff
+JacksonDatabind-66,glob,3,
+JacksonDatabind-66,read_file,12,
+JacksonDatabind-66,replace,3,
+JacksonDatabind-66,run_shell_command,3,./run_all_tests_trace.sh
+JacksonDatabind-66,run_shell_command,4,./run_bug_exposing_tests.sh
+JacksonDatabind-66,run_shell_command,4,defects4j compile
+JacksonDatabind-66,run_shell_command,1,git diff
+JacksonDatabind-66,run_shell_command,1,rm /Users/danielding/Desktop/example_dir/JacksonDatabind_66/src/test/java/com/fasterxml/jackson/databind/module/SuperType.java
+JacksonDatabind-66,run_shell_command,1,rm /Users/danielding/Desktop/example_dir/JacksonDatabind_66/src/test/java/com/fasterxml/jackson/databind/module/SuperTypeEnum.java
+JacksonDatabind-66,write_file,2,
+JacksonDatabind-68,google_web_search,1,Jackson Databind ACCEPT_SINGLE_VALUE_AS_ARRAY creator property List<T> constructor bug 2.7
+JacksonDatabind-68,google_web_search,1,Jackson Databind ACCEPT_SINGLE_VALUE_AS_ARRAY creator property List<T> constructor bug 2.7 github commit
+JacksonDatabind-68,google_web_search,1,Jackson Databind ACCEPT_SINGLE_VALUE_AS_ARRAY creator property bug 2.7
+JacksonDatabind-68,google_web_search,1,Jackson Databind ACCEPT_SINGLE_VALUE_AS_ARRAY creator property bug 2.7 github
+JacksonDatabind-68,google_web_search,1,Jackson Databind ACCEPT_SINGLE_VALUE_AS_ARRAY creator property bug 2.7 github commit
+JacksonDatabind-68,read_file,27,
+JacksonDatabind-68,replace,61,
+JacksonDatabind-68,run_shell_command,34,defects4j compile
+JacksonDatabind-68,run_shell_command,19,defects4j test -t com.fasterxml.jackson.databind.creators.JsonCreatorWithCollectionTest::test
+JacksonDatabind-68,search_file_content,3,
+JacksonDatabind-68,write_file,2,
+JacksonDatabind-69,glob,2,
+JacksonDatabind-69,read_file,14,
+JacksonDatabind-69,replace,27,
+JacksonDatabind-69,run_shell_command,23,defects4j compile
+JacksonDatabind-69,run_shell_command,10,defects4j test
+JacksonDatabind-69,run_shell_command,21,defects4j test -t com.fasterxml.jackson.databind.failing.TestJackson::testJackson
+JacksonDatabind-69,run_shell_command,20,git checkout /Users/danielding/Desktop/example_dir/JacksonDatabind_69/src/main/java/com/fasterxml/jackson/databind/deser/BasicDeserializerFactory.java
+JacksonDatabind-69,run_shell_command,1,mkdir -p /Users/danielding/Desktop/example_dir/JacksonDatabind_69/src/test/java/com/fasterxml/jackson/databind/failing/
+JacksonDatabind-69,write_file,1,
+JacksonDatabind-6,glob,1,
+JacksonDatabind-6,read_file,11,
+JacksonDatabind-6,replace,12,
+JacksonDatabind-6,run_shell_command,5,./run_bug_exposing_tests.sh
+JacksonDatabind-6,run_shell_command,1,defects4j export -p tests.trigger
+JacksonDatabind-6,run_shell_command,3,defects4j test
+JacksonDatabind-6,run_shell_command,2,git checkout HEAD -- src/main/java/com/fasterxml/jackson/databind/util/StdDateFormat.java
+JacksonDatabind-6,run_shell_command,1,git diff > fix.patch
+JacksonDatabind-73,glob,1,
+JacksonDatabind-73,read_file,19,
+JacksonDatabind-73,replace,22,
+JacksonDatabind-73,run_shell_command,8,./run_bug_exposing_tests.sh
+JacksonDatabind-73,run_shell_command,11,defects4j compile
+JacksonDatabind-73,search_file_content,4,
+JacksonDatabind-75,glob,2,
+JacksonDatabind-75,google_web_search,1,Jackson JsonFormat.Shape source code
+JacksonDatabind-75,read_file,24,
+JacksonDatabind-75,replace,71,
+JacksonDatabind-75,run_shell_command,7,./run_bug_exposing_tests.sh
+JacksonDatabind-75,run_shell_command,8,defects4j compile
+JacksonDatabind-75,search_file_content,6,
+JacksonDatabind-77,read_file,7,
+JacksonDatabind-77,run_shell_command,2,./run_bug_exposing_tests.sh
+JacksonDatabind-77,run_shell_command,1,defects4j compile
+JacksonDatabind-77,search_file_content,1,
+JacksonDatabind-78,glob,1,
+JacksonDatabind-78,read_file,3,
+JacksonDatabind-78,read_many_files,1,
+JacksonDatabind-78,run_shell_command,2,./run_bug_exposing_tests.sh
+JacksonDatabind-78,run_shell_command,1,defects4j compile
+JacksonDatabind-78,search_file_content,1,
+JacksonDatabind-79,glob,1,
+JacksonDatabind-79,read_file,7,
+JacksonDatabind-79,replace,5,
+JacksonDatabind-79,run_shell_command,1,./run_bug_exposing_tests.sh
+JacksonDatabind-79,run_shell_command,5,defects4j compile
+JacksonDatabind-79,run_shell_command,1,defects4j test
+JacksonDatabind-79,run_shell_command,2,defects4j test -t com.fasterxml.jackson.databind.objectid.TestObjectIdSerialization::testReallyAlwaysAsId
+JacksonDatabind-79,search_file_content,4,
+JacksonDatabind-87,glob,1,
+JacksonDatabind-87,read_file,7,
+JacksonDatabind-87,replace,8,
+JacksonDatabind-87,run_shell_command,3,./run_bug_exposing_tests.sh
+JacksonDatabind-87,run_shell_command,4,defects4j compile
+JacksonDatabind-87,run_shell_command,1,defects4j export -p cp.test
+JacksonDatabind-87,run_shell_command,1,defects4j test
+JacksonDatabind-87,run_shell_command,1,git diff
+JacksonDatabind-8,read_file,6,
+JacksonDatabind-8,replace,1,
+JacksonDatabind-8,run_shell_command,3,./run_bug_exposing_tests.sh
+JacksonDatabind-8,run_shell_command,2,defects4j compile
+JacksonDatabind-8,run_shell_command,1,defects4j test
+JacksonDatabind-8,run_shell_command,1,git diff
+JacksonDatabind-90,read_file,14,
+JacksonDatabind-90,replace,13,
+JacksonDatabind-90,run_shell_command,1,defects4j compile
+JacksonDatabind-90,run_shell_command,8,defects4j test -t com.fasterxml.jackson.databind.failing.ArrayDelegateDeserializationTest::testArrayDelegateDeserialization
+JacksonDatabind-90,run_shell_command,1,git show HEAD:src/main/java/com/fasterxml/jackson/databind/deser/BasicDeserializerFactory.java
+JacksonDatabind-90,search_file_content,2,
+JacksonDatabind-90,write_file,4,
+JacksonDatabind-94,glob,1,
+JacksonDatabind-94,read_file,11,
+JacksonDatabind-94,replace,11,
+JacksonDatabind-94,run_shell_command,7,./run_bug_exposing_tests.sh
+JacksonDatabind-94,run_shell_command,5,defects4j compile
+JacksonDatabind-94,run_shell_command,1,defects4j test
+JacksonDatabind-94,run_shell_command,1,git diff
+JacksonDatabind-94,search_file_content,1,
+JacksonDatabind-95,read_file,4,
+JacksonDatabind-95,replace,2,
+JacksonDatabind-95,run_shell_command,1,./run_bug_exposing_tests.sh
+JacksonDatabind-95,run_shell_command,2,defects4j compile
+JacksonDatabind-95,run_shell_command,2,defects4j test
+JacksonDatabind-95,run_shell_command,1,defects4j test -t com.fasterxml.jackson.databind.type.TestTypeFactory::testCanonicalNames
+JacksonDatabind-95,run_shell_command,1,git diff
+JacksonXml-1,read_file,18,
+JacksonXml-1,read_many_files,2,
+JacksonXml-1,replace,22,
+JacksonXml-1,run_shell_command,7,./run_bug_exposing_tests.sh
+JacksonXml-1,run_shell_command,1,defects4j compile
+JacksonXml-1,run_shell_command,1,defects4j test
+JacksonXml-1,run_shell_command,1,defects4j test -t com.fasterxml.jackson.dataformat.xml.lists.NestedUnwrappedLists180Test
+JacksonXml-1,search_file_content,1,
+JacksonXml-6,glob,4,
+JacksonXml-6,read_file,11,
+JacksonXml-6,replace,42,
+JacksonXml-6,run_shell_command,1,./run_all_tests_trace.sh
+JacksonXml-6,run_shell_command,3,./run_bug_exposing_tests.sh
+JacksonXml-6,run_shell_command,11,defects4j compile
+JacksonXml-6,run_shell_command,1,git checkout /Users/danielding/Desktop/example_dir/JacksonXml_6/src/main/java/com/fasterxml/jackson/dataformat/xml/XmlPrettyPrinter.java
+JacksonXml-6,run_shell_command,1,git checkout /Users/danielding/Desktop/example_dir/JacksonXml_6/src/main/java/com/fasterxml/jackson/dataformat/xml/ser/ToXmlGenerator.java
+JacksonXml-6,run_shell_command,1,git checkout /Users/danielding/Desktop/example_dir/JacksonXml_6/src/main/java/com/fasterxml/jackson/dataformat/xml/util/DefaultXmlPrettyPrinter.java
+JacksonXml-6,run_shell_command,2,git checkout /Users/danielding/Desktop/example_dir/JacksonXml_6/src/main/java/com/fasterxml/jackson/dataformat/xml/util/StaxUtil.java
+JacksonXml-6,run_shell_command,1,git diff > /Users/danielding/Desktop/example_dir/JacksonXml_6/fix.patch
+Jsoup-11,read_file,13,
+Jsoup-11,replace,27,
+Jsoup-11,run_shell_command,1,./run_bug_exposing_tests.sh
+Jsoup-11,run_shell_command,5,defects4j test
+Jsoup-11,run_shell_command,1,defects4j test -t org.jsoup.select.SelectorTest
+Jsoup-11,run_shell_command,12,defects4j test -t org.jsoup.select.SelectorTest::notParas
+Jsoup-11,run_shell_command,1,git diff
+Jsoup-12,glob,1,
+Jsoup-12,read_file,12,
+Jsoup-12,replace,35,
+Jsoup-12,run_shell_command,1,./run_bug_exposing_tests.sh
+Jsoup-12,run_shell_command,16,defects4j compile
+Jsoup-12,run_shell_command,1,defects4j export -p cp.test
+Jsoup-12,run_shell_command,11,defects4j test
+Jsoup-12,run_shell_command,2,defects4j test -t org.jsoup.select.SelectorTest
+Jsoup-12,run_shell_command,1,defects4j test -t org.jsoup.select.SelectorTest::*
+Jsoup-12,run_shell_command,1,git diff > fix.patch
+Jsoup-12,run_shell_command,4,java -cp /Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/junit/junit/4.5/junit-4.5.jar:/Users/danielding/Desktop/example_dir/Jsoup_12/target/classes:/Users/danielding/Desktop/example_dir/Jsoup_12/target/test-classes:/Users/danielding/Desktop/defects4j/framework/projects/lib/junit-4.11.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/com/google/code/gson/gson/2.7/gson-2.7.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/commons-lang/commons-lang/2.4/commons-lang-2.4.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/javax/servlet/javax.servlet-api/3.1.0/javax.servlet-api-3.1.0.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/junit/junit/4.12/junit-4.12.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/org/eclipse/jetty/jetty-http/9.2.22.v20170606/jetty-http-9.2.22.v20170606.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/org/eclipse/jetty/jetty-http/9.2.26.v20180806/jetty-http-9.2.26.v20180806.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/org/eclipse/jetty/jetty-http/9.2.28.v20190418/jetty-http-9.2.28.v20190418.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/org/eclipse/jetty/jetty-io/9.2.22.v20170606/jetty-io-9.2.22.v20170606.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/org/eclipse/jetty/jetty-io/9.2.26.v20180806/jetty-io-9.2.26.v20180806.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/org/eclipse/jetty/jetty-io/9.2.28.v20190418/jetty-io-9.2.28.v20190418.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/org/eclipse/jetty/jetty-security/9.2.22.v20170606/jetty-security-9.2.22.v20170606.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/org/eclipse/jetty/jetty-security/9.2.26.v20180806/jetty-security-9.2.26.v20180806.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/org/eclipse/jetty/jetty-security/9.2.28.v20190418/jetty-security-9.2.28.v20190418.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/org/eclipse/jetty/jetty-server/9.2.22.v20170606/jetty-server-9.2.22.v20170606.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/org/eclipse/jetty/jetty-server/9.2.26.v20180806/jetty-server-9.2.26.v20180806.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/org/eclipse/jetty/jetty-server/9.2.28.v20190418/jetty-server-9.2.28.v20190418.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/org/eclipse/jetty/jetty-servlet/9.2.22.v20170606/jetty-servlet-9.2.22.v20170606.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/org/eclipse/jetty/jetty-servlet/9.2.26.v20180806/jetty-servlet-9.2.26.v20180806.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/org/eclipse/jetty/jetty-servlet/9.2.28.v20190418/jetty-servlet-9.2.28.v20190418.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/org/eclipse/jetty/jetty-util/9.2.22.v20170606/jetty-util-9.2.22.v20170606.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/org/eclipse/jetty/jetty-util/9.2.26.v20180806/jetty-util-9.2.26.v20180806.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/org/eclipse/jetty/jetty-util/9.2.28.v20190418/jetty-util-9.2.28.v20190418.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar org.junit.runner.JUnitCore org.jsoup.select.SelectorTest
+Jsoup-12,search_file_content,1,
+Jsoup-14,glob,1,
+Jsoup-14,read_file,20,
+Jsoup-14,replace,28,
+Jsoup-14,run_shell_command,1,./run_bug_exposing_tests.sh
+Jsoup-14,run_shell_command,17,defects4j compile
+Jsoup-14,run_shell_command,15,defects4j test
+Jsoup-14,run_shell_command,1,git show HEAD:src/main/java/org/jsoup/parser/Tokeniser.java
+Jsoup-14,run_shell_command,3,git show HEAD:src/main/java/org/jsoup/parser/TokeniserState.java
+Jsoup-14,run_shell_command,4,git show HEAD:src/main/java/org/jsoup/parser/TreeBuilderState.java
+Jsoup-14,write_file,8,
+Jsoup-18,read_file,33,
+Jsoup-18,replace,35,
+Jsoup-18,run_shell_command,1,./run_bug_exposing_tests.sh
+Jsoup-18,run_shell_command,11,defects4j compile
+Jsoup-18,run_shell_command,5,defects4j test -t org.jsoup.nodes.ElementTest::testOuterHtmlWithNewlineInAttribute
+Jsoup-18,search_file_content,1,
+Jsoup-18,write_file,2,
+Jsoup-22,read_file,17,
+Jsoup-22,replace,29,
+Jsoup-22,run_shell_command,4,./run_bug_exposing_tests.sh
+Jsoup-22,run_shell_command,3,defects4j compile
+Jsoup-22,run_shell_command,11,defects4j test
+Jsoup-22,run_shell_command,1,defects4j test -t org.jsoup.nodes.NodeTest::orphanNodeReturnsNullForSiblingElements
+Jsoup-22,run_shell_command,1,git diff
+Jsoup-23,read_file,6,
+Jsoup-23,replace,4,
+Jsoup-23,run_shell_command,1,./run_bug_exposing_tests.sh
+Jsoup-23,run_shell_command,3,defects4j compile
+Jsoup-23,run_shell_command,2,defects4j test
+Jsoup-23,run_shell_command,2,defects4j test -t org.jsoup.nodes.EntitiesTest::letterDigitEntities
+Jsoup-23,run_shell_command,1,git checkout src/test/java/org/jsoup/nodes/EntitiesTest.java
+Jsoup-23,run_shell_command,2,git diff
+Jsoup-23,write_file,1,
+Jsoup-3,read_file,20,
+Jsoup-3,replace,83,
+Jsoup-3,run_shell_command,5,./run_bug_exposing_tests.sh
+Jsoup-3,run_shell_command,34,defects4j compile
+Jsoup-3,run_shell_command,25,defects4j test
+Jsoup-3,write_file,3,
+Jsoup-42,read_file,4,
+Jsoup-42,replace,1,
+Jsoup-42,run_shell_command,1,./run_bug_exposing_tests.sh
+Jsoup-42,run_shell_command,1,defects4j compile
+Jsoup-42,run_shell_command,1,defects4j export -p cp.test
+Jsoup-42,run_shell_command,1,defects4j test
+Jsoup-42,run_shell_command,1,defects4j test -t org.jsoup.nodes.FormElementTest
+Jsoup-42,run_shell_command,1,git diff
+Jsoup-42,run_shell_command,2,java -cp /Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/junit/junit/4.5/junit-4.5.jar:/Users/danielding/Desktop/example_dir/Jsoup_42/target/classes:/Users/danielding/Desktop/example_dir/Jsoup_42/target/test-classes:/Users/danielding/Desktop/defects4j/framework/projects/lib/junit-4.11.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/com/google/code/gson/gson/2.7/gson-2.7.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/commons-lang/commons-lang/2.4/commons-lang-2.4.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/javax/servlet/javax.servlet-api/3.1.0/javax.servlet-api-3.1.0.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/junit/junit/4.12/junit-4.12.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/org/eclipse/jetty/jetty-http/9.2.22.v20170606/jetty-http-9.2.22.v20170606.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/org/eclipse/jetty/jetty-http/9.2.26.v20180806/jetty-http-9.2.26.v20180806.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/org/eclipse/jetty/jetty-http/9.2.28.v20190418/jetty-http-9.2.28.v20190418.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/org/eclipse/jetty/jetty-io/9.2.22.v20170606/jetty-io-9.2.22.v20170606.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/org/eclipse/jetty/jetty-io/9.2.26.v20180806/jetty-io-9.2.26.v20180806.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/org/eclipse/jetty/jetty-io/9.2.28.v20190418/jetty-io-9.2.28.v20190418.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/org/eclipse/jetty/jetty-security/9.2.22.v20170606/jetty-security-9.2.22.v20170606.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/org/eclipse/jetty/jetty-security/9.2.26.v20180806/jetty-security-9.2.26.v20180806.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/org/eclipse/jetty/jetty-security/9.2.28.v20190418/jetty-security-9.2.28.v20190418.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/org/eclipse/jetty/jetty-server/9.2.22.v20170606/jetty-server-9.2.22.v20170606.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/org/eclipse/jetty/jetty-server/9.2.26.v20180806/jetty-server-9.2.26.v20180806.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/org/eclipse/jetty/jetty-server/9.2.28.v20190418/jetty-server-9.2.28.v20190418.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/org/eclipse/jetty/jetty-servlet/9.2.22.v20170606/jetty-servlet-9.2.22.v20170606.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/org/eclipse/jetty/jetty-servlet/9.2.26.v20180806/jetty-servlet-9.2.26.v20180806.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/org/eclipse/jetty/jetty-servlet/9.2.28.v20190418/jetty-servlet-9.2.28.v20190418.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/org/eclipse/jetty/jetty-util/9.2.22.v20170606/jetty-util-9.2.22.v20170606.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/org/eclipse/jetty/jetty-util/9.2.26.v20180806/jetty-util-9.2.26.v20180806.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/org/eclipse/jetty/jetty-util/9.2.28.v20190418/jetty-util-9.2.28.v20190418.jar:/Users/danielding/Desktop/defects4j/framework/projects/Jsoup/lib/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar org.junit.runner.JUnitCore org.jsoup.nodes.FormElementTest
+Jsoup-4,list_directory,1,
+Jsoup-4,read_file,10,
+Jsoup-4,replace,3,
+Jsoup-4,run_shell_command,1,./run_bug_exposing_tests.sh
+Jsoup-4,run_shell_command,1,defects4j compile
+Jsoup-4,run_shell_command,1,defects4j test
+Jsoup-4,run_shell_command,1,defects4j test -t org.jsoup.nodes.EntitiesTest
+Jsoup-56,read_file,57,
+Jsoup-56,read_many_files,3,
+Jsoup-56,replace,16,
+Jsoup-56,run_shell_command,1,./run_bug_exposing_tests.sh
+Jsoup-56,run_shell_command,50,defects4j test
+Jsoup-56,run_shell_command,4,defects4j test -t org.jsoup.nodes.DocumentTypeTest::testRoundTrip
+Jsoup-56,write_file,48,
+Jsoup-58,read_file,8,
+Jsoup-58,replace,19,
+Jsoup-58,run_shell_command,2,./run_all_tests_trace.sh
+Jsoup-58,run_shell_command,11,defects4j compile
+Jsoup-58,run_shell_command,10,defects4j test
+Jsoup-58,run_shell_command,2,defects4j test -t jsoup.JsoupTest
+Jsoup-58,run_shell_command,1,git diff
+Jsoup-58,run_shell_command,1,rm /Users/danielding/Desktop/example_dir/Jsoup_58/src/test/java/jsoup/JsoupTest.java
+Jsoup-58,write_file,1,
+Jsoup-60,read_file,10,
+Jsoup-60,replace,23,
+Jsoup-60,run_shell_command,2,./run_bug_exposing_tests.sh
+Jsoup-60,run_shell_command,11,defects4j compile
+Jsoup-60,run_shell_command,7,defects4j test
+Jsoup-60,run_shell_command,1,defects4j test -t org.jsoup.select.QueryParserTest
+Jsoup-60,run_shell_command,1,git diff src/main/java/org/jsoup/parser/TokenQueue.java src/main/java/org/jsoup/select/QueryParser.java
+Jsoup-60,run_shell_command,1,git status
+Jsoup-60,write_file,1,
+Jsoup-65,read_file,19,
+Jsoup-65,replace,26,
+Jsoup-65,run_shell_command,1,./run_all_tests_trace.sh
+Jsoup-65,run_shell_command,6,./run_bug_exposing_tests.sh
+Jsoup-65,run_shell_command,8,defects4j compile
+Jsoup-65,run_shell_command,2,defects4j test
+Jsoup-65,run_shell_command,1,git diff
+Jsoup-65,search_file_content,2,
+Jsoup-65,write_file,1,
+Jsoup-67,glob,1,
+Jsoup-67,list_directory,1,
+Jsoup-67,read_file,5,
+Jsoup-67,replace,2,
+Jsoup-67,run_shell_command,1,./run_bug_exposing_tests.sh
+Jsoup-67,run_shell_command,1,defects4j compile
+Jsoup-67,run_shell_command,1,defects4j test
+Jsoup-67,run_shell_command,1,defects4j test -t org.jsoup.parser.HtmlParserTest::handlesDeepStack
+Jsoup-67,run_shell_command,1,defects4j test -t org.jsoup.parser.HtmlParserTest::handlesDeepStack 2> test_output.log
+Jsoup-67,run_shell_command,1,git diff
+Jsoup-71,read_file,3,
+Jsoup-73,read_file,6,
+Jsoup-73,replace,6,
+Jsoup-73,run_shell_command,3,./run_bug_exposing_tests.sh
+Jsoup-73,run_shell_command,2,defects4j compile
+Jsoup-73,run_shell_command,1,defects4j test
+Jsoup-73,run_shell_command,1,git diff
+Jsoup-74,read_file,10,
+Jsoup-74,replace,5,
+Jsoup-74,run_shell_command,3,defects4j compile
+Jsoup-74,run_shell_command,2,defects4j test
+Jsoup-74,run_shell_command,1,defects4j test -t org.jsoup.nodes.ElementTest::testNormalizesInvisiblesInText
+Jsoup-74,run_shell_command,3,defects4j test -t org.jsoup.nodes.TextNodeTest::testIfShyIsStripped
+Jsoup-74,run_shell_command,1,git diff > fix.patch
+Jsoup-81,read_file,7,
+Jsoup-81,replace,133,
+Jsoup-81,run_shell_command,2,./run_bug_exposing_tests.sh
+Jsoup-81,run_shell_command,47,defects4j compile
+Jsoup-81,run_shell_command,45,defects4j test
+Jsoup-81,run_shell_command,1,defects4j test -t org.jsoup.helper.DataUtilTest
+Jsoup-83,read_file,26,
+Jsoup-83,replace,24,
+Jsoup-83,run_shell_command,1,./run_bug_exposing_tests.sh
+Jsoup-83,run_shell_command,2,defects4j compile
+Jsoup-83,run_shell_command,1,defects4j test
+Jsoup-87,read_file,3,
+Jsoup-87,run_shell_command,1,./run_bug_exposing_tests.sh
+Jsoup-87,run_shell_command,1,defects4j compile
+Jsoup-87,write_file,1,
+Jsoup-91,read_file,19,
+Jsoup-91,replace,21,
+Jsoup-91,run_shell_command,1,./run_all_tests_trace.sh
+Jsoup-91,run_shell_command,8,./run_bug_exposing_tests.sh
+Jsoup-91,run_shell_command,9,defects4j compile
+Jsoup-91,run_shell_command,1,git diff > fix.patch
+Jsoup-92,read_file,3,
+Jsoup-92,run_shell_command,1,mvn clean install
+JxPath-13,glob,1,
+JxPath-13,read_file,7,
+JxPath-13,replace,9,
+JxPath-13,run_shell_command,1,./run_all_tests_trace.sh
+JxPath-13,run_shell_command,3,./run_bug_exposing_tests.sh
+JxPath-13,run_shell_command,6,defects4j compile
+JxPath-13,run_shell_command,1,defects4j export -p cp.test
+JxPath-13,run_shell_command,1,git diff
+JxPath-15,glob,4,
+JxPath-15,read_file,11,
+JxPath-15,replace,3,
+JxPath-15,run_shell_command,1,./run_bug_exposing_tests.sh
+JxPath-15,run_shell_command,4,defects4j compile
+JxPath-15,run_shell_command,2,defects4j test
+JxPath-15,run_shell_command,1,defects4j test -t org.apache.commons.jxpath.ri.model.dom.DOMModelTest::testGetNode
+JxPath-15,run_shell_command,1,defects4j test -t org.apache.commons.jxpath.ri.model.dom.DOMModelTest::testUnion
+JxPath-15,run_shell_command,1,defects4j test -t org.apache.commons.jxpath.ri.model.jdom.JDOMModelTest::testUnion
+JxPath-15,run_shell_command,1,git diff
+JxPath-16,read_file,4,
+JxPath-16,replace,2,
+JxPath-16,run_shell_command,1,./run_bug_exposing_tests.sh
+JxPath-16,run_shell_command,2,defects4j compile
+JxPath-16,run_shell_command,2,defects4j test
+JxPath-16,run_shell_command,1,git diff
+JxPath-17,glob,4,
+JxPath-17,read_file,7,
+JxPath-17,replace,3,
+JxPath-17,run_shell_command,1,./run_bug_exposing_tests.sh
+JxPath-17,run_shell_command,3,defects4j compile
+JxPath-17,run_shell_command,3,defects4j test
+JxPath-17,run_shell_command,1,git diff
+JxPath-18,list_directory,1,
+JxPath-18,read_file,51,
+JxPath-18,replace,59,
+JxPath-18,run_shell_command,20,./run_bug_exposing_tests.sh
+JxPath-18,run_shell_command,34,defects4j compile
+JxPath-18,run_shell_command,35,defects4j test
+JxPath-18,run_shell_command,1,defects4j test -t org.apache.commons.jxpath.ri.model.dom.DOMModelTest::testAxisAttribute
+JxPath-18,search_file_content,1,
+JxPath-19,read_file,7,
+JxPath-19,replace,2,
+JxPath-19,run_shell_command,4,./run_bug_exposing_tests.sh
+JxPath-19,run_shell_command,1,defects4j compile
+JxPath-19,run_shell_command,1,defects4j test
+JxPath-19,run_shell_command,1,git diff
+JxPath-19,search_file_content,1,
+JxPath-1,read_file,54,
+JxPath-1,replace,62,
+JxPath-1,run_shell_command,21,./run_bug_exposing_tests.sh
+JxPath-1,run_shell_command,34,defects4j compile
+JxPath-1,write_file,3,
+JxPath-2,glob,3,
+JxPath-2,read_file,8,
+JxPath-2,replace,3,
+JxPath-2,run_shell_command,3,./run_bug_exposing_tests.sh
+JxPath-2,run_shell_command,2,defects4j compile
+JxPath-2,run_shell_command,1,defects4j test
+JxPath-2,run_shell_command,1,git diff
+JxPath-3,read_file,63,
+JxPath-3,replace,106,
+JxPath-3,run_shell_command,4,./run_bug_exposing_tests.sh
+JxPath-3,run_shell_command,21,defects4j compile
+JxPath-3,run_shell_command,17,defects4j test
+JxPath-3,run_shell_command,2,defects4j test -t org.apache.commons.jxpath.ri.model.beans.BadlyImplementedFactoryTest::testBadFactoryImplementation
+JxPath-3,search_file_content,6,
+JxPath-4,glob,1,
+JxPath-4,read_file,48,
+JxPath-4,replace,56,
+JxPath-4,run_shell_command,16,./run_bug_exposing_tests.sh
+JxPath-4,run_shell_command,1,defects4j compile
+JxPath-4,run_shell_command,1,git diff src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java
+JxPath-4,run_shell_command,1,git diff src/java/org/apache/commons/jxpath/ri/model/jdom/JDOMNodePointer.java
+JxPath-4,run_shell_command,11,git restore src/java/org/apache/commons/jxpath/ri/model/dom/DOMNodePointer.java src/java/org/apache/commons/jxpath/ri/model/jdom/JDOMNodePointer.java
+JxPath-4,run_shell_command,1,git status
+JxPath-4,search_file_content,9,
+JxPath-7,glob,2,
+JxPath-7,read_file,8,
+JxPath-7,read_many_files,1,
+JxPath-7,replace,8,
+JxPath-7,run_shell_command,1,./run_bug_exposing_tests.sh
+JxPath-7,run_shell_command,3,defects4j compile
+JxPath-7,run_shell_command,1,defects4j test
+JxPath-7,run_shell_command,2,defects4j test -t org.apache.commons.jxpath.ri.compiler.CoreOperationTest::testNodeSetAndNumberComparisonWithEmptyNodeSet
+JxPath-7,run_shell_command,1,git diff
+JxPath-9,read_file,26,
+JxPath-9,replace,25,
+JxPath-9,run_shell_command,6,./run_bug_exposing_tests.sh
+JxPath-9,run_shell_command,17,defects4j compile
+JxPath-9,run_shell_command,14,defects4j test
+JxPath-9,run_shell_command,1,git diff
+Lang-13,google_web_search,1,ObjectInputStream.resolveClass source code java 1.4
+Lang-13,read_file,5,
+Lang-13,replace,8,
+Lang-13,run_shell_command,1,./run_bug_exposing_tests.sh
+Lang-13,run_shell_command,7,defects4j compile
+Lang-13,run_shell_command,1,defects4j test
+Lang-13,run_shell_command,7,defects4j test -t org.apache.commons.lang3.SerializationUtilsTest::primitiveTypeClassSerialization
+Lang-13,run_shell_command,2,git checkout HEAD -- src/main/java/org/apache/commons/lang3/SerializationUtils.java
+Lang-13,run_shell_command,1,git diff
+Lang-15,glob,2,
+Lang-15,read_file,8,
+Lang-15,replace,34,
+Lang-15,run_shell_command,1,./run_all_tests_trace.sh
+Lang-15,run_shell_command,1,./run_bug_exposing_tests.sh
+Lang-15,run_shell_command,33,defects4j compile
+Lang-15,run_shell_command,26,defects4j test
+Lang-15,run_shell_command,2,defects4j test -t org.apache.commons.lang3.reflect.TypeUtilsTest::testGetTypeArguments
+Lang-15,run_shell_command,1,defects4j test -t org.apache.commons.lang3.reflect.TypeUtilsTest::testIsAssignable
+Lang-15,run_shell_command,10,git show HEAD:src/main/java/org/apache/commons/lang3/reflect/TypeUtils.java
+Lang-15,write_file,8,
+Lang-20,read_file,14,
+Lang-20,replace,25,
+Lang-20,run_shell_command,2,./run_bug_exposing_tests.sh
+Lang-20,run_shell_command,1,/Users/danielding/Desktop/example_dir/Lang_20/run_single_test.sh > single_test_trace.log 2>&1
+Lang-20,run_shell_command,1,chmod +x /Users/danielding/Desktop/example_dir/Lang_20/run_single_test.sh
+Lang-20,run_shell_command,10,defects4j compile
+Lang-20,run_shell_command,11,defects4j test
+Lang-20,run_shell_command,1,defects4j test -t org.apache.commons.lang3.StringUtilsTest::testJoin_ArrayChar > test_trace.log 2>&1
+Lang-20,run_shell_command,1,git diff > /Users/danielding/Desktop/example_dir/Lang_20/fix.patch
+Lang-20,search_file_content,3,
+Lang-20,write_file,1,
+Lang-27,read_file,5,
+Lang-27,replace,1,
+Lang-27,run_shell_command,3,./run_bug_exposing_tests.sh
+Lang-27,run_shell_command,1,defects4j compile
+Lang-27,run_shell_command,1,defects4j test
+Lang-27,run_shell_command,1,git diff
+Lang-30,glob,3,
+Lang-30,read_file,13,
+Lang-30,replace,27,
+Lang-30,run_shell_command,1,./run_bug_exposing_tests.sh
+Lang-30,run_shell_command,10,defects4j compile
+Lang-30,run_shell_command,6,defects4j test
+Lang-30,run_shell_command,3,defects4j test -t org.apache.commons.lang3.StringUtilsTest::testContainsAny_StringString_SupplementaryChars
+Lang-30,run_shell_command,1,defects4j test -t org.apache.commons.lang3.StringUtilsTest::testContainsAny_StringString_SupplementaryChars_BugFix
+Lang-30,run_shell_command,1,git diff
+Lang-30,run_shell_command,2,git restore src/main/java/org/apache/commons/lang3/StringUtils.java
+Lang-32,read_file,5,
+Lang-32,replace,13,
+Lang-32,run_shell_command,1,./run_bug_exposing_tests.sh
+Lang-32,run_shell_command,5,defects4j compile
+Lang-32,run_shell_command,5,defects4j test
+Lang-34,read_file,17,
+Lang-34,replace,46,
+Lang-34,run_shell_command,1,./run_bug_exposing_tests.sh
+Lang-34,run_shell_command,10,defects4j compile
+Lang-34,run_shell_command,7,defects4j test
+Lang-35,read_file,6,
+Lang-35,replace,2,
+Lang-35,run_shell_command,1,./run_bug_exposing_tests.sh
+Lang-35,run_shell_command,2,defects4j compile
+Lang-35,run_shell_command,2,defects4j test
+Lang-35,run_shell_command,2,defects4j test -t org.apache.commons.lang3.ArrayUtilsAddTest::testLANG571
+Lang-35,run_shell_command,1,git diff
+Lang-35,search_file_content,3,
+Lang-36,glob,1,
+Lang-36,list_directory,1,
+Lang-36,read_file,9,
+Lang-36,replace,7,
+Lang-36,run_shell_command,1,./run_all_tests_trace.sh
+Lang-36,run_shell_command,5,./run_bug_exposing_tests.sh
+Lang-36,run_shell_command,5,defects4j compile
+Lang-36,run_shell_command,1,git diff
+Lang-36,run_shell_command,2,git restore /Users/danielding/Desktop/example_dir/Lang_36/src/java/org/apache/commons/lang3/math/NumberUtils.java
+Lang-41,glob,4,
+Lang-41,read_file,5,
+Lang-41,replace,2,
+Lang-41,run_shell_command,1,./run_bug_exposing_tests.sh
+Lang-41,run_shell_command,1,defects4j compile
+Lang-41,run_shell_command,2,defects4j test
+Lang-41,run_shell_command,1,defects4j test -t org.apache.commons.lang.ClassUtilsTest
+Lang-41,run_shell_command,2,defects4j test -t org.apache.commons.lang.ClassUtilsTest::test_getShortClassName_Class
+Lang-41,run_shell_command,1,git diff
+Lang-46,read_file,7,
+Lang-46,replace,24,
+Lang-46,run_shell_command,1,./run_bug_exposing_tests.sh
+Lang-46,run_shell_command,6,defects4j compile
+Lang-46,run_shell_command,1,defects4j test
+Lang-46,run_shell_command,4,defects4j test -t org.apache.commons.lang.StringEscapeUtilsTestBug::testEscapeJavaWithSlash
+Lang-46,run_shell_command,1,rm /Users/danielding/Desktop/example_dir/Lang_46/src/test/java/org/apache/commons/lang/StringEscapeUtilsTestBug.java
+Lang-46,write_file,1,
+Lang-47,read_file,2,
+Lang-47,replace,2,
+Lang-47,run_shell_command,1,./run_bug_exposing_tests.sh
+Lang-47,run_shell_command,1,defects4j compile
+Lang-47,run_shell_command,2,defects4j test
+Lang-4,glob,1,
+Lang-4,google_web_search,1,defects4j run single test class
+Lang-4,read_file,4,
+Lang-4,replace,1,
+Lang-4,run_shell_command,1,./run_bug_exposing_tests.sh
+Lang-4,run_shell_command,2,defects4j test
+Lang-4,run_shell_command,2,defects4j test -t org.apache.commons.lang3.text.translate.LookupTranslatorTest
+Lang-4,run_shell_command,1,defects4j test -w /Users/danielding/Desktop/example_dir/Lang_4 -t org.apache.commons.lang3.text.translate.LookupTranslatorTest
+Lang-4,run_shell_command,1,defects4j test -w /Users/danielding/Desktop/example_dir/Lang_4 -t org.apache.commons.lang3.text.translate.LookupTranslatorTest::testLang882
+Lang-4,run_shell_command,1,git diff
+Lang-50,read_file,1,
+Lang-50,replace,3,
+Lang-50,run_shell_command,1,./run_bug_exposing_tests.sh
+Lang-50,run_shell_command,1,defects4j compile
+Lang-50,run_shell_command,2,defects4j test
+Lang-50,run_shell_command,1,defects4j test -t org.apache.commons.lang.time.FastDateFormatTest::test_changeDefault_Locale_DateInstance && defects4j test -t org.apache.commons.lang.time.FastDateFormatTest::test_changeDefault_Locale_DateTimeInstance
+Lang-50,run_shell_command,1,git diff
+Lang-56,glob,1,
+Lang-56,read_file,2,
+Lang-56,replace,2,
+Lang-56,run_shell_command,1,./run_bug_exposing_tests.sh
+Lang-56,run_shell_command,1,defects4j compile
+Lang-56,run_shell_command,1,defects4j test
+Lang-56,run_shell_command,1,git diff
+Lang-5,read_file,5,
+Lang-5,run_shell_command,1,./run_bug_exposing_tests.sh
+Lang-5,run_shell_command,1,defects4j compile
+Lang-5,run_shell_command,1,defects4j test
+Lang-60,read_file,2,
+Lang-60,replace,2,
+Lang-60,run_shell_command,1,./run_bug_exposing_tests.sh
+Lang-60,run_shell_command,1,defects4j compile
+Lang-60,run_shell_command,2,defects4j test
+Lang-60,run_shell_command,1,git diff
+Lang-60,search_file_content,1,
+Lang-63,read_file,3,
+Lang-63,replace,3,
+Lang-63,run_shell_command,1,./run_bug_exposing_tests.sh
+Lang-63,run_shell_command,2,defects4j compile
+Lang-63,run_shell_command,2,defects4j test
+Lang-63,run_shell_command,1,defects4j test -t org.apache.commons.lang.time.DurationFormatUtilsTest::testJiraLang281
+Lang-63,run_shell_command,1,git diff
+Lang-64,read_file,10,
+Lang-64,replace,4,
+Lang-64,run_shell_command,1,./run_all_tests_trace.sh
+Lang-64,run_shell_command,6,./run_bug_exposing_tests.sh
+Lang-64,run_shell_command,5,defects4j compile
+Lang-64,run_shell_command,1,git diff
+Lang-65,read_file,6,
+Lang-65,replace,34,
+Lang-65,run_shell_command,1,./run_bug_exposing_tests.sh
+Lang-65,run_shell_command,19,defects4j compile
+Lang-65,run_shell_command,1,defects4j test
+Lang-65,run_shell_command,1,defects4j test -t org.apache.commons.lang.time.DateUtilsTest
+Lang-65,run_shell_command,15,defects4j test -t org.apache.commons.lang.time.DateUtilsTest::testTruncateLang59
+Lang-7,read_file,4,
+Lang-7,replace,1,
+Lang-7,run_shell_command,1,./run_bug_exposing_tests.sh
+Lang-7,run_shell_command,1,defects4j compile
+Lang-7,run_shell_command,2,defects4j test
+Lang-7,run_shell_command,1,git diff
+Lang-8,list_directory,1,
+Lang-8,read_file,6,
+Lang-8,replace,1,
+Lang-8,run_shell_command,1,./run_all_tests_trace.sh
+Lang-8,run_shell_command,3,./run_bug_exposing_tests.sh
+Lang-8,run_shell_command,2,defects4j compile
+Lang-8,run_shell_command,1,git diff
+Math-100,glob,1,
+Math-100,read_file,2,
+Math-100,replace,2,
+Math-100,run_shell_command,1,./run_bug_exposing_tests.sh
+Math-100,run_shell_command,1,defects4j compile
+Math-100,run_shell_command,1,defects4j test
+Math-100,run_shell_command,1,git diff
+Math-106,read_file,5,
+Math-106,run_shell_command,1,./run_bug_exposing_tests.sh
+Math-106,run_shell_command,1,defects4j test
+Math-12,glob,1,
+Math-12,read_file,2,
+Math-12,replace,1,
+Math-12,run_shell_command,1,./run_bug_exposing_tests.sh
+Math-12,run_shell_command,1,defects4j compile
+Math-12,run_shell_command,2,defects4j test
+Math-12,run_shell_command,1,defects4j test -t org.apache.commons.math3.distribution.GammaDistributionTest::testDistributionClone && defects4j test -t org.apache.commons.math3.distribution.LogNormalDistributionTest::testDistributionClone && defects4j test -t org.apache.commons.math3.distribution.NormalDistributionTest::testDistributionClone
+Math-12,run_shell_command,1,git diff
+Math-14,read_file,7,
+Math-14,replace,2,
+Math-14,run_shell_command,1,./run_bug_exposing_tests.sh
+Math-14,run_shell_command,3,defects4j compile
+Math-14,run_shell_command,2,defects4j test
+Math-14,run_shell_command,2,defects4j test -t org.apache.commons.math3.fitting.PolynomialFitterTest::testLargeSample
+Math-14,run_shell_command,1,git diff
+Math-15,glob,1,
+Math-15,read_file,1,
+Math-15,replace,1,
+Math-15,run_shell_command,1,./run_bug_exposing_tests.sh
+Math-15,run_shell_command,1,defects4j compile
+Math-15,run_shell_command,1,defects4j test
+Math-15,run_shell_command,1,git diff
+Math-16,glob,2,
+Math-16,read_file,4,
+Math-16,replace,6,
+Math-16,run_shell_command,1,./run_bug_exposing_tests.sh
+Math-16,run_shell_command,3,defects4j compile
+Math-16,run_shell_command,1,defects4j test
+Math-16,run_shell_command,1,defects4j test -t org.apache.commons.math3.util.FastMathTest
+Math-16,run_shell_command,2,defects4j test -t org.apache.commons.math3.util.FastMathTest::testMath905LargeNegative
+Math-16,run_shell_command,3,defects4j test -t org.apache.commons.math3.util.FastMathTest::testMath905LargePositive
+Math-16,run_shell_command,1,git diff
+Math-18,glob,1,
+Math-18,read_file,23,
+Math-18,replace,116,
+Math-18,run_shell_command,19,./run_bug_exposing_tests.sh
+Math-18,run_shell_command,19,defects4j compile
+Math-1,read_file,4,
+Math-1,replace,4,
+Math-1,run_shell_command,2,./run_bug_exposing_tests.sh
+Math-1,run_shell_command,3,defects4j compile
+Math-1,run_shell_command,3,defects4j test
+Math-1,run_shell_command,1,defects4j test -t org.apache.commons.math3.fraction.BigFractionTest::testDigitLimitConstructor && defects4j test -t org.apache.commons.math3.fraction.FractionTest::testDigitLimitConstructor
+Math-1,run_shell_command,1,git diff
+Math-21,glob,3,
+Math-21,read_file,3,
+Math-21,replace,1,
+Math-21,run_shell_command,1,./run_bug_exposing_tests.sh
+Math-21,run_shell_command,1,defects4j compile
+Math-21,run_shell_command,1,defects4j test
+Math-21,run_shell_command,2,defects4j test -t org.apache.commons.math3.random.CorrelatedRandomVectorGeneratorTest
+Math-21,run_shell_command,2,defects4j test -t org.apache.commons.math3.random.CorrelatedRandomVectorGeneratorTest::testSampleWithZeroCovariance
+Math-21,run_shell_command,1,git diff
+Math-22,read_file,4,
+Math-22,replace,2,
+Math-22,run_shell_command,1,./run_bug_exposing_tests.sh
+Math-22,run_shell_command,2,defects4j compile
+Math-22,run_shell_command,2,defects4j test
+Math-22,run_shell_command,1,git diff
+Math-23,read_file,3,
+Math-23,replace,4,
+Math-23,run_shell_command,1,./run_bug_exposing_tests.sh
+Math-23,run_shell_command,3,defects4j compile
+Math-23,run_shell_command,3,defects4j test
+Math-23,run_shell_command,1,defects4j test -t org.apache.commons.math3.optimization.univariate.BrentOptimizerTest::testKeepInitIfBest
+Math-24,glob,2,
+Math-24,read_file,3,
+Math-24,replace,4,
+Math-24,run_shell_command,1,./run_bug_exposing_tests.sh
+Math-24,run_shell_command,2,defects4j compile
+Math-24,run_shell_command,2,defects4j test
+Math-26,glob,2,
+Math-26,read_file,9,
+Math-26,replace,22,
+Math-26,run_shell_command,15,defects4j compile
+Math-26,run_shell_command,14,defects4j test
+Math-26,run_shell_command,1,defects4j test -t org.apache.commons.math3.fraction.FractionBug26Test
+Math-26,run_shell_command,1,git add src/main/java/org/apache/commons/math3/fraction/Fraction.java
+Math-26,run_shell_command,1,git add src/test/java/org/apache/commons/math3/fraction/FractionBug26Test.java
+Math-26,run_shell_command,1,git diff
+Math-26,run_shell_command,1,git diff --staged
+Math-26,write_file,1,
+Math-28,glob,2,
+Math-28,google_web_search,1,MATH-828 Apache Commons Math
+Math-28,read_file,3,
+Math-28,replace,2,
+Math-28,run_shell_command,1,./run_bug_exposing_tests.sh
+Math-28,run_shell_command,1,defects4j compile
+Math-28,run_shell_command,3,defects4j test
+Math-28,search_file_content,2,
+Math-29,read_file,2,
+Math-29,replace,2,
+Math-29,run_shell_command,1,./run_bug_exposing_tests.sh
+Math-29,run_shell_command,2,defects4j compile
+Math-29,run_shell_command,2,defects4j test
+Math-29,run_shell_command,1,git diff
+Math-31,glob,4,
+Math-31,read_file,5,
+Math-31,replace,7,
+Math-31,run_shell_command,2,./run_bug_exposing_tests.sh
+Math-31,run_shell_command,4,defects4j compile
+Math-31,run_shell_command,5,defects4j test
+Math-31,run_shell_command,1,git checkout -- src/main/java/org/apache/commons/math3/distribution/BinomialDistribution.java
+Math-31,run_shell_command,1,git diff
+Math-31,run_shell_command,1,git diff src/main/java/org/apache/commons/math3/distribution/BinomialDistribution.java
+Math-35,read_file,3,
+Math-35,replace,2,
+Math-35,run_shell_command,2,./run_bug_exposing_tests.sh
+Math-35,run_shell_command,2,defects4j compile
+Math-35,run_shell_command,1,defects4j test
+Math-35,run_shell_command,1,git diff
+Math-36,read_file,2,
+Math-36,replace,6,
+Math-36,run_shell_command,1,./run_bug_exposing_tests.sh
+Math-36,run_shell_command,2,defects4j compile
+Math-36,run_shell_command,2,defects4j compile && defects4j test
+Math-36,run_shell_command,2,defects4j test
+Math-36,run_shell_command,1,defects4j test -t org.apache.commons.math.fraction.BigFractionTest::testFloatValueForLargeNumeratorAndDenominator && defects4j test -t org.apache.commons.math.fraction.BigFractionTest::testDoubleValueForLargeNumeratorAndDenominator
+Math-36,run_shell_command,1,git diff
+Math-37,read_file,10,
+Math-37,replace,5,
+Math-37,run_shell_command,1,./run_all_tests_trace.sh
+Math-37,run_shell_command,4,./run_bug_exposing_tests.sh
+Math-37,run_shell_command,4,defects4j compile
+Math-37,run_shell_command,1,git diff
+Math-38,glob,2,
+Math-38,read_file,41,
+Math-38,replace,62,
+Math-38,run_shell_command,15,./run_bug_exposing_tests.sh
+Math-38,run_shell_command,15,defects4j compile
+Math-38,search_file_content,8,
+Math-44,glob,2,
+Math-44,read_file,3,
+Math-44,replace,79,
+Math-44,run_shell_command,1,./run_bug_exposing_tests.sh
+Math-44,run_shell_command,40,defects4j compile
+Math-44,run_shell_command,41,defects4j test
+Math-46,glob,2,
+Math-46,read_file,3,
+Math-46,replace,2,
+Math-46,run_shell_command,1,./run_bug_exposing_tests.sh
+Math-46,run_shell_command,1,defects4j compile
+Math-46,run_shell_command,1,defects4j test
+Math-46,run_shell_command,1,defects4j test -t org.apache.commons.math.complex.ComplexTest
+Math-47,read_file,3,
+Math-47,replace,2,
+Math-47,run_shell_command,1,./run_bug_exposing_tests.sh
+Math-47,run_shell_command,1,defects4j compile
+Math-47,run_shell_command,1,defects4j test
+Math-49,glob,1,
+Math-49,read_file,2,
+Math-49,replace,2,
+Math-49,run_shell_command,1,./run_bug_exposing_tests.sh
+Math-49,run_shell_command,1,defects4j compile
+Math-49,run_shell_command,1,defects4j test
+Math-49,run_shell_command,1,git diff
+Math-49,search_file_content,1,
+Math-4,read_file,5,
+Math-4,replace,2,
+Math-4,run_shell_command,1,./run_bug_exposing_tests.sh
+Math-4,run_shell_command,1,defects4j compile
+Math-4,run_shell_command,2,defects4j test
+Math-4,run_shell_command,1,git diff
+Math-52,read_file,3,
+Math-52,run_shell_command,2,./run_bug_exposing_tests.sh
+Math-52,run_shell_command,1,defects4j compile
+Math-52,run_shell_command,1,defects4j test
+Math-54,glob,2,
+Math-54,read_file,4,
+Math-54,replace,4,
+Math-54,run_shell_command,1,./run_bug_exposing_tests.sh
+Math-54,run_shell_command,4,defects4j compile
+Math-54,run_shell_command,2,defects4j test
+Math-54,run_shell_command,2,defects4j test -t org.apache.commons.math.dfp.DfpTest::testIssue567
+Math-54,run_shell_command,1,defects4j test -t org.apache.commons.math.dfp.TestDfpToDoubleBug::testToDoubleZero
+Math-54,run_shell_command,1,git diff
+Math-54,run_shell_command,1,rm /Users/danielding/Desktop/example_dir/Math_54/src/test/java/org/apache/commons/math/dfp/TestDfpToDoubleBug.java
+Math-54,search_file_content,1,
+Math-54,write_file,1,
+Math-55,read_file,8,
+Math-55,replace,6,
+Math-55,run_shell_command,1,./run_all_tests_trace.sh
+Math-55,run_shell_command,1,./run_bug_exposing_tests.sh
+Math-55,run_shell_command,5,defects4j compile
+Math-55,run_shell_command,6,defects4j test -t org.apache.commons.math.geometry.Vector3DTest::testCrossProductCancellation
+Math-55,search_file_content,1,
+Math-61,read_file,6,
+Math-61,replace,4,
+Math-61,run_shell_command,1,./run_bug_exposing_tests.sh
+Math-61,run_shell_command,4,defects4j compile
+Math-61,run_shell_command,3,defects4j test
+Math-62,glob,1,
+Math-62,read_file,3,
+Math-62,replace,1,
+Math-62,run_shell_command,1,./run_bug_exposing_tests.sh
+Math-62,run_shell_command,1,defects4j compile
+Math-62,run_shell_command,1,defects4j test
+Math-64,glob,4,
+Math-64,read_file,5,
+Math-64,replace,18,
+Math-64,run_shell_command,1,./run_bug_exposing_tests.sh
+Math-64,run_shell_command,10,defects4j compile
+Math-64,run_shell_command,9,defects4j test
+Math-64,run_shell_command,1,git diff src/main/java/org/apache/commons/math/optimization/general/LevenbergMarquardtOptimizer.java
+Math-64,run_shell_command,2,git restore src/main/java/org/apache/commons/math/optimization/general/LevenbergMarquardtOptimizer.java
+Math-65,glob,1,
+Math-65,read_file,3,
+Math-65,replace,2,
+Math-65,run_shell_command,1,./run_bug_exposing_tests.sh
+Math-65,run_shell_command,1,defects4j compile
+Math-65,run_shell_command,2,defects4j test
+Math-65,search_file_content,1,
+Math-66,google_web_search,1,Apache Commons Math BrentOptimizer MATH-395 diff
+Math-66,google_web_search,1,Apache Commons Math BrentOptimizer bug fix
+Math-66,google_web_search,1,Apache Commons Math MATH-395 JIRA
+Math-66,google_web_search,1,BrentOptimizer python scipy
+Math-66,google_web_search,1,SciPy optimize.py v0.5 Brent's method source code
+Math-66,read_file,11,
+Math-66,replace,10,
+Math-66,run_shell_command,2,./run_bug_exposing_tests.sh
+Math-66,run_shell_command,7,defects4j compile
+Math-66,run_shell_command,10,defects4j test
+Math-66,run_shell_command,9,git checkout /Users/danielding/Desktop/example_dir/Math_66/src/main/java/org/apache/commons/math/optimization/univariate/BrentOptimizer.java
+Math-66,write_file,3,
+Math-68,read_file,8,
+Math-68,replace,134,
+Math-68,run_shell_command,1,./run_bug_exposing_tests.sh
+Math-68,run_shell_command,31,defects4j compile
+Math-68,run_shell_command,17,defects4j test
+Math-68,run_shell_command,15,git restore /Users/danielding/Desktop/example_dir/Math_68/src/main/java/org/apache/commons/math/optimization/general/LevenbergMarquardtOptimizer.java
+Math-6,glob,10,
+Math-6,read_file,14,
+Math-6,replace,13,
+Math-6,run_shell_command,1,./run_bug_exposing_tests.sh
+Math-6,run_shell_command,7,defects4j compile
+Math-6,run_shell_command,7,defects4j test
+Math-6,run_shell_command,1,defects4j test -t org.apache.commons.math3.optim.nonlinear.vector.jacobian.LevenbergMarquardtOptimizerTest::testGetIterations
+Math-6,run_shell_command,1,git diff
+Math-71,read_file,11,
+Math-71,replace,156,
+Math-71,run_shell_command,1,./run_bug_exposing_tests.sh
+Math-71,run_shell_command,3,defects4j compile
+Math-71,run_shell_command,77,defects4j test -t org.apache.commons.math.ode.nonstiff.DormandPrince853IntegratorTest::testMissedEvent
+Math-71,search_file_content,1,
+Math-72,glob,1,
+Math-72,read_file,1,
+Math-72,read_many_files,1,
+Math-72,replace,2,
+Math-72,run_shell_command,1,./run_bug_exposing_tests.sh
+Math-72,run_shell_command,2,defects4j compile
+Math-72,run_shell_command,2,defects4j test
+Math-72,run_shell_command,1,git diff
+Math-76,glob,1,
+Math-76,read_file,5,
+Math-76,replace,83,
+Math-76,run_shell_command,3,./run_bug_exposing_tests.sh
+Math-76,run_shell_command,73,defects4j test
+Math-76,run_shell_command,1,defects4j test -t org.apache.commons.math.linear.SingularValueDecompositionImplTest
+Math-77,read_file,1,
+Math-77,read_many_files,1,
+Math-77,replace,2,
+Math-77,run_shell_command,1,./run_bug_exposing_tests.sh
+Math-77,run_shell_command,1,defects4j compile
+Math-77,run_shell_command,2,defects4j test
+Math-78,read_file,7,
+Math-78,replace,14,
+Math-78,run_shell_command,1,./run_bug_exposing_tests.sh
+Math-78,run_shell_command,1,defects4j compile
+Math-78,run_shell_command,1,defects4j test
+Math-78,run_shell_command,5,defects4j test -t org.apache.commons.math.ode.events.EventStateTest::closeEvents
+Math-7,read_file,11,
+Math-7,replace,38,
+Math-7,run_shell_command,1,./run_all_tests_trace.sh
+Math-7,run_shell_command,1,./run_bug_exposing_tests.sh
+Math-7,run_shell_command,13,defects4j compile
+Math-7,run_shell_command,11,defects4j test
+Math-7,run_shell_command,1,defects4j test -t org.apache.commons.math3.ode.events.EventStateTest
+Math-7,run_shell_command,1,git diff
+Math-7,search_file_content,1,
+Math-81,read_file,21,
+Math-81,replace,46,
+Math-81,run_shell_command,9,./run_bug_exposing_tests.sh
+Math-81,run_shell_command,27,defects4j compile
+Math-81,run_shell_command,24,defects4j test -t org.apache.commons.math.linear.EigenDecompositionImplTest::testMath308
+Math-81,run_shell_command,26,git restore /Users/danielding/Desktop/example_dir/Math_81/src/main/java/org/apache/commons/math/linear/EigenDecompositionImpl.java
+Math-81,search_file_content,2,
+Math-83,read_file,6,
+Math-83,replace,1,
+Math-83,run_shell_command,3,./run_bug_exposing_tests.sh
+Math-83,run_shell_command,3,defects4j compile
+Math-83,run_shell_command,1,git restore /Users/danielding/Desktop/example_dir/Math_83/src/main/java/org/apache/commons/math/optimization/linear/SimplexTableau.java
+Math-84,glob,2,
+Math-84,read_file,8,
+Math-84,replace,6,
+Math-84,run_shell_command,1,./run_bug_exposing_tests.sh
+Math-84,run_shell_command,6,defects4j compile
+Math-84,run_shell_command,1,defects4j test
+Math-84,run_shell_command,1,defects4j test -t org.apache.commons.math.optimization.direct.MultiDirectionalTest::testMath283
+Math-84,run_shell_command,4,defects4j test -t org.apache.commons.math.optimization.direct.MultiDirectionalTest::testMultiDirectionalCorrectStart
+Math-84,run_shell_command,1,git diff
+Math-84,search_file_content,2,
+Math-86,glob,2,
+Math-86,read_file,2,
+Math-86,replace,2,
+Math-86,run_shell_command,1,./run_bug_exposing_tests.sh
+Math-86,run_shell_command,1,defects4j test
+Math-86,run_shell_command,3,defects4j test -t org.apache.commons.math.linear.CholeskyDecompositionImplTest::testMath274
+Math-90,glob,2,
+Math-90,google_web_search,1,defects4j run single test class
+Math-90,read_file,3,
+Math-90,replace,11,
+Math-90,run_shell_command,1,./run_bug_exposing_tests.sh
+Math-90,run_shell_command,6,defects4j compile
+Math-90,run_shell_command,5,defects4j test
+Math-90,run_shell_command,2,defects4j test -t org.apache.commons.math.stat.FrequencyTest
+Math-90,run_shell_command,1,git diff
+Math-92,glob,2,
+Math-92,read_file,3,
+Math-92,replace,2,
+Math-92,run_shell_command,1,./run_bug_exposing_tests.sh
+Math-92,run_shell_command,2,defects4j compile
+Math-92,run_shell_command,1,defects4j test
+Math-92,run_shell_command,1,defects4j test -t org.apache.commons.math.util.MathUtilsTest
+Math-92,run_shell_command,2,defects4j test -t org.apache.commons.math.util.MathUtilsTest::testBinomialCoefficientLarge
+Math-93,glob,2,
+Math-93,read_file,3,
+Math-93,replace,4,
+Math-93,run_shell_command,2,defects4j test
+Math-93,run_shell_command,3,defects4j test -t org.apache.commons.math.util.MathUtilsTest::testFactorial
+Math-93,run_shell_command,1,git diff
+Math-98,read_file,3,
+Math-98,replace,2,
+Math-98,run_shell_command,1,./run_bug_exposing_tests.sh
+Math-98,run_shell_command,2,defects4j compile
+Math-98,run_shell_command,2,defects4j test
+Math-98,run_shell_command,1,git diff
+Math-99,glob,2,
+Math-99,read_file,3,
+Math-99,replace,2,
+Math-99,run_shell_command,1,./run_bug_exposing_tests.sh
+Math-99,run_shell_command,2,defects4j compile
+Math-99,run_shell_command,2,defects4j test
+Math-99,run_shell_command,1,git diff
+Mockito-10,glob,2,
+Mockito-10,read_file,12,
+Mockito-10,replace,41,
+Mockito-10,run_shell_command,2,./run_bug_exposing_tests.sh
+Mockito-10,run_shell_command,16,defects4j compile
+Mockito-10,run_shell_command,14,defects4j test -t org.mockitousage.bugs.DeepStubsWronglyReportsSerializationProblemsTest::test
+Mockito-10,write_file,4,
+Mockito-14,read_file,3,
+Mockito-14,read_many_files,1,
+Mockito-14,run_shell_command,1,./run_bug_exposing_tests.sh
+Mockito-14,run_shell_command,1,defects4j compile
+Mockito-14,run_shell_command,1,defects4j test -t org.mockitousage.bugs.VerifyingWithAnExtraCallToADifferentMockTest
+Mockito-14,run_shell_command,1,defects4j test -t org.mockitousage.bugs.VerifyingWithAnExtraCallToADifferentMockTest::shouldAllowVerifyingWhenOtherMockCallIsInTheSameLine
+Mockito-14,search_file_content,1,
+Mockito-15,glob,1,
+Mockito-15,read_file,6,
+Mockito-15,run_shell_command,2,./run_bug_exposing_tests.sh
+Mockito-15,run_shell_command,1,defects4j compile
+Mockito-15,run_shell_command,1,defects4j test -t org.mockitousage.bugs.InjectMocksShouldTryPropertySettersFirstBeforeFieldAccessTest
+Mockito-15,search_file_content,2,
+Mockito-16,read_file,17,
+Mockito-16,replace,161,
+Mockito-16,run_shell_command,2,./run_bug_exposing_tests.sh
+Mockito-16,run_shell_command,16,defects4j compile
+Mockito-16,run_shell_command,1,defects4j test
+Mockito-16,run_shell_command,9,defects4j test -t org.mockitousage.bugs.StubbingMocksThatAreConfiguredToReturnMocksTest::shouldAllowStubbingMocksConfiguredWithRETURNS_MOCKS
+Mockito-16,run_shell_command,1,defects4j test -t org.mockitousage.bugs.StubbingMocksThatAreConfiguredToReturnMocksTest::shouldAllowStubbingMocksConfiguredWithRETURNS_MOCKSWithDoApi
+Mockito-16,run_shell_command,1,git checkout /Users/danielding/Desktop/example_dir/Mockito_16/src/org/mockito/internal/MockHandler.java
+Mockito-16,run_shell_command,1,git checkout /Users/danielding/Desktop/example_dir/Mockito_16/src/org/mockito/internal/progress/MockingProgress.java
+Mockito-16,run_shell_command,1,git checkout /Users/danielding/Desktop/example_dir/Mockito_16/src/org/mockito/internal/progress/MockingProgressImpl.java
+Mockito-16,run_shell_command,1,git checkout /Users/danielding/Desktop/example_dir/Mockito_16/src/org/mockito/internal/progress/ThreadSafeMockingProgress.java
+Mockito-16,run_shell_command,1,git diff /Users/danielding/Desktop/example_dir/Mockito_16/src/org/mockito/internal/MockHandler.java
+Mockito-17,list_directory,4,
+Mockito-17,read_file,9,
+Mockito-17,replace,8,
+Mockito-17,run_shell_command,3,./run_bug_exposing_tests.sh
+Mockito-17,run_shell_command,2,ant clean && ant compile.test
+Mockito-17,run_shell_command,1,ant clean && ant compile.test && defects4j test
+Mockito-17,run_shell_command,1,defects4j compile
+Mockito-17,run_shell_command,1,defects4j export -p cp.test
+Mockito-17,run_shell_command,1,defects4j export -p tests.trigger
+Mockito-17,run_shell_command,1,defects4j test
+Mockito-17,run_shell_command,2,defects4j test -t org.mockitousage.basicapi.MocksSerializationTest
+Mockito-17,run_shell_command,1,git diff
+Mockito-17,run_shell_command,1,java -cp /Users/danielding/Desktop/defects4j/framework/projects/lib/junit-4.11.jar:/Users/danielding/Desktop/example_dir/Mockito_17/target/classes:/Users/danielding/Desktop/example_dir/Mockito_17/target/test-classes:/Users/danielding/Desktop/defects4j/framework/projects/Mockito/lib/asm-all-5.0.4.jar:/Users/danielding/Desktop/defects4j/framework/projects/Mockito/lib/assertj-core-2.1.0.jar:/Users/danielding/Desktop/defects4j/framework/projects/Mockito/lib/cglib-and-asm-1.0.jar:/Users/danielding/Desktop/defects4j/framework/projects/Mockito/lib/cobertura-2.0.3.jar:/Users/danielding/Desktop/defects4j/framework/projects/Mockito/lib/fest-assert-1.3.jar:/Users/danielding/Desktop/defects4j/framework/projects/Mockito/lib/fest-util-1.1.4.jar:/Users/danielding/Desktop/defects4j/framework/projects/Mockito/lib/hamcrest-all-1.3.jar:/Users/danielding/Desktop/defects4j/framework/projects/Mockito/lib/hamcrest-core-1.1.jar:/Users/danielding/Desktop/defects4j/framework/projects/Mockito/lib/objenesis-2.1.jar:/Users/danielding/Desktop/defects4j/framework/projects/Mockito/lib/objenesis-2.2.jar:/Users/danielding/Desktop/defects4j/framework/projects/Mockito/lib/powermock-reflect-1.2.5.jar org.junit.runner.JUnitCore org.mockitousage.basicapi.MocksSerializationTest
+Mockito-19,read_file,19,
+Mockito-19,replace,21,
+Mockito-19,run_shell_command,1,./run_bug_exposing_tests.sh
+Mockito-19,run_shell_command,1,defects4j compile
+Mockito-19,run_shell_command,21,defects4j test
+Mockito-19,run_shell_command,4,defects4j test -t org.mockitousage.annotation.MockInjectionUsingSetterOrPropertyTest::shouldInsertFieldWithCorrectNameWhenMultipleTypesAvailable
+Mockito-19,run_shell_command,1,git diff
+Mockito-19,search_file_content,1,
+Mockito-19,write_file,27,
+Mockito-20,glob,1,
+Mockito-20,list_directory,1,
+Mockito-20,read_file,15,
+Mockito-20,replace,17,
+Mockito-20,run_shell_command,1,./run_bug_exposing_tests.sh
+Mockito-20,run_shell_command,5,defects4j compile
+Mockito-20,run_shell_command,3,defects4j test
+Mockito-20,run_shell_command,1,defects4j test -t org.mockitousage.annotation.SpyAnnotationTest
+Mockito-20,run_shell_command,1,defects4j test -t org.mockitousage.annotation.SpyAnnotationTest::should_spy_abstract_class
+Mockito-20,run_shell_command,2,defects4j test -t org.mockitousage.constructor.CreatingMocksWithConstructorTest::can_spy_abstract_classes
+Mockito-20,run_shell_command,1,git diff
+Mockito-20,search_file_content,6,
+Mockito-20,write_file,1,
+Mockito-21,list_directory,3,
+Mockito-21,read_file,12,
+Mockito-21,replace,9,
+Mockito-21,run_shell_command,2,./run_bug_exposing_tests.sh
+Mockito-21,run_shell_command,5,defects4j compile
+Mockito-21,run_shell_command,3,defects4j test
+Mockito-21,run_shell_command,1,defects4j test -t org.mockito.internal.creation.instance.ConstructorInstantiatorTest::creates_instances_of_inner_classes
+Mockito-21,run_shell_command,1,git add /Users/danielding/Desktop/example_dir/Mockito_21/test/org/mockito/bugfix/AbstractClassMockingTest.java
+Mockito-21,run_shell_command,1,git diff
+Mockito-21,run_shell_command,1,git diff HEAD
+Mockito-21,run_shell_command,1,git restore /Users/danielding/Desktop/example_dir/Mockito_21/src/org/mockito/internal/creation/instance/InstantiatorProvider.java
+Mockito-21,run_shell_command,1,mkdir -p /Users/danielding/Desktop/example_dir/Mockito_21/test/org/mockito/bugfix/
+Mockito-21,write_file,1,
+Mockito-23,read_file,19,
+Mockito-23,replace,12,
+Mockito-23,run_shell_command,2,./run_bug_exposing_tests.sh
+Mockito-23,run_shell_command,6,defects4j compile
+Mockito-23,run_shell_command,1,defects4j test
+Mockito-23,run_shell_command,5,defects4j test -t org.mockitousage.stubbing.DeepStubsSerializableTest::should_serialize_and_deserialize_mock_created_by_deep_stubs
+Mockito-23,search_file_content,5,
+Mockito-25,glob,3,
+Mockito-25,read_file,21,
+Mockito-25,replace,28,
+Mockito-25,run_shell_command,2,./run_bug_exposing_tests.sh
+Mockito-25,run_shell_command,7,defects4j compile
+Mockito-25,run_shell_command,1,defects4j test -t org.mockito.internal.stubbing.defaultanswers.ReturnsGenericDeepStubsTest
+Mockito-25,run_shell_command,2,defects4j test -t org.mockito.internal.stubbing.defaultanswers.ReturnsGenericDeepStubsTest::generic_deep_mock_frenzy__look_at_these_chained_calls
+Mockito-25,search_file_content,2,
+Mockito-25,write_file,2,
+Mockito-2,read_file,11,
+Mockito-2,replace,9,
+Mockito-2,run_shell_command,1,./run_all_tests_trace.sh
+Mockito-2,run_shell_command,5,./run_bug_exposing_tests.sh
+Mockito-2,run_shell_command,5,defects4j compile
+Mockito-2,run_shell_command,1,git diff
+Mockito-2,run_shell_command,1,git diff src/org/mockito/internal/util/Timer.java src/org/mockito/verification/After.java src/org/mockito/verification/Timeout.java
+Mockito-2,search_file_content,2,
+Mockito-30,glob,1,
+Mockito-30,read_file,5,
+Mockito-30,replace,3,
+Mockito-30,run_shell_command,2,./run_bug_exposing_tests.sh
+Mockito-30,run_shell_command,1,defects4j compile
+Mockito-30,run_shell_command,2,defects4j test
+Mockito-30,run_shell_command,1,defects4j test -t org.mockito.internal.stubbing.defaultanswers.ReturnsSmartNullsTest
+Mockito-30,run_shell_command,1,git diff
+Mockito-31,read_file,3,
+Mockito-31,replace,1,
+Mockito-31,run_shell_command,2,./run_bug_exposing_tests.sh
+Mockito-31,run_shell_command,1,defects4j compile
+Mockito-31,run_shell_command,2,defects4j test
+Mockito-31,run_shell_command,1,defects4j test -t org.mockito.internal.stubbing.defaultanswers.ReturnsSmartNullsTest
+Mockito-31,run_shell_command,1,defects4j test -t org.mockito.internal.stubbing.defaultanswers.ReturnsSmartNullsTest::shouldPrintTheParametersWhenCallingAMethodWithArgs
+Mockito-31,run_shell_command,1,git diff
+Mockito-32,glob,1,
+Mockito-32,read_file,4,
+Mockito-32,replace,1,
+Mockito-32,run_shell_command,1,./run_bug_exposing_tests.sh
+Mockito-32,run_shell_command,1,defects4j compile
+Mockito-32,run_shell_command,1,defects4j test
+Mockito-32,run_shell_command,1,defects4j test -t org.mockitousage.bugs.SpyShouldHaveNiceNameTest
+Mockito-32,run_shell_command,2,defects4j test -t org.mockitousage.bugs.SpyShouldHaveNiceNameTest::shouldPrintNiceName
+Mockito-32,run_shell_command,1,git diff
+Mockito-32,search_file_content,2,
+Mockito-35,list_directory,6,
+Mockito-35,read_file,15,
+Mockito-35,replace,4,
+Mockito-35,run_shell_command,5,defects4j compile
+Mockito-35,run_shell_command,5,defects4j test -t org.mockitousage.bugs.Bug35ReproducerTest::shouldAllowIsAForPrimitiveArgumentsInVerification
+Mockito-35,search_file_content,4,
+Mockito-35,write_file,1,
+Mockito-36,read_file,1,
+Mockito-36,read_many_files,1,
+Mockito-36,run_shell_command,1,./run_bug_exposing_tests.sh
+Mockito-36,run_shell_command,1,defects4j compile
+Mockito-36,run_shell_command,1,defects4j test
+Mockito-36,run_shell_command,2,defects4j test -t org.mockitousage.spies.SpyingOnInterfacesTest
+Mockito-36,search_file_content,1,
+Mockito-3,read_file,12,
+Mockito-3,replace,8,
+Mockito-3,run_shell_command,1,./run_bug_exposing_tests.sh
+Mockito-3,run_shell_command,6,defects4j compile
+Mockito-3,run_shell_command,6,defects4j test
+Mockito-3,run_shell_command,1,git diff
+Mockito-3,search_file_content,2,
+Mockito-4,list_directory,4,
+Mockito-4,read_file,17,
+Mockito-4,replace,7,
+Mockito-4,run_shell_command,1,./run_bug_exposing_tests.sh
+Mockito-4,run_shell_command,4,defects4j compile
+Mockito-4,run_shell_command,4,defects4j test
+Mockito-4,run_shell_command,1,defects4j test -t org.mockitousage.bugs.ClassCastExOnVerifyZeroInteractionsTest::should_not_throw_a_ClassCastException
+Mockito-4,search_file_content,13,
+Mockito-6,glob,3,
+Mockito-6,read_file,9,
+Mockito-6,replace,22,
+Mockito-6,run_shell_command,1,./run_bug_exposing_tests.sh
+Mockito-6,run_shell_command,6,defects4j compile
+Mockito-6,run_shell_command,6,defects4j test
+Mockito-6,run_shell_command,1,defects4j test -t org.mockitousage.matchers.AnyXMatchersAcceptNullsTest
+Mockito-6,run_shell_command,1,git diff
+Mockito-6,write_file,6,
+Mockito-9,glob,1,
+Mockito-9,read_file,6,
+Mockito-9,replace,1,
+Mockito-9,run_shell_command,1,./run_bug_exposing_tests.sh
+Mockito-9,run_shell_command,1,defects4j compile
+Mockito-9,run_shell_command,2,defects4j test
+Mockito-9,run_shell_command,1,defects4j test -t org.mockitousage.constructor.CreatingMocksWithConstructorTest::abstractMethodStubbed && defects4j test -t org.mockitousage.constructor.CreatingMocksWithConstructorTest::testCallsRealInterfaceMethod && defects4j test -t org.mockitousage.constructor.CreatingMocksWithConstructorTest::abstractMethodReturnsDefault
+Mockito-9,search_file_content,3,
+Time-10,read_file,6,
+Time-10,replace,2,
+Time-10,run_shell_command,1,./run_bug_exposing_tests.sh
+Time-10,run_shell_command,1,defects4j compile
+Time-10,run_shell_command,2,defects4j test
+Time-12,read_file,5,
+Time-12,replace,4,
+Time-12,run_shell_command,2,./run_bug_exposing_tests.sh
+Time-12,run_shell_command,1,defects4j compile
+Time-12,run_shell_command,2,defects4j test
+Time-12,run_shell_command,1,git diff
+Time-13,read_file,9,
+Time-13,replace,4,
+Time-13,run_shell_command,2,./run_bug_exposing_tests.sh
+Time-13,run_shell_command,1,defects4j compile
+Time-13,run_shell_command,1,defects4j test
+Time-13,run_shell_command,3,defects4j test -t org.joda.time.format.TestISOPeriodFormat::testFormatStandard_negative
+Time-13,run_shell_command,1,git diff
+Time-13,search_file_content,1,
+Time-1,read_file,30,
+Time-1,replace,34,
+Time-1,run_shell_command,1,./run_bug_exposing_tests.sh
+Time-1,run_shell_command,7,defects4j compile
+Time-1,run_shell_command,8,defects4j test
+Time-1,run_shell_command,1,git checkout /Users/danielding/Desktop/example_dir/Time_1/src/main/java/org/joda/time/Partial.java
+Time-1,run_shell_command,1,git diff /Users/danielding/Desktop/example_dir/Time_1/src/main/java/org/joda/time/Partial.java
+Time-1,search_file_content,3,
+Time-23,glob,2,
+Time-23,read_file,43,
+Time-23,replace,22,
+Time-23,run_shell_command,23,./run_bug_exposing_tests.sh
+Time-23,run_shell_command,22,defects4j compile
+Time-23,run_shell_command,1,defects4j export -p cp.test
+Time-23,run_shell_command,1,defects4j export -p tests.trigger
+Time-26,glob,1,
+Time-26,read_file,6,
+Time-26,replace,1,
+Time-26,run_shell_command,2,./run_bug_exposing_tests.sh
+Time-26,run_shell_command,2,defects4j compile
+Time-26,run_shell_command,1,defects4j test
+Time-2,google_web_search,1,joda time DateTimeFieldType.era getRangeDurationType ISOChronology
+Time-2,google_web_search,1,joda time DateTimeFieldType.year getRangeDurationType ISOChronology
+Time-2,list_directory,2,
+Time-2,read_file,8,
+Time-2,replace,6,
+Time-2,run_shell_command,1,./run_bug_exposing_tests.sh
+Time-2,run_shell_command,4,defects4j compile
+Time-2,run_shell_command,1,defects4j test
+Time-2,run_shell_command,3,defects4j test -t org.joda.time.TestPartial_Basics::testWith_baseAndArgHaveNoRange
+Time-2,run_shell_command,1,git checkout /Users/danielding/Desktop/example_dir/Time_2/src/main/java/org/joda/time/Partial.java
+Time-3,read_file,13,
+Time-3,replace,9,
+Time-3,run_shell_command,6,./run_bug_exposing_tests.sh
+Time-3,run_shell_command,4,defects4j compile
+Time-3,run_shell_command,1,defects4j test
+Time-6,read_file,25,
+Time-6,replace,38,
+Time-6,run_shell_command,5,./run_all_tests_trace.sh
+Time-6,run_shell_command,10,./run_bug_exposing_tests.sh
+Time-6,run_shell_command,13,defects4j compile
+Time-6,run_shell_command,1,defects4j export -p cp.test
+Time-6,run_shell_command,1,git diff
+Time-9,read_file,9,
+Time-9,replace,4,
+Time-9,run_shell_command,2,./run_all_tests_trace.sh
+Time-9,run_shell_command,4,./run_bug_exposing_tests.sh
+Time-9,run_shell_command,1,defects4j compile
+Time-9,run_shell_command,1,defects4j test -t org.joda.time.TestDateTimeZone
+Time-9,run_shell_command,1,git diff
+Time-9,run_shell_command,1,git restore run_bug_exposing_tests.sh run_all_tests_trace.sh
+JacksonCore-17,glob,1,
+JacksonCore-17,read_file,4,
+JacksonCore-17,replace,1,
+JacksonCore-17,run_shell_command,1,./run_bug_exposing_tests.sh
+JacksonCore-17,run_shell_command,2,defects4j compile
+JacksonCore-17,run_shell_command,2,defects4j test
+JacksonCore-17,run_shell_command,1,git diff
+JacksonDatabind-20,read_file,8,
+JacksonDatabind-20,replace,3,
+JacksonDatabind-20,run_shell_command,1,./run_bug_exposing_tests.sh
+JacksonDatabind-20,run_shell_command,3,defects4j compile
+JacksonDatabind-20,run_shell_command,1,defects4j test
+JacksonDatabind-20,run_shell_command,3,defects4j test -t com.fasterxml.jackson.databind.failing.TestPropertyNamingStrategyIssue::reproducer
+JacksonDatabind-20,run_shell_command,1,git diff
+JacksonDatabind-20,run_shell_command,1,rm /Users/danielding/Desktop/example_dir/JacksonDatabind_20/src/test/java/com/fasterxml/jackson/databind/failing/TestPropertyNamingStrategyIssue.java
+JacksonDatabind-20,search_class,1,
+JacksonDatabind-20,search_code,1,
+JacksonDatabind-20,search_file_content,11,
+JacksonDatabind-20,write_file,1,
