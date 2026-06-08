@@ -1,10 +1,10 @@
 # Qwen Code Automation — MCP variant (SWE-bench)
 
-**MCP-enabled fork** of `swe-bench/qwen-cli-automation/`. Same Docker-isolated runner for the 32 SWE-bench Verified multi-hunk bugs, *plus* an MCP layer that exposes the nine `maple_*` repository-search tools to the agent through `progctx-mcp-swe-bench/mcp_server/python_analysis_server.py`. After this directory's per-bug setup runs, qwen has structured access to find classes, methods, code patterns, class skeletons, and repo structure — instead of having to fall back to ad-hoc `grep`/`cat`.
+**MCP-enabled fork** of `hunk-swe/qwen-cli-automation/`. Same Docker-isolated runner for the 32 SWE-bench Verified multi-hunk bugs, *plus* an MCP layer that exposes the nine `maple_*` repository-search tools to the agent through `progctx-mcp-swe-bench/mcp_server/python_analysis_server.py`. After this directory's per-bug setup runs, qwen has structured access to find classes, methods, code patterns, class skeletons, and repo structure — instead of having to fall back to ad-hoc `grep`/`cat`.
 
 Use this directory to A/B-compare against the vanilla `qwen-cli-automation/`: same bug set, same model, same harness; the only differences are the MCP-aware prompt (`prompt_mcp.md`) and the in-container MCP server. Results land in `test_results_model_qwen_mcp.csv` so the two runs don't collide.
 
-The three automation directories (vanilla `qwen-cli-automation/`, this MCP variant, and `gemini-cli-automation/`) share `swe-bench/swe_bench_utils/` for the overlay builder, container plumbing, prompt/record loaders, and the harness grader. Only the agent CLI (npm package, binary, env vars) and — for this variant — the MCP setup differ.
+The three automation directories (vanilla `qwen-cli-automation/`, this MCP variant, and `gemini-cli-automation/`) share `hunk-swe/swe_bench_utils/` for the overlay builder, container plumbing, prompt/record loaders, and the harness grader. Only the agent CLI (npm package, binary, env vars) and — for this variant — the MCP setup differ.
 
 ---
 
@@ -121,12 +121,12 @@ We discovered this empirically when the first qwen-MCP run on `astropy__astropy-
   ```
   (or `export OPENROUTER_API_KEY=...` in your shell.)
 - The 32-bug bug list at
-  `swe-bench/swe_bench_verified/multihunk_bugs_swe_bench_verified_32.json`
+  `hunk-swe/swe_bench_verified/multihunk_bugs_swe_bench_verified_32.json`
   and the SWE-bench Verified records at
-  `swe-bench/swe_bench_verified/swe_bench.jsonl` (already in repo).
+  `hunk-swe/swe_bench_verified/swe_bench.jsonl` (already in repo).
 - A Python environment with `swebench` installed:
   ```bash
-  conda env create -f swe-bench/environment.yml
+  conda env create -f hunk-swe/environment.yml
   conda activate swe-bench-eval
   ```
 - **Node.js / npm / qwen-code on the host: not required.** Everything the
@@ -139,7 +139,7 @@ We discovered this empirically when the first qwen-MCP run on `astropy__astropy-
 ### First-time / single-bug debug run
 
 ```bash
-cd swe-bench/qwen-cli-automation-mcp
+cd hunk-swe/qwen-cli-automation-mcp
 python3 automated_qwen_code.py --only astropy__astropy-13033 --duration-min 30 --keep-container
 ```
 
@@ -149,7 +149,7 @@ python3 automated_qwen_code.py --only astropy__astropy-13033 --duration-min 30 -
 ### Full batch (all 32 bugs)
 
 ```bash
-cd swe-bench/qwen-cli-automation-mcp
+cd hunk-swe/qwen-cli-automation-mcp
 python3 automated_qwen_code.py
 ```
 

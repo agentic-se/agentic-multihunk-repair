@@ -45,7 +45,7 @@ already there.
 
 ## Import pattern
 
-Each agent runner adds `swe-bench/` to `sys.path`, then imports:
+Each agent runner adds `hunk-swe/` to `sys.path`, then imports:
 
 ```python
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -67,4 +67,4 @@ from swe_bench_utils.grader import grade_instance
 from swe_bench_utils.utils import ensure_dir, ts
 ```
 
-Requires `swebench>=4.1.0` (see `swe-bench/environment.yml`).
+Requires `swebench>=4.1.0` (see `hunk-swe/environment.yml`).

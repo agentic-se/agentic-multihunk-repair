@@ -134,7 +134,7 @@ if not _docker_available():
         allow_module_level=True,
     )
 
-sys.path.insert(0, str(REPO_ROOT / "swe-bench"))
+sys.path.insert(0, str(REPO_ROOT / "hunk-swe"))
 try:
     from swe_bench_utils.docker_env import DockerContainer, instance_image_name
 except ImportError as e:                            # pragma: no cover

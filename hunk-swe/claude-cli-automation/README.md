@@ -8,7 +8,7 @@ a faithful environment, and the host is never touched. Final grading is
 delegated to the **official SWE-bench harness** so verdicts are bit-identical
 to the leaderboard.
 
-The three automation directories share `swe-bench/swe_bench_utils/` for the
+The three automation directories share `hunk-swe/swe_bench_utils/` for the
 overlay builder, container plumbing, prompt/record loaders, and the harness
 grader. Only the agent CLI (npm package, binary, prompt file convention)
 differs.
@@ -99,12 +99,12 @@ for optimal performance.
 
   OAuth takes precedence if both are set (to avoid accidentally billing API credits).
 - The 32-bug bug list at
-  `swe-bench/swe_bench_verified/multihunk_bugs_swe_bench_verified_32.json`
+  `hunk-swe/swe_bench_verified/multihunk_bugs_swe_bench_verified_32.json`
   and the SWE-bench Verified records at
-  `swe-bench/swe_bench_verified/swe_bench.jsonl` (already in repo).
+  `hunk-swe/swe_bench_verified/swe_bench.jsonl` (already in repo).
 - A Python environment with `swebench` installed:
   ```bash
-  conda env create -f swe-bench/environment.yml
+  conda env create -f hunk-swe/environment.yml
   conda activate swe-bench-eval
   ```
 - **Node.js / npm / claude on the host: not required.** Everything the agent
@@ -120,7 +120,7 @@ To run Claude Code on all 32 multi-hunk bugs:
 
 ```bash
 # 1. Navigate to the automation directory
-cd swe-bench/claude-cli-automation
+cd hunk-swe/claude-cli-automation
 
 # 2. Activate the conda environment
 conda activate swe-bench-eval
@@ -276,7 +276,7 @@ find workspace_docker -name "patch-*.diff" -type f
 ### First-time / single-bug debug run
 
 ```bash
-cd swe-bench/claude-cli-automation
+cd hunk-swe/claude-cli-automation
 python3 automated_claude_cli.py --only astropy__astropy-13033 --duration-min 30 --keep-container
 ```
 
@@ -286,7 +286,7 @@ python3 automated_claude_cli.py --only astropy__astropy-13033 --duration-min 30 
 ### Full batch (all 32 bugs)
 
 ```bash
-cd swe-bench/claude-cli-automation
+cd hunk-swe/claude-cli-automation
 python3 automated_claude_cli.py
 ```
 

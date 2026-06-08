@@ -3,7 +3,7 @@
 import json
 from pathlib import Path
 
-# Paths relative to swe-bench/ directory
+# Paths relative to hunk-swe/ directory
 SWE_BENCH_DIR = Path(__file__).resolve().parent.parent
 MULTIHUNK_JSON = SWE_BENCH_DIR / "swe_bench_verified" / "multihunk_bugs_swe_bench_verified_32.json"
 SWEBENCH_JSONL = SWE_BENCH_DIR / "swe_bench_verified" / "swe_bench.jsonl"

@@ -5,7 +5,7 @@ from collections import defaultdict
 from pathlib import Path
 
 # Delegate categorization to the shared SWE-bench module
-# (swe-bench/scripts/agent_command_categorization/categorizer.py).
+# (hunk-swe/scripts/agent_command_categorization/categorizer.py).
 # We insert the sibling scripts/ directory on sys.path so the import
 # resolves regardless of the CWD the script is invoked from. The
 # `# noqa: E402` silences flake8's "module-level import not at top of

@@ -110,7 +110,7 @@ The `resources/` directory contains synthetic AST-pattern fixtures and real SWE-
 
 ```bash
 conda activate llm-code-repair-env
-cd swe-bench/swe_hunk_divergence
+cd hunk-swe/swe_hunk_divergence
 ```
 
 ### Run All Tests
