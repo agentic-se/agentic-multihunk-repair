@@ -10,6 +10,9 @@ Quick links:
 - [Gemini CLI Automation](./README_GEMINI.md)
 - [MCP Support](progctx-mcp/)
 
+## Hunk-SWE (SWE-bench Extension)
+[`hunk-swe/`](hunk-swe/) is the SWE-bench counterpart of this study: the 32 multi-hunk bugs from SWE-bench Verified, the four agent runners (with MCP variants), the shared Docker-isolated harness, and the hunk-divergence / proximity-class analysis and metrics. See [`hunk-swe/README.md`](hunk-swe/README.md). Its MCP code-search server lives in [`progctx-mcp-swe-bench/`](progctx-mcp-swe-bench/).
+
 ## Prompts
 - For vanilla Agent runs, the prompt is at [`agentic_ai/prompt.md`](agentic_ai/prompt.md)
 - For MCP Agent runs, the prompt is at [`agentic_ai/prompt_mcp.md`](agentic_ai/prompt_mcp.md)
