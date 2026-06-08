@@ -90,12 +90,12 @@ diverge from the leaderboard or duplicate what the harness already does.
   ```
   (or `export GEMINI_API_KEY=...` in your shell.)
 - The 32-bug bug list at
-  `swe-bench/swe_bench_verified/multihunk_bugs_swe_bench_verified_32.json`
+  `hunk-swe/swe_bench_verified/multihunk_bugs_swe_bench_verified_32.json`
   and the SWE-bench Verified records at
-  `swe-bench/swe_bench_verified/swe_bench.jsonl` (already in repo).
+  `hunk-swe/swe_bench_verified/swe_bench.jsonl` (already in repo).
 - A Python environment with `swebench` installed. From the repo root:
   ```bash
-  conda env create -f swe-bench/environment.yml
+  conda env create -f hunk-swe/environment.yml
   conda activate swe-bench-eval
   ```
   Verify: `python3 -c "from swebench.harness.test_spec.python import MAP_REPO_VERSION_TO_SPECS; print('ok')"`
@@ -115,7 +115,7 @@ budgeting `--duration-min`.
 ### First-time / single-bug debug run
 
 ```bash
-cd swe-bench/gemini-cli-automation
+cd hunk-swe/gemini-cli-automation
 python3 automated_gemini_cli.py --only astropy__astropy-13033 --duration-min 30 --keep-container
 ```
 
@@ -125,7 +125,7 @@ you can `docker exec -it <name> bash -l` and poke around.
 ### Full batch (all 32 bugs)
 
 ```bash
-cd swe-bench/gemini-cli-automation
+cd hunk-swe/gemini-cli-automation
 python3 automated_gemini_cli.py
 ```
 

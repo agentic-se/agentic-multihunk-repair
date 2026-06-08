@@ -87,7 +87,7 @@ Expected output: A table showing running containers (may be empty).
 ### Step 2: Navigate to Repository
 
 ```bash
-cd /path/to/agentic-multihunk-repair/swe-bench
+cd /path/to/agentic-multihunk-repair/hunk-swe
 ```
 
 Replace `/path/to/` with your actual repository path.
@@ -142,7 +142,7 @@ Should print the path to the tokenizer data.
 cd qwen-cli-automation
 ```
 
-Your working directory should now be: `.../swe-bench/qwen-cli-automation/`
+Your working directory should now be: `.../hunk-swe/qwen-cli-automation/`
 
 ### Step 6: Create .env File with API Key
 
@@ -188,7 +188,7 @@ python -c "import swebench; print(swebench.__version__)"
 ls -la .env
 
 # 6. Working directory is correct
-pwd  # Should end with: .../swe-bench/qwen-cli-automation
+pwd  # Should end with: .../hunk-swe/qwen-cli-automation
 ```
 
 All checks should pass before proceeding.

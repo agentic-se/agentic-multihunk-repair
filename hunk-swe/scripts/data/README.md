@@ -60,7 +60,7 @@ Both files are produced from the same primitives that drive the
 thesis's headline tables:
 
 - `is_resolved` ← official SWE-bench harness `report.json` verdict
-- `hunk_count`, `divergence` ← `swe-bench/swe_hunk_divergence/total_hunk_divergence_results.csv`
+- `hunk_count`, `divergence` ← `hunk-swe/swe_hunk_divergence/total_hunk_divergence_results.csv`
 
 If the underlying CSV / harness output changes, regenerate these
 JSONs to keep the figure data in sync.

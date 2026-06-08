@@ -175,11 +175,11 @@ Two pytest suites:
 
 ### Setup
 
-The tests run in the existing SWE-bench evaluation conda env, `swe-bench-eval`. `pytest` is not currently part of `swe-bench/environment.yml`, so it needs to be pip-installed into the env once. From the repository root:
+The tests run in the existing SWE-bench evaluation conda env, `swe-bench-eval`. `pytest` is not currently part of `hunk-swe/environment.yml`, so it needs to be pip-installed into the env once. From the repository root:
 
 ```bash
 # 1) Create swe-bench-eval if you don't already have it
-conda env create -f swe-bench/environment.yml
+conda env create -f hunk-swe/environment.yml
 
 # 2) Activate and add pytest
 conda activate swe-bench-eval
@@ -219,7 +219,7 @@ sample_repo/
 
 `test_mcp_e2e.py` boots the actual MCP server **inside the SWE-bench Docker container** for `astropy__astropy-13033`, connects an MCP client over STDIO, and exercises a representative subset of the `maple_*` tools through the real MCP protocol against the real astropy source tree at `/testbed`.
 
-`astropy__astropy-13033` is the first instance in `swe-bench/swe_bench_verified/multihunk_bugs_swe_bench_verified_32.json` and is the canonical example bug used throughout `CLAUDE.md`. The instance image already contains astropy checked out at the bug's `base_commit`, so the test pulls no source code onto the host.
+`astropy__astropy-13033` is the first instance in `hunk-swe/swe_bench_verified/multihunk_bugs_swe_bench_verified_32.json` and is the canonical example bug used throughout `CLAUDE.md`. The instance image already contains astropy checked out at the bug's `base_commit`, so the test pulls no source code onto the host.
 
 #### Prerequisites
 

@@ -26,7 +26,7 @@ Python/`pytest` world that every SWE-bench instance lives in.
 | `other`           | everything else (`cat`, `sed`, `awk`, `cd`, `echo`, …)|
 
 The bucket names are used verbatim as `Bash_<bucket>` columns by the
-metric scripts in `swe-bench/scripts/metrics-<agent>/`, so they must
+metric scripts in `hunk-swe/scripts/metrics-<agent>/`, so they must
 not be renamed in isolation.
 
 ## Usage

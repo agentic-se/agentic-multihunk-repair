@@ -3,10 +3,10 @@
 Extract per-bug action-category counts for HunkSWE, in the same 17-bucket
 PAPER_CATEGORIES schema that the Hunk4J `tools_count_all_abstracted_*.csv`
 files use. Source data is the trajectory log shipped inside every
-`swe-bench/<agent>-cli-automation[-mcp]/workspace_docker/<instance>/agent_logs/`.
+`hunk-swe/<agent>-cli-automation[-mcp]/workspace_docker/<instance>/agent_logs/`.
 
 The categorization itself is delegated to
-`swe-bench/scripts/agent_command_categorization/categorizer.py`
+`hunk-swe/scripts/agent_command_categorization/categorizer.py`
 (`categorize_action(tool_name, command)`), so this script's job is
 purely (a) parse each agent's trajectory format and (b) call the
 categorizer once per tool call. Both native-tool calls and shell-exec
@@ -27,7 +27,7 @@ Per-agent trajectory formats:
                          `function_name` and `function_args` (JSON).
 
 Output: per agent + mode, one CSV at
-  swe-bench/<agent>-cli-automation[-mcp]/results/
+  hunk-swe/<agent>-cli-automation[-mcp]/results/
       <tag>_hunkswe_action_counts.csv
 with header `instance_id, <17 paper categories...>`.
 """
@@ -41,7 +41,7 @@ from pathlib import Path
 from typing import Iterator
 
 REPO = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(REPO / "swe-bench" / "scripts"))
+sys.path.insert(0, str(REPO / "hunk-swe" / "scripts"))
 sys.path.insert(0, str(REPO))
 from agent_command_categorization.categorizer import (
     PAPER_CATEGORIES,
@@ -102,7 +102,7 @@ def _split_atomic(command: str) -> list[str]:
         atoms = []
     return atoms or [command]
 
-SWE = REPO / "swe-bench"
+SWE = REPO / "hunk-swe"
 AGENT_DIRS = {
     ("claude", "vanilla"): SWE / "claude-cli-automation",
     ("codex",  "vanilla"): SWE / "codex-cli-automation",
