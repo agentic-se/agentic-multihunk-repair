@@ -1,0 +1,18 @@
+{
+  "qwen_code": {
+    "agent": "qwen_code",
+    "agent_name": "Qwen Code",
+    "total_bugs": 50,
+    "successful_localizations": 13,
+    "failed_localizations": 37,
+    "success_percentage": 26.0
+  },
+  "gemini_cli": {
+    "agent": "gemini_cli",
+    "agent_name": "Gemini CLI",
+    "total_bugs": 50,
+    "successful_localizations": 16,
+    "failed_localizations": 34,
+    "success_percentage": 32.0
+  }
+}

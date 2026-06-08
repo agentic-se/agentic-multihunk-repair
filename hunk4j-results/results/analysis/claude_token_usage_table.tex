@@ -1,0 +1,21 @@
+\begin{table}[t]
+\centering
+\caption{Claude Code Token Usage with Prompt Caching Breakdown}
+\label{tab:claude-token-usage}
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+\textbf{Outcome} & \textbf{n} & \textbf{New Input} & \textbf{Cache Creation} & \textbf{Cache Read} & \textbf{Total Input} \\
+\midrule
+Pass & 273 & 969 & 147K & 3.70M & 3.85M \\
+Fail & 15  & 308 & 359K & 9.34M & 9.70M \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small
+\item All values are means. Total Input = New Input + Cache Creation + Cache Read.
+\item New Input: uncached tokens sent with each request (\$3.00 per M).
+\item Cache Creation: tokens written to cache (\$3.75 per M, 25\% premium).
+\item Cache Read: tokens retrieved from cache (\$0.30 per M, 90\% discount).
+\item Failed repairs consume 152\% more total input tokens than successful repairs.
+\end{tablenotes}
+\end{table}

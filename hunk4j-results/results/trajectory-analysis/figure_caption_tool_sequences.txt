@@ -1,0 +1,6 @@
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.95\textwidth]{figures/qwen_vs_gemini_patterns_comparison.png}
+\caption{Top 5 tool sequence patterns (window size = 3) for the two lowest-performing agents. \qwencode exhibits navigation overhead with NAVIGATE appearing in 5/10 top patterns, fragmenting productive workflows. \geminicli exhibits over-modification with 8.74\% of sequences consisting of three consecutive WRITE operations, batching changes without intermediate validation. Percentages represent the proportion of each pattern relative to all 3-step sequences executed during repair attempts.}
+\label{fig:qwen_gemini_patterns}
+\end{figure}

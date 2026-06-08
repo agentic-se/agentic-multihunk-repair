@@ -1,0 +1,16 @@
+\begin{table}[t]
+\centering
+\caption{Unique Command Diversity Across Coding Agents}
+\label{tab:unique_commands_per_agent}
+\small
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Agent} & \textbf{Native Tools} & \textbf{Shell-Invoked} & \textbf{Total Unique} \\
+\midrule
+\qwencode & 10 & 81 & 91 \\
+\geminicli & 11 & 27 & 38 \\
+\codex & 0 & 96 & 96 \\
+\claudecode & 7 & 60 & 66 \\
+\bottomrule
+\end{tabular}
+\end{table}

@@ -1,0 +1,27 @@
+\subsection{Measuring Regression Introduction}
+\label{subsec:regression-analysis}
+
+Traditional automated program repair evaluation focuses on whether patches fix target bugs, measuring success by whether originally failing tests pass after repair. However, this overlooks a critical failure mode: repairs that break previously passing functionality. A patch that fixes one bug but introduces three new test failures creates net negative value, imposing a debugging tax on development teams.
+
+We measure regression introduction to assess whether repair attempts improve or degrade overall test suite health. This metric is orthogonal to repair accuracy: an agent can successfully fix the target bug (high accuracy) while simultaneously breaking other functionality (introducing regressions).
+
+\subsubsection{Metric Definition}
+
+We define \textbf{regression reduction} to quantify the change in total failing tests:
+
+\begin{equation}
+\text{regression\_reduction}_A(b) =
+\big|\mathrm{Tests}^{\text{fail, before}}_A(b)\big| -
+\big|\mathrm{Tests}^{\text{fail, after}}_A(b)\big|
+\label{eq:regression-reduction}
+\end{equation}
+
+where $\mathrm{Tests}^{\text{fail, before}}_A(b)$ represents the total number of failing tests before agent $A$ attempts to repair bug $b$, and $\mathrm{Tests}^{\text{fail, after}}_A(b)$ represents the total number after. Positive values indicate improvement (fewer total failing tests), negative values indicate degradation (more total failing tests), and zero indicates no net change. When compilation fails, regression reduction is undefined and excluded from analysis.
+
+\subsubsection{Interpretation}
+
+This metric captures the net change in failing tests but conflates two distinct phenomena: fixing originally failing tests (accuracy) and breaking previously passing tests (regression). A positive regression reduction indicates the repair reduced total failing tests, but this could result from perfect accuracy with no regression, partial accuracy with no regression, or full accuracy with some regression offset by more fixes.
+
+Despite this limitation, regression reduction provides actionable signal for deployment decisions. Agents with consistently negative regression reduction introduce more test failures than they fix, creating net harm regardless of whether failures stem from unfixed bugs or newly broken tests. Such agents impose a debugging tax on development teams. Conversely, agents with positive regression reduction improve overall test suite health, indicating they fix more than they break.
+
+When compilation fails, regression reduction is undefined and excluded from analysis.

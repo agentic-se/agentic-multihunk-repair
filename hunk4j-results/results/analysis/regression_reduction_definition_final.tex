@@ -1,0 +1,14 @@
+\subsection{Regression Reduction: Beyond Binary Success}
+\label{subsec:regression-reduction}
+
+While understanding whether a repair compiles and fixes originally failing tests is necessary, these binary success metrics do not capture whether repairs reduce or increase the number of failing tests. Two coding agents may achieve identical repair success rates yet exhibit fundamentally different behaviors on test failure counts. One agent may fix bugs without affecting other tests, while another may fix bugs but break previously passing tests. Binary metrics cannot distinguish these scenarios.
+
+We introduce \emph{regression reduction} to quantify the net change in the number of failing tests after applying the generated patch. For agent $A$ attempting to repair bug $b$, we define:
+
+\[
+\text{regression\_reduction}_A(b) = \text{failed\_tests}_{\text{before}} - \text{failed\_tests}_{\text{after}}
+\]
+
+where $\text{failed\_tests}_{\text{before}}$ represents the total number of failing tests before agent $A$ attempts to repair bug $b$, and $\text{failed\_tests}_{\text{after}}$ represents the total number after. Positive values indicate the generated patch reduced the number of failing tests. Zero values indicate the repair compiled successfully but produced no net change in the number of failing tests. Negative values indicate the repair increased the number of failing tests. When compilation fails, regression reduction is undefined and excluded from analysis.
+
+A positive value may result from fixing originally failing tests without breaking others, or from fixing more tests than breaking. A negative value indicates the repair introduced more failures than it fixed, regardless of whether these failures stem from unfixed target bugs or newly broken tests. Agents exhibiting negative average regression reduction create net harm, requiring practitioners to address both the original bug and additional test failures. Agents with positive regression reduction reduce the total number of failing tests.

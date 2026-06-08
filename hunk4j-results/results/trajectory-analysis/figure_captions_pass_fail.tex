@@ -1,0 +1,13 @@
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.95\textwidth]{figures/qwen_pass_fail_sequences.png}
+\caption{Top 5 tool sequence patterns (window size = 3) for \qwencode stratified by repair outcome. Navigation overhead (NAVIGATE operations) appears in 3/5 successful patterns and 4/5 unsuccessful patterns, indicating structural rather than behavioral inefficiency. Pattern distributions remain similar across outcomes, with NAVIGATE $\rightarrow$ TEST $\rightarrow$ NAVIGATE appearing at 4.13\% in successful repairs and 2.93\% in unsuccessful repairs.}
+\label{fig:qwen_pass_fail_sequences}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.95\textwidth]{figures/gemini_pass_fail_sequences.png}
+\caption{Top 5 tool sequence patterns (window size = 3) for \geminicli stratified by repair outcome. Successful repairs prioritize WRITE $\rightarrow$ BUILD $\rightarrow$ TEST (9.09\%), representing validated iterative cycles. Unsuccessful repairs shift dramatically toward WRITE $\rightarrow$ WRITE $\rightarrow$ WRITE (10.37\%), a 2.24-fold increase (+5.75 percentage points) indicating batched modifications without intermediate validation when repairs prove difficult.}
+\label{fig:gemini_pass_fail_sequences}
+\end{figure}

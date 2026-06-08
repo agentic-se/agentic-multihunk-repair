@@ -1,0 +1,28 @@
+\begin{table}[t]
+\centering
+\caption{Token Usage Statistics by Agent and Repair Outcome}
+\label{tab:token-usage-statistics}
+\begin{tabular}{@{}llrrrr@{}}
+\toprule
+\textbf{Agent} & \textbf{Outcome} & \textbf{n} & \textbf{Total Input} & \textbf{Output} & \textbf{Std} \\
+\midrule
+Qwen Code & Pass & 96 & 1.70M & 7.1K & 1.13M \\
+            & Fail & 239 & 2.37M & 9.5K & 1.56M \\
+\midrule
+Gemini CLI & Pass & 152 & 1.33M & 4.2K & 1.84M \\
+            & Fail & 216 & 5.90M & 12.1K & 9.07M \\
+\midrule
+OpenAI Codex & Pass & 324 & 61.3K & 1.6K & 38.6K \\
+            & Fail & 48 & 110.0K & 2.7K & 66.7K \\
+\midrule
+Claude Code & Pass & 273 & 3.85M & 18.1K & 2.99M \\
+            & Fail & 15 & 9.70M & 32.0K & 6.11M \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small
+\item All values are means. Std refers to total input tokens.
+\item \claudecode uses prompt caching (see Table~\ref{tab:claude-token-usage} for breakdown).
+\item Bugs with duration $<$ 30 seconds excluded (incomplete processing).
+\end{tablenotes}
+\end{table}

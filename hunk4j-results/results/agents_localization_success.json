@@ -1,0 +1,38 @@
+{
+  "qwen_code": {
+    "agent": "qwen_code",
+    "agent_name": "Qwen Code",
+    "total_bugs": 372,
+    "successful_localizations": 142,
+    "failed_localizations": 230,
+    "success_percentage": 38.17,
+    "success_summary": "142 (38.17%)"
+  },
+  "gemini_cli": {
+    "agent": "gemini_cli",
+    "agent_name": "Gemini CLI",
+    "total_bugs": 372,
+    "successful_localizations": 173,
+    "failed_localizations": 199,
+    "success_percentage": 46.51,
+    "success_summary": "173 (46.51%)"
+  },
+  "openai_codex": {
+    "agent": "openai_codex",
+    "agent_name": "OpenAI Codex",
+    "total_bugs": 372,
+    "successful_localizations": 279,
+    "failed_localizations": 93,
+    "success_percentage": 75.0,
+    "success_summary": "279 (75.00%)"
+  },
+  "claude_code": {
+    "agent": "claude_code",
+    "agent_name": "Claude Code",
+    "total_bugs": 372,
+    "successful_localizations": 238,
+    "failed_localizations": 134,
+    "success_percentage": 63.98,
+    "success_summary": "238 (63.98%)"
+  }
+}
